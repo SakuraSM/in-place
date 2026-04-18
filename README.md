@@ -16,14 +16,13 @@ shared TypeScript packages, and PostgreSQL schema tooling.
 - `packages/domain`: shared domain types
 - `infra/postgres`: local PostgreSQL runtime for development
 
-This repository intentionally excludes Android/mobile code, deployment packaging,
-and AI-specific features so the public codebase stays smaller and easier to maintain.
+This repository intentionally excludes Android/mobile code and other private runtime pieces so the public codebase stays smaller and easier to maintain.
 
 ## Requirements
 
 - Node.js `>= 20.10.0`
 - npm `>= 10`
-- Docker Desktop or another compatible Docker runtime for local PostgreSQL
+- Docker Desktop or another compatible Docker runtime
 
 ## Quick start
 
@@ -43,6 +42,7 @@ and AI-specific features so the public codebase stays smaller and easier to main
 3. Start PostgreSQL:
 
    ```bash
+   export POSTGRES_PASSWORD=<generate-a-strong-password>
    npm run db:up
    ```
 
@@ -58,6 +58,34 @@ and AI-specific features so the public codebase stays smaller and easier to main
    npm run dev:server
    npm run dev:web
    ```
+
+## Deployment
+
+### Recommended Docker Compose Deployment
+
+#### Prepare deployment environment
+
+```bash
+cp .env.compose.example .env.compose
+```
+
+Update `.env.compose` before the first deployment. At minimum, set:
+
+```env
+POSTGRES_PASSWORD=<generate-a-strong-password>
+JWT_SECRET=<at-least-32-random-characters>
+APP_ENCRYPTION_KEY=<at-least-32-random-characters>
+CORS_ORIGIN=https://your-domain.com,http://localhost:8080,http://127.0.0.1:8080
+VITE_API_BASE_URL=/api
+BACKUP_PAYLOAD_SIZE_MB=100
+```
+
+Then start the stack:
+
+```bash
+docker compose --env-file .env.compose up --build -d
+```
+
 
 ## Repository layout
 

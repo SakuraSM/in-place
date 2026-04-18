@@ -15,13 +15,11 @@ English version: [README.md](README.md)
 - `packages/domain`：共享领域类型
 - `infra/postgres`：本地开发用 PostgreSQL 运行定义
 
-这个仓库**不再包含** Android/移动端代码、部署打包文件，以及 AI 专属功能代码，以便保持仓库更聚焦、更容易维护。
-
 ## 环境要求
 
 - Node.js `>= 20.10.0`
 - npm `>= 10`
-- Docker Desktop 或兼容的 Docker 运行时（用于本地 PostgreSQL）
+- Docker Desktop 或兼容的 Docker 运行时
 
 ## 快速开始
 
@@ -38,9 +36,10 @@ English version: [README.md](README.md)
    cp apps/web/.env.example apps/web/.env
    ```
 
-3. 启动本地 PostgreSQL：
+3. 启动 PostgreSQL：
 
    ```bash
+   export POSTGRES_PASSWORD=<设置强密码>
    npm run db:up
    ```
 
@@ -56,6 +55,31 @@ English version: [README.md](README.md)
    npm run dev:server
    npm run dev:web
    ```
+
+## 部署
+
+### 推荐Docker compose
+首次部署前请先修改 `.env.compose`，至少配置这些值：
+
+```env
+POSTGRES_PASSWORD=<设置强密码>
+JWT_SECRET=<至少32位随机字符串>
+APP_ENCRYPTION_KEY=<至少32位随机字符串>
+CORS_ORIGIN=https://your-domain.com,http://localhost:8080,http://127.0.0.1:8080
+VITE_API_BASE_URL=/api
+BACKUP_PAYLOAD_SIZE_MB=100
+```
+构建镜像并启动整套服务：
+
+```bash
+docker compose --env-file .env.compose up --build -d
+```
+
+浏览器访问：
+
+```text
+http://localhost:8080
+```
 
 ## 仓库结构
 
