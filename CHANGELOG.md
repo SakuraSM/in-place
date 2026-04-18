@@ -9,12 +9,14 @@ and this project is expected to follow Semantic Versioning once release manageme
 
 ### Added
 
-- Split repository under `in-place/` with a web, server, and database workspace closure
-- Local PostgreSQL runtime definition under `infra/postgres`
-- Refreshed English and Chinese repository documentation
+- Workspace-based repository layout with `apps/web`, `apps/server`, and `packages/db`
+- Fastify server scaffold
+- Drizzle ORM database package
+- Local PostgreSQL Docker setup
+- Chinese README
+- Common open source community files
 
 ### Changed
 
-- Removed Android/mobile workspace code from the split repository
-- Removed deployment packaging files outside the retained local database workflow
-- Removed AI routes, UI surfaces, and schema artifacts from the split repository
+- Repository architecture shifted from frontend-direct data access toward a PostgreSQL-first layered design
+- Root documentation rewritten to match open source repository conventions

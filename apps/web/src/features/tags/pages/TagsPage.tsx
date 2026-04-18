@@ -271,7 +271,7 @@ export default function TagsPage() {
           <EmptyState
             icon={<StickyNote size={28} className="text-slate-300" />}
             title="还没有标签"
-            description="当物品创建或编辑写入新标签时，这里会自动同步。"
+            description="当物品创建、编辑或 AI 识别写入新标签时，这里会自动同步。"
           />
         ) : (
           <div className="flex min-h-full flex-1 flex-col">

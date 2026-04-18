@@ -1,5 +1,5 @@
 {
-  "name": "in-place",
+  "name": "inplace",
   "version": "0.1.0",
   "workspaces": [
     "apps/*",
@@ -9,6 +9,7 @@
     "node": ">=20.10.0"
   },
   "scripts": {
+    "dev:mobile": "npm run start --workspace @inplace/mobile",
     "dev:web": "npm run dev --workspace @inplace/web",
     "dev:server": "NODE_OPTIONS=--conditions=development npm run dev --workspace @inplace/server",
     "build:web": "npm run build --workspace @inplace/web",
@@ -21,6 +22,12 @@
     "db:down": "docker compose -f infra/postgres/docker-compose.yml down",
     "db:logs": "docker compose -f infra/postgres/docker-compose.yml logs -f postgres",
     "db:generate": "npm run db:generate --workspace @inplace/db",
-    "db:migrate": "npm run db:migrate --workspace @inplace/db"
+    "db:migrate": "npm run db:migrate --workspace @inplace/db",
+    "compose:pull": "docker compose pull",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down",
+    "compose:logs": "docker compose logs -f",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   }
 }

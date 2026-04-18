@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "归位",
+    "description": "家庭物品管理系统",
+    "slug": "inplace-mobile",
+    "scheme": "inplace",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.inplace.mobile"
+    },
+    "android": {
+      "package": "com.inplace.mobile"
+    }
+  }
+}

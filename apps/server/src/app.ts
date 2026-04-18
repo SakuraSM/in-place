@@ -3,13 +3,14 @@ import { mkdir } from 'node:fs/promises';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import { authPlugin } from './plugins/auth.js';
+import { aiRoutes } from './modules/ai/ai.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { categoryRoutes } from './modules/categories/category.routes.js';
 import { healthRoutes } from './routes/health.js';
 import { itemRoutes } from './modules/items/item.routes.js';
 import { tagRoutes } from './modules/tags/tag.routes.js';
 import { uploadRoutes } from './routes/uploads.js';
-import { parseCorsOrigins, type AppEnv } from './env.js';
+import { getAllowedCorsOrigins, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
 
 export async function createApp(env: AppEnv) {
@@ -20,7 +21,7 @@ export async function createApp(env: AppEnv) {
     trustProxy: true,
   });
 
-  const allowedOrigins = new Set(parseCorsOrigins(env.CORS_ORIGIN));
+  const allowedOrigins = new Set(getAllowedCorsOrigins(env));
 
   await app.register(cors, {
     origin(origin, callback) {
@@ -45,6 +46,7 @@ export async function createApp(env: AppEnv) {
     status: 'ok',
   }));
 
+  await app.register(aiRoutes, { prefix: '/api/v1/ai', env });
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(categoryRoutes, { prefix: '/api/v1/categories' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });

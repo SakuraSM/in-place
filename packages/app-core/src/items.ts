@@ -70,6 +70,142 @@ function normalizePaginationMeta(meta: Partial<PaginationMeta> | undefined, fall
   };
 }
 
+const COMPRESSIBLE_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+
+const CLIENT_UPLOAD_TARGET_BYTES = 8 * 1024 * 1024;
+const CLIENT_UPLOAD_COMPRESS_THRESHOLD_BYTES = 4 * 1024 * 1024;
+const CLIENT_UPLOAD_MAX_EDGE = 2560;
+const CLIENT_UPLOAD_QUALITY_STEPS = [0.82, 0.76, 0.7];
+
+function canCompressInBrowser() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
+}
+
+function replaceFileExtension(filename: string, extension: string) {
+  const baseName = filename.replace(/\.[^.]+$/, '');
+  return `${baseName || 'image'}${extension}`;
+}
+
+async function loadImageElement(file: File) {
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error('图片解析失败'));
+      element.src = objectUrl;
+    });
+
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      draw(canvas: HTMLCanvasElement) {
+        const context = canvas.getContext('2d');
+        if (!context) {
+          throw new Error('图片压缩失败');
+        }
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      },
+    };
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function loadImageSource(file: File) {
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(file);
+    return {
+      width: bitmap.width,
+      height: bitmap.height,
+      draw(canvas: HTMLCanvasElement) {
+        const context = canvas.getContext('2d');
+        if (!context) {
+          throw new Error('图片压缩失败');
+        }
+
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      },
+      dispose() {
+        bitmap.close();
+      },
+    };
+  }
+
+  const image = await loadImageElement(file);
+  return {
+    ...image,
+    dispose() {
+      // no-op fallback for HTMLImageElement
+    },
+  };
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('图片压缩失败'));
+        return;
+      }
+
+      resolve(blob);
+    }, type, quality);
+  });
+}
+
+async function prepareUploadImage(file: File) {
+  if (!canCompressInBrowser() || !COMPRESSIBLE_IMAGE_TYPES.has(file.type)) {
+    return file;
+  }
+
+  if (file.size <= CLIENT_UPLOAD_COMPRESS_THRESHOLD_BYTES) {
+    return file;
+  }
+
+  const source = await loadImageSource(file);
+
+  try {
+    const scale = Math.min(1, CLIENT_UPLOAD_MAX_EDGE / Math.max(source.width, source.height));
+    const width = Math.max(1, Math.round(source.width * scale));
+    const height = Math.max(1, Math.round(source.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    source.draw(canvas);
+
+    let bestBlob = await canvasToBlob(canvas, 'image/webp', CLIENT_UPLOAD_QUALITY_STEPS[0]);
+    for (const quality of CLIENT_UPLOAD_QUALITY_STEPS.slice(1)) {
+      if (bestBlob.size <= CLIENT_UPLOAD_TARGET_BYTES) {
+        break;
+      }
+
+      bestBlob = await canvasToBlob(canvas, 'image/webp', quality);
+    }
+
+    if (bestBlob.size >= file.size) {
+      return file;
+    }
+
+    return new File(
+      [bestBlob],
+      replaceFileExtension(file.name, '.webp'),
+      { type: 'image/webp', lastModified: file.lastModified },
+    );
+  } catch {
+    return file;
+  } finally {
+    source.dispose();
+  }
+}
+
 export function createItemsApi(request: AppCoreRequest) {
   async function fetchChildrenPage(parentId: string | null, userId: string, options: {
     page?: number;
@@ -216,8 +352,9 @@ export function createItemsApi(request: AppCoreRequest) {
 
   async function uploadImage(file: File, userId: string): Promise<string> {
     void userId;
+    const uploadFile = await prepareUploadImage(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
 
     const response = await request<{ url: string }>('/v1/uploads/images', {
       method: 'POST',

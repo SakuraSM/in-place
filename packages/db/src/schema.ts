@@ -1,4 +1,4 @@
-import { type AnyPgColumn, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const itemTypeEnum = pgEnum('item_type', ['container', 'item']);
 export const itemStatusEnum = pgEnum('item_status', ['in_stock', 'borrowed', 'worn_out']);
@@ -63,11 +63,25 @@ export const tagRegistry = pgTable('tags', {
   userNameIdx: index('tags_user_name_idx').on(table.userId, table.name),
 }));
 
+export const userAiSettings = pgTable('user_ai_settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  apiKeyEncrypted: text('api_key_encrypted'),
+  baseUrl: varchar('base_url', { length: 255 }),
+  model: varchar('model', { length: 120 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userIdx: uniqueIndex('user_ai_settings_user_id_idx').on(table.userId),
+}));
+
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type TagRecord = typeof tagRegistry.$inferSelect;
+export type UserAiSetting = typeof userAiSettings.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type NewCategory = typeof categories.$inferInsert;
 export type NewItem = typeof items.$inferInsert;
 export type NewTagRecord = typeof tagRegistry.$inferInsert;
+export type NewUserAiSetting = typeof userAiSettings.$inferInsert;

@@ -8,7 +8,9 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import HomePage from '../features/inventory/pages/HomePage';
 import ItemDetailPage from '../features/inventory/pages/ItemDetailPage';
 import SearchPage from '../features/inventory/pages/SearchPage';
+import ScanPage from '../features/inventory/pages/ScanPage';
 import ProfilePage from '../features/profile/pages/ProfilePage';
+import AiSettingsPage from '../features/profile/pages/AiSettingsPage';
 import SecurityPage from '../features/profile/pages/SecurityPage';
 import CategoriesPage from '../features/inventory/pages/CategoriesPage';
 import TagsPage from '../features/tags/pages/TagsPage';
@@ -75,11 +77,31 @@ export default function App() {
             />
             <Route path="/search" element={<Navigate to="/overview" replace />} />
             <Route
+              path="/scan"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ScanPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
                   <AppLayout>
                     <ProfilePage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/ai"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AiSettingsPage />
                   </AppLayout>
                 </ProtectedRoute>
               }

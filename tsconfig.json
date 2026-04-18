@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "./apps/mobile/tsconfig.json" },
     { "path": "./packages/app-core/tsconfig.json" },
     { "path": "./packages/domain/tsconfig.json" },
     { "path": "./packages/api-client/tsconfig.json" },

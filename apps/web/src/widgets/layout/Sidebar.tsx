@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, User, StickyNote } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, StickyNote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/overview', icon: Search, label: '总览' },
   { to: '/categories', icon: Shapes, label: '分类管理' },
   { to: '/tags', icon: StickyNote, label: '标签管理' },
+  { to: '/scan', icon: Camera, label: 'AI 扫描' },
   { to: '/profile', icon: User, label: '我的' },
 ];
 

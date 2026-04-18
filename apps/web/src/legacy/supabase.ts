@@ -10,7 +10,7 @@ const missingSupabaseClient = new Proxy(
   {
     get() {
       throw new Error(
-        'Supabase is not configured. Provide the legacy Supabase environment variables if you still need the compatibility flow.',
+        'Supabase is not configured in this deployment. Run the frontend in API platform mode or provide legacy Supabase environment variables.',
       );
     },
   },

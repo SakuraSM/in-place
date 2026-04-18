@@ -4,6 +4,7 @@
 .env.*.local
 apps/*/.env
 apps/*/.env.local
+.env.compose
 
 # Node modules
 node_modules/
@@ -34,12 +35,21 @@ packages/*/dist
 # IDE
 .vscode/*
 !.vscode/extensions.json
+.claude/
 .idea
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# AI workspace files
+/AGENTS.md
+/IDENTITY.md
+/MEMORY.md
+/SOUL.md
+/USER.md
+
 # Uploaded files
 /apps/server/storage/
 /storage/postgres/

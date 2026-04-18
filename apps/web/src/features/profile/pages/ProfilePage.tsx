@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Upload } from 'lucide-react';
+import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -218,6 +218,7 @@ export default function ProfilePage() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">个人资料</span>
                   <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-600">数据备份</span>
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600">AI 配置</span>
                 </div>
               </div>
             </motion.div>
@@ -264,6 +265,13 @@ export default function ProfilePage() {
                   title="分类管理"
                   description="统一容器和物品分类结构，让首页和总览都更清晰。"
                   tone="bg-sky-50 text-sky-500"
+                />
+                <QuickLinkCard
+                  to="/profile/ai"
+                  icon={<Sparkles size={20} />}
+                  title="AI 配置"
+                  description="管理识别模型、服务地址和账号专属密钥。"
+                  tone="bg-amber-50 text-amber-500"
                 />
                 <QuickLinkCard
                   to="/profile/security"

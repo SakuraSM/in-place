@@ -26,12 +26,24 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       return;
     }
 
-    const file = await request.file();
-    if (!file) {
-      return reply.code(400).send({
-        error: 'FILE_REQUIRED',
-        message: '请上传图片文件',
-      });
+    let file;
+    try {
+      file = await request.file();
+      if (!file) {
+        return reply.code(400).send({
+          error: 'FILE_REQUIRED',
+          message: '请上传图片文件',
+        });
+      }
+    } catch (error) {
+      if (error instanceof app.multipartErrors.RequestFileTooLargeError) {
+        return reply.code(413).send({
+          error: 'FILE_TOO_LARGE',
+          message: `图片不能超过 ${options.env.MAX_UPLOAD_SIZE_MB}MB，请压缩后重试`,
+        });
+      }
+
+      throw error;
     }
 
     try {

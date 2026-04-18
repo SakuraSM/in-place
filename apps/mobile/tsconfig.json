@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022"],
+    "types": ["react", "react-native"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@inplace/domain": ["../../packages/domain/src/index.ts"],
+      "@inplace/api-client": ["../../packages/api-client/src/index.ts"],
+      "@inplace/app-core": ["../../packages/app-core/src/index.ts"]
+    },
+    "noEmit": true
+  },
+  "include": ["app/**/*.ts", "app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+}
