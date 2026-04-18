@@ -143,7 +143,7 @@ IMAGE_REGISTRY=ghcr.io
 IMAGE_TAG=latest
 ```
 
-Images are published under `ghcr.io/SakuraSM/inplace-*`.
+Images are published under `ghcr.io/sakurasm/inplace-*`.
 
 Then start the stack:
 

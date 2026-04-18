@@ -18,7 +18,7 @@ services:
       retries: 20
 
   migrate:
-    image: ${IMAGE_REGISTRY:-ghcr.io}/SakuraSM/inplace-migrate:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-migrate:${IMAGE_TAG:-latest}
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-inplace}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:-inplace}
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-32-character-secret}
@@ -31,7 +31,7 @@ services:
 
   server:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/SakuraSM/inplace-server:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-server:${IMAGE_TAG:-latest}
     environment:
       NODE_ENV: production
       PORT: 4000
@@ -62,7 +62,7 @@ services:
 
   web:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/SakuraSM/inplace-web:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-web:${IMAGE_TAG:-latest}
     depends_on:
       server:
         condition: service_healthy

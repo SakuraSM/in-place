@@ -140,7 +140,7 @@ IMAGE_REGISTRY=ghcr.io
 IMAGE_TAG=latest
 ```
 
-镜像会发布到 `ghcr.io/SakuraSM/inplace-*`。
+镜像会发布到 `ghcr.io/sakurasm/inplace-*`。
 
 然后启动整套服务：
 
