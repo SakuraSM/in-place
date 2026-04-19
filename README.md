@@ -115,7 +115,6 @@ The repository now includes a full multi-service Docker Compose deployment at
 ### Services
 
 - `postgres`: PostgreSQL 16
-- `migrate`: one-shot database migration runner
 - `server`: Fastify server container
 - `web`: Nginx container serving the frontend and proxying `/api` to the API container
 
@@ -136,20 +135,17 @@ VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
 
-Set the image source as well:
-
-```env
-IMAGE_REGISTRY=ghcr.io
-IMAGE_TAG=latest
-```
-
 Images are published under `ghcr.io/sakurasm/inplace-*`.
 
 Then start the stack:
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
+
+In the single-host Docker Compose deployment, the `server` container applies
+checked-in database migrations automatically before the API starts. The same
+command therefore works for first boot and later updates.
 
 If you want PostgreSQL data on an external filesystem, set `POSTGRES_DATA_DIR`
 to an absolute host path before starting the stack, for example:
@@ -204,7 +200,7 @@ docker compose --env-file .env.compose down
 Restart after a new image is published or configuration changes:
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
 
 ### Deployment behavior
@@ -317,7 +313,7 @@ The business-layer migration is still in progress:
 - `apps/web` is already in the correct workspace
 - parts of the current frontend still use legacy direct data-access modules
 - those modules should be replaced incrementally with API-backed clients
-- Docker Compose deployment now covers the full platform path: web, server, migrations, and PostgreSQL
+- Docker Compose deployment now covers the full platform path: web, server, and PostgreSQL, with schema migrations applied automatically during server startup
 - the Compose frontend defaults to platform mode until the legacy feature path is fully retired
 
 Legacy Supabase SQL artifacts are preserved for reference under

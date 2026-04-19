@@ -17,21 +17,9 @@ services:
       timeout: 5s
       retries: 20
 
-  migrate:
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-migrate:${IMAGE_TAG:-latest}
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-inplace}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:-inplace}
-      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-32-character-secret}
-      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-replace-with-a-random-32-character-secret}
-    command: ["node", "packages/db/dist/scripts/migrate.js"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-
   server:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-server:${IMAGE_TAG:-latest}
+    image: ghcr.io/sakurasm/inplace-server:latest
     environment:
       NODE_ENV: production
       PORT: 4000
@@ -48,8 +36,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     ports:
       - "${API_PORT:-4000}:4000"
     volumes:
@@ -62,7 +48,7 @@ services:
 
   web:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-web:${IMAGE_TAG:-latest}
+    image: ghcr.io/sakurasm/inplace-web:latest
     depends_on:
       server:
         condition: service_healthy

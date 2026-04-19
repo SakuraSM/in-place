@@ -112,7 +112,6 @@ npm run dev:web
 ### 服务组成
 
 - `postgres`：PostgreSQL 16
-- `migrate`：一次性数据库迁移执行服务
 - `server`：Fastify 服务端容器
 - `web`：Nginx 前端容器，同时把 `/api` 反向代理到 API 服务
 
@@ -133,20 +132,16 @@ VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
 
-同时配置镜像来源：
-
-```env
-IMAGE_REGISTRY=ghcr.io
-IMAGE_TAG=latest
-```
-
 镜像会发布到 `ghcr.io/sakurasm/inplace-*`。
 
 然后启动整套服务：
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
+
+在单机 Docker Compose 部署中，`server` 容器会在启动 API 之前自动执行
+仓库中已纳入版本控制的数据库迁移，因此首次启动和后续更新都可以复用同一条命令。
 
 如果希望把 PostgreSQL 数据放到外部文件系统，请在启动前额外设置
 `POSTGRES_DATA_DIR` 为宿主机绝对路径，例如：
@@ -200,7 +195,7 @@ docker compose --env-file .env.compose down
 镜像更新或配置变更后重新启动：
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
 
 ### 当前部署行为说明
@@ -311,7 +306,7 @@ npm run db:migrate
 - `apps/web` 已进入正确的工作区结构
 - 前端部分模块仍保留旧的直连数据访问逻辑
 - 这些模块后续需要逐步替换为 API 调用
-- Docker Compose 已经覆盖完整平台链路：前端、服务端、迁移和 PostgreSQL
+- Docker Compose 已覆盖完整平台链路：前端、服务端和 PostgreSQL，数据库结构迁移会在服务启动时自动执行
 - Compose 下的前端默认运行在平台模式，直到 legacy 业务链路完全退场
 
 旧的 Supabase SQL 迁移文件目前保留在

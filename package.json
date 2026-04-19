@@ -24,7 +24,7 @@
     "db:generate": "npm run db:generate --workspace @inplace/db",
     "db:migrate": "npm run db:migrate --workspace @inplace/db",
     "compose:pull": "docker compose pull",
-    "compose:up": "docker compose up -d",
+    "compose:up": "docker compose up -d server web",
     "compose:down": "docker compose down",
     "compose:logs": "docker compose logs -f",
     "android": "expo run:android",
