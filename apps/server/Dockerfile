@@ -1,4 +1,4 @@
-FROM node:20-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json .npmrc ./
@@ -10,7 +10,7 @@ RUN npm ci --ignore-scripts \
   && npm rebuild esbuild \
   && mkdir -p apps/web/node_modules apps/server/node_modules packages/db/node_modules
 
-FROM node:20-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -23,7 +23,7 @@ COPY packages/db ./packages/db
 RUN npm run build --workspace @inplace/db \
   && npm run build --workspace @inplace/server
 
-FROM node:20-alpine AS runner
+FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
