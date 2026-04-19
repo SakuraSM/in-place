@@ -1,0 +1,30 @@
+name: inplace-single
+
+services:
+  app:
+    image: ghcr.io/sakurasm/inplace-all-in-one:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-32-character-secret}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-replace-with-a-random-32-character-secret}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080,http://127.0.0.1:8080}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-10}
+      BACKUP_PAYLOAD_SIZE_MB: ${BACKUP_PAYLOAD_SIZE_MB:-100}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - inplace_single_pg_data:/var/lib/postgresql/data
+      - inplace_single_uploads_data:/app/storage/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  inplace_single_pg_data:
+  inplace_single_uploads_data:

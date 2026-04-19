@@ -60,6 +60,9 @@ jobs:
           - service: web
             dockerfile: apps/web/Dockerfile
             image_suffix: web
+          - service: all-in-one
+            dockerfile: docker/all-in-one.Dockerfile
+            image_suffix: all-in-one
 
     steps:
       - name: Checkout repository
