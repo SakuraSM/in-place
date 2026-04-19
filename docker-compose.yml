@@ -5,41 +5,27 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-inplace}
-      POSTGRES_USER: ${POSTGRES_USER:-inplace}
+      POSTGRES_DB: inplace
+      POSTGRES_USER: inplace
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
-      - ${POSTGRES_DATA_DIR:-./storage/postgres}:/var/lib/postgresql/data
-      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ${POSTGRES_DATA_DIR:-./pg_data}:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inplace} -d ${POSTGRES_DB:-inplace}"]
+      test: ["CMD-SHELL", "pg_isready -U inplace -d inplace"]
       interval: 5s
       timeout: 5s
       retries: 20
 
-  migrate:
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-migrate:${IMAGE_TAG:-latest}
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-inplace}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:-inplace}
-      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-32-character-secret}
-      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-replace-with-a-random-32-character-secret}
-    command: ["node", "packages/db/dist/scripts/migrate.js"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-
   server:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-server:${IMAGE_TAG:-latest}
+    image: ghcr.io/sakurasm/inplace-server:latest
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgres://${POSTGRES_USER:-inplace}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:-inplace}
+      DATABASE_URL: postgres://inplace:${POSTGRES_PASSWORD:?required}@postgres:5432/inplace
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080,http://127.0.0.1:8080}
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-32-character-secret}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-replace-with-a-random-32-character-secret}
-      UPLOAD_DIR: ${UPLOAD_DIR:-./storage/uploads}
       MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-10}
       BACKUP_PAYLOAD_SIZE_MB: ${BACKUP_PAYLOAD_SIZE_MB:-100}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -48,10 +34,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
-    ports:
-      - "${API_PORT:-4000}:4000"
     volumes:
       - inplace_uploads_data:/app/storage/uploads
     healthcheck:
@@ -62,7 +44,7 @@ services:
 
   web:
     restart: unless-stopped
-    image: ${IMAGE_REGISTRY:-ghcr.io}/sakurasm/inplace-web:${IMAGE_TAG:-latest}
+    image: ghcr.io/sakurasm/inplace-web:latest
     depends_on:
       server:
         condition: service_healthy

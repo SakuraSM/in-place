@@ -5,6 +5,8 @@ import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import type { AppEnv } from '../env.js';
 
+const DEFAULT_UPLOAD_DIR = './storage/uploads';
+
 export interface UploadedImageFile {
   file: NodeJS.ReadableStream;
   filename?: string;
@@ -35,7 +37,7 @@ function resolveExtension(file: UploadedImageFile) {
 }
 
 export function resolveUploadRoot(env: AppEnv) {
-  return path.resolve(process.cwd(), env.UPLOAD_DIR);
+  return path.resolve(process.cwd(), DEFAULT_UPLOAD_DIR);
 }
 
 export function resolveImageMimeType(filename: string) {

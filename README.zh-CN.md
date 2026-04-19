@@ -112,7 +112,6 @@ npm run dev:web
 ### 服务组成
 
 - `postgres`：PostgreSQL 16
-- `migrate`：一次性数据库迁移执行服务
 - `server`：Fastify 服务端容器
 - `web`：Nginx 前端容器，同时把 `/api` 反向代理到 API 服务
 
@@ -133,20 +132,16 @@ VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
 
-同时配置镜像来源：
-
-```env
-IMAGE_REGISTRY=ghcr.io
-IMAGE_TAG=latest
-```
-
 镜像会发布到 `ghcr.io/sakurasm/inplace-*`。
 
 然后启动整套服务：
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
+
+在单机 Docker Compose 部署中，`server` 容器会在启动 API 之前自动执行
+仓库中已纳入版本控制的数据库迁移，因此首次启动和后续更新都可以复用同一条命令。
 
 如果希望把 PostgreSQL 数据放到外部文件系统，请在启动前额外设置
 `POSTGRES_DATA_DIR` 为宿主机绝对路径，例如：
@@ -183,10 +178,10 @@ docker compose --env-file .env.compose ps
 docker compose --env-file .env.compose logs -f
 ```
 
-检查 API 健康状态：
+通过 Web 入口检查 API 健康状态：
 
 ```text
-http://localhost:4000/api/v1/health
+http://localhost:8080/api/v1/health
 ```
 
 ### 停止或重建服务
@@ -200,7 +195,7 @@ docker compose --env-file .env.compose down
 镜像更新或配置变更后重新启动：
 
 ```bash
-docker compose --env-file .env.compose up -d
+docker compose --env-file .env.compose up -d server web
 ```
 
 ### 当前部署行为说明
@@ -210,7 +205,7 @@ docker compose --env-file .env.compose up -d
 
 - 如果没有提供 legacy Supabase 环境变量，前端会进入平台模式
 - 平台模式会展示部署状态页
-- 状态页通过 `/api/v1/health` 校验 API 与 PostgreSQL 是否联通
+- Web 容器会通过 Compose 内部网络访问 API，并通过 `/api/v1/health` 校验 API 与 PostgreSQL 是否联通
 
 这意味着即使库存功能还没有全部切换到新 API，整套前端 + API + 数据库部署链路仍然是可启动、可访问、可观测的。
 
@@ -227,7 +222,6 @@ docker compose --env-file .env.compose up -d
 - `CORS_ORIGIN`：本地开发允许的前端来源
 - `POSTGRES_DATA_DIR`：Docker Compose 下 PostgreSQL 数据文件映射到宿主机的目录
 - `JWT_SECRET`：JWT 签名密钥，至少 32 个字符
-- `UPLOAD_DIR`：服务端用于持久化上传图片的本地目录
 - `MAX_UPLOAD_SIZE_MB`：单张图片允许的最大上传大小
 - `OPENAI_API_KEY`：服务端 AI 识别使用的 API Key
 - `OPENAI_BASE_URL`：AI 服务基础地址，默认 `https://api.openai.com/v1`
@@ -249,7 +243,7 @@ docker compose --env-file .env.compose up -d
 ### 图片上传
 
 - 图片上传接口为 `POST /api/v1/uploads/images`
-- 服务端将文件保存到本地文件系统，并通过 `/api/uploads/*` 对外提供访问
+- 服务端将文件保存到 `./storage/uploads`，并通过 `/api/uploads/*` 对外提供访问
 - 在 Docker Compose 部署中，上传文件会持久化在 `inplace_uploads_data` 卷中
 
 ## 常用脚本
@@ -311,7 +305,7 @@ npm run db:migrate
 - `apps/web` 已进入正确的工作区结构
 - 前端部分模块仍保留旧的直连数据访问逻辑
 - 这些模块后续需要逐步替换为 API 调用
-- Docker Compose 已经覆盖完整平台链路：前端、服务端、迁移和 PostgreSQL
+- Docker Compose 已覆盖完整平台链路：前端、服务端和 PostgreSQL，数据库结构迁移会在服务启动时自动执行
 - Compose 下的前端默认运行在平台模式，直到 legacy 业务链路完全退场
 
 旧的 Supabase SQL 迁移文件目前保留在

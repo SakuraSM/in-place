@@ -54,9 +54,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - service: migrate
-            dockerfile: apps/server/Dockerfile
-            image_suffix: migrate
           - service: server
             dockerfile: apps/server/Dockerfile
             image_suffix: server
