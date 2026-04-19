@@ -1,4 +1,4 @@
-FROM node:20-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json .npmrc ./
@@ -14,7 +14,7 @@ RUN npm ci --ignore-scripts \
   && npm rebuild esbuild \
   && mkdir -p apps/web/node_modules apps/server/node_modules apps/mobile/node_modules packages/app-core/node_modules packages/domain/node_modules packages/api-client/node_modules packages/db/node_modules
 
-FROM node:20-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /app
 
 ARG VITE_API_BASE_URL=/api
@@ -46,9 +46,9 @@ RUN npm run build --workspace @inplace/db \
   && npm run build --workspace @inplace/server \
   && npm run build --workspace @inplace/web
 
-FROM node:20-alpine AS node-runtime
+FROM --platform=$TARGETPLATFORM node:20-alpine AS node-runtime
 
-FROM postgres:16-alpine AS runner
+FROM --platform=$TARGETPLATFORM postgres:16-alpine AS runner
 
 RUN apk add --no-cache nginx tini ca-certificates wget \
   && rm -f /etc/nginx/http.d/default.conf
