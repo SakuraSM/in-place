@@ -178,10 +178,10 @@ docker compose --env-file .env.compose ps
 docker compose --env-file .env.compose logs -f
 ```
 
-检查 API 健康状态：
+通过 Web 入口检查 API 健康状态：
 
 ```text
-http://localhost:4000/api/v1/health
+http://localhost:8080/api/v1/health
 ```
 
 ### 停止或重建服务
@@ -205,7 +205,7 @@ docker compose --env-file .env.compose up -d server web
 
 - 如果没有提供 legacy Supabase 环境变量，前端会进入平台模式
 - 平台模式会展示部署状态页
-- 状态页通过 `/api/v1/health` 校验 API 与 PostgreSQL 是否联通
+- Web 容器会通过 Compose 内部网络访问 API，并通过 `/api/v1/health` 校验 API 与 PostgreSQL 是否联通
 
 这意味着即使库存功能还没有全部切换到新 API，整套前端 + API + 数据库部署链路仍然是可启动、可访问、可观测的。
 
@@ -222,7 +222,6 @@ docker compose --env-file .env.compose up -d server web
 - `CORS_ORIGIN`：本地开发允许的前端来源
 - `POSTGRES_DATA_DIR`：Docker Compose 下 PostgreSQL 数据文件映射到宿主机的目录
 - `JWT_SECRET`：JWT 签名密钥，至少 32 个字符
-- `UPLOAD_DIR`：服务端用于持久化上传图片的本地目录
 - `MAX_UPLOAD_SIZE_MB`：单张图片允许的最大上传大小
 - `OPENAI_API_KEY`：服务端 AI 识别使用的 API Key
 - `OPENAI_BASE_URL`：AI 服务基础地址，默认 `https://api.openai.com/v1`
@@ -244,7 +243,7 @@ docker compose --env-file .env.compose up -d server web
 ### 图片上传
 
 - 图片上传接口为 `POST /api/v1/uploads/images`
-- 服务端将文件保存到本地文件系统，并通过 `/api/uploads/*` 对外提供访问
+- 服务端将文件保存到 `./storage/uploads`，并通过 `/api/uploads/*` 对外提供访问
 - 在 Docker Compose 部署中，上传文件会持久化在 `inplace_uploads_data` 卷中
 
 ## 常用脚本

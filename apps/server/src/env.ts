@@ -18,7 +18,6 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default(DEFAULT_CORS_ORIGINS),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   APP_ENCRYPTION_KEY: z.string().min(32, 'APP_ENCRYPTION_KEY must be at least 32 characters').optional(),
-  UPLOAD_DIR: z.string().default('./storage/uploads'),
   MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().default(10),
   BACKUP_PAYLOAD_SIZE_MB: z.coerce.number().int().positive().default(100),
   OPENAI_API_KEY: z.string().trim().optional(),

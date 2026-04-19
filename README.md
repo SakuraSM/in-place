@@ -183,10 +183,10 @@ Follow service logs:
 docker compose --env-file .env.compose logs -f
 ```
 
-Verify the API health endpoint:
+Verify the API health endpoint through the web entrypoint:
 
 ```text
-http://localhost:4000/api/v1/health
+http://localhost:8080/api/v1/health
 ```
 
 ### Stop or rebuild the stack
@@ -210,7 +210,7 @@ even while the legacy frontend flow is still being migrated.
 
 - If legacy Supabase variables are not provided, the frontend runs in platform mode
 - Platform mode serves a deployment status page from the web container
-- The status page verifies API reachability and PostgreSQL connectivity through `/api/v1/health`
+- The web container reaches the API over the internal Compose network and verifies API reachability and PostgreSQL connectivity through `/api/v1/health`
 
 This means the deployed stack is operational and observable even before all inventory features
 are fully migrated from the legacy data-access path to the new API + PostgreSQL architecture.
@@ -228,7 +228,6 @@ Key variables:
 - `CORS_ORIGIN`: allowed web origin during local development
 - `POSTGRES_DATA_DIR`: host directory used by Docker Compose to persist PostgreSQL data files
 - `JWT_SECRET`: signing key for JWT tokens, must be at least 32 characters
-- `UPLOAD_DIR`: local directory used by the server to persist uploaded images
 - `MAX_UPLOAD_SIZE_MB`: maximum allowed upload size per image
 - `OPENAI_API_KEY`: API key used by the server-side AI recognition route
 - `OPENAI_BASE_URL`: AI provider base URL, defaults to `https://api.openai.com/v1`
@@ -251,7 +250,7 @@ some UI code has not yet been fully migrated away from the previous Supabase-bas
 ### Image Uploads
 
 - Images are uploaded to `POST /api/v1/uploads/images`
-- The server stores them on the local filesystem and serves them from `/api/uploads/*`
+- The server stores them under `./storage/uploads` and serves them from `/api/uploads/*`
 - In Docker Compose, uploaded files are persisted in the `inplace_uploads_data` volume
 
 ## Available Scripts
