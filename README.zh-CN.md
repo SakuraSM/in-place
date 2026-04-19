@@ -115,6 +115,40 @@ npm run dev:web
 - `server`：Fastify 服务端容器
 - `web`：Nginx 前端容器，同时把 `/api` 反向代理到 API 服务
 
+### 单镜像部署
+
+如果希望进一步简化自部署方式，仓库也提供了一套一体化部署文件：
+[docker-compose.single.yml](docker-compose.single.yml)。
+
+这个版本会把三个运行时组件打进同一个镜像：
+
+- PostgreSQL
+- Fastify API
+- Nginx + 前端静态资源
+
+它更适合单机、低运维成本的部署场景。如果你希望服务边界更清晰、
+支持独立扩缩容，或分别管理生命周期，仍建议使用上面的拆分部署版本。
+
+先准备环境变量：
+
+```bash
+cp .env.single.example .env.single
+```
+
+然后启动一体化容器：
+
+```bash
+docker compose --env-file .env.single -f docker-compose.single.yml up -d
+```
+
+浏览器访问：
+
+```text
+http://localhost:8080
+```
+
+这个 bundled 镜像会发布到 `ghcr.io/sakurasm/inplace-all-in-one:latest`。
+
 ### 准备部署环境
 
 ```bash
@@ -265,6 +299,10 @@ npm run compose:pull
 npm run compose:up
 npm run compose:down
 npm run compose:logs
+npm run single:pull
+npm run single:up
+npm run single:down
+npm run single:logs
 ```
 
 ## 数据库开发

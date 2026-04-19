@@ -118,6 +118,41 @@ The repository now includes a full multi-service Docker Compose deployment at
 - `server`: Fastify server container
 - `web`: Nginx container serving the frontend and proxying `/api` to the API container
 
+### Single-Image Deployment
+
+For simpler self-hosting, the repository also includes a bundled deployment at
+[docker-compose.single.yml](docker-compose.single.yml).
+
+This variant packages three runtime components into one image:
+
+- PostgreSQL
+- Fastify API
+- Nginx + frontend assets
+
+It is intended as a convenience deployment option for a single host. The split
+deployment remains the better fit when you want clearer service boundaries,
+independent scaling, or separate lifecycle management.
+
+Prepare the environment:
+
+```bash
+cp .env.single.example .env.single
+```
+
+Then start the bundled container:
+
+```bash
+docker compose --env-file .env.single -f docker-compose.single.yml up -d
+```
+
+Open the application:
+
+```text
+http://localhost:8080
+```
+
+The bundled image is published as `ghcr.io/sakurasm/inplace-all-in-one:latest`.
+
 ### Prepare deployment environment
 
 ```bash
@@ -272,6 +307,10 @@ npm run compose:pull
 npm run compose:up
 npm run compose:down
 npm run compose:logs
+npm run single:pull
+npm run single:up
+npm run single:down
+npm run single:logs
 ```
 
 ## Database Development

@@ -27,6 +27,10 @@
     "compose:up": "docker compose up -d server web",
     "compose:down": "docker compose down",
     "compose:logs": "docker compose logs -f",
+    "single:pull": "docker compose --env-file .env.single -f docker-compose.single.yml pull",
+    "single:up": "docker compose --env-file .env.single -f docker-compose.single.yml up -d",
+    "single:down": "docker compose --env-file .env.single -f docker-compose.single.yml down",
+    "single:logs": "docker compose --env-file .env.single -f docker-compose.single.yml logs -f",
     "android": "expo run:android",
     "ios": "expo run:ios"
   }
