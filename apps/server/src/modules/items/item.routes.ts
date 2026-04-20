@@ -469,7 +469,7 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
     if (parentValidation === 'not_container') {
       return reply.code(400).send({
         error: 'INVALID_PARENT',
-        message: '只能放到位置下',
+        message: '只能放到容器类型的位置下',
       });
     }
 
@@ -527,7 +527,7 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       if (parentValidation === 'not_container') {
         return reply.code(400).send({
           error: 'INVALID_PARENT',
-          message: '只能放到位置下',
+          message: '只能放到容器类型的位置下',
         });
       }
 
