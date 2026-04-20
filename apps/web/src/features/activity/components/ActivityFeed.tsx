@@ -43,22 +43,22 @@ const CHANGED_FIELD_LABELS: Record<string, string> = {
 
 function formatTimeLabel(value: string) {
   const target = new Date(value).getTime();
-  const diffMs = target - Date.now();
+  const diffMs = Date.now() - target;
   const diffMinutes = Math.round(diffMs / (1000 * 60));
   const formatter = new Intl.RelativeTimeFormat('zh-CN', { numeric: 'auto' });
 
   if (Math.abs(diffMinutes) < 60) {
-    return formatter.format(diffMinutes, 'minute');
+    return formatter.format(-diffMinutes, 'minute');
   }
 
   const diffHours = Math.round(diffMinutes / 60);
   if (Math.abs(diffHours) < 24) {
-    return formatter.format(diffHours, 'hour');
+    return formatter.format(-diffHours, 'hour');
   }
 
   const diffDays = Math.round(diffHours / 24);
   if (Math.abs(diffDays) < 7) {
-    return formatter.format(diffDays, 'day');
+    return formatter.format(-diffDays, 'day');
   }
 
   return new Date(value).toLocaleString('zh-CN', {

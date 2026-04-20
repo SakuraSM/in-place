@@ -237,7 +237,7 @@ function listChangedFields(existingItem: Awaited<ReturnType<typeof findItemByIdF
     return Object.keys(input);
   }
 
-  const fieldMap: Array<[keyof UpdateItemInput, unknown]> = [
+  const fieldMap = [
     ['parentId', existingItem.parentId],
     ['type', existingItem.type],
     ['name', existingItem.name],
@@ -251,7 +251,7 @@ function listChangedFields(existingItem: Awaited<ReturnType<typeof findItemByIdF
     ['images', existingItem.images],
     ['tags', existingItem.tags],
     ['metadata', existingItem.metadata],
-  ];
+  ] as const satisfies ReadonlyArray<readonly [keyof UpdateItemInput, unknown]>;
 
   return fieldMap
     .filter(([field, previousValue]) => {
