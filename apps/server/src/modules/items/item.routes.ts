@@ -531,7 +531,7 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         });
       }
 
-      if (parsed.data.parentId && await wouldCreateParentCycleForUser(currentUser.id, params.data.id, parsed.data.parentId)) {
+      if (await wouldCreateParentCycleForUser(currentUser.id, params.data.id, parsed.data.parentId)) {
         return reply.code(400).send({
           error: 'INVALID_PARENT',
           message: '上级位置不能设置为当前节点或其下级位置',

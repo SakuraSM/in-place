@@ -112,7 +112,9 @@ export default function SearchPage() {
         item.description,
         item.category,
         ...item.tags,
-      ].some((field) => field.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
+      ]
+        .filter((field): field is string => Boolean(field))
+        .some((field) => field.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
     });
   }, [descendantIds, itemsWithPaths, normalizedQuery, statusFilter, typeFilter]);
 

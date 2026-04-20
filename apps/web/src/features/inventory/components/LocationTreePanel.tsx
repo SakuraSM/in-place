@@ -11,6 +11,9 @@ interface Props {
   emptyLabel?: string;
 }
 
+const INDENT_PER_LEVEL = 18;
+const BASE_PADDING_LEFT = 12;
+
 function TreeNodeButton({
   node,
   depth,
@@ -34,7 +37,7 @@ function TreeNodeButton({
             ? 'bg-sky-50 text-sky-700'
             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
         }`}
-        style={{ paddingLeft: `${depth * 18 + 12}px` }}
+        style={{ paddingLeft: `${depth * INDENT_PER_LEVEL + BASE_PADDING_LEFT}px` }}
       >
         <MapPin size={14} className={isSelected ? 'text-sky-500' : 'text-slate-300'} />
         <span className="min-w-0 flex-1 truncate font-medium">{node.item.name}</span>
