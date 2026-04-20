@@ -234,7 +234,9 @@ function isAiScanCreate(input: CreateItemInput) {
 
 function listChangedFields(existingItem: Awaited<ReturnType<typeof findItemByIdForUser>>, input: UpdateItemInput) {
   if (!existingItem) {
-    return Object.keys(input);
+    return Object.entries(input)
+      .filter(([, value]) => value !== undefined)
+      .map(([field]) => field);
   }
 
   const fieldMap = [

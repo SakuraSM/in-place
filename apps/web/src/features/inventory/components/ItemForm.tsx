@@ -123,9 +123,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
 
   const addTag = () => {
     const tag = tagInput.trim();
-    const matchedTag = availableTags.find((value) => value.toLocaleLowerCase('zh-CN') === tag.toLocaleLowerCase('zh-CN'));
+    const normalizedTag = tag.toLocaleLowerCase('zh-CN');
+    const matchedTag = availableTags.find((value) => value.toLocaleLowerCase('zh-CN') === normalizedTag);
     const resolvedTag = matchedTag ?? tag;
-    const hasDuplicateTag = form.tags.some((value) => value.toLocaleLowerCase('zh-CN') === resolvedTag.toLocaleLowerCase('zh-CN'));
+    const normalizedResolvedTag = resolvedTag.toLocaleLowerCase('zh-CN');
+    const hasDuplicateTag = form.tags.some((value) => value.toLocaleLowerCase('zh-CN') === normalizedResolvedTag);
     if (resolvedTag && !hasDuplicateTag) {
       update('tags', [...form.tags, resolvedTag]);
     }

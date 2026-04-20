@@ -11,6 +11,8 @@ type ServerTag = {
   updatedAt: string;
 };
 
+const TAG_FETCH_PAGE_SIZE = 100;
+
 function mapTag(tag: ServerTag): TagEntity {
   return {
     id: tag.id,
@@ -64,7 +66,7 @@ export function createTagsApi(request: AppCoreRequest) {
     let hasNextPage = true;
 
     while (hasNextPage) {
-      const response = await fetchTagsPage(userId, { page, pageSize: 100 });
+      const response = await fetchTagsPage(userId, { page, pageSize: TAG_FETCH_PAGE_SIZE });
       allTags.push(...response.data);
       hasNextPage = response.meta.hasNextPage;
       page += 1;
