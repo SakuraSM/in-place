@@ -14,19 +14,19 @@ interface Props {
 
 export default function LocationPicker({ value, excludeId, onChange, onClose }: Props) {
   const { user } = useAuth();
-  const currentUserIdOrNull = user?.id ?? null;
+  const currentUserId = user?.id ?? null;
   const [currentParent, setCurrentParent] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
   const [containers, setContainers] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!currentUserIdOrNull) return;
+    if (!currentUserId) return;
     setLoading(true);
-    fetchChildren(currentParent, currentUserIdOrNull)
+    fetchChildren(currentParent, currentUserId)
       .then((items) => setContainers(items.filter((i) => i.type === 'container' && i.id !== excludeId)))
       .finally(() => setLoading(false));
-  }, [currentParent, excludeId, currentUserIdOrNull]);
+  }, [currentParent, excludeId, currentUserId]);
 
   const handleSelect = (id: string | null) => {
     onChange(id);
