@@ -1,0 +1,44 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/prompts/ui-ux-pro-max/**
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/prompts/ui-ux-pro-max/**
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Install UI UX Pro Max CLI
+        run: npm install -g uipro-cli@2.2.3
+
+      - name: Verify UI UX Pro Max prompt assets
+        run: |
+          test -f .github/prompts/ui-ux-pro-max/PROMPT.md
+          python3 .github/prompts/ui-ux-pro-max/scripts/search.py "saas dashboard" --domain style -n 1 >/dev/null

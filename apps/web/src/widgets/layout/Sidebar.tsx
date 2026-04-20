@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3 } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 
@@ -14,16 +14,64 @@ const navItems = [
   { to: '/profile', icon: User, label: '我的' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const location = useLocation();
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 lg:w-72 flex-col bg-white border-r border-slate-100 z-40">
-      <div className="px-6 py-6 border-b border-slate-100">
-        <BrandLockup size="sm" animated logoVariant="mark" />
+    <aside
+      className={`hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col border-r border-slate-100 bg-white transition-[width] duration-300 ${
+        collapsed ? 'w-24' : 'w-64 lg:w-72'
+      }`}
+    >
+      <div className={`border-b border-slate-100 ${collapsed ? 'px-3 py-5' : 'px-6 py-6'}`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
+          {collapsed ? (
+            <div className="overflow-hidden rounded-2xl">
+              <img
+                src="/branding/inplace-logo-mark.png"
+                alt="归位"
+                className="h-12 w-12 object-cover object-center"
+              />
+            </div>
+          ) : (
+            <BrandLockup
+              size="sm"
+              animated
+              logoVariant="mark"
+            />
+          )}
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={onToggle}
+              title="折叠菜单"
+              aria-label="折叠菜单"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          )}
+        </div>
+        {collapsed && (
+          <button
+            type="button"
+            onClick={onToggle}
+            title="展开菜单"
+            aria-label="展开菜单"
+            className="mt-4 flex w-full items-center justify-center rounded-2xl bg-slate-100 py-2.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 px-3 py-5 space-y-0.5 relative">
+      <nav className={`relative flex-1 space-y-1 py-5 ${collapsed ? 'px-2' : 'px-3'}`}>
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = to === '/'
             ? location.pathname === '/'
@@ -33,7 +81,12 @@ export default function Sidebar() {
               key={to}
               to={to}
               end={to === '/'}
-              className="relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-150"
+              title={collapsed ? label : undefined}
+              className={`relative flex rounded-xl text-sm font-medium transition-colors duration-150 ${
+                collapsed
+                  ? 'justify-center px-0 py-3'
+                  : 'items-center gap-3 px-4 py-3'
+              }`}
             >
               {isActive && (
                 <motion.div
@@ -42,17 +95,19 @@ export default function Sidebar() {
                   transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 />
               )}
-              <span className={`relative flex items-center gap-3 ${isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'}`}>
+              <span className={`relative flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'}`}>
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                {label}
+                {!collapsed && label}
               </span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="px-5 py-5 border-t border-slate-100">
-        <p className="text-xs text-slate-300 text-center">归位 v0.1.0</p>
+      <div className={`border-t border-slate-100 ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>
+        <p className={`text-center text-xs text-slate-300 ${collapsed ? 'leading-5' : ''}`}>
+          {collapsed ? 'v0.1.0' : '归位 v0.1.0'}
+        </p>
       </div>
     </aside>
   );
