@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useState, useRef, type MouseEvent } from 'react';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { staggerItem } from '../../../shared/lib/animations';
 
 const FALLBACK_COLORS = [
@@ -125,9 +126,14 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         </div>
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">
-            {childCount !== undefined ? `${childCount} 项` : (category?.name ?? '位置')}
-          </span>
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span>{childCount !== undefined ? `${childCount} 项` : (category?.name ?? '收纳')}</span>
+            {isLocationItem(item) && (
+              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+                {getContainerTypeLabel(item)}
+              </span>
+            )}
+          </div>
           {selectionMode ? (
             <span className="text-xs text-sky-500 font-medium">已选中</span>
           ) : (

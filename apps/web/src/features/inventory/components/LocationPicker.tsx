@@ -4,6 +4,7 @@ import { ChevronRight, Home, Box, Check, X } from 'lucide-react';
 import { fetchChildren } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
 import { useAuth } from '../../../app/providers/AuthContext';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 
 interface Props {
   value: string | null;
@@ -69,7 +70,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
           <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-2" />
           <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-slate-100">
             <div>
-              <h3 className="font-semibold text-slate-900">选择位置</h3>
+              <h3 className="font-semibold text-slate-900">选择放置位置</h3>
               <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-hide">
                 <motion.button
                   onClick={() => handleBreadcrumbNav(-1)}
@@ -129,7 +130,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : containers.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置</p>
+              <p className="text-center text-slate-400 text-sm py-6">暂无下级收纳或位置</p>
             ) : (
               containers.map((container, i) => (
                 <motion.div
@@ -151,6 +152,11 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                   >
                     <Box size={16} className="text-slate-400 shrink-0" />
                     <span className="flex-1 text-left truncate">{container.name}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      isLocationItem(container) ? 'bg-sky-100 text-sky-600' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      {getContainerTypeLabel(container)}
+                    </span>
                     {value === container.id && <Check size={15} className="text-sky-500" />}
                   </motion.button>
                   <motion.button

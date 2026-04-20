@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload } from 'lucide-react';
+import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload, MapPinned } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -226,7 +226,7 @@ export default function ProfilePage() {
             <motion.div variants={staggerItem} className="grid grid-cols-2 gap-3">
               {[
                 { label: '总物品', value: loading ? '-' : stats.items, icon: Package, color: 'bg-sky-50 text-sky-500' },
-                { label: '位置数', value: loading ? '-' : stats.containers, icon: Box, color: 'bg-teal-50 text-teal-500' },
+                { label: '收纳数', value: loading ? '-' : stats.containers, icon: Box, color: 'bg-teal-50 text-teal-500' },
                 { label: '借出中', value: loading ? '-' : stats.borrowed, icon: ChevronRight, color: 'bg-amber-50 text-amber-500' },
                 { label: '总计', value: loading ? '-' : stats.total, icon: ShieldCheck, color: 'bg-emerald-50 text-emerald-500' },
               ].map(({ label, value, icon: Icon, color }, i) => (
@@ -260,10 +260,17 @@ export default function ProfilePage() {
                   tone="bg-amber-50 text-amber-500"
                 />
                 <QuickLinkCard
+                  to="/locations"
+                  icon={<MapPinned size={20} />}
+                  title="位置树"
+                  description="查看所有已标记位置的层级，并快速进入对应位置内容。"
+                  tone="bg-sky-50 text-sky-500"
+                />
+                <QuickLinkCard
                   to="/categories"
                   icon={<Box size={20} />}
                   title="分类管理"
-                  description="统一位置和物品分类结构，让首页和总览都更清晰。"
+                  description="统一收纳和物品分类结构，让首页和总览都更清晰。"
                   tone="bg-sky-50 text-sky-500"
                 />
                 <QuickLinkCard

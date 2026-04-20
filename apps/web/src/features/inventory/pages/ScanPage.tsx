@@ -374,7 +374,7 @@ export default function ScanPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold text-slate-900 text-sm">{draft.result.name}</p>
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">
-                          {(draft.result.type ?? 'item') === 'container' ? '位置' : '物品'}
+                          {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}
                         </span>
                         <AnimatePresence>
                           {draft.saved && (

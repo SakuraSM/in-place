@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Box, ChevronDown, ChevronRight, GripVertical, Image as ImageIcon, Layers3, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Item } from '../../../legacy/database.types';
+import { getContainerTypeLabel } from '../lib/locationTag';
 
 interface Props {
   currentItem: Item;
@@ -177,7 +178,7 @@ function SortableChildCard({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
               <p className="truncate mt-0.5 text-[11px] text-slate-400">
-                {item.type === 'container' ? '位置节点' : '物品节点'}
+                {item.type === 'container' ? `${getContainerTypeLabel(item)}节点` : '物品节点'}
               </p>
             </div>
             <span
@@ -187,7 +188,7 @@ function SortableChildCard({
                   : 'bg-amber-50 text-amber-700'
               }`}
             >
-              {item.type === 'container' ? '位置' : '物品'}
+              {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
             </span>
           </div>
 
@@ -248,7 +249,7 @@ function MobileChildList({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">{child.name}</p>
             <p className="truncate mt-1 text-[11px] text-slate-400">
-              {child.type === 'container' ? '位置节点' : '物品节点'}
+              {child.type === 'container' ? `${getContainerTypeLabel(child)}节点` : '物品节点'}
             </p>
           </div>
         </button>
@@ -312,7 +313,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">查看位置路径与直接下级</h2>
+            <h2 className="text-sm font-semibold text-slate-900">查看所在路径与直接下级</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">

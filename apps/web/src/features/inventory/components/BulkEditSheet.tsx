@@ -187,7 +187,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了位置和物品，类别和状态不会一起批量修改。
+                混合选择了收纳和物品，类别和状态不会一起批量修改。
               </div>
             )}
 
@@ -255,7 +255,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                   whileHover={{ borderColor: '#38bdf8' }}
                   className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-left text-slate-500 transition-colors"
                 >
-                  {parentId ? '已选择新位置' : '顶层位置'}
+                  {parentId ? '已选择新的上级' : '顶层位置'}
                 </motion.button>
               )}
             </div>

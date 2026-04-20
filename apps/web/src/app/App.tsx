@@ -16,6 +16,7 @@ import CategoriesPage from '../features/inventory/pages/CategoriesPage';
 import TagsPage from '../features/tags/pages/TagsPage';
 import ScrollToTop from '../shared/ui/ScrollToTop';
 import ContainerDetailPage from '../features/inventory/pages/ContainerDetailPage';
+import LocationTreePage from '../features/inventory/pages/LocationTreePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,16 @@ export default function App() {
                 <ProtectedRoute>
                   <AppLayout>
                     <SearchPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/locations"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LocationTreePage />
                   </AppLayout>
                 </ProtectedRoute>
               }

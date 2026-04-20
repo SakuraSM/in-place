@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { MouseEvent } from 'react';
 import { SquarePen, Trash2, Move, X, Box, Package, Eye } from 'lucide-react';
 import type { Item } from '../../legacy/database.types';
+import { getContainerTypeLabel } from '../../features/inventory/lib/locationTag';
 
 interface Props {
   item: Item;
@@ -50,7 +51,7 @@ export default function ContextMenu({ item, onView, onEdit, onDelete, onMove, on
               </div>
               <div>
                 <p className="font-semibold text-slate-900 text-sm">{item.name}</p>
-                <p className="text-xs text-slate-400">{item.type === 'container' ? '位置' : '物品'}</p>
+                <p className="text-xs text-slate-400">{item.type === 'container' ? getContainerTypeLabel(item) : '物品'}</p>
               </div>
             </div>
             <motion.button
