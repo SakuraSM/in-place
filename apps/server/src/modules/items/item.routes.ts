@@ -14,14 +14,16 @@ import {
 import {
   createItemForUser,
   deleteItemForUser,
-  ensureParentBelongsToUser,
   exportInventoryForUser,
   findItemByIdForUser,
   getItemStatsForUser,
   importInventoryForUser,
+  itemHasChildrenForUser,
   listAncestorsForUser,
   listItemsForUser,
   updateItemForUser,
+  validateParentForUser,
+  wouldCreateParentCycleForUser,
 } from './item.repository.js';
 import type { AppEnv } from '../../env.js';
 import { persistImageBuffer, resolveImageMimeType, resolveUploadRoot } from '../../lib/uploads.js';
@@ -456,11 +458,18 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
-    const parentExists = await ensureParentBelongsToUser(currentUser.id, parsed.data.parentId);
-    if (!parentExists) {
+    const parentValidation = await validateParentForUser(currentUser.id, parsed.data.parentId);
+    if (parentValidation === 'not_found') {
       return reply.code(400).send({
         error: 'INVALID_PARENT',
-        message: '父级节点不存在',
+        message: '上级位置不存在',
+      });
+    }
+
+    if (parentValidation === 'not_container') {
+      return reply.code(400).send({
+        error: 'INVALID_PARENT',
+        message: '只能放到位置下',
       });
     }
 
@@ -494,25 +503,50 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
     if (parsed.data.parentId === params.data.id) {
       return reply.code(400).send({
         error: 'INVALID_PARENT',
-        message: '父级节点不能指向自己',
+        message: '上级位置不能指向自己',
       });
     }
 
-    const parentExists = await ensureParentBelongsToUser(currentUser.id, parsed.data.parentId);
-    if (!parentExists) {
-      return reply.code(400).send({
-        error: 'INVALID_PARENT',
-        message: '父级节点不存在',
-      });
-    }
-
-    const updatedItem = await updateItemForUser(currentUser.id, params.data.id, parsed.data);
-    if (!updatedItem) {
+    const existingItem = await findItemByIdForUser(currentUser.id, params.data.id);
+    if (!existingItem) {
       return reply.code(404).send({
         error: 'ITEM_NOT_FOUND',
         message: '物品不存在',
       });
     }
+
+    if (parsed.data.parentId !== undefined) {
+      const parentValidation = await validateParentForUser(currentUser.id, parsed.data.parentId);
+      if (parentValidation === 'not_found') {
+        return reply.code(400).send({
+          error: 'INVALID_PARENT',
+          message: '上级位置不存在',
+        });
+      }
+
+      if (parentValidation === 'not_container') {
+        return reply.code(400).send({
+          error: 'INVALID_PARENT',
+          message: '只能放到位置下',
+        });
+      }
+
+      if (parsed.data.parentId && await wouldCreateParentCycleForUser(currentUser.id, params.data.id, parsed.data.parentId)) {
+        return reply.code(400).send({
+          error: 'INVALID_PARENT',
+          message: '上级位置不能设置为当前节点或其下级位置',
+        });
+      }
+    }
+
+    if (parsed.data.type === 'item' && existingItem.type === 'container' && await itemHasChildrenForUser(currentUser.id, existingItem.id)) {
+      return reply.code(400).send({
+        error: 'INVALID_TYPE',
+        message: '仍包含内容的位置不能改为物品',
+      });
+    }
+
+    const updatedItem = await updateItemForUser(currentUser.id, params.data.id, parsed.data);
 
     return reply.send({
       data: updatedItem,

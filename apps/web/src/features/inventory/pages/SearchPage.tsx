@@ -20,7 +20,7 @@ const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
 
 const TYPE_FILTERS: { value: ItemType | 'all'; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: '全部', icon: Archive },
-  { value: 'container', label: '容器', icon: Box },
+  { value: 'container', label: '位置', icon: Box },
   { value: 'item', label: '物品', icon: Package },
 ];
 
@@ -351,7 +351,7 @@ export default function SearchPage() {
                         <p className="font-semibold text-slate-800 text-sm truncate">{item.name}</p>
                         {item.type === 'item' && <StatusBadge status={item.status} />}
                         {item.type === 'container' && (
-                          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-600 text-[10px] font-medium">容器</span>
+                          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-600 text-[10px] font-medium">位置</span>
                         )}
                       </div>
                       {item.category && (

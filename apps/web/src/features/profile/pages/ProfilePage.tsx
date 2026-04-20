@@ -226,7 +226,7 @@ export default function ProfilePage() {
             <motion.div variants={staggerItem} className="grid grid-cols-2 gap-3">
               {[
                 { label: '总物品', value: loading ? '-' : stats.items, icon: Package, color: 'bg-sky-50 text-sky-500' },
-                { label: '容器数', value: loading ? '-' : stats.containers, icon: Box, color: 'bg-teal-50 text-teal-500' },
+                { label: '位置数', value: loading ? '-' : stats.containers, icon: Box, color: 'bg-teal-50 text-teal-500' },
                 { label: '借出中', value: loading ? '-' : stats.borrowed, icon: ChevronRight, color: 'bg-amber-50 text-amber-500' },
                 { label: '总计', value: loading ? '-' : stats.total, icon: ShieldCheck, color: 'bg-emerald-50 text-emerald-500' },
               ].map(({ label, value, icon: Icon, color }, i) => (
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                   to="/categories"
                   icon={<Box size={20} />}
                   title="分类管理"
-                  description="统一容器和物品分类结构，让首页和总览都更清晰。"
+                  description="统一位置和物品分类结构，让首页和总览都更清晰。"
                   tone="bg-sky-50 text-sky-500"
                 />
                 <QuickLinkCard

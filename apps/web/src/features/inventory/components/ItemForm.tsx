@@ -168,7 +168,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
           <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <h2 className="font-semibold text-slate-900 text-lg">
-              {initial?.id ? '编辑' : '新增'}{form.type === 'container' ? '容器' : '物品'}
+              {initial?.id ? '编辑' : '新增'}{form.type === 'container' ? '位置' : '物品'}
             </h2>
             <motion.button
               onClick={onClose}
@@ -199,7 +199,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                       />
                     )}
                     <span className={`relative ${form.type === t ? 'text-slate-900' : 'text-slate-500'}`}>
-                      {t === 'item' ? '物品' : '容器'}
+                      {t === 'item' ? '物品' : '位置'}
                     </span>
                   </button>
                 ))}
@@ -333,7 +333,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5">
                 <MapPin size={14} />
-                存放位置
+                所属位置
               </label>
               <motion.button
                 type="button"
@@ -342,8 +342,8 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left text-slate-500 transition-colors"
               >
                 {form.parent_id
-                  ? `已选择容器 (${parentLabel ?? '加载中...'})`
-                  : '根目录（顶层）'}
+                  ? `已选择位置 (${parentLabel ?? '加载中...'})`
+                  : '顶层位置'}
               </motion.button>
             </div>
 

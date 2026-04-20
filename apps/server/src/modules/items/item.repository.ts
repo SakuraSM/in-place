@@ -186,6 +186,18 @@ function parseImportedDate(value: string | null) {
 
 export async function importInventoryForUser(userId: string, snapshot: ImportInventoryInput) {
   const db = getDb();
+  const snapshotItemMap = new Map(snapshot.items.map((item) => [item.id, item]));
+
+  for (const item of snapshot.items) {
+    if (!item.parent_id) {
+      continue;
+    }
+
+    const parent = snapshotItemMap.get(item.parent_id);
+    if (parent && parent.type !== 'container') {
+      throw new Error('导入数据中的上级位置必须是位置');
+    }
+  }
 
   return db.transaction(async (tx) => {
     await tx.delete(items).where(eq(items.userId, userId));
@@ -304,13 +316,15 @@ export async function listAncestorsForUser(userId: string, itemId: string) {
   return ancestors;
 }
 
-export async function ensureParentBelongsToUser(userId: string, parentId: string | null | undefined) {
+export type ParentValidationResult = 'valid' | 'not_found' | 'not_container';
+
+export async function validateParentForUser(userId: string, parentId: string | null | undefined): Promise<ParentValidationResult> {
   if (!parentId) {
-    return true;
+    return 'valid';
   }
 
   const [parent] = await getDb()
-    .select({ id: items.id })
+    .select({ id: items.id, type: items.type })
     .from(items)
     .where(and(
       eq(items.id, parentId),
@@ -318,7 +332,40 @@ export async function ensureParentBelongsToUser(userId: string, parentId: string
     ))
     .limit(1);
 
-  return Boolean(parent);
+  if (!parent) {
+    return 'not_found';
+  }
+
+  return parent.type === 'container' ? 'valid' : 'not_container';
+}
+
+export async function itemHasChildrenForUser(userId: string, itemId: string) {
+  const [row] = await getDb()
+    .select({ value: count() })
+    .from(items)
+    .where(and(
+      eq(items.userId, userId),
+      eq(items.parentId, itemId),
+    ));
+
+  return Number(row?.value ?? 0) > 0;
+}
+
+export async function wouldCreateParentCycleForUser(userId: string, itemId: string, parentId: string | null) {
+  let currentId = parentId;
+  const visited = new Set<string>();
+
+  while (currentId && !visited.has(currentId)) {
+    if (currentId === itemId) {
+      return true;
+    }
+
+    visited.add(currentId);
+    const parent = await findItemByIdForUser(userId, currentId);
+    currentId = parent?.parentId ?? null;
+  }
+
+  return false;
 }
 
 export async function createItemForUser(userId: string, input: CreateItemInput) {

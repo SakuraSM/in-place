@@ -177,7 +177,7 @@ function SortableChildCard({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
               <p className="truncate mt-0.5 text-[11px] text-slate-400">
-                {item.type === 'container' ? '容器节点' : '物品节点'}
+                {item.type === 'container' ? '位置节点' : '物品节点'}
               </p>
             </div>
             <span
@@ -187,7 +187,7 @@ function SortableChildCard({
                   : 'bg-amber-50 text-amber-700'
               }`}
             >
-              {item.type === 'container' ? '容器' : '物品'}
+              {item.type === 'container' ? '位置' : '物品'}
             </span>
           </div>
 
@@ -248,7 +248,7 @@ function MobileChildList({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">{child.name}</p>
             <p className="truncate mt-1 text-[11px] text-slate-400">
-              {child.type === 'container' ? '容器节点' : '物品节点'}
+              {child.type === 'container' ? '位置节点' : '物品节点'}
             </p>
           </div>
         </button>
@@ -312,7 +312,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">包含路径与直接子节点</h2>
+            <h2 className="text-sm font-semibold text-slate-900">查看位置路径与直接下级</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">
@@ -390,7 +390,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
                     <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 px-4 py-12 text-center">
                       <p className="text-sm font-semibold text-slate-600">当前节点暂无直接子节点</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        等后续添加新的容器或物品后，这里会展示直接被 {currentItem.name} 包含的内容。
+                        等后续添加新的位置或物品后，这里会展示直接归属到 {currentItem.name} 的内容。
                       </p>
                     </div>
                   )}

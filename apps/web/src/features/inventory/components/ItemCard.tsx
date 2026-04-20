@@ -1,6 +1,6 @@
 import { Package, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, type MouseEvent } from 'react';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
@@ -45,7 +45,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
         onClick={selectionMode ? (onSelect ?? onClick) : onClick}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        onContextMenu={(e) => {
+        onContextMenu={(e: MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           if (selectionMode) {
             (onSelect ?? onClick)();
@@ -138,7 +138,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
       </motion.button>
       {!selectionMode && (
         <motion.button
-          onClick={(e) => { e.stopPropagation(); onLongPress(); }}
+          onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); onLongPress(); }}
           animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.8 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

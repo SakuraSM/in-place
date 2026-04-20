@@ -1,6 +1,6 @@
 import { ChevronRight, Box, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, type MouseEvent } from 'react';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { staggerItem } from '../../../shared/lib/animations';
@@ -81,7 +81,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         onClick={selectionMode ? (onSelect ?? onClick) : onClick}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        onContextMenu={(e) => {
+        onContextMenu={(e: MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           if (selectionMode) {
             (onSelect ?? onClick)();
@@ -126,7 +126,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-400">
-            {childCount !== undefined ? `${childCount} 项` : (category?.name ?? '容器')}
+            {childCount !== undefined ? `${childCount} 项` : (category?.name ?? '位置')}
           </span>
           {selectionMode ? (
             <span className="text-xs text-sky-500 font-medium">已选中</span>
@@ -137,7 +137,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
       </motion.button>
       {!selectionMode && (
         <motion.button
-          onClick={(e) => { e.stopPropagation(); onLongPress(); }}
+          onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); onLongPress(); }}
           animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.8 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

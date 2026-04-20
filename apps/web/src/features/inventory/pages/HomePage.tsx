@@ -338,7 +338,7 @@ export default function HomePage() {
                 <Package size={36} className="text-slate-300" />
               </motion.div>
               <h3 className="mb-1 font-semibold text-slate-700">暂时空空如也</h3>
-              <p className="text-sm text-slate-400">点击 + 按钮添加容器或物品</p>
+              <p className="text-sm text-slate-400">点击 + 按钮添加位置或物品</p>
             </motion.div>
           ) : (
             <motion.div
@@ -366,7 +366,7 @@ export default function HomePage() {
                           transition={{ delay: 0.05 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          容器 ({containers.length})
+                          位置 ({containers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -487,7 +487,7 @@ export default function HomePage() {
                           animate={{ opacity: 1, x: 0 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          其他容器 ({uncategorizedContainers.length})
+                          其他位置 ({uncategorizedContainers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -660,7 +660,7 @@ export default function HomePage() {
       {deleteTarget && (
         <ConfirmDialog
           title="确认删除"
-          message={`确定要删除「${deleteTarget.name}」吗？此操作不可撤销。${deleteTarget.type === 'container' ? '容器内的所有内容也将被删除。' : ''}`}
+          message={`确定要删除「${deleteTarget.name}」吗？此操作不可撤销。${deleteTarget.type === 'container' ? '该位置下的所有内容也会一起删除。' : ''}`}
           confirmLabel="删除"
           danger
           onConfirm={handleDelete}
@@ -671,7 +671,7 @@ export default function HomePage() {
       {bulkDeletePending && (
         <ConfirmDialog
           title="确认批量删除"
-          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含容器会同时删除容器内的内容。`}
+          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含位置会同时删除其下内容。`}
           confirmLabel="批量删除"
           danger
           onConfirm={handleBulkDelete}

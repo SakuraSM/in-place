@@ -25,7 +25,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
     fetchChildren(currentParent, user.id)
       .then((items) => setContainers(items.filter((i) => i.type === 'container' && i.id !== excludeId)))
       .finally(() => setLoading(false));
-  }, [currentParent, user]);
+  }, [currentParent, excludeId, user]);
 
   const handleSelect = (id: string | null) => {
     onChange(id);
@@ -114,7 +114,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
             >
               <Home size={16} className="text-slate-400" />
               <span className="flex-1 text-left">
-                {currentParent === null ? '根目录（顶层）' : '此容器'}
+                {currentParent === null ? '顶层位置' : '当前位置'}
               </span>
               {value === currentParent && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}>
@@ -128,7 +128,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : containers.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">暂无子容器</p>
+              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置</p>
             ) : (
               containers.map((container, i) => (
                 <motion.div
