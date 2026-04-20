@@ -195,7 +195,7 @@ export async function importInventoryForUser(userId: string, snapshot: ImportInv
 
     const parent = snapshotItemMap.get(item.parent_id);
     if (parent && parent.type !== 'container') {
-      throw new Error('导入数据中的上级位置必须是容器类型的位置');
+      throw new Error('导入数据中的上级节点必须是容器类型');
     }
   }
 
