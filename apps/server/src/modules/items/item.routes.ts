@@ -542,7 +542,7 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
     if (parsed.data.type === 'item' && existingItem.type === 'container' && await itemHasChildrenForUser(currentUser.id, existingItem.id)) {
       return reply.code(400).send({
         error: 'INVALID_TYPE',
-        message: '仍包含内容的位置不能改为物品',
+        message: '仍包含内容的收纳或位置不能改为物品',
       });
     }
 

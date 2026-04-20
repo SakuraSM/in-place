@@ -13,7 +13,7 @@ export interface LocationContentStats {
   total: number;
 }
 
-export function buildItemMap(items: Item[]) {
+export function buildItemIdMap(items: Item[]) {
   return new Map(items.map((item) => [item.id, item]));
 }
 
@@ -34,7 +34,7 @@ export function buildChildrenMap(items: Item[]) {
 }
 
 export function buildLocationTree(items: Item[]) {
-  const itemMap = buildItemMap(items);
+  const itemMap = buildItemIdMap(items);
   const locationItems = items
     .filter(isLocationItem)
     .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'));
@@ -142,7 +142,7 @@ export function countLocationContents(items: Item[], locationId: string): Locati
     total: descendantIds.size,
   };
 
-  const itemMap = buildItemMap(items);
+  const itemMap = buildItemIdMap(items);
   for (const descendantId of descendantIds) {
     const item = itemMap.get(descendantId);
     if (!item) {

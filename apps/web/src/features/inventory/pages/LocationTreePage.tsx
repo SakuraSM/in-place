@@ -6,8 +6,8 @@ import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
 import {
   buildChildrenMap,
+  buildItemIdMap,
   buildItemLineage,
-  buildItemMap,
   countLocationContents,
 } from '../lib/locationTree';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
@@ -22,7 +22,7 @@ export default function LocationTreePage() {
     () => items.filter(isLocationItem),
     [items],
   );
-  const itemMap = useMemo(() => buildItemMap(items), [items]);
+  const itemMap = useMemo(() => buildItemIdMap(items), [items]);
   const childrenMap = useMemo(() => buildChildrenMap(items), [items]);
 
   useEffect(() => {

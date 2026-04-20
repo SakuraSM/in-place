@@ -10,7 +10,7 @@ import PaginationControls from '../components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 import LocationTreePanel from '../components/LocationTreePanel';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
-import { buildItemMap, buildItemPath, collectDescendantIds } from '../lib/locationTree';
+import { buildItemIdMap, buildItemPath, collectDescendantIds } from '../lib/locationTree';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 
 type TypeFilterValue = ItemType | 'all' | 'location';
@@ -49,7 +49,7 @@ export default function SearchPage() {
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   const selectedLocationId = searchParams.get('locationId');
-  const itemMap = useMemo(() => buildItemMap(allItems), [allItems]);
+  const itemMap = useMemo(() => buildItemIdMap(allItems), [allItems]);
   const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
 
   useEffect(() => {
