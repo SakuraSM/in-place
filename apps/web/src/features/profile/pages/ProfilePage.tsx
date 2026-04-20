@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload, MapPinned } from 'lucide-react';
+import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload, MapPinned, Clock3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -265,6 +265,13 @@ export default function ProfilePage() {
                   title="位置树"
                   description="查看所有已标记位置的层级，并快速进入对应位置内容。"
                   tone="bg-sky-50 text-sky-500"
+                />
+                <QuickLinkCard
+                  to="/activity"
+                  icon={<Clock3 size={20} />}
+                  title="操作记录"
+                  description="查看 AI 扫描录入、手动录入以及修改、删除行为。"
+                  tone="bg-violet-50 text-violet-500"
                 />
                 <QuickLinkCard
                   to="/categories"

@@ -25,8 +25,10 @@ import {
   validateParentForUser,
   wouldCreateParentCycleForUser,
 } from './item.repository.js';
+import { createActivityLogForUser } from '../activity/activity.repository.js';
 import type { AppEnv } from '../../env.js';
 import { persistImageBuffer, resolveImageMimeType, resolveUploadRoot } from '../../lib/uploads.js';
+import type { CreateItemInput, UpdateItemInput } from './item.schemas.js';
 
 interface ExportCategoryRecord {
   id: string;
@@ -224,6 +226,42 @@ function buildExportCsv(items: ExportItemRecord[]) {
   ].map(escapeCsv).join(','));
 
   return [headers.join(','), ...lines].join('\n');
+}
+
+function isAiScanCreate(input: CreateItemInput) {
+  return input.metadata?.ai_recognized === true || input.metadata?.source_image === 'scan';
+}
+
+function listChangedFields(existingItem: Awaited<ReturnType<typeof findItemByIdForUser>>, input: UpdateItemInput) {
+  if (!existingItem) {
+    return Object.keys(input);
+  }
+
+  const fieldMap: Array<[keyof UpdateItemInput, unknown]> = [
+    ['parentId', existingItem.parentId],
+    ['type', existingItem.type],
+    ['name', existingItem.name],
+    ['description', existingItem.description],
+    ['category', existingItem.category],
+    ['price', existingItem.price === null ? null : Number(existingItem.price)],
+    ['quantity', existingItem.quantity],
+    ['purchaseDate', existingItem.purchaseDate],
+    ['warrantyDate', existingItem.warrantyDate],
+    ['status', existingItem.status],
+    ['images', existingItem.images],
+    ['tags', existingItem.tags],
+    ['metadata', existingItem.metadata],
+  ];
+
+  return fieldMap
+    .filter(([field, previousValue]) => {
+      if (input[field] === undefined) {
+        return false;
+      }
+
+      return JSON.stringify(input[field]) !== JSON.stringify(previousValue);
+    })
+    .map(([field]) => field);
 }
 
 async function buildImageAssets(input: {
@@ -473,8 +511,24 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
+    const createdItem = await createItemForUser(currentUser.id, parsed.data);
+
+    if (createdItem) {
+      await createActivityLogForUser({
+        userId: currentUser.id,
+        itemId: createdItem.id,
+        itemType: createdItem.type,
+        itemName: createdItem.name,
+        action: isAiScanCreate(parsed.data) ? 'ai_scan_create' : 'manual_create',
+        metadata: {
+          parent_id: createdItem.parentId,
+          category: createdItem.category,
+        },
+      });
+    }
+
     return reply.code(201).send({
-      data: await createItemForUser(currentUser.id, parsed.data),
+      data: createdItem,
     });
   });
 
@@ -548,6 +602,19 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
 
     const updatedItem = await updateItemForUser(currentUser.id, params.data.id, parsed.data);
 
+    if (updatedItem) {
+      await createActivityLogForUser({
+        userId: currentUser.id,
+        itemId: updatedItem.id,
+        itemType: updatedItem.type,
+        itemName: updatedItem.name,
+        action: 'update',
+        metadata: {
+          changed_fields: listChangedFields(existingItem, parsed.data),
+        },
+      });
+    }
+
     return reply.send({
       data: updatedItem,
     });
@@ -567,6 +634,14 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
+    const existingItem = await findItemByIdForUser(currentUser.id, params.data.id);
+    if (!existingItem) {
+      return reply.code(404).send({
+        error: 'ITEM_NOT_FOUND',
+        message: '物品不存在',
+      });
+    }
+
     const deletedItem = await deleteItemForUser(currentUser.id, params.data.id);
     if (!deletedItem) {
       return reply.code(404).send({
@@ -574,6 +649,18 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         message: '物品不存在',
       });
     }
+
+    await createActivityLogForUser({
+      userId: currentUser.id,
+      itemId: existingItem.id,
+      itemType: existingItem.type,
+      itemName: existingItem.name,
+      action: 'delete',
+      metadata: {
+        parent_id: existingItem.parentId,
+        category: existingItem.category,
+      },
+    });
 
     return reply.code(204).send();
   });

@@ -59,8 +59,18 @@ export function createTagsApi(request: AppCoreRequest) {
   }
 
   async function fetchTags(userId: string): Promise<TagEntity[]> {
-    const response = await fetchTagsPage(userId);
-    return response.data;
+    const allTags: TagEntity[] = [];
+    let page = 1;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+      const response = await fetchTagsPage(userId, { page, pageSize: 100 });
+      allTags.push(...response.data);
+      hasNextPage = response.meta.hasNextPage;
+      page += 1;
+    }
+
+    return allTags;
   }
 
   return {

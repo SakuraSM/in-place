@@ -1,3 +1,4 @@
+export * from './activity';
 export * from './ai';
 export * from './categories';
 export * from './items';

@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import { authPlugin } from './plugins/auth.js';
+import { activityRoutes } from './modules/activity/activity.routes.js';
 import { aiRoutes } from './modules/ai/ai.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { categoryRoutes } from './modules/categories/category.routes.js';
@@ -47,6 +48,7 @@ export async function createApp(env: AppEnv) {
   }));
 
   await app.register(aiRoutes, { prefix: '/api/v1/ai', env });
+  await app.register(activityRoutes, { prefix: '/api/v1/activity' });
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(categoryRoutes, { prefix: '/api/v1/categories' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });

@@ -2,6 +2,7 @@ import { type AnyPgColumn, index, integer, jsonb, numeric, pgEnum, pgTable, text
 
 export const itemTypeEnum = pgEnum('item_type', ['container', 'item']);
 export const itemStatusEnum = pgEnum('item_status', ['in_stock', 'borrowed', 'worn_out']);
+export const activityActionEnum = pgEnum('activity_action', ['manual_create', 'ai_scan_create', 'update', 'delete']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -75,13 +76,30 @@ export const userAiSettings = pgTable('user_ai_settings', {
   userIdx: uniqueIndex('user_ai_settings_user_id_idx').on(table.userId),
 }));
 
+export const activityLogs = pgTable('activity_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  itemId: uuid('item_id'),
+  itemType: itemTypeEnum('item_type').notNull(),
+  itemName: varchar('item_name', { length: 160 }).notNull(),
+  action: activityActionEnum('action').notNull(),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index('activity_logs_user_id_idx').on(table.userId),
+  userCreatedIdx: index('activity_logs_user_created_at_idx').on(table.userId, table.createdAt),
+  itemIdx: index('activity_logs_item_id_idx').on(table.itemId),
+}));
+
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type TagRecord = typeof tagRegistry.$inferSelect;
 export type UserAiSetting = typeof userAiSettings.$inferSelect;
+export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type NewCategory = typeof categories.$inferInsert;
 export type NewItem = typeof items.$inferInsert;
 export type NewTagRecord = typeof tagRegistry.$inferInsert;
 export type NewUserAiSetting = typeof userAiSettings.$inferInsert;
+export type NewActivityLog = typeof activityLogs.$inferInsert;

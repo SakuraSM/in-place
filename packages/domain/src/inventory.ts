@@ -40,6 +40,19 @@ export interface TagEntity {
   updated_at: string;
 }
 
+export type ActivityAction = 'manual_create' | 'ai_scan_create' | 'update' | 'delete';
+
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  item_id: string | null;
+  item_type: ItemType;
+  item_name: string;
+  action: ActivityAction;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -68,6 +81,14 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Omit<TagEntity, 'id' | 'user_id' | 'created_at'>>;
+      };
+      activity_logs: {
+        Row: ActivityLog;
+        Insert: Omit<ActivityLog, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<ActivityLog, 'id' | 'user_id' | 'created_at'>>;
       };
     };
   };
