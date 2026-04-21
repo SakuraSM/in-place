@@ -7,6 +7,7 @@ import { uploadImage } from '../../../legacy/items';
 import type { Category, ItemType } from '../../../legacy/database.types';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { CategoryIcon, COLOR_OPTIONS, ICON_OPTIONS, getCategoryIconLabel, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import EmptyState from '../../../shared/ui/EmptyState';
 
@@ -298,9 +299,9 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3">
-          <h1 className="text-xl font-bold text-slate-900 mb-3">分类管理</h1>
+      <div className={APP_PAGE_HEADER}>
+        <div className={`${APP_PAGE_HEADER_STACK} gap-3 md:gap-4`}>
+          <h1 className="text-xl font-bold text-slate-900">分类管理</h1>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit relative">
             {([['container', '收纳分类'], ['item', '物品分类']] as [ItemType, string][]).map(([type, label]) => (
               <motion.button
@@ -341,7 +342,6 @@ export default function CategoriesPage() {
             <EmptyState
               icon={<Shapes size={28} className="text-slate-300" />}
               title={`暂无${activeTab === 'container' ? '收纳' : '物品'}分类`}
-              description="点击 + 按钮创建第一个分类"
               iconMotion={{
                 animate: { rotate: [0, -8, 8, 0] },
                 transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },

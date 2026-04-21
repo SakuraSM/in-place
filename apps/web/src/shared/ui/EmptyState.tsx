@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 interface EmptyStateProps {
   icon: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   iconMotion?: Record<string, unknown>;
 }
 
@@ -24,7 +24,9 @@ export default function EmptyState({ icon, title, description, iconMotion }: Emp
         {icon}
       </motion.div>
       <p className="mb-1 font-medium text-slate-500">{title}</p>
-      <p className="text-sm text-slate-400">{description}</p>
+      {description ? (
+        <p className="text-sm text-slate-400">{description}</p>
+      ) : null}
     </motion.div>
   );
 }

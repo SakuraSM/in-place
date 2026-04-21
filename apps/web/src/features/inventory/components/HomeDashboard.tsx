@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Box, Clock3, FolderTree, Package, Plus } from 'lucide-react';
+import { ArrowRight, Box, Clock3, FolderTree, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
@@ -9,8 +9,6 @@ interface Props {
   recentItems: Item[];
   recentActivity: ActivityLog[];
   statsLoading?: boolean;
-  onCreate: () => void;
-  onOpenScan: () => void;
   onOpenActivity: () => void;
   onOpenItem: (item: Item) => void;
   onOpenActivityItem: (entry: ActivityLog) => void;
@@ -31,8 +29,6 @@ export default function HomeDashboard({
   recentItems,
   recentActivity,
   statsLoading = false,
-  onCreate,
-  onOpenScan,
   onOpenActivity,
   onOpenItem,
   onOpenActivityItem,
@@ -46,59 +42,28 @@ export default function HomeDashboard({
   ];
 
   return (
-    <div className="mb-6 space-y-4 md:mb-8">
+    <div className="mb-5 space-y-3 md:mb-6">
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-        className="overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm md:p-6"
+        className="overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)] xl:items-start">
-          <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 md:p-5">
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <button
-                type="button"
-                onClick={onCreate}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
-              >
-                <Plus size={16} />
-                立即新增
-              </button>
-              <button
-                type="button"
-                onClick={onOpenScan}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-              >
-                <Bot size={16} />
-                打开 AI 扫描
-              </button>
-              <button
-                type="button"
-                onClick={onOpenActivity}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 sm:col-span-2 xl:col-span-1 2xl:col-span-2"
-              >
-                <Clock3 size={16} />
-                查看操作记录
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onNavigateOverview?.(filter)}
-                className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors xl:min-h-[144px] ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
-              >
-                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
-                  <Icon size={18} />
-                </div>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                <p className="mt-1 text-xs text-slate-400">{label}</p>
-              </button>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => onNavigateOverview?.(filter)}
+              className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
+            >
+              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
+                <Icon size={18} />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{value}</p>
+              <p className="mt-1 text-xs text-slate-400">{label}</p>
+            </button>
+          ))}
         </div>
       </motion.section>
 
@@ -107,12 +72,12 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.05 }}
-          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm"
+          className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
         >
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-slate-900">最近添加</h3>
-              <p className="mt-1 text-xs text-slate-400">快速回到刚录入的物品、收纳和位置。</p>
+              <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条，快速回到刚录入的内容。</p>
             </div>
           </div>
 
@@ -127,12 +92,12 @@ export default function HomeDashboard({
                   key={item.id}
                   type="button"
                   onClick={() => onOpenItem(item)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${
                     item.type === 'item' ? 'bg-amber-50 text-amber-500' : 'bg-sky-50 text-sky-500'
                   }`}>
-                    {item.type === 'item' ? <Package size={18} /> : <Box size={18} />}
+                    {item.type === 'item' ? <Package size={16} /> : <Box size={16} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
@@ -140,7 +105,7 @@ export default function HomeDashboard({
                       {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatRecentTime(item.created_at)}
                     </p>
                   </div>
-                  <ArrowRight size={16} className="shrink-0 text-slate-300" />
+                  <ArrowRight size={14} className="shrink-0 text-slate-300" />
                 </button>
               ))}
             </div>
@@ -151,12 +116,12 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm"
+          className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
         >
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-slate-900">最近操作</h3>
-              <p className="mt-1 text-xs text-slate-400">包含 AI 扫描录入、手动录入、修改和删除行为。</p>
+              <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条操作，页面主体仍聚焦收纳和物品。</p>
             </div>
             <button
               type="button"

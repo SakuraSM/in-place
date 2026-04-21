@@ -1,20 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Box, ChevronDown, ChevronRight, GripVertical, Image as ImageIcon, Layers3, Package } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Box, ChevronDown, ChevronRight, Image as ImageIcon, Layers3, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Item } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
@@ -118,114 +103,80 @@ function RelationshipLine({
   );
 }
 
-function SortableChildCard({
+function ChildCard({
   item,
   onNodeClick,
 }: {
   item: Item;
   onNodeClick?: (item: Item) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: item.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`${isDragging ? 'z-20' : ''}`}
+    <motion.button
+      layout
+      type="button"
+      onClick={() => onNodeClick?.(item)}
+      whileHover={{ y: -3, scale: 1.005 }}
+      className="block overflow-hidden rounded-[20px] border border-white/80 bg-white/96 p-3 text-left shadow-sm"
     >
-      <motion.div
-        layout
-        whileHover={{ y: -3, scale: 1.005 }}
-        className={`overflow-hidden rounded-[20px] border border-white/80 bg-white/96 shadow-sm ${
-          isDragging ? 'opacity-85 shadow-lg' : ''
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => onNodeClick?.(item)}
-          className="block w-full p-3 text-left"
-        >
-          <div className="mb-3 overflow-hidden rounded-[18px] bg-slate-100">
-            {item.images[0] ? (
-              <img
-                src={item.images[0]}
-                alt={item.name}
-                className="aspect-[4/3] w-full object-cover object-center"
-              />
-            ) : (
-              <div className="flex aspect-[4/3] w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.7),transparent_50%),linear-gradient(180deg,#f8fafc,#e2e8f0)]">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                    item.type === 'container'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {item.type === 'container' ? <Box size={22} /> : <Package size={22} />}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
-              <p className="truncate mt-0.5 text-[11px] text-slate-400">
-                {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
-              </p>
-            </div>
-            <span
-              className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium ${
+      <div className="mb-3 overflow-hidden rounded-[18px] bg-slate-100">
+        {item.images[0] ? (
+          <img
+            src={item.images[0]}
+            alt={item.name}
+            className="aspect-[4/3] w-full object-cover object-center"
+          />
+        ) : (
+          <div className="flex aspect-[4/3] w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.7),transparent_50%),linear-gradient(180deg,#f8fafc,#e2e8f0)]">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
                 item.type === 'container'
-                  ? 'bg-slate-100 text-slate-600'
-                  : 'bg-amber-50 text-amber-700'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-amber-100 text-amber-700'
               }`}
             >
-              {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
-            </span>
-          </div>
-
-          {(item.category || item.tags.length > 0) && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {item.category && (
-                <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
-                  <ImageIcon size={11} />
-                  <span className="max-w-[100px] truncate">{item.category}</span>
-                </span>
-              )}
-              {item.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="max-w-[92px] truncate whitespace-nowrap rounded-full bg-sky-50 px-2 py-0.5 text-[10px] text-sky-600"
-                >
-                  {tag}
-                </span>
-              ))}
+              {item.type === 'container' ? <Box size={22} /> : <Package size={22} />}
             </div>
-          )}
-        </button>
+          </div>
+        )}
+      </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-3 py-2 text-[11px] text-slate-400">
-          <span className="min-w-0 truncate whitespace-nowrap">拖拽可调整排列顺序</span>
-          <button
-            type="button"
-            className="inline-flex shrink-0 cursor-grab items-center gap-1 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-slate-500 active:cursor-grabbing"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical size={12} />
-            排列
-          </button>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+          <p className="truncate mt-0.5 text-[11px] text-slate-400">
+            {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
+          </p>
         </div>
-      </motion.div>
-    </div>
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium ${
+            item.type === 'container'
+              ? 'bg-slate-100 text-slate-600'
+              : 'bg-amber-50 text-amber-700'
+          }`}
+        >
+          {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
+        </span>
+      </div>
+
+      {(item.category || item.tags.length > 0) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {item.category && (
+            <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+              <ImageIcon size={11} />
+              <span className="max-w-[100px] truncate">{item.category}</span>
+            </span>
+          )}
+          {item.tags.slice(0, 2).map((tag) => (
+            <span
+              key={tag}
+              className="max-w-[92px] truncate whitespace-nowrap rounded-full bg-sky-50 px-2 py-0.5 text-[10px] text-sky-600"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </motion.button>
   );
 }
 
@@ -260,40 +211,10 @@ function MobileChildList({
 
 export default function SpatialRelationScene({ currentItem, ancestors, children, onNodeClick }: Props) {
   const lineage = useMemo(() => [...ancestors, currentItem], [ancestors, currentItem]);
-  const [orderedChildren, setOrderedChildren] = useState(children);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showChildrenPanel, setShowChildrenPanel] = useState(false);
   const showChildrenSection = currentItem.type === 'container';
   const isContainer = currentItem.type === 'container';
-
-  useEffect(() => {
-    setOrderedChildren(children);
-  }, [children]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    setOrderedChildren((current) => {
-      const oldIndex = current.findIndex((item) => item.id === active.id);
-      const newIndex = current.findIndex((item) => item.id === over.id);
-
-      if (oldIndex < 0 || newIndex < 0) {
-        return current;
-      }
-
-      return arrayMove(current, oldIndex, newIndex);
-    });
-  };
 
   return (
     <motion.section
@@ -317,7 +238,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">
-              {orderedChildren.length} 项下级内容
+              {children.length} 项下级内容
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
               {isExpanded ? '收起' : '展开'}
@@ -364,35 +285,25 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
 
             {showChildrenPanel && (
               <>
-                <RelationshipLine label={`直接包含 ${orderedChildren.length} 项内容`} />
+                <RelationshipLine label={`直接包含 ${children.length} 项内容`} />
                 <div className="relative rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94))] p-4 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
                   <div className="pointer-events-none absolute inset-x-16 -bottom-5 h-8 rounded-full bg-slate-200/40 blur-2xl" />
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-slate-900">直接下级内容</p>
-                  </div>
 
-                  {orderedChildren.length > 0 ? (
+                  {children.length > 0 ? (
                     <>
                       <div className="hidden md:block">
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                          <SortableContext items={orderedChildren.map((item) => item.id)} strategy={rectSortingStrategy}>
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                              {orderedChildren.map((child) => (
-                                <SortableChildCard key={child.id} item={child} onNodeClick={onNodeClick} />
-                              ))}
-                            </div>
-                          </SortableContext>
-                        </DndContext>
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                          {children.map((child) => (
+                            <ChildCard key={child.id} item={child} onNodeClick={onNodeClick} />
+                          ))}
+                        </div>
                       </div>
 
-                      <MobileChildList children={orderedChildren} onNodeClick={onNodeClick} />
+                      <MobileChildList children={children} onNodeClick={onNodeClick} />
                     </>
                   ) : (
                     <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 px-4 py-12 text-center">
                       <p className="text-sm font-semibold text-slate-600">这里还没有内容</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        添加新的收纳或物品并归入「{currentItem.name}」后，这里会自动出现。
-                      </p>
                     </div>
                   )}
                 </div>

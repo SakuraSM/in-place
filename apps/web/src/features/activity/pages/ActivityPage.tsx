@@ -5,6 +5,7 @@ import type { ActivityLog } from '../../../legacy/database.types';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
 import { useAuth } from '../../../app/providers/AuthContext';
 import EmptyState from '../../../shared/ui/EmptyState';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import ActivityFeed from '../components/ActivityFeed';
 import { resolveItemDetailPath } from '../../inventory/lib/detailPath';
@@ -64,15 +65,14 @@ export default function ActivityPage() {
   }, [logs]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+      <div className={APP_PAGE_HEADER}>
+        <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
-          <p className="mt-1 text-sm text-slate-500">集中查看 AI 扫描录入、手动录入、修改和删除行为。</p>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col px-4 py-6 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col overflow-y-auto px-4 py-6 md:px-8">
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           {[
             { label: '手动录入', value: summary.manual_create, tone: 'bg-sky-50 text-sky-500' },
@@ -98,7 +98,6 @@ export default function ActivityPage() {
           <EmptyState
             icon={<Clock3 size={28} className="text-slate-300" />}
             title="还没有操作记录"
-            description="创建、扫描、编辑或删除收纳与物品后，这里会自动生成记录。"
           />
         ) : (
           <>

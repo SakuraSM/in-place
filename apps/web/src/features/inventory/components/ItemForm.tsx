@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, MapPin, Tag, Plus, Loader2 } from 'lucide-react';
 import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/database.types';
@@ -30,6 +30,9 @@ interface Props {
   initial?: Partial<Item>;
   defaultParentId?: string | null;
   defaultType?: ItemType;
+  forceType?: ItemType;
+  fixedLocation?: boolean;
+  submitError?: string | null;
   onSave: (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   onClose: () => void;
 }
@@ -40,14 +43,23 @@ const STATUS_OPTIONS: { value: ItemStatus; label: string }[] = [
   { value: 'worn_out', label: '损耗' },
 ];
 
-export default function ItemForm({ initial, defaultParentId, defaultType = 'item', onSave, onClose }: Props) {
+export default function ItemForm({
+  initial,
+  defaultParentId,
+  defaultType = 'item',
+  forceType,
+  fixedLocation = false,
+  submitError,
+  onSave,
+  onClose,
+}: Props) {
   const { user } = useAuth();
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   const [form, setForm] = useState<FormData>({
-    type: initial?.type ?? defaultType,
-    isLocation: isLocationItem(initial as Item | undefined),
+    type: forceType ?? initial?.type ?? defaultType,
+    isLocation: fixedLocation || isLocationItem(initial as Item | undefined),
     name: initial?.name ?? '',
     description: initial?.description ?? '',
     category: initial?.category ?? '',
@@ -74,7 +86,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
 
   useEffect(() => {
     if (!user) return;
-    fetchTags(user.id).then((tags) => setAvailableTags(tags.map((tag) => tag.name)));
+    fetchTags(user.id).then((tags) => setAvailableTags(
+      tags
+        .map((tag) => tag.name)
+        .sort((left, right) => left.localeCompare(right, 'zh-CN')),
+    ));
   }, [user]);
 
   useEffect(() => {
@@ -179,8 +195,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
   const containerLabel = form.type === 'container'
     ? (form.isLocation ? '位置' : '收纳')
     : '物品';
-  const normalizedTagInput = tagInput.trim().toLocaleLowerCase('zh-CN');
-  const suggestedTags = availableTags.filter((tag) => {
+  const normalizedTagInput = useMemo(
+    () => tagInput.trim().toLocaleLowerCase('zh-CN'),
+    [tagInput],
+  );
+  const suggestedTags = useMemo(() => availableTags.filter((tag) => {
     if (form.tags.includes(tag)) {
       return false;
     }
@@ -190,7 +209,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
     }
 
     return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
-  });
+  }), [availableTags, form.tags, normalizedTagInput]);
   const hasExactSuggestedTag = suggestedTags.some((tag) => tag.toLocaleLowerCase('zh-CN') === normalizedTagInput);
 
   return (
@@ -225,7 +244,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
           </div>
 
           <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
-            {!initial?.id && (
+            {!initial?.id && !forceType && (
               <div className="relative flex p-1 bg-slate-100 rounded-xl">
                 {(['item', 'container'] as ItemType[]).map((t) => (
                   <button
@@ -249,14 +268,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
               </div>
             )}
 
-            {form.type === 'container' && (
+            {form.type === 'container' && !fixedLocation && (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <label className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-slate-700">标记为位置</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      位置会出现在位置树里，适合卧室、客厅、阳台这类可导航空间。
-                    </p>
                   </div>
                   <input
                     type="checkbox"
@@ -265,6 +281,12 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
                   />
                 </label>
+              </div>
+            )}
+
+            {form.type === 'container' && fixedLocation && (
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3">
+                <p className="text-sm font-medium text-sky-700">当前位置将直接作为「位置」创建</p>
               </div>
             )}
 
@@ -418,25 +440,38 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
               </label>
               {availableTags.length > 0 && (
                 <div className="mb-3">
-                  <p className="mb-2 text-xs font-medium text-slate-400">从标签库选择</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedTags.slice(0, 12).map((tag) => (
-                      <motion.button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleExistingTag(tag)}
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                          form.tags.includes(tag)
-                            ? 'bg-sky-500 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                      >
-                        {tag}
-                      </motion.button>
-                    ))}
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-slate-400">从标签库选择</p>
+                    <span className="text-[11px] text-slate-400">
+                      {suggestedTags.length} / {availableTags.length}
+                    </span>
                   </div>
+                  {suggestedTags.length > 0 ? (
+                    <div className="max-h-40 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-2">
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedTags.map((tag) => (
+                          <motion.button
+                            key={tag}
+                            type="button"
+                            onClick={() => toggleExistingTag(tag)}
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.96 }}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                              form.tags.includes(tag)
+                                ? 'bg-sky-500 text-white'
+                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {tag}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-400">
+                      当前筛选下没有可选标签，回车可直接新建。
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex gap-2 mb-2">
@@ -491,6 +526,12 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                 )}
               </AnimatePresence>
             </div>
+
+            {submitError ? (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                {submitError}
+              </div>
+            ) : null}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5">

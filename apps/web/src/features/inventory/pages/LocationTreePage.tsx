@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package } from 'lucide-react';
+import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package, Plus } from 'lucide-react';
 import EmptyState from '../../../shared/ui/EmptyState';
+import { useAuth } from '../../../app/providers/AuthContext';
+import { createItem } from '../../../legacy/items';
+import type { Item } from '../../../legacy/database.types';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
+import ItemForm from '../components/ItemForm';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
 import {
   buildChildrenMap,
   buildItemIdMap,
@@ -14,9 +20,13 @@ import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { resolveItemDetailPath } from '../lib/detailPath';
 
 export default function LocationTreePage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useAllInventoryItems();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const locationItems = useMemo(
     () => items.filter(isLocationItem),
@@ -50,16 +60,35 @@ export default function LocationTreePage() {
     [childrenMap, selectedLocation],
   );
 
+  const handleCreateLocation = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      setCreateError(null);
+      const created = await createItem(data);
+      setShowCreateForm(false);
+      setSelectedLocationId(created.id);
+      await queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : '新增位置失败，请稍后再试');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`${APP_PAGE_HEADER_ROW} justify-between gap-3`}>
           <h1 className="text-xl font-bold text-slate-900">位置树</h1>
-          <p className="mt-1 text-sm text-slate-500">查看所有已标记位置的层级，并快速进入对应内容。</p>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-sky-500 px-4 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
+          >
+            <Plus size={16} />
+            新增位置
+          </button>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 md:px-8">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col px-4 py-5 md:overflow-y-auto md:px-8 md:py-5">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -68,19 +97,15 @@ export default function LocationTreePage() {
           <EmptyState
             icon={<FolderTree size={28} className="text-slate-300" />}
             title="还没有可展示的位置"
-            description="在新增或编辑收纳时勾选“标记为位置”，这里就会生成位置树。"
           />
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.75fr)_minmax(420px,1.25fr)]">
-            <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 xl:sticky xl:top-28 xl:h-fit">
+          <div className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+            <section className="self-start rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-0 lg:max-h-[calc(100vh-132px)] lg:overflow-y-auto">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
                   <MapPin size={18} />
                 </div>
-                <div>
-                  <h2 className="font-semibold text-slate-900">位置导航</h2>
-                  <p className="text-xs text-slate-400">点击节点即可查看该位置的内容摘要。</p>
-                </div>
+                <h2 className="font-semibold text-slate-900">位置导航</h2>
               </div>
               <LocationTreePanel
                 items={items}
@@ -90,12 +115,12 @@ export default function LocationTreePage() {
               />
             </section>
 
-            <section className="space-y-4">
+            <section className="min-w-0 space-y-4">
               {selectedLocation ? (
                 <>
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
                           当前位置
                         </span>
@@ -107,7 +132,7 @@ export default function LocationTreePage() {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => navigate(`/overview?locationId=${selectedLocation.id}`)}
@@ -141,7 +166,7 @@ export default function LocationTreePage() {
                     )}
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-4">
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     {[
                       { label: '下级位置', value: selectedStats?.locations ?? 0, icon: MapPin, tone: 'bg-sky-50 text-sky-500' },
                       { label: '下级收纳', value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },
@@ -160,10 +185,7 @@ export default function LocationTreePage() {
 
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">直接内容</h3>
-                        <p className="mt-1 text-xs text-slate-400">这里展示这个位置下面一层的收纳、位置和物品。</p>
-                      </div>
+                      <h3 className="font-semibold text-slate-900">直接内容</h3>
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
                         {directChildren.length} 项
                       </span>
@@ -206,6 +228,19 @@ export default function LocationTreePage() {
           </div>
         )}
       </div>
+      {showCreateForm && (
+        <ItemForm
+          defaultParentId={selectedLocationId}
+          forceType="container"
+          fixedLocation
+          submitError={createError}
+          onSave={handleCreateLocation}
+          onClose={() => {
+            setShowCreateForm(false);
+            setCreateError(null);
+          }}
+        />
+      )}
     </div>
   );
 }

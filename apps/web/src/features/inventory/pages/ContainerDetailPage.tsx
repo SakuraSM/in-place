@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { fetchItem, fetchAncestors, fetchChildren, updateItem, deleteItem } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
 import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
@@ -193,8 +194,8 @@ export default function ContainerDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="flex items-center justify-between px-4 md:px-8 pt-4 md:pt-5 pb-3">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`${APP_PAGE_HEADER_ROW} justify-between`}>
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"

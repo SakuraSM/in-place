@@ -6,6 +6,7 @@ import type { Database, TagEntity } from '../../../legacy/database.types';
 import { createTag, deleteTag, fetchTagsPage, updateTag } from '../../../legacy/tags';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import EmptyState from '../../../shared/ui/EmptyState';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 
@@ -86,10 +87,7 @@ function TagEditor({
       >
         <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200" />
         <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-slate-900">{initial ? '编辑标签' : '新增标签'}</h3>
-            <p className="mt-1 text-xs text-slate-400">这里维护的是统一标签，删除或改名会同步到已有物品。</p>
-          </div>
+          <h3 className="font-semibold text-slate-900">{initial ? '编辑标签' : '新增标签'}</h3>
           <motion.button
             onClick={onClose}
             whileHover={{ scale: 1.08, rotate: 90 }}
@@ -253,10 +251,9 @@ export default function TagsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+      <div className={APP_PAGE_HEADER}>
+        <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">标签管理</h1>
-          <p className="mt-1 text-sm text-slate-400">从标签视角统一维护名称、说明和颜色。删除或改名会同步影响已有物品。</p>
         </div>
       </div>
 
@@ -271,7 +268,6 @@ export default function TagsPage() {
           <EmptyState
             icon={<StickyNote size={28} className="text-slate-300" />}
             title="还没有标签"
-            description="当物品创建、编辑或 AI 识别写入新标签时，这里会自动同步。"
           />
         ) : (
           <div className="flex min-h-full flex-1 flex-col">

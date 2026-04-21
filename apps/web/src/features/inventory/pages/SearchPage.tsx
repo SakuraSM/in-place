@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Item, ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import PaginationControls from '../components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
@@ -260,17 +261,17 @@ export default function SearchPage() {
             selectedLocationId={selectedLocationId}
             onSelectLocation={handleSelectLocation}
             allLabel="全部位置"
-            emptyLabel="先把收纳标记为位置，才能使用位置树筛选。"
+            emptyLabel="还没有位置"
           />
         </div>
-      </div>
+        </div>
     </div>
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl md:hidden">
-        <div className="space-y-3 px-4 pb-3 pt-4">
+      <div className={`${APP_PAGE_HEADER} md:hidden`}>
+        <div className={`${APP_PAGE_HEADER_STACK} space-y-3`}>
           <h1 className="text-xl font-bold text-slate-900">总览</h1>
           <div className="relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -335,8 +336,7 @@ export default function SearchPage() {
 
       <aside className="sticky top-0 hidden h-screen w-72 overflow-y-auto border-r border-slate-100 bg-white md:flex md:flex-col lg:w-80">
         <div className="border-b border-slate-50 px-6 pb-4 pt-6">
-          <h1 className="mb-1 text-xl font-bold text-slate-900">总览</h1>
-          <p className="mb-4 text-sm text-slate-500">查看全部收纳、位置与物品，并通过位置树缩小范围。</p>
+          <h1 className="mb-4 text-xl font-bold text-slate-900">总览</h1>
           <div className="relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -516,10 +516,7 @@ export default function SearchPage() {
             >
               <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200" />
               <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-4 pt-2">
-                <div>
-                  <h2 className="font-semibold text-slate-900">位置树筛选</h2>
-                  <p className="mt-1 text-xs text-slate-400">选择一个位置后，总览只显示该位置下的内容。</p>
-                </div>
+                <h2 className="font-semibold text-slate-900">位置树筛选</h2>
                 <button
                   type="button"
                   onClick={() => setShowLocationSheet(false)}
@@ -534,7 +531,7 @@ export default function SearchPage() {
                   selectedLocationId={selectedLocationId}
                   onSelectLocation={handleSelectLocation}
                   allLabel="全部位置"
-                  emptyLabel="先把收纳标记为位置，才能使用位置树筛选。"
+                  emptyLabel="还没有位置"
                 />
               </div>
             </motion.div>

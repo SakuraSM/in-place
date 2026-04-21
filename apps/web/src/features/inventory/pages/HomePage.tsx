@@ -15,6 +15,7 @@ import ItemCard from '../components/ItemCard';
 import Breadcrumb from '../components/Breadcrumb';
 import ContextMenu from '../../../shared/ui/ContextMenu';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_TOP_ZONE } from '../../../shared/ui/pageHeader';
 import ItemForm from '../components/ItemForm';
 import MoveItemSheet from '../components/MoveItemSheet';
 import BulkEditSheet from '../components/BulkEditSheet';
@@ -23,6 +24,7 @@ import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import { staggerContainer } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
+import { HOME_CREATE_PARAM, HOME_CREATE_VALUE } from '../lib/homeRoute';
 
 type ViewMode = 'type' | 'category';
 const DEFAULT_VIEW_MODE: ViewMode = 'category';
@@ -57,7 +59,7 @@ export default function HomePage() {
   const recentItems = useMemo(
     () => [...allInventoryItems]
       .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
-      .slice(0, 6),
+      .slice(0, 3),
     [allInventoryItems],
   );
 
@@ -72,11 +74,24 @@ export default function HomePage() {
     queryKey: ['home', 'recent-activity', user?.id],
     enabled: Boolean(user?.id) && showRootDashboard,
     queryFn: async () => {
-      const response = await fetchActivityLogsPage(user!.id, { pageSize: 6 });
+      const response = await fetchActivityLogsPage(user!.id, { pageSize: 3 });
       return response.data;
     },
     staleTime: 1000 * 30,
   });
+
+  useEffect(() => {
+    if (searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
+      return;
+    }
+
+    setEditItem(null);
+    setShowForm(true);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete(HOME_CREATE_PARAM);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setEditItem, setSearchParams, setShowForm]);
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;
@@ -262,13 +277,14 @@ export default function HomePage() {
   );
 
   const isEmpty = children.length === 0;
+  const hasHeaderDetail = breadcrumbs.length > 0 || (selectionMode && !isEmpty);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 md:px-8 pt-3 md:pt-6 pb-2 md:pb-3">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`px-4 md:px-8 ${hasHeaderDetail ? 'pb-3 md:pb-4' : ''}`}>
           <div
-            className={`mb-2 ${isRootLevel ? 'flex items-center gap-3' : 'flex items-center gap-3'}`}
+            className={`${hasHeaderDetail ? 'mb-2' : ''} flex items-center gap-3 ${APP_PAGE_HEADER_TOP_ZONE}`}
           >
             {currentParentId && (
               <button
@@ -368,8 +384,6 @@ export default function HomePage() {
               recentItems={recentItems}
               recentActivity={recentActivity}
               statsLoading={statsLoading}
-              onCreate={() => { setEditItem(null); setShowForm(true); }}
-              onOpenScan={() => navigate('/scan')}
               onOpenActivity={() => navigate('/activity')}
               onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
               onOpenActivityItem={(entry) => {
@@ -406,7 +420,6 @@ export default function HomePage() {
                 <Package size={36} className="text-slate-300" />
               </motion.div>
               <h3 className="mb-1 font-semibold text-slate-700">暂时空空如也</h3>
-              <p className="text-sm text-slate-400">点击 + 按钮添加收纳、位置或物品</p>
             </motion.div>
           ) : (
             <motion.div
@@ -688,7 +701,6 @@ export default function HomePage() {
             <div className="flex items-center justify-between mb-3 px-1">
               <div>
                 <p className="text-sm font-semibold text-slate-900">已选择 {selectedIds.length} 项</p>
-                <p className="text-xs text-slate-400 mt-0.5">可以统一编辑通用信息或批量删除</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
