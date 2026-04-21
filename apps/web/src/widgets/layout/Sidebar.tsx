@@ -82,7 +82,7 @@ export default function Sidebar({
               to={to}
               end={to === '/'}
               title={collapsed ? label : undefined}
-              className={`relative flex rounded-xl text-sm font-medium transition-colors duration-150 ${
+              className={`relative flex overflow-hidden rounded-xl text-sm font-medium transition-colors duration-150 ${
                 collapsed
                   ? 'justify-center px-0 py-3'
                   : 'items-center gap-3 px-4 py-3'
@@ -95,9 +95,22 @@ export default function Sidebar({
                   transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 />
               )}
-              <span className={`relative flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'}`}>
+              <span
+                className={`relative flex min-w-0 items-center ${
+                  collapsed ? 'justify-center' : 'gap-3'
+                } ${isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'}`}
+              >
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                {!collapsed && label}
+                <span
+                  aria-hidden={collapsed}
+                  className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200 ${
+                    collapsed
+                      ? 'ml-0 max-w-0 opacity-0'
+                      : 'ml-0 max-w-24 opacity-100 delay-150'
+                  }`}
+                >
+                  {label}
+                </span>
               </span>
             </NavLink>
           );
