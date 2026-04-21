@@ -55,15 +55,7 @@ export default function HomeDashboard({
       >
         <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)] xl:items-start">
           <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 md:p-5">
-            <div className="max-w-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-500">快捷操作</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-900">常用入口集中在这里</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                新增、扫描和查看近期动态都可以直接处理，右侧同步展示当前整理概览。
-              </p>
-            </div>
-
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <button
                 type="button"
                 onClick={onCreate}
