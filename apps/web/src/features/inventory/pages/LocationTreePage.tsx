@@ -75,10 +75,7 @@ export default function LocationTreePage() {
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
       <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 md:px-8 md:pt-6">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">位置树</h1>
-            <p className="mt-1 text-sm text-slate-500">查看所有已标记位置的层级，并快速进入对应内容。</p>
-          </div>
+          <h1 className="text-xl font-bold text-slate-900">位置树</h1>
           <button
             type="button"
             onClick={() => setShowCreateForm(true)}
@@ -90,7 +87,7 @@ export default function LocationTreePage() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col overflow-y-auto px-4 py-6 md:px-8">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col px-4 py-6 md:overflow-y-auto md:px-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -99,19 +96,15 @@ export default function LocationTreePage() {
           <EmptyState
             icon={<FolderTree size={28} className="text-slate-300" />}
             title="还没有可展示的位置"
-            description="直接新增位置后，这里会自动生成层级结构"
           />
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.75fr)_minmax(420px,1.25fr)]">
-            <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 xl:sticky xl:top-28 xl:h-fit">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]">
+            <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-28 lg:h-fit">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
                   <MapPin size={18} />
                 </div>
-                <div>
-                  <h2 className="font-semibold text-slate-900">位置导航</h2>
-                  <p className="text-xs text-slate-400">点击节点即可查看该位置的内容摘要。</p>
-                </div>
+                <h2 className="font-semibold text-slate-900">位置导航</h2>
               </div>
               <LocationTreePanel
                 items={items}
@@ -121,7 +114,7 @@ export default function LocationTreePage() {
               />
             </section>
 
-            <section className="space-y-4">
+            <section className="min-w-0 space-y-4">
               {selectedLocation ? (
                 <>
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -191,10 +184,7 @@ export default function LocationTreePage() {
 
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">直接内容</h3>
-                        <p className="mt-1 text-xs text-slate-400">这里展示这个位置下面一层的收纳、位置和物品。</p>
-                      </div>
+                      <h3 className="font-semibold text-slate-900">直接内容</h3>
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
                         {directChildren.length} 项
                       </span>

@@ -341,7 +341,6 @@ export default function CategoriesPage() {
             <EmptyState
               icon={<Shapes size={28} className="text-slate-300" />}
               title={`暂无${activeTab === 'container' ? '收纳' : '物品'}分类`}
-              description="点击 + 按钮创建第一个分类"
               iconMotion={{
                 animate: { rotate: [0, -8, 8, 0] },
                 transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },

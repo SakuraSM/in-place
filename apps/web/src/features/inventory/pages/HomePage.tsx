@@ -418,7 +418,6 @@ export default function HomePage() {
                 <Package size={36} className="text-slate-300" />
               </motion.div>
               <h3 className="mb-1 font-semibold text-slate-700">暂时空空如也</h3>
-              <p className="text-sm text-slate-400">点击 + 按钮添加收纳、位置或物品</p>
             </motion.div>
           ) : (
             <motion.div
@@ -700,7 +699,6 @@ export default function HomePage() {
             <div className="flex items-center justify-between mb-3 px-1">
               <div>
                 <p className="text-sm font-semibold text-slate-900">已选择 {selectedIds.length} 项</p>
-                <p className="text-xs text-slate-400 mt-0.5">可以统一编辑通用信息或批量删除</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">

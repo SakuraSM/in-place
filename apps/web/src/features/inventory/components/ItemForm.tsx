@@ -270,9 +270,6 @@ export default function ItemForm({
                 <label className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-slate-700">标记为位置</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      位置会出现在位置树里，适合卧室、客厅、阳台这类可导航空间。
-                    </p>
                   </div>
                   <input
                     type="checkbox"
@@ -287,7 +284,6 @@ export default function ItemForm({
             {form.type === 'container' && fixedLocation && (
               <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3">
                 <p className="text-sm font-medium text-sky-700">当前位置将直接作为「位置」创建</p>
-                <p className="mt-1 text-xs text-sky-600">会自动出现在位置树中，无需额外勾选。</p>
               </div>
             )}
 

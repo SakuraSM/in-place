@@ -214,7 +214,6 @@ export default function ScanPage() {
               <Sparkles size={22} className="text-amber-500" />
             </div>
             <h3 className="font-semibold text-amber-800 mb-1">AI 功能即将开放</h3>
-            <p className="text-amber-600 text-sm">服务端配置 AI 环境变量后即可使用拍照识别功能</p>
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(420px,0.95fr)_minmax(520px,1.15fr)] xl:items-start">
