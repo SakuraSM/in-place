@@ -143,7 +143,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
           onClick={onClose}
         />
         <motion.div
-          className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col"
+          className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden bg-white rounded-t-3xl shadow-2xl"
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 340, damping: 30 }}
@@ -165,7 +165,8 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
             </motion.button>
           </div>
 
-          <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
             {itemType ? (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">类别</label>
@@ -332,8 +333,9 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                 )}
               </AnimatePresence>
             </div>
+            </div>
 
-            <div className="pb-4">
+            <div className="border-t border-slate-100 bg-white px-5 py-4">
               <motion.button
                 type="submit"
                 disabled={saving}

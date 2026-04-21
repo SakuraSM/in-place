@@ -15,7 +15,7 @@ import ItemCard from '../components/ItemCard';
 import Breadcrumb from '../components/Breadcrumb';
 import ContextMenu from '../../../shared/ui/ContextMenu';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_TOP_ZONE } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_TOP_ZONE } from '../../../shared/ui/pageHeader';
 import ItemForm from '../components/ItemForm';
 import MoveItemSheet from '../components/MoveItemSheet';
 import BulkEditSheet from '../components/BulkEditSheet';
@@ -25,6 +25,7 @@ import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import { staggerContainer } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { HOME_CREATE_PARAM, HOME_CREATE_VALUE } from '../lib/homeRoute';
+import { buildItemIdMap, buildItemLineage } from '../lib/locationTree';
 
 type ViewMode = 'type' | 'category';
 const DEFAULT_VIEW_MODE: ViewMode = 'category';
@@ -61,6 +62,18 @@ export default function HomePage() {
       .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
       .slice(0, 3),
     [allInventoryItems],
+  );
+  const dashboardItemMap = useMemo(() => buildItemIdMap(allInventoryItems), [allInventoryItems]);
+  const recentItemPaths = useMemo(
+    () => Object.fromEntries(
+      recentItems.map((item) => [
+        item.id,
+        buildItemLineage(item.id, dashboardItemMap)
+          .map((node) => node.name)
+          .join(' > '),
+      ]),
+    ),
+    [dashboardItemMap, recentItems],
   );
 
   const { data: rootStats, isLoading: statsLoading } = useQuery({
@@ -280,7 +293,7 @@ export default function HomePage() {
   const hasHeaderDetail = breadcrumbs.length > 0 || (selectionMode && !isEmpty);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
       <div className={APP_PAGE_HEADER}>
         <div className={`px-4 md:px-8 ${hasHeaderDetail ? 'pb-3 md:pb-4' : ''}`}>
           <div
@@ -376,12 +389,13 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div data-scroll-root className="flex-1 min-h-0 overflow-y-auto">
-        <div className="flex min-h-full flex-1 flex-col px-4 py-4 md:min-h-full md:px-8 md:py-6">
+      <div data-scroll-root className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
+        <div className={`flex min-h-full min-w-0 flex-1 flex-col md:min-h-full ${APP_PAGE_CONTENT}`}>
           {showRootDashboard && (
             <HomeDashboard
               stats={rootStats ?? null}
               recentItems={recentItems}
+              recentItemPaths={recentItemPaths}
               recentActivity={recentActivity}
               statsLoading={statsLoading}
               onOpenActivity={() => navigate('/activity')}

@@ -6,7 +6,7 @@ import type { Database, TagEntity } from '../../../legacy/database.types';
 import { createTag, deleteTag, fetchTagsPage, updateTag } from '../../../legacy/tags';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import EmptyState from '../../../shared/ui/EmptyState';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 
@@ -70,7 +70,7 @@ function TagEditor({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
       <motion.div
         className="absolute inset-0 bg-black/25 backdrop-blur-sm"
         initial={{ opacity: 0 }}
@@ -79,14 +79,14 @@ function TagEditor({
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-lg rounded-t-3xl bg-white p-5 pb-8 shadow-2xl"
-        initial={{ y: '100%', opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: '100%', opacity: 0 }}
+        className="relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
+        initial={{ y: 24, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 24, opacity: 0, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
       >
-        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200" />
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
+        <div className="mb-5 flex items-center justify-between px-5 pt-5">
           <h3 className="font-semibold text-slate-900">{initial ? '编辑标签' : '新增标签'}</h3>
           <motion.button
             onClick={onClose}
@@ -99,7 +99,8 @@ function TagEditor({
           </motion.button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-500">标签名称</label>
             <input
@@ -138,14 +139,16 @@ function TagEditor({
           </div>
 
           {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-500">{error}</p> : null}
-
-          <button
-            type="submit"
-            disabled={saving || !name.trim()}
-            className="w-full rounded-2xl bg-sky-500 py-3.5 text-sm font-semibold text-white transition-all hover:bg-sky-600 disabled:bg-sky-300"
-          >
-            {saving ? '保存中...' : '保存标签'}
-          </button>
+          </div>
+          <div className="border-t border-slate-100 bg-white px-5 py-4">
+            <button
+              type="submit"
+              disabled={saving || !name.trim()}
+              className="w-full rounded-2xl bg-sky-500 py-3.5 text-sm font-semibold text-white transition-all hover:bg-sky-600 disabled:bg-sky-300"
+            >
+              {saving ? '保存中...' : '保存标签'}
+            </button>
+          </div>
         </form>
       </motion.div>
     </div>
@@ -260,7 +263,7 @@ export default function TagsPage() {
       <div
         ref={scrollRootRef}
         data-scroll-root
-        className="flex min-h-0 flex-1 flex-col px-4 py-4 md:overflow-y-auto md:px-8 md:py-6 md:pb-32"
+        className={`flex min-h-0 flex-1 flex-col md:overflow-y-auto md:pb-32 ${APP_PAGE_CONTENT}`}
       >
         {loading && tags.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-400">加载中...</div>

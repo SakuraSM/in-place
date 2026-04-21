@@ -7,7 +7,7 @@ import { uploadImage } from '../../../legacy/items';
 import type { Category, ItemType } from '../../../legacy/database.types';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { CategoryIcon, COLOR_OPTIONS, ICON_OPTIONS, getCategoryIconLabel, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import EmptyState from '../../../shared/ui/EmptyState';
 
@@ -72,7 +72,7 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
       <motion.div
         className="absolute inset-0 bg-black/25 backdrop-blur-sm"
         initial={{ opacity: 0 }}
@@ -81,14 +81,14 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-md rounded-t-3xl bg-white p-5 pb-8 shadow-2xl"
-        initial={{ y: '100%', opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: '100%', opacity: 0 }}
+        className="relative flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
+        initial={{ y: 24, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 24, opacity: 0, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
       >
-        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200" />
-        <div className="flex items-center justify-between mb-5">
+        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
+        <div className="mb-5 flex items-center justify-between px-5 pt-5">
           <h3 className="font-semibold text-slate-900">{initial?.id ? '编辑类别' : '新增类别'}</h3>
           <motion.button
             onClick={onClose}
@@ -100,7 +100,8 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
             <X size={16} />
           </motion.button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
           <div className="flex items-center gap-4">
             <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${colorCls.bg} ${isCustomCategoryImageIcon(icon) ? '' : colorCls.text}`}>
               <CategoryIcon
@@ -209,13 +210,16 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
           {error && (
             <p className="text-sm text-rose-500 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
           )}
-          <button
-            type="submit"
-            disabled={saving || !name.trim()}
-            className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm"
-          >
-            {saving ? '保存中...' : '保存'}
-          </button>
+          </div>
+          <div className="border-t border-slate-100 bg-white px-5 py-4">
+            <button
+              type="submit"
+              disabled={saving || !name.trim()}
+              className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm"
+            >
+              {saving ? '保存中...' : '保存'}
+            </button>
+          </div>
         </form>
       </motion.div>
     </div>
@@ -326,7 +330,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <div className="px-4 md:px-8 py-4 space-y-2.5">
+      <div className={`${APP_PAGE_CONTENT} space-y-2.5`}>
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div

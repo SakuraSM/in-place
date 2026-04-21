@@ -8,7 +8,7 @@ import type { AIRecognitionResult } from '../../../legacy/database.types';
 import ItemForm from '../components/ItemForm';
 import type { Item } from '../../../legacy/database.types';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import CropImageSheet from '../components/CropImageSheet';
 import { createObjectUrl, cropImageFromFile, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox } from '../lib/imageCrop';
 
@@ -208,7 +208,7 @@ export default function ScanPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 md:px-8">
+      <div className={`mx-auto w-full max-w-[1480px] ${APP_PAGE_CONTENT}`}>
         {aiEnabled === false ? (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-3">

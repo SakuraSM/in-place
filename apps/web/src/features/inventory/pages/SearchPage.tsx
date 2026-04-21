@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree } from 'lucide-react';
+import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree, Tags } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Item, ItemStatus, ItemType } from '../../../legacy/database.types';
+import type { ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import PaginationControls from '../components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 import LocationTreePanel from '../components/LocationTreePanel';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
-import { buildItemIdMap, buildItemPath, collectDescendantIds } from '../lib/locationTree';
+import { buildItemIdMap, buildItemPath } from '../lib/locationTree';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+import { searchItemsPage } from '../../../legacy/items';
+import { useAuth } from '../../../app/providers/AuthContext';
 
 type TypeFilterValue = ItemType | 'all' | 'location';
 
@@ -33,21 +36,19 @@ const TYPE_FILTERS: { value: TypeFilterValue; label: string; icon: React.Element
 const VALID_TYPE_VALUES = TYPE_FILTERS.map((f) => f.value);
 const VALID_STATUS_VALUES = STATUS_FILTERS.map((f) => f.value);
 
-interface ItemWithPath {
-  item: Item;
-  path: string;
-}
-
 export default function SearchPage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const { data: allItems = [], isLoading } = useAllInventoryItems();
+  const tagPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const [query, setQuery] = useState('');
 
   const typeParam = searchParams.get('type') as TypeFilterValue | null;
   const statusParam = searchParams.get('status') as ItemStatus | 'all' | null;
+  const tagParams = searchParams.getAll('tag');
 
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>(
     statusParam && (VALID_STATUS_VALUES as string[]).includes(statusParam) ? statusParam : 'all',
@@ -55,14 +56,37 @@ export default function SearchPage() {
   const [typeFilter, setTypeFilter] = useState<TypeFilterValue>(
     typeParam && (VALID_TYPE_VALUES as string[]).includes(typeParam) ? typeParam : 'all',
   );
+  const [selectedTags, setSelectedTags] = useState<string[]>(tagParams);
+  const [tagQuery, setTagQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
   const [showLocationSheet, setShowLocationSheet] = useState(false);
+  const [showTagSheet, setShowTagSheet] = useState(false);
+  const [showTagPopover, setShowTagPopover] = useState(false);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   const selectedLocationId = searchParams.get('locationId');
   const itemMap = useMemo(() => buildItemIdMap(allItems), [allItems]);
   const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
+  const availableTags = useMemo(
+    () => Array.from(new Set(allItems.flatMap((item) => item.tags)))
+      .sort((left, right) => left.localeCompare(right, 'zh-CN')),
+    [allItems],
+  );
+  const tagCounts = useMemo(
+    () => allItems.reduce<Record<string, number>>((acc, item) => {
+      for (const tag of item.tags) {
+        acc[tag] = (acc[tag] ?? 0) + 1;
+      }
+      return acc;
+    }, {}),
+    [allItems],
+  );
+  const normalizedTagQuery = tagQuery.trim().toLocaleLowerCase('zh-CN');
+  const filteredAvailableTags = useMemo(
+    () => availableTags.filter((tag) => tag.toLocaleLowerCase('zh-CN').includes(normalizedTagQuery)),
+    [availableTags, normalizedTagQuery],
+  );
 
   useEffect(() => {
     if (!selectedLocationId) {
@@ -79,85 +103,94 @@ export default function SearchPage() {
     setSearchParams(nextSearchParams, { replace: true });
   }, [itemMap, searchParams, selectedLocationId, setSearchParams]);
 
-  const descendantIds = useMemo(
-    () => (selectedLocationId ? collectDescendantIds(allItems, selectedLocationId) : null),
-    [allItems, selectedLocationId],
-  );
-
-  const itemsWithPaths = useMemo<ItemWithPath[]>(() => {
-    return allItems.map((item) => ({
-      item,
-      path: buildItemPath(item, itemMap),
-    }));
-  }, [allItems, itemMap]);
-
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
-
-  const filteredResults = useMemo(() => {
-    return itemsWithPaths.filter(({ item }) => {
-      if (descendantIds && !descendantIds.has(item.id)) {
-        return false;
-      }
-
-      if (typeFilter === 'location' && !isLocationItem(item)) {
-        return false;
-      }
-
-      if (typeFilter === 'container' && (item.type !== 'container' || isLocationItem(item))) {
-        return false;
-      }
-
-      if (typeFilter === 'item' && item.type !== 'item') {
-        return false;
-      }
-
-      if (statusFilter !== 'all' && item.status !== statusFilter) {
-        return false;
-      }
-
-      if (!normalizedQuery) {
-        return true;
-      }
-
-      return [
-        item.name,
-        item.description,
-        item.category,
-        ...item.tags,
-      ]
-        .filter((field): field is string => Boolean(field))
-        .some((field) => field.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
-    });
-  }, [descendantIds, itemsWithPaths, normalizedQuery, statusFilter, typeFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [query, statusFilter, typeFilter, pageSize, selectedLocationId]);
+  }, [query, selectedTags, statusFilter, typeFilter, pageSize, selectedLocationId]);
 
-  const total = filteredResults.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  useEffect(() => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (typeFilter !== 'all') {
+      nextSearchParams.set('type', typeFilter);
+    } else {
+      nextSearchParams.delete('type');
+    }
+
+    if (statusFilter !== 'all') {
+      nextSearchParams.set('status', statusFilter);
+    } else {
+      nextSearchParams.delete('status');
+    }
+
+    nextSearchParams.delete('tag');
+    selectedTags.forEach((tag) => nextSearchParams.append('tag', tag));
+
+    const currentQuery = searchParams.toString();
+    const nextQuery = nextSearchParams.toString();
+    if (currentQuery !== nextQuery) {
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [searchParams, selectedTags, setSearchParams, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    if (!showTagPopover) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!tagPopoverRef.current?.contains(event.target as Node)) {
+        setShowTagPopover(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, [showTagPopover]);
+
+  const effectiveTypeFilter = typeFilter === 'location' ? 'container' : typeFilter === 'all' ? undefined : typeFilter;
+  const effectiveStatusFilter = typeFilter === 'location' || typeFilter === 'container' ? undefined : statusFilter === 'all' ? undefined : statusFilter;
+
+  const { data: searchResponse, isLoading: isSearchLoading } = useQuery({
+    queryKey: ['inventory', 'overview-search', user?.id, normalizedQuery, effectiveTypeFilter, effectiveStatusFilter, selectedLocationId, selectedTags, page, pageSize, typeFilter],
+    enabled: Boolean(user?.id),
+    placeholderData: (previous) => previous,
+    queryFn: async () => searchItemsPage(normalizedQuery, user!.id, {
+      page,
+      pageSize,
+      type: effectiveTypeFilter,
+      status: effectiveStatusFilter,
+      locationId: selectedLocationId,
+      locationOnly: typeFilter === 'location',
+      tags: selectedTags,
+    }),
+  });
+
+  const displayedResults = useMemo(
+    () => (searchResponse?.data ?? []).map((item) => ({
+      item,
+      path: buildItemPath(item, itemMap),
+    })),
+    [searchResponse?.data, typeFilter],
+  );
+  const total = searchResponse?.meta.total ?? 0;
+  const totalPages = searchResponse?.meta.totalPages ?? 1;
+  const paginationMeta = searchResponse?.meta ?? {
+    page,
+    pageSize,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+  };
 
   useEffect(() => {
     if (page > totalPages) {
       setPage(totalPages);
     }
   }, [page, totalPages]);
-
-  const displayedResults = useMemo(
-    () => (
-      isMobile
-        ? filteredResults.slice(0, page * pageSize)
-        : filteredResults.slice((page - 1) * pageSize, page * pageSize)
-    ),
-    [filteredResults, isMobile, page, pageSize],
-  );
-
-  const paginationMeta = {
-    page,
-    totalPages,
-    total,
-    hasNextPage: page < totalPages,
-  };
 
   const handleSelectLocation = (locationId: string | null) => {
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -170,13 +203,26 @@ export default function SearchPage() {
     setShowLocationSheet(false);
   };
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags((current) => (
+      current.includes(tag)
+        ? current.filter((value) => value !== tag)
+        : [...current, tag]
+    ));
+  };
+
+  const clearTags = () => {
+    setSelectedTags([]);
+    setTagQuery('');
+  };
+
   const loadNextPage = useCallback(() => {
-    if (!isMobile || !paginationMeta.hasNextPage || isLoading) {
+    if (!isMobile || !paginationMeta.hasNextPage || isSearchLoading) {
       return;
     }
 
     setPage((current) => current + 1);
-  }, [isLoading, isMobile, paginationMeta.hasNextPage]);
+  }, [isMobile, isSearchLoading, paginationMeta.hasNextPage]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -239,6 +285,104 @@ export default function SearchPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">标签</p>
+          {selectedTags.length > 0 && (
+            <button
+              type="button"
+              onClick={clearTags}
+              className="text-xs font-medium text-sky-500"
+            >
+              清空
+            </button>
+          )}
+        </div>
+        {availableTags.length === 0 ? (
+          <p className="text-xs text-slate-400">还没有可筛选的标签</p>
+        ) : (
+          <div ref={tagPopoverRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowTagPopover((current) => !current)}
+              className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition-colors ${
+                selectedTags.length > 0
+                  ? 'border-sky-200 bg-sky-50 text-sky-700'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              <span className="truncate">
+                {selectedTags.length > 0 ? `已选 ${selectedTags.length} 个标签` : '点击选择标签'}
+              </span>
+              <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[11px] text-slate-500">
+                {availableTags.length}
+              </span>
+            </button>
+
+            {showTagPopover && (
+              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    value={tagQuery}
+                    onChange={(event) => setTagQuery(event.target.value)}
+                    placeholder="搜索标签"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  {tagQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setTagQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-64 space-y-1 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/70 p-2">
+                  <button
+                    type="button"
+                    onClick={clearTags}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                      selectedTags.length === 0 ? 'bg-sky-500 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>全部标签</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] ${selectedTags.length === 0 ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                      {availableTags.length}
+                    </span>
+                  </button>
+                  {filteredAvailableTags.length === 0 ? (
+                    <div className="px-3 py-8 text-center text-xs text-slate-400">没有匹配的标签</div>
+                  ) : (
+                    filteredAvailableTags.map((tag) => {
+                      const active = selectedTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                            active ? 'bg-sky-500 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="truncate">{tag}</span>
+                          <span className={`ml-3 shrink-0 rounded-full px-2 py-0.5 text-[11px] ${active ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                            {tagCounts[tag] ?? 0}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div>
@@ -331,6 +475,20 @@ export default function SearchPage() {
               </button>
             ))}
           </div>
+          {availableTags.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                type="button"
+                onClick={() => setShowTagSheet(true)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedTags.length > 0 ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <Tags size={12} />
+                {selectedTags.length > 0 ? `已选 ${selectedTags.length}` : '标签筛选'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -367,7 +525,7 @@ export default function SearchPage() {
       <div
         ref={scrollRootRef}
         data-scroll-root
-        className="flex min-h-full flex-1 flex-col overflow-y-auto px-4 py-4 md:px-8 md:py-6"
+        className={`flex min-h-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}
       >
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -408,6 +566,12 @@ export default function SearchPage() {
               <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                 <span>共 {total} 个结果</span>
                 {query && <span>· 搜索词「{query.trim()}」</span>}
+                {selectedTags.length > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-sky-600">
+                    <Tags size={11} />
+                    标签 {selectedTags.length} 项
+                  </span>
+                )}
                 {selectedLocation && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-sky-600">
                     <MapPin size={11} />
@@ -498,6 +662,96 @@ export default function SearchPage() {
       </div>
 
       <AnimatePresence>
+        {showTagSheet && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden">
+            <motion.div
+              className="absolute inset-0 bg-black/25 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTagSheet(false)}
+            />
+            <motion.div
+              className="relative flex max-h-[75vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+            >
+              <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200" />
+              <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-4 pt-2">
+                <h2 className="font-semibold text-slate-900">标签筛选</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowTagSheet(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={tagQuery}
+                      onChange={(event) => setTagQuery(event.target.value)}
+                      placeholder="搜索标签"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                    {tagQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setTagQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                        onClick={() => {
+                          clearTags();
+                          setShowTagSheet(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition-colors ${
+                        selectedTags.length === 0 ? 'bg-sky-500 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>全部标签</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] ${selectedTags.length === 0 ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        {availableTags.length}
+                      </span>
+                    </button>
+                    {filteredAvailableTags.length === 0 ? (
+                      <div className="px-3 py-10 text-center text-sm text-slate-400">没有匹配的标签</div>
+                    ) : (
+                      filteredAvailableTags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition-colors ${
+                            selectedTags.includes(tag) ? 'bg-sky-500 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span className="truncate">{tag}</span>
+                          <span className={`ml-3 shrink-0 rounded-full px-2 py-0.5 text-[11px] ${selectedTags.includes(tag) ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                            {tagCounts[tag] ?? 0}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
         {showLocationSheet && (
           <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden">
             <motion.div
@@ -525,7 +779,7 @@ export default function SearchPage() {
                   <X size={16} />
                 </button>
               </div>
-              <div className="overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 <LocationTreePanel
                   items={allItems}
                   selectedLocationId={selectedLocationId}

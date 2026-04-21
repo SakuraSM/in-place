@@ -7,6 +7,7 @@ import ActivityFeed from '../../activity/components/ActivityFeed';
 interface Props {
   stats: ItemStats | null;
   recentItems: Item[];
+  recentItemPaths: Record<string, string>;
   recentActivity: ActivityLog[];
   statsLoading?: boolean;
   onOpenActivity: () => void;
@@ -27,6 +28,7 @@ function formatRecentTime(value: string) {
 export default function HomeDashboard({
   stats,
   recentItems,
+  recentItemPaths,
   recentActivity,
   statsLoading = false,
   onOpenActivity,
@@ -42,12 +44,12 @@ export default function HomeDashboard({
   ];
 
   return (
-    <div className="mb-5 space-y-3 md:mb-6">
+    <div className="mb-5 min-w-0 space-y-3 overflow-x-hidden md:mb-6">
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-        className="overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
+        className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
       >
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
@@ -67,15 +69,15 @@ export default function HomeDashboard({
         </div>
       </motion.section>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.05 }}
-          className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <h3 className="text-base font-semibold text-slate-900">最近添加</h3>
               <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条，快速回到刚录入的内容。</p>
             </div>
@@ -94,7 +96,7 @@ export default function HomeDashboard({
                   onClick={() => onOpenItem(item)}
                   className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
                 >
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
                     item.type === 'item' ? 'bg-amber-50 text-amber-500' : 'bg-sky-50 text-sky-500'
                   }`}>
                     {item.type === 'item' ? <Package size={16} /> : <Box size={16} />}
@@ -103,6 +105,9 @@ export default function HomeDashboard({
                     <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
                     <p className="mt-1 text-xs text-slate-400">
                       {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatRecentTime(item.created_at)}
+                    </p>
+                    <p className="mt-1 truncate text-[11px] text-slate-400">
+                      {recentItemPaths[item.id] || '顶层'}
                     </p>
                   </div>
                   <ArrowRight size={14} className="shrink-0 text-slate-300" />
@@ -116,17 +121,17 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-          className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <h3 className="text-base font-semibold text-slate-900">最近操作</h3>
               <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条操作，页面主体仍聚焦收纳和物品。</p>
             </div>
             <button
               type="button"
               onClick={onOpenActivity}
-              className="text-sm font-medium text-sky-500"
+              className="shrink-0 text-sm font-medium text-sky-500"
             >
               查看全部
             </button>

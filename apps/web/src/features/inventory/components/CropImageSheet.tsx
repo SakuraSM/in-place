@@ -152,7 +152,7 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
       <motion.div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         initial={{ opacity: 0 }}
@@ -160,12 +160,12 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-2xl bg-white rounded-t-3xl shadow-2xl max-h-[94vh] flex flex-col"
-        initial={{ y: '100%', opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        className="relative flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
+        initial={{ y: 24, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
       >
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
+        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1 md:hidden" />
         <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
           <div>
             <h2 className="font-semibold text-slate-900 text-lg">手动裁图</h2>
@@ -182,7 +182,7 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
           </motion.button>
         </div>
 
-        <div className="p-5 space-y-4 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div
             ref={imageContainerRef}
             className="relative rounded-2xl overflow-hidden bg-slate-100 touch-none select-none"
@@ -213,6 +213,9 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
             )}
           </div>
 
+        </div>
+
+        <div className="border-t border-slate-100 bg-white p-5">
           <div className="grid grid-cols-3 gap-3">
             <button
               type="button"

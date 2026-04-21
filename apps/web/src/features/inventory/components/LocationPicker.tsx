@@ -52,7 +52,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex items-end justify-center">
+      <div className="fixed inset-0 z-[60] flex items-end justify-center md:items-center md:px-6 md:py-8">
         <motion.div
           className="absolute inset-0 bg-black/25 backdrop-blur-sm"
           initial={{ opacity: 0 }}
@@ -61,13 +61,13 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
           onClick={onClose}
         />
         <motion.div
-          className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-2xl max-h-[70vh] flex flex-col"
-          initial={{ y: '100%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
+          className="relative flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden bg-white shadow-2xl rounded-t-3xl md:max-h-[78vh] md:max-w-2xl md:rounded-3xl"
+          initial={{ y: 24, opacity: 0, scale: 0.98 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 24, opacity: 0, scale: 0.98 }}
           transition={{ type: 'spring', stiffness: 340, damping: 30 }}
         >
-          <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-2" />
+          <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
           <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-slate-100">
             <div>
               <h3 className="font-semibold text-slate-900">选择放置位置</h3>
