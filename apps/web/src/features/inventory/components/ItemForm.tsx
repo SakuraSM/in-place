@@ -195,7 +195,10 @@ export default function ItemForm({
   const containerLabel = form.type === 'container'
     ? (form.isLocation ? '位置' : '收纳')
     : '物品';
-  const normalizedTagInput = tagInput.trim().toLocaleLowerCase('zh-CN');
+  const normalizedTagInput = useMemo(
+    () => tagInput.trim().toLocaleLowerCase('zh-CN'),
+    [tagInput],
+  );
   const suggestedTags = useMemo(() => availableTags.filter((tag) => {
     if (form.tags.includes(tag)) {
       return false;
