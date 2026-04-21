@@ -377,13 +377,13 @@ export default function HomePage() {
       <div data-scroll-root className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex min-h-full flex-1 flex-col px-4 py-4 md:min-h-full md:px-8 md:py-6">
           {showRootDashboard && (
-              <HomeDashboard
-                stats={rootStats ?? null}
-                recentItems={recentItems}
-                recentActivity={recentActivity}
-                statsLoading={statsLoading}
-                onOpenActivity={() => navigate('/activity')}
-                onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
+            <HomeDashboard
+              stats={rootStats ?? null}
+              recentItems={recentItems}
+              recentActivity={recentActivity}
+              statsLoading={statsLoading}
+              onOpenActivity={() => navigate('/activity')}
+              onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
               onOpenActivityItem={(entry) => {
                 if (!entry.item_id || entry.action === 'delete') {
                   navigate('/activity');
