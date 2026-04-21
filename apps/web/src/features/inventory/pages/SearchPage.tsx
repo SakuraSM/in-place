@@ -29,6 +29,9 @@ const TYPE_FILTERS: { value: TypeFilterValue; label: string; icon: React.Element
   { value: 'item', label: '物品', icon: Package },
 ];
 
+const VALID_TYPE_VALUES = TYPE_FILTERS.map((f) => f.value);
+const VALID_STATUS_VALUES = STATUS_FILTERS.map((f) => f.value);
+
 interface ItemWithPath {
   item: Item;
   path: string;
@@ -44,14 +47,12 @@ export default function SearchPage() {
 
   const typeParam = searchParams.get('type') as TypeFilterValue | null;
   const statusParam = searchParams.get('status') as ItemStatus | 'all' | null;
-  const validTypeValues: TypeFilterValue[] = ['all', 'location', 'container', 'item'];
-  const validStatusValues: Array<ItemStatus | 'all'> = ['all', 'in_stock', 'borrowed', 'worn_out'];
 
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>(
-    statusParam && validStatusValues.includes(statusParam) ? statusParam : 'all',
+    statusParam && (VALID_STATUS_VALUES as string[]).includes(statusParam) ? statusParam : 'all',
   );
   const [typeFilter, setTypeFilter] = useState<TypeFilterValue>(
-    typeParam && validTypeValues.includes(typeParam) ? typeParam : 'all',
+    typeParam && (VALID_TYPE_VALUES as string[]).includes(typeParam) ? typeParam : 'all',
   );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
