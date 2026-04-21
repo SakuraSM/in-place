@@ -57,7 +57,7 @@ export default function HomePage() {
   const recentItems = useMemo(
     () => [...allInventoryItems]
       .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
-      .slice(0, 6),
+      .slice(0, 3),
     [allInventoryItems],
   );
 
@@ -72,11 +72,24 @@ export default function HomePage() {
     queryKey: ['home', 'recent-activity', user?.id],
     enabled: Boolean(user?.id) && showRootDashboard,
     queryFn: async () => {
-      const response = await fetchActivityLogsPage(user!.id, { pageSize: 6 });
+      const response = await fetchActivityLogsPage(user!.id, { pageSize: 3 });
       return response.data;
     },
     staleTime: 1000 * 30,
   });
+
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') {
+      return;
+    }
+
+    setEditItem(null);
+    setShowForm(true);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('create');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;
@@ -363,15 +376,13 @@ export default function HomePage() {
       <div data-scroll-root className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex min-h-full flex-1 flex-col px-4 py-4 md:min-h-full md:px-8 md:py-6">
           {showRootDashboard && (
-            <HomeDashboard
-              stats={rootStats ?? null}
-              recentItems={recentItems}
-              recentActivity={recentActivity}
-              statsLoading={statsLoading}
-              onCreate={() => { setEditItem(null); setShowForm(true); }}
-              onOpenScan={() => navigate('/scan')}
-              onOpenActivity={() => navigate('/activity')}
-              onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
+              <HomeDashboard
+                stats={rootStats ?? null}
+                recentItems={recentItems}
+                recentActivity={recentActivity}
+                statsLoading={statsLoading}
+                onOpenActivity={() => navigate('/activity')}
+                onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
               onOpenActivityItem={(entry) => {
                 if (!entry.item_id || entry.action === 'delete') {
                   navigate('/activity');

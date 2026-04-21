@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         onToggle={() => setSidebarCollapsed((current) => !current)}
       />
       <motion.div
-        className={`flex min-h-screen min-w-0 flex-1 flex-col pb-20 md:h-screen md:pb-0 ${
+        className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden bg-slate-50 pb-20 md:h-screen md:pb-0 ${
           sidebarCollapsed ? 'md:ml-24' : 'md:ml-64 lg:ml-72'
         }`}
         variants={pageTransition}

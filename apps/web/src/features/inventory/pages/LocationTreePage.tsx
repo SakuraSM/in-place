@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package } from 'lucide-react';
+import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package, Plus } from 'lucide-react';
 import EmptyState from '../../../shared/ui/EmptyState';
+import { useAuth } from '../../../app/providers/AuthContext';
+import { createItem } from '../../../legacy/items';
+import type { Item } from '../../../legacy/database.types';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
+import ItemForm from '../components/ItemForm';
 import {
   buildChildrenMap,
   buildItemIdMap,
@@ -14,9 +19,12 @@ import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { resolveItemDetailPath } from '../lib/detailPath';
 
 export default function LocationTreePage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useAllInventoryItems();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const locationItems = useMemo(
     () => items.filter(isLocationItem),
@@ -50,16 +58,33 @@ export default function LocationTreePage() {
     [childrenMap, selectedLocation],
   );
 
+  const handleCreateLocation = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+    const created = await createItem(data);
+    setShowCreateForm(false);
+    setSelectedLocationId(created.id);
+    await queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
       <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
-          <h1 className="text-xl font-bold text-slate-900">位置树</h1>
-          <p className="mt-1 text-sm text-slate-500">查看所有已标记位置的层级，并快速进入对应内容。</p>
+        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 md:px-8 md:pt-6">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">位置树</h1>
+            <p className="mt-1 text-sm text-slate-500">查看所有已标记位置的层级，并快速进入对应内容。</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-sky-500 px-4 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
+          >
+            <Plus size={16} />
+            新增位置
+          </button>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col overflow-y-auto px-4 py-6 md:px-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -68,7 +93,7 @@ export default function LocationTreePage() {
           <EmptyState
             icon={<FolderTree size={28} className="text-slate-300" />}
             title="还没有可展示的位置"
-            description="在新增或编辑收纳时勾选“标记为位置”，这里就会生成位置树。"
+            description="直接新增位置后，这里会自动生成层级结构。"
           />
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.75fr)_minmax(420px,1.25fr)]">
@@ -206,6 +231,15 @@ export default function LocationTreePage() {
           </div>
         )}
       </div>
+      {showCreateForm && (
+        <ItemForm
+          defaultParentId={selectedLocationId}
+          forceType="container"
+          fixedLocation
+          onSave={handleCreateLocation}
+          onClose={() => setShowCreateForm(false)}
+        />
+      )}
     </div>
   );
 }

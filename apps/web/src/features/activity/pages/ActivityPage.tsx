@@ -64,7 +64,7 @@ export default function ActivityPage() {
   }, [logs]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
       <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
           <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
@@ -72,7 +72,7 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col px-4 py-6 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col overflow-y-auto px-4 py-6 md:px-8">
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           {[
             { label: '手动录入', value: summary.manual_create, tone: 'bg-sky-50 text-sky-500' },

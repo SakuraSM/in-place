@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 
@@ -13,6 +13,12 @@ const navItems = [
   { to: '/scan', icon: Camera, label: 'AI 扫描' },
   { to: '/profile', icon: User, label: '我的' },
 ];
+
+const quickActions = [
+  { to: '/?create=1', icon: Plus, label: '立即新增', primary: true },
+  { to: '/activity', icon: Clock3, label: '操作记录' },
+  { to: '/scan', icon: Camera, label: 'AI 扫描' },
+] as const;
 
 const sidebarEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -31,7 +37,7 @@ export default function Sidebar({
         collapsed ? 'w-24' : 'w-64 lg:w-72'
       }`}
     >
-      <div className={`border-b border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-5' : 'px-6 py-6'}`}>
+      <div className={`border-b border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-4' : 'px-5 py-4'}`}>
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
           {collapsed ? (
             <div className="overflow-hidden rounded-2xl">
@@ -60,6 +66,24 @@ export default function Sidebar({
             </button>
           )}
         </div>
+        {!collapsed && (
+          <div className="mt-4 grid gap-2">
+            {quickActions.map(({ to, icon: Icon, label, primary }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                  primary
+                    ? 'bg-sky-500 text-white shadow-sm shadow-sky-200 hover:bg-sky-600'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                }`}
+              >
+                <Icon size={16} />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </div>
+        )}
         {collapsed && (
           <button
             type="button"
