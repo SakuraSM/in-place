@@ -14,6 +14,8 @@ const navItems = [
   { to: '/profile', icon: User, label: '我的' },
 ];
 
+const sidebarEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
 export default function Sidebar({
   collapsed,
   onToggle,
@@ -25,11 +27,11 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col border-r border-slate-100 bg-white transition-[width] duration-300 ${
+      className={`hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col border-r border-slate-100 bg-white transition-[width,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
         collapsed ? 'w-24' : 'w-64 lg:w-72'
       }`}
     >
-      <div className={`border-b border-slate-100 ${collapsed ? 'px-3 py-5' : 'px-6 py-6'}`}>
+      <div className={`border-b border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-5' : 'px-6 py-6'}`}>
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
           {collapsed ? (
             <div className="overflow-hidden rounded-2xl">
@@ -71,7 +73,7 @@ export default function Sidebar({
         )}
       </div>
 
-      <nav className={`relative flex-1 space-y-1 py-5 ${collapsed ? 'px-2' : 'px-3'}`}>
+      <nav className={`relative flex-1 space-y-1 py-5 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2' : 'px-3'}`}>
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = to === '/'
             ? location.pathname === '/'
@@ -82,10 +84,10 @@ export default function Sidebar({
               to={to}
               end={to === '/'}
               title={collapsed ? label : undefined}
-              className={`relative flex overflow-hidden rounded-xl text-sm font-medium transition-colors duration-150 ${
+              className={`relative flex items-center overflow-hidden rounded-xl text-sm font-medium transition-[padding,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 collapsed
                   ? 'justify-center px-0 py-3'
-                  : 'items-center gap-3 px-4 py-3'
+                  : 'justify-start px-4 py-3'
               }`}
             >
               {isActive && (
@@ -97,27 +99,41 @@ export default function Sidebar({
               )}
               <span
                 className={`relative flex min-w-0 items-center ${
-                  collapsed ? 'justify-center' : 'gap-3'
-                } ${isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'}`}
+                  isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'
+                }`}
               >
-                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                <span
+                <motion.span
+                  animate={{ x: collapsed ? 0 : 2 }}
+                  transition={{ duration: 0.28, ease: sidebarEase }}
+                >
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                </motion.span>
+                <motion.span
                   aria-hidden={collapsed}
-                  className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200 ${
-                    collapsed
-                      ? 'ml-0 max-w-0 opacity-0'
-                      : 'ml-0 max-w-full opacity-100 delay-150'
-                  }`}
+                  initial={false}
+                  animate={{
+                    opacity: collapsed ? 0 : 1,
+                    maxWidth: collapsed ? 0 : 160,
+                    marginLeft: collapsed ? 0 : 12,
+                    x: collapsed ? -8 : 0,
+                  }}
+                  transition={{
+                    opacity: { duration: collapsed ? 0.12 : 0.18, delay: collapsed ? 0 : 0.12, ease: sidebarEase },
+                    maxWidth: { duration: 0.3, delay: collapsed ? 0 : 0.08, ease: sidebarEase },
+                    marginLeft: { duration: 0.3, delay: collapsed ? 0 : 0.08, ease: sidebarEase },
+                    x: { duration: 0.24, delay: collapsed ? 0 : 0.1, ease: sidebarEase },
+                  }}
+                  className="overflow-hidden whitespace-nowrap"
                 >
                   {label}
-                </span>
+                </motion.span>
               </span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className={`border-t border-slate-100 ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>
+      <div className={`border-t border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>
         <p className={`text-center text-xs text-slate-300 ${collapsed ? 'leading-5' : ''}`}>
           {collapsed ? 'v0.1.0' : '归位 v0.1.0'}
         </p>
