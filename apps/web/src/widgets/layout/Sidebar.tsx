@@ -15,12 +15,6 @@ const navItems = [
   { to: '/profile', icon: User, label: '我的' },
 ];
 
-const quickActions = [
-  { to: HOME_CREATE_ROUTE, icon: Plus, label: '立即新增', primary: true },
-  { to: '/activity', icon: Clock3, label: '操作记录', primary: false },
-  { to: '/scan', icon: Camera, label: 'AI 扫描', primary: false },
-] as const;
-
 const sidebarEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export default function Sidebar({
@@ -56,45 +50,47 @@ export default function Sidebar({
             />
           )}
           {!collapsed && (
+            <div className="flex items-center gap-2">
+              <NavLink
+                to={HOME_CREATE_ROUTE}
+                title="立即新增"
+                aria-label="立即新增"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
+              >
+                <Plus size={18} />
+              </NavLink>
+              <button
+                type="button"
+                onClick={onToggle}
+                title="折叠菜单"
+                aria-label="折叠菜单"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
+              >
+                <PanelLeftClose size={18} />
+              </button>
+            </div>
+          )}
+        </div>
+        {collapsed && (
+          <div className="mt-4 space-y-2">
+            <NavLink
+              to={HOME_CREATE_ROUTE}
+              title="立即新增"
+              aria-label="立即新增"
+              className="flex w-full items-center justify-center rounded-2xl bg-sky-50 py-2.5 text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
+            >
+              <Plus size={18} />
+            </NavLink>
             <button
               type="button"
               onClick={onToggle}
-              title="折叠菜单"
-              aria-label="折叠菜单"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
+              title="展开菜单"
+              aria-label="展开菜单"
+              className="flex w-full items-center justify-center rounded-2xl bg-slate-100 py-2.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
             >
-              <PanelLeftClose size={18} />
+              <PanelLeftOpen size={18} />
             </button>
-          )}
-        </div>
-        {!collapsed && (
-          <div className="mt-4 grid gap-2">
-            {quickActions.map(({ to, icon: Icon, label, primary }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  primary
-                    ? 'bg-sky-500 text-white shadow-sm shadow-sky-200 hover:bg-sky-600'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-                }`}
-              >
-                <Icon size={16} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
           </div>
-        )}
-        {collapsed && (
-          <button
-            type="button"
-            onClick={onToggle}
-            title="展开菜单"
-            aria-label="展开菜单"
-            className="mt-4 flex w-full items-center justify-center rounded-2xl bg-slate-100 py-2.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
-          >
-            <PanelLeftOpen size={18} />
-          </button>
         )}
       </div>
 
