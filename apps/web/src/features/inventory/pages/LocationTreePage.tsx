@@ -25,6 +25,7 @@ export default function LocationTreePage() {
   const { data: items = [], isLoading } = useAllInventoryItems();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const locationItems = useMemo(
     () => items.filter(isLocationItem),
@@ -59,10 +60,15 @@ export default function LocationTreePage() {
   );
 
   const handleCreateLocation = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
-    const created = await createItem(data);
-    setShowCreateForm(false);
-    setSelectedLocationId(created.id);
-    await queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+    try {
+      setCreateError(null);
+      const created = await createItem(data);
+      setShowCreateForm(false);
+      setSelectedLocationId(created.id);
+      await queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : '新增位置失败，请稍后再试');
+    }
   };
 
   return (
@@ -93,7 +99,7 @@ export default function LocationTreePage() {
           <EmptyState
             icon={<FolderTree size={28} className="text-slate-300" />}
             title="还没有可展示的位置"
-            description="直接新增位置后，这里会自动生成层级结构。"
+            description="直接新增位置后，这里会自动生成层级结构"
           />
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.75fr)_minmax(420px,1.25fr)]">
@@ -236,8 +242,12 @@ export default function LocationTreePage() {
           defaultParentId={selectedLocationId}
           forceType="container"
           fixedLocation
+          submitError={createError}
           onSave={handleCreateLocation}
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            setShowCreateForm(false);
+            setCreateError(null);
+          }}
         />
       )}
     </div>

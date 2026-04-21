@@ -23,6 +23,7 @@ import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import { staggerContainer } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
+import { HOME_CREATE_PARAM, HOME_CREATE_VALUE } from '../lib/homeRoute';
 
 type ViewMode = 'type' | 'category';
 const DEFAULT_VIEW_MODE: ViewMode = 'category';
@@ -79,7 +80,7 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    if (searchParams.get('create') !== '1') {
+    if (searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
       return;
     }
 
@@ -87,9 +88,9 @@ export default function HomePage() {
     setShowForm(true);
 
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('create');
+    nextParams.delete(HOME_CREATE_PARAM);
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setEditItem, setSearchParams, setShowForm]);
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;

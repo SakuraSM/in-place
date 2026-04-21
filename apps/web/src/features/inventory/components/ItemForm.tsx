@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, MapPin, Tag, Plus, Loader2 } from 'lucide-react';
 import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/database.types';
@@ -32,6 +32,7 @@ interface Props {
   defaultType?: ItemType;
   forceType?: ItemType;
   fixedLocation?: boolean;
+  submitError?: string | null;
   onSave: (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   onClose: () => void;
 }
@@ -48,6 +49,7 @@ export default function ItemForm({
   defaultType = 'item',
   forceType,
   fixedLocation = false,
+  submitError,
   onSave,
   onClose,
 }: Props) {
@@ -84,7 +86,11 @@ export default function ItemForm({
 
   useEffect(() => {
     if (!user) return;
-    fetchTags(user.id).then((tags) => setAvailableTags(tags.map((tag) => tag.name)));
+    fetchTags(user.id).then((tags) => setAvailableTags(
+      tags
+        .map((tag) => tag.name)
+        .sort((left, right) => left.localeCompare(right, 'zh-CN')),
+    ));
   }, [user]);
 
   useEffect(() => {
@@ -114,18 +120,6 @@ export default function ItemForm({
       cancelled = true;
     };
   }, [form.parent_id]);
-
-  useEffect(() => {
-    if (forceType && form.type !== forceType) {
-      setForm((current) => ({ ...current, type: forceType }));
-    }
-  }, [forceType, form.type]);
-
-  useEffect(() => {
-    if (fixedLocation && (!form.isLocation || form.type !== 'container')) {
-      setForm((current) => ({ ...current, isLocation: true, type: 'container' }));
-    }
-  }, [fixedLocation, form.isLocation, form.type]);
 
   const update = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -202,17 +196,17 @@ export default function ItemForm({
     ? (form.isLocation ? '位置' : '收纳')
     : '物品';
   const normalizedTagInput = tagInput.trim().toLocaleLowerCase('zh-CN');
-  const suggestedTags = availableTags.filter((tag) => {
-    if (form.tags.includes(tag)) {
-      return false;
-    }
+  const suggestedTags = useMemo(() => availableTags.filter((tag) => {
+      if (form.tags.includes(tag)) {
+        return false;
+      }
 
     if (!normalizedTagInput) {
       return true;
     }
 
-    return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
-  }).sort((left, right) => left.localeCompare(right, 'zh-CN'));
+      return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
+    }), [availableTags, form.tags, normalizedTagInput]);
   const hasExactSuggestedTag = suggestedTags.some((tag) => tag.toLocaleLowerCase('zh-CN') === normalizedTagInput);
 
   return (
@@ -533,6 +527,12 @@ export default function ItemForm({
                 )}
               </AnimatePresence>
             </div>
+
+            {submitError ? (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                {submitError}
+              </div>
+            ) : null}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5">

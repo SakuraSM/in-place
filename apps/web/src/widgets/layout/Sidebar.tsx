@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
+import { HOME_CREATE_ROUTE } from '../../features/inventory/lib/homeRoute';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
@@ -15,9 +16,9 @@ const navItems = [
 ];
 
 const quickActions = [
-  { to: '/?create=1', icon: Plus, label: '立即新增', primary: true },
-  { to: '/activity', icon: Clock3, label: '操作记录' },
-  { to: '/scan', icon: Camera, label: 'AI 扫描' },
+  { to: HOME_CREATE_ROUTE, icon: Plus, label: '立即新增', primary: true },
+  { to: '/activity', icon: Clock3, label: '操作记录', primary: false },
+  { to: '/scan', icon: Camera, label: 'AI 扫描', primary: false },
 ] as const;
 
 const sidebarEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
