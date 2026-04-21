@@ -106,7 +106,7 @@ export default function Sidebar({
                   className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200 ${
                     collapsed
                       ? 'ml-0 max-w-0 opacity-0'
-                      : 'ml-0 max-w-40 opacity-100 delay-150'
+                      : 'ml-0 max-w-full opacity-100 delay-150'
                   }`}
                 >
                   {label}
