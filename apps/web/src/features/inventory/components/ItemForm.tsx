@@ -197,16 +197,16 @@ export default function ItemForm({
     : '物品';
   const normalizedTagInput = tagInput.trim().toLocaleLowerCase('zh-CN');
   const suggestedTags = useMemo(() => availableTags.filter((tag) => {
-      if (form.tags.includes(tag)) {
-        return false;
-      }
+    if (form.tags.includes(tag)) {
+      return false;
+    }
 
     if (!normalizedTagInput) {
       return true;
     }
 
-      return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
-    }), [availableTags, form.tags, normalizedTagInput]);
+    return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
+  }), [availableTags, form.tags, normalizedTagInput]);
   const hasExactSuggestedTag = suggestedTags.some((tag) => tag.toLocaleLowerCase('zh-CN') === normalizedTagInput);
 
   return (
