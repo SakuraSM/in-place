@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Box, Clock3, FolderTree, Package, Plus, Sparkles } from 'lucide-react';
+import { ArrowRight, Bot, Box, Clock3, FolderTree, Package, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
@@ -14,6 +14,7 @@ interface Props {
   onOpenActivity: () => void;
   onOpenItem: (item: Item) => void;
   onOpenActivityItem: (entry: ActivityLog) => void;
+  onNavigateOverview?: (filter?: { type?: string; status?: string }) => void;
 }
 
 function formatRecentTime(value: string) {
@@ -35,12 +36,13 @@ export default function HomeDashboard({
   onOpenActivity,
   onOpenItem,
   onOpenActivityItem,
+  onNavigateOverview,
 }: Props) {
   const statCards = [
-    { label: '总计', value: statsLoading ? '-' : stats?.total ?? 0, icon: FolderTree, tone: 'bg-sky-50 text-sky-500' },
-    { label: '物品', value: statsLoading ? '-' : stats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500' },
-    { label: '收纳', value: statsLoading ? '-' : stats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },
-    { label: '借出中', value: statsLoading ? '-' : stats?.borrowed ?? 0, icon: Clock3, tone: 'bg-rose-50 text-rose-500' },
+    { label: '总计', value: statsLoading ? '-' : stats?.total ?? 0, icon: FolderTree, tone: 'bg-sky-50 text-sky-500', filter: {} },
+    { label: '物品', value: statsLoading ? '-' : stats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500', filter: { type: 'item' } },
+    { label: '收纳', value: statsLoading ? '-' : stats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500', filter: { type: 'container' } },
+    { label: '借出中', value: statsLoading ? '-' : stats?.borrowed ?? 0, icon: Clock3, tone: 'bg-rose-50 text-rose-500', filter: { status: 'borrowed' } },
   ];
 
   return (
@@ -53,17 +55,7 @@ export default function HomeDashboard({
       >
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
-              <Sparkles size={14} />
-              更高效地整理你的收纳空间
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-[30px]">
-              首页现在会展示最近添加和最近操作，方便你快速回到刚整理过的内容。
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-              继续新增物品、收纳或位置，或直接查看 AI 扫描与操作记录，减少来回切换页面的成本。
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={onCreate}
@@ -92,14 +84,19 @@ export default function HomeDashboard({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {statCards.map(({ label, value, icon: Icon, tone }) => (
-              <div key={label} className="rounded-3xl border border-slate-100 bg-slate-50/70 p-4">
+            {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => onNavigateOverview?.(filter)}
+                className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors ${onNavigateOverview ? 'hover:bg-slate-100/80 cursor-pointer' : 'cursor-default'}`}
+              >
                 <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
                   <Icon size={18} />
                 </div>
                 <p className="text-2xl font-bold text-slate-900">{value}</p>
                 <p className="mt-1 text-xs text-slate-400">{label}</p>
-              </div>
+              </button>
             ))}
           </div>
         </div>

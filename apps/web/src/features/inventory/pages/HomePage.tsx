@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Package, ArrowLeft, LayoutGrid, FolderTree, Box, CheckSquare, SquarePen, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,6 +30,7 @@ const DEFAULT_VIEW_MODE: ViewMode = 'category';
 export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
@@ -167,6 +168,12 @@ export default function HomePage() {
     });
   };
 
+  const invalidateDashboard = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+    void queryClient.invalidateQueries({ queryKey: ['home', 'stats', user?.id] });
+    void queryClient.invalidateQueries({ queryKey: ['home', 'recent-activity', user?.id] });
+  }, [queryClient, user?.id]);
+
   const handleSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
     if (editItem) {
       await updateItem(editItem.id, data);
@@ -176,6 +183,7 @@ export default function HomePage() {
     setShowForm(false);
     setEditItem(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleDelete = async () => {
@@ -183,6 +191,7 @@ export default function HomePage() {
     await deleteItem(deleteTarget.id);
     setDeleteTarget(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleMove = async (newParentId: string | null) => {
@@ -190,6 +199,7 @@ export default function HomePage() {
     await updateItem(moveTarget.id, { parent_id: newParentId });
     setMoveTarget(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const toggleSelection = (itemId: string) => {
@@ -222,6 +232,7 @@ export default function HomePage() {
     setShowBulkEdit(false);
     exitSelectionMode();
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleBulkDelete = async () => {
@@ -229,6 +240,7 @@ export default function HomePage() {
     setBulkDeletePending(false);
     exitSelectionMode();
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const containers = children.filter((i) => i.type === 'container');
@@ -367,6 +379,12 @@ export default function HomePage() {
                 }
 
                 navigate(resolveItemDetailPath({ id: entry.item_id, type: entry.item_type }));
+              }}
+              onNavigateOverview={(filter) => {
+                const params = new URLSearchParams();
+                if (filter?.type) params.set('type', filter.type);
+                if (filter?.status) params.set('status', filter.status);
+                navigate(`/overview${params.toString() ? `?${params.toString()}` : ''}`);
               }}
             />
           )}

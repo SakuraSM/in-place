@@ -64,7 +64,7 @@ export default function ActivityPage() {
   }, [logs]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
           <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
@@ -72,7 +72,7 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col px-4 py-6 md:px-8">
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           {[
             { label: '手动录入', value: summary.manual_create, tone: 'bg-sky-50 text-sky-500' },
@@ -91,7 +91,7 @@ export default function ActivityPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex flex-1 items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
           </div>
         ) : logs.length === 0 ? (
@@ -102,28 +102,33 @@ export default function ActivityPage() {
           />
         ) : (
           <>
-            <ActivityFeed
-              logs={logs}
-              onOpenItem={(entry) => {
-                if (!entry.item_id) {
-                  return;
-                }
+            <div className="flex-1">
+              <ActivityFeed
+                logs={logs}
+                onOpenItem={(entry) => {
+                  if (!entry.item_id) {
+                    return;
+                  }
 
-                navigate(resolveItemDetailPath({ id: entry.item_id, type: entry.item_type }));
-              }}
-            />
-            {paginationMeta && (
-              <PaginationControls
-                page={page}
-                pageSize={pageSize}
-                total={paginationMeta.total}
-                totalPages={paginationMeta.totalPages}
-                onPageChange={setPage}
-                onPageSizeChange={(value) => {
-                  setPage(1);
-                  setPageSize(value);
+                  navigate(resolveItemDetailPath({ id: entry.item_id, type: entry.item_type }));
                 }}
               />
+            </div>
+            {paginationMeta && (
+              <div className="sticky bottom-0 pt-4">
+                <PaginationControls
+                  page={page}
+                  pageSize={pageSize}
+                  total={paginationMeta.total}
+                  totalPages={paginationMeta.totalPages}
+                  onPageChange={setPage}
+                  onPageSizeChange={(value) => {
+                    setPage(1);
+                    setPageSize(value);
+                  }}
+                  className="bg-white/95 backdrop-blur shadow-lg"
+                />
+              </div>
             )}
           </>
         )}

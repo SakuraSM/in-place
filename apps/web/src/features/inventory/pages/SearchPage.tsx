@@ -41,8 +41,18 @@ export default function SearchPage() {
   const { data: allItems = [], isLoading } = useAllInventoryItems();
 
   const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<TypeFilterValue>('all');
+
+  const typeParam = searchParams.get('type') as TypeFilterValue | null;
+  const statusParam = searchParams.get('status') as ItemStatus | 'all' | null;
+  const validTypeValues: TypeFilterValue[] = ['all', 'location', 'container', 'item'];
+  const validStatusValues: Array<ItemStatus | 'all'> = ['all', 'in_stock', 'borrowed', 'worn_out'];
+
+  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>(
+    statusParam && validStatusValues.includes(statusParam) ? statusParam : 'all',
+  );
+  const [typeFilter, setTypeFilter] = useState<TypeFilterValue>(
+    typeParam && validTypeValues.includes(typeParam) ? typeParam : 'all',
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
   const [showLocationSheet, setShowLocationSheet] = useState(false);
@@ -460,7 +470,7 @@ export default function SearchPage() {
               </motion.div>
 
               {!isMobile ? (
-                <div className="pt-8 lg:sticky lg:bottom-6">
+                <div className="mt-auto pt-8 lg:sticky lg:bottom-6">
                   <PaginationControls
                     page={page}
                     pageSize={pageSize}
