@@ -8,6 +8,7 @@ import type { AIRecognitionResult } from '../../../legacy/database.types';
 import ItemForm from '../components/ItemForm';
 import type { Item } from '../../../legacy/database.types';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import CropImageSheet from '../components/CropImageSheet';
 import { createObjectUrl, cropImageFromFile, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox } from '../lib/imageCrop';
 
@@ -200,8 +201,8 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3">
+      <div className={APP_PAGE_HEADER}>
+        <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">AI 扫描</h1>
           <p className="text-slate-400 text-xs mt-0.5">拍照自动识别物品并录入</p>
         </div>

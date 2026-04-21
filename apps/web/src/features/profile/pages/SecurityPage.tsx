@@ -6,6 +6,7 @@ import { useAuth } from '../../../app/providers/AuthContext';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function SecurityPage() {
@@ -47,8 +48,8 @@ export default function SecurityPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
           <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
             <ArrowLeft size={15} />
             返回我的

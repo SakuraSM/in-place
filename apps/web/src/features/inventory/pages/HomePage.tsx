@@ -15,6 +15,7 @@ import ItemCard from '../components/ItemCard';
 import Breadcrumb from '../components/Breadcrumb';
 import ContextMenu from '../../../shared/ui/ContextMenu';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_TOP_ZONE } from '../../../shared/ui/pageHeader';
 import ItemForm from '../components/ItemForm';
 import MoveItemSheet from '../components/MoveItemSheet';
 import BulkEditSheet from '../components/BulkEditSheet';
@@ -276,13 +277,14 @@ export default function HomePage() {
   );
 
   const isEmpty = children.length === 0;
+  const hasHeaderDetail = breadcrumbs.length > 0 || (selectionMode && !isEmpty);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 md:px-8 pt-3 md:pt-6 pb-2 md:pb-3">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`px-4 md:px-8 ${hasHeaderDetail ? 'pb-3 md:pb-4' : ''}`}>
           <div
-            className={`mb-2 ${isRootLevel ? 'flex items-center gap-3' : 'flex items-center gap-3'}`}
+            className={`${hasHeaderDetail ? 'mb-2' : ''} flex items-center gap-3 ${APP_PAGE_HEADER_TOP_ZONE}`}
           >
             {currentParentId && (
               <button

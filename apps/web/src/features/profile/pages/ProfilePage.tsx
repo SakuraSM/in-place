@@ -6,6 +6,7 @@ import { useAuth } from '../../../app/providers/AuthContext';
 import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { fetchItemStats } from '../../../legacy/items';
 import type { ItemStats } from '@inplace/domain';
 import { QuickLinkCard, SectionPanel } from '../components/ProfileUi';
@@ -174,8 +175,8 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+      <div className={APP_PAGE_HEADER}>
+        <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">我的</h1>
         </div>
       </div>

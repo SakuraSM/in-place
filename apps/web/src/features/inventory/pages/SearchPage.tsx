@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Item, ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import PaginationControls from '../components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
@@ -269,8 +270,8 @@ export default function SearchPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl md:hidden">
-        <div className="space-y-3 px-4 pb-3 pt-4">
+      <div className={`${APP_PAGE_HEADER} md:hidden`}>
+        <div className={`${APP_PAGE_HEADER_STACK} space-y-3`}>
           <h1 className="text-xl font-bold text-slate-900">总览</h1>
           <div className="relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />

@@ -9,6 +9,7 @@ import type { Item } from '../../../legacy/database.types';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
 import ItemForm from '../components/ItemForm';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
 import {
   buildChildrenMap,
   buildItemIdMap,
@@ -73,8 +74,8 @@ export default function LocationTreePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 md:px-8 md:pt-6">
+      <div className={APP_PAGE_HEADER}>
+        <div className={`${APP_PAGE_HEADER_ROW} justify-between gap-3`}>
           <h1 className="text-xl font-bold text-slate-900">位置树</h1>
           <button
             type="button"
@@ -87,7 +88,7 @@ export default function LocationTreePage() {
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col px-4 py-6 md:overflow-y-auto md:px-8">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col px-4 py-5 md:overflow-y-auto md:px-8 md:py-5">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -98,8 +99,8 @@ export default function LocationTreePage() {
             title="还没有可展示的位置"
           />
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]">
-            <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-28 lg:h-fit">
+          <div className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+            <section className="self-start rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-0 lg:max-h-[calc(100vh-132px)] lg:overflow-y-auto">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
                   <MapPin size={18} />
@@ -119,7 +120,7 @@ export default function LocationTreePage() {
                 <>
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
                           当前位置
                         </span>
@@ -131,7 +132,7 @@ export default function LocationTreePage() {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => navigate(`/overview?locationId=${selectedLocation.id}`)}
@@ -165,7 +166,7 @@ export default function LocationTreePage() {
                     )}
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-4">
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     {[
                       { label: '下级位置', value: selectedStats?.locations ?? 0, icon: MapPin, tone: 'bg-sky-50 text-sky-500' },
                       { label: '下级收纳', value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },

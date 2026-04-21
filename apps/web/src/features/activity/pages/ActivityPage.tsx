@@ -5,6 +5,7 @@ import type { ActivityLog } from '../../../legacy/database.types';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
 import { useAuth } from '../../../app/providers/AuthContext';
 import EmptyState from '../../../shared/ui/EmptyState';
+import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import ActivityFeed from '../components/ActivityFeed';
 import { resolveItemDetailPath } from '../../inventory/lib/detailPath';
@@ -65,8 +66,8 @@ export default function ActivityPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
-      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
-        <div className="px-4 pb-3 pt-4 md:px-8 md:pt-6">
+      <div className={APP_PAGE_HEADER}>
+        <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
         </div>
       </div>

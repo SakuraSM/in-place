@@ -3,6 +3,7 @@ import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, Pane
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 import { HOME_CREATE_ROUTE } from '../../features/inventory/lib/homeRoute';
+import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
@@ -32,8 +33,8 @@ export default function Sidebar({
         collapsed ? 'w-24' : 'w-64 lg:w-72'
       }`}
     >
-      <div className={`border-b border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-4' : 'px-5 py-4'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
+      <div className={`border-b border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3' : 'px-5'}`}>
+        <div className={`flex items-center ${APP_PAGE_HEADER_TOP_ZONE} ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
           {collapsed ? (
             <div className="overflow-hidden rounded-2xl">
               <img
@@ -43,22 +44,12 @@ export default function Sidebar({
               />
             </div>
           ) : (
-            <BrandLockup
-              size="sm"
-              animated
-              logoVariant="mark"
-            />
-          )}
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <NavLink
-                to={HOME_CREATE_ROUTE}
-                title="立即新增"
-                aria-label="立即新增"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
-              >
-                <Plus size={18} />
-              </NavLink>
+            <>
+              <BrandLockup
+                size="sm"
+                animated
+                logoVariant="mark"
+              />
               <button
                 type="button"
                 onClick={onToggle}
@@ -68,11 +59,14 @@ export default function Sidebar({
               >
                 <PanelLeftClose size={18} />
               </button>
-            </div>
+            </>
           )}
         </div>
-        {collapsed && (
-          <div className="mt-4 space-y-2">
+      </div>
+
+      <div className={`transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-3' : 'px-5 py-3'}`}>
+        {collapsed ? (
+          <div className="space-y-2">
             <NavLink
               to={HOME_CREATE_ROUTE}
               title="立即新增"
@@ -91,10 +85,20 @@ export default function Sidebar({
               <PanelLeftOpen size={18} />
             </button>
           </div>
+        ) : (
+          <NavLink
+            to={HOME_CREATE_ROUTE}
+            title="立即新增"
+            aria-label="立即新增"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-medium text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
+          >
+            <Plus size={18} />
+            立即新增
+          </NavLink>
         )}
       </div>
 
-      <nav className={`relative flex-1 space-y-1 py-5 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2' : 'px-3'}`}>
+      <nav className={`relative flex-1 space-y-1 pb-5 pt-2 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2' : 'px-3'}`}>
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = to === '/'
             ? location.pathname === '/'
