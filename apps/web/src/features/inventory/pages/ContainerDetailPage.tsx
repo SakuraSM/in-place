@@ -9,6 +9,7 @@ import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
+import { getContainerTypeLabel } from '../lib/locationTag';
 
 export default function ContainerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -76,11 +77,13 @@ export default function ContainerDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <Box size={48} className="text-slate-300 mb-3" />
-        <p className="text-slate-500">找不到该容器</p>
+        <p className="text-slate-500">找不到该收纳或位置</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-sky-500 text-sm">返回</button>
       </div>
     );
   }
+
+  const containerLabel = getContainerTypeLabel(container);
 
   const infoCards = (
     <motion.div
@@ -105,11 +108,11 @@ export default function ContainerDetailPage() {
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <p className="text-xs font-medium text-sky-500 mb-1">容器详情</p>
+            <p className="text-xs font-medium text-sky-500 mb-1">{containerLabel}详情</p>
             <h1 className="text-xl font-bold text-slate-900 leading-tight">{container.name}</h1>
           </div>
           <span className="inline-flex items-center rounded-full px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium">
-            容器
+            {containerLabel}
           </span>
         </div>
         {container.category && (
@@ -123,14 +126,14 @@ export default function ContainerDetailPage() {
       </motion.div>
 
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">容器信息</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-3">{containerLabel}信息</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-slate-50 px-4 py-3">
             <p className="text-xs text-slate-400">直接包含</p>
             <p className="mt-1 text-lg font-semibold text-slate-900">{children.length}</p>
           </div>
           <div className="rounded-xl bg-slate-50 px-4 py-3">
-            <p className="text-xs text-slate-400">容器层级</p>
+            <p className="text-xs text-slate-400">{containerLabel}层级</p>
             <p className="mt-1 text-lg font-semibold text-slate-900">{ancestors.length + 1}</p>
           </div>
         </div>
@@ -298,8 +301,8 @@ export default function ContainerDetailPage() {
 
       {showDelete && (
         <ConfirmDialog
-          title="确认删除容器"
-          message={`确定要删除「${container.name}」吗？容器内的所有内容也将被删除。`}
+          title={`确认删除${containerLabel}`}
+          message={`确定要删除「${container.name}」吗？该${containerLabel}下的所有内容也会一起删除。`}
           confirmLabel="删除"
           danger
           onConfirm={handleDelete}

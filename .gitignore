@@ -31,6 +31,8 @@ packages/*/dist
 
 # OS files
 .DS_Store
+__pycache__/
+*.py[cod]
 
 # IDE
 .vscode/*

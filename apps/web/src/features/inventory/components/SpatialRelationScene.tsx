@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Box, ChevronDown, ChevronRight, GripVertical, Image as ImageIcon, Layers3, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Item } from '../../../legacy/database.types';
+import { getContainerTypeLabel } from '../lib/locationTag';
 
 interface Props {
   currentItem: Item;
@@ -177,7 +178,7 @@ function SortableChildCard({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
               <p className="truncate mt-0.5 text-[11px] text-slate-400">
-                {item.type === 'container' ? '容器节点' : '物品节点'}
+                {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
               </p>
             </div>
             <span
@@ -187,7 +188,7 @@ function SortableChildCard({
                   : 'bg-amber-50 text-amber-700'
               }`}
             >
-              {item.type === 'container' ? '容器' : '物品'}
+              {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
             </span>
           </div>
 
@@ -212,7 +213,7 @@ function SortableChildCard({
         </button>
 
         <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-3 py-2 text-[11px] text-slate-400">
-          <span className="min-w-0 truncate whitespace-nowrap">拖拽调整当前视图顺序</span>
+          <span className="min-w-0 truncate whitespace-nowrap">拖拽可调整排列顺序</span>
           <button
             type="button"
             className="inline-flex shrink-0 cursor-grab items-center gap-1 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-slate-500 active:cursor-grabbing"
@@ -248,7 +249,7 @@ function MobileChildList({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">{child.name}</p>
             <p className="truncate mt-1 text-[11px] text-slate-400">
-              {child.type === 'container' ? '容器节点' : '物品节点'}
+              {child.type === 'container' ? getContainerTypeLabel(child) : '物品'}
             </p>
           </div>
         </button>
@@ -312,11 +313,11 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">包含路径与直接子节点</h2>
+            <h2 className="text-sm font-semibold text-slate-900">所在路径 · 直接下级内容</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">
-              {orderedChildren.length} 个子节点
+              {orderedChildren.length} 项下级内容
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
               {isExpanded ? '收起' : '展开'}
@@ -331,7 +332,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">包含路径</h2>
+            <h2 className="text-sm font-semibold text-slate-900">所在路径</h2>
           </div>
         </div>
       )}
@@ -350,7 +351,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               className="flex w-full items-center justify-between rounded-[22px] border border-white/80 bg-white/78 px-4 py-3 text-left shadow-sm transition-colors hover:bg-white"
             >
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900">直接子节点</p>
+                <p className="text-sm font-semibold text-slate-900">直接下级内容</p>
               </div>
               <span className="ml-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] text-slate-500">
                 <span className="whitespace-nowrap">{showChildrenPanel ? '收起' : '展开'}</span>
@@ -363,11 +364,11 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
 
             {showChildrenPanel && (
               <>
-                <RelationshipLine label={`直接包含 ${orderedChildren.length} 个子节点`} />
+                <RelationshipLine label={`直接包含 ${orderedChildren.length} 项内容`} />
                 <div className="relative rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94))] p-4 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
                   <div className="pointer-events-none absolute inset-x-16 -bottom-5 h-8 rounded-full bg-slate-200/40 blur-2xl" />
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-slate-900">直接子节点</p>
+                    <p className="text-sm font-semibold text-slate-900">直接下级内容</p>
                   </div>
 
                   {orderedChildren.length > 0 ? (
@@ -388,9 +389,9 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
                     </>
                   ) : (
                     <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 px-4 py-12 text-center">
-                      <p className="text-sm font-semibold text-slate-600">当前节点暂无直接子节点</p>
+                      <p className="text-sm font-semibold text-slate-600">这里还没有内容</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        等后续添加新的容器或物品后，这里会展示直接被 {currentItem.name} 包含的内容。
+                        添加新的收纳或物品并归入「{currentItem.name}」后，这里会自动出现。
                       </p>
                     </div>
                   )}

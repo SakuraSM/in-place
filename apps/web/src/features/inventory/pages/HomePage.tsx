@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Package, ArrowLeft, LayoutGrid, FolderTree, Box, CheckSquare, SquarePen, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../app/providers/AuthContext';
-import { fetchAncestors, fetchChildren, createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch } from '../../../legacy/items';
+import { fetchAncestors, fetchChildren, createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch, fetchItemStats } from '../../../legacy/items';
+import { fetchActivityLogsPage } from '../../../legacy/activity';
 import { fetchCategories } from '../../../legacy/categories';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
@@ -16,6 +18,8 @@ import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import ItemForm from '../components/ItemForm';
 import MoveItemSheet from '../components/MoveItemSheet';
 import BulkEditSheet from '../components/BulkEditSheet';
+import HomeDashboard from '../components/HomeDashboard';
+import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import { staggerContainer } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
@@ -26,6 +30,7 @@ const DEFAULT_VIEW_MODE: ViewMode = 'category';
 export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
@@ -46,6 +51,32 @@ export default function HomePage() {
 
   const currentParentId = searchParams.get('parentId');
   const viewMode: ViewMode = searchParams.get('view') === 'type' ? 'type' : DEFAULT_VIEW_MODE;
+  const isRootLevel = !currentParentId;
+  const showRootDashboard = isRootLevel && !selectionMode;
+  const { data: allInventoryItems = [] } = useAllInventoryItems(showRootDashboard);
+  const recentItems = useMemo(
+    () => [...allInventoryItems]
+      .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+      .slice(0, 6),
+    [allInventoryItems],
+  );
+
+  const { data: rootStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['home', 'stats', user?.id],
+    enabled: Boolean(user?.id) && showRootDashboard,
+    queryFn: () => fetchItemStats(user!.id),
+    staleTime: 1000 * 60,
+  });
+
+  const { data: recentActivity = [] } = useQuery({
+    queryKey: ['home', 'recent-activity', user?.id],
+    enabled: Boolean(user?.id) && showRootDashboard,
+    queryFn: async () => {
+      const response = await fetchActivityLogsPage(user!.id, { pageSize: 6 });
+      return response.data;
+    },
+    staleTime: 1000 * 30,
+  });
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;
@@ -137,6 +168,12 @@ export default function HomePage() {
     });
   };
 
+  const invalidateDashboard = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+    void queryClient.invalidateQueries({ queryKey: ['home', 'stats', user?.id] });
+    void queryClient.invalidateQueries({ queryKey: ['home', 'recent-activity', user?.id] });
+  }, [queryClient, user?.id]);
+
   const handleSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
     if (editItem) {
       await updateItem(editItem.id, data);
@@ -146,6 +183,7 @@ export default function HomePage() {
     setShowForm(false);
     setEditItem(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleDelete = async () => {
@@ -153,6 +191,7 @@ export default function HomePage() {
     await deleteItem(deleteTarget.id);
     setDeleteTarget(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleMove = async (newParentId: string | null) => {
@@ -160,6 +199,7 @@ export default function HomePage() {
     await updateItem(moveTarget.id, { parent_id: newParentId });
     setMoveTarget(null);
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const toggleSelection = (itemId: string) => {
@@ -192,6 +232,7 @@ export default function HomePage() {
     setShowBulkEdit(false);
     exitSelectionMode();
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const handleBulkDelete = async () => {
@@ -199,6 +240,7 @@ export default function HomePage() {
     setBulkDeletePending(false);
     exitSelectionMode();
     await loadChildren(currentParentId);
+    invalidateDashboard();
   };
 
   const containers = children.filter((i) => i.type === 'container');
@@ -220,7 +262,6 @@ export default function HomePage() {
   );
 
   const isEmpty = children.length === 0;
-  const isRootLevel = breadcrumbs.length === 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
@@ -321,6 +362,33 @@ export default function HomePage() {
 
       <div data-scroll-root className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex min-h-full flex-1 flex-col px-4 py-4 md:min-h-full md:px-8 md:py-6">
+          {showRootDashboard && (
+            <HomeDashboard
+              stats={rootStats ?? null}
+              recentItems={recentItems}
+              recentActivity={recentActivity}
+              statsLoading={statsLoading}
+              onCreate={() => { setEditItem(null); setShowForm(true); }}
+              onOpenScan={() => navigate('/scan')}
+              onOpenActivity={() => navigate('/activity')}
+              onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
+              onOpenActivityItem={(entry) => {
+                if (!entry.item_id || entry.action === 'delete') {
+                  navigate('/activity');
+                  return;
+                }
+
+                navigate(resolveItemDetailPath({ id: entry.item_id, type: entry.item_type }));
+              }}
+              onNavigateOverview={(filter) => {
+                const params = new URLSearchParams();
+                if (filter?.type) params.set('type', filter.type);
+                if (filter?.status) params.set('status', filter.status);
+                navigate(`/overview${params.toString() ? `?${params.toString()}` : ''}`);
+              }}
+            />
+          )}
+
           {loading ? (
             <SkeletonList />
           ) : isEmpty ? (
@@ -328,7 +396,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 280, damping: 24, delay: 0.1 }}
-              className="flex flex-col items-center justify-center py-20 text-center"
+              className={`flex flex-col items-center justify-center text-center ${showRootDashboard ? 'rounded-[28px] border border-dashed border-slate-200 bg-white py-14' : 'py-20'}`}
             >
               <motion.div
                 animate={{ y: [0, -8, 0] }}
@@ -338,7 +406,7 @@ export default function HomePage() {
                 <Package size={36} className="text-slate-300" />
               </motion.div>
               <h3 className="mb-1 font-semibold text-slate-700">暂时空空如也</h3>
-              <p className="text-sm text-slate-400">点击 + 按钮添加容器或物品</p>
+              <p className="text-sm text-slate-400">点击 + 按钮添加收纳、位置或物品</p>
             </motion.div>
           ) : (
             <motion.div
@@ -366,7 +434,7 @@ export default function HomePage() {
                           transition={{ delay: 0.05 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          容器 ({containers.length})
+                          收纳 ({containers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -487,7 +555,7 @@ export default function HomePage() {
                           animate={{ opacity: 1, x: 0 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          其他容器 ({uncategorizedContainers.length})
+                          其他收纳 ({uncategorizedContainers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -660,7 +728,7 @@ export default function HomePage() {
       {deleteTarget && (
         <ConfirmDialog
           title="确认删除"
-          message={`确定要删除「${deleteTarget.name}」吗？此操作不可撤销。${deleteTarget.type === 'container' ? '容器内的所有内容也将被删除。' : ''}`}
+          message={`确定要删除「${deleteTarget.name}」吗？此操作不可撤销。${deleteTarget.type === 'container' ? '该节点下的所有内容也会一起删除。' : ''}`}
           confirmLabel="删除"
           danger
           onConfirm={handleDelete}
@@ -671,7 +739,7 @@ export default function HomePage() {
       {bulkDeletePending && (
         <ConfirmDialog
           title="确认批量删除"
-          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含容器会同时删除容器内的内容。`}
+          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含收纳或位置会同时删除其下内容。`}
           confirmLabel="批量删除"
           danger
           onConfirm={handleBulkDelete}

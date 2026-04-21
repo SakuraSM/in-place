@@ -154,7 +154,7 @@ export default function ItemDetailPage() {
         <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <MapPin size={14} />
-            存放位置
+            所在位置
           </h2>
           <div className="flex items-center gap-1 flex-wrap">
             {ancestors.map((a, i) => (

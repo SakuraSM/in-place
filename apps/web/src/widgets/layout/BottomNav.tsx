@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, MapPinned } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const tabs = [
   { to: '/', icon: Home, label: '首页' },
   { to: '/overview', icon: Search, label: '总览' },
+  { to: '/locations', icon: MapPinned, label: '位置树' },
   { to: '/categories', icon: Shapes, label: '分类' },
   { to: '/scan', icon: Camera, label: '扫描' },
   { to: '/profile', icon: User, label: '我的' },

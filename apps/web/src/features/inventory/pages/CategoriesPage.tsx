@@ -302,7 +302,7 @@ export default function CategoriesPage() {
         <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3">
           <h1 className="text-xl font-bold text-slate-900 mb-3">分类管理</h1>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit relative">
-            {([['container', '容器分类'], ['item', '物品分类']] as [ItemType, string][]).map(([type, label]) => (
+            {([['container', '收纳分类'], ['item', '物品分类']] as [ItemType, string][]).map(([type, label]) => (
               <motion.button
                 key={type}
                 onClick={() => setActiveTab(type)}
@@ -340,7 +340,7 @@ export default function CategoriesPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={<Shapes size={28} className="text-slate-300" />}
-              title={`暂无${activeTab === 'container' ? '容器' : '物品'}分类`}
+              title={`暂无${activeTab === 'container' ? '收纳' : '物品'}分类`}
               description="点击 + 按钮创建第一个分类"
               iconMotion={{
                 animate: { rotate: [0, -8, 8, 0] },

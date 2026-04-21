@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import type { MouseEvent } from 'react';
 import { SquarePen, Trash2, Move, X, Box, Package, Eye } from 'lucide-react';
 import type { Item } from '../../legacy/database.types';
+import { getContainerTypeLabel } from '../../features/inventory/lib/locationTag';
 
 interface Props {
   item: Item;
@@ -31,7 +33,7 @@ export default function ContextMenu({ item, onView, onEdit, onDelete, onMove, on
           exit={{ opacity: 0 }}
         />
         <motion.div
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
           className="relative w-full max-w-lg bg-white rounded-t-3xl px-4 pt-5 pb-10 shadow-2xl"
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -49,7 +51,7 @@ export default function ContextMenu({ item, onView, onEdit, onDelete, onMove, on
               </div>
               <div>
                 <p className="font-semibold text-slate-900 text-sm">{item.name}</p>
-                <p className="text-xs text-slate-400">{item.type === 'container' ? '容器' : '物品'}</p>
+                <p className="text-xs text-slate-400">{item.type === 'container' ? getContainerTypeLabel(item) : '物品'}</p>
               </div>
             </div>
             <motion.button

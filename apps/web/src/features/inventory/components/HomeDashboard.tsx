@@ -1,0 +1,179 @@
+import { ArrowRight, Bot, Box, Clock3, FolderTree, Package, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
+import { getContainerTypeLabel } from '../lib/locationTag';
+import ActivityFeed from '../../activity/components/ActivityFeed';
+
+interface Props {
+  stats: ItemStats | null;
+  recentItems: Item[];
+  recentActivity: ActivityLog[];
+  statsLoading?: boolean;
+  onCreate: () => void;
+  onOpenScan: () => void;
+  onOpenActivity: () => void;
+  onOpenItem: (item: Item) => void;
+  onOpenActivityItem: (entry: ActivityLog) => void;
+  onNavigateOverview?: (filter?: { type?: string; status?: string }) => void;
+}
+
+function formatRecentTime(value: string) {
+  return new Date(value).toLocaleString('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export default function HomeDashboard({
+  stats,
+  recentItems,
+  recentActivity,
+  statsLoading = false,
+  onCreate,
+  onOpenScan,
+  onOpenActivity,
+  onOpenItem,
+  onOpenActivityItem,
+  onNavigateOverview,
+}: Props) {
+  const statCards = [
+    { label: '总计', value: statsLoading ? '-' : stats?.total ?? 0, icon: FolderTree, tone: 'bg-sky-50 text-sky-500', filter: {} },
+    { label: '物品', value: statsLoading ? '-' : stats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500', filter: { type: 'item' } },
+    { label: '收纳', value: statsLoading ? '-' : stats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500', filter: { type: 'container' } },
+    { label: '借出中', value: statsLoading ? '-' : stats?.borrowed ?? 0, icon: Clock3, tone: 'bg-rose-50 text-rose-500', filter: { status: 'borrowed' } },
+  ];
+
+  return (
+    <div className="mb-6 space-y-4 md:mb-8">
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+        className="overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm md:p-6"
+      >
+        <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+          <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 md:p-5">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <button
+                type="button"
+                onClick={onCreate}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
+              >
+                <Plus size={16} />
+                立即新增
+              </button>
+              <button
+                type="button"
+                onClick={onOpenScan}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                <Bot size={16} />
+                打开 AI 扫描
+              </button>
+              <button
+                type="button"
+                onClick={onOpenActivity}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 sm:col-span-2 xl:col-span-1 2xl:col-span-2"
+              >
+                <Clock3 size={16} />
+                查看操作记录
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => onNavigateOverview?.(filter)}
+                className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors xl:min-h-[144px] ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
+              >
+                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
+                  <Icon size={18} />
+                </div>
+                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                <p className="mt-1 text-xs text-slate-400">{label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.05 }}
+          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">最近添加</h3>
+              <p className="mt-1 text-xs text-slate-400">快速回到刚录入的物品、收纳和位置。</p>
+            </div>
+          </div>
+
+          {recentItems.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-400">
+              还没有新增内容，点右下角按钮开始整理吧。
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onOpenItem(item)}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50"
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                    item.type === 'item' ? 'bg-amber-50 text-amber-500' : 'bg-sky-50 text-sky-500'
+                  }`}>
+                    {item.type === 'item' ? <Package size={18} /> : <Box size={18} />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatRecentTime(item.created_at)}
+                    </p>
+                  </div>
+                  <ArrowRight size={16} className="shrink-0 text-slate-300" />
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
+          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">最近操作</h3>
+              <p className="mt-1 text-xs text-slate-400">包含 AI 扫描录入、手动录入、修改和删除行为。</p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenActivity}
+              className="text-sm font-medium text-sky-500"
+            >
+              查看全部
+            </button>
+          </div>
+          <ActivityFeed
+            logs={recentActivity}
+            compact
+            onOpenItem={onOpenActivityItem}
+            emptyMessage="还没有操作记录。创建或修改内容后，这里会自动出现。"
+          />
+        </motion.section>
+      </div>
+    </div>
+  );
+}

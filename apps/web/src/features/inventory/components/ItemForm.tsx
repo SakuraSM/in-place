@@ -5,11 +5,14 @@ import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/datab
 import { useAuth } from '../../../app/providers/AuthContext';
 import { fetchItem, uploadImage } from '../../../legacy/items';
 import { fetchCategories } from '../../../legacy/categories';
+import { fetchTags } from '../../../legacy/tags';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
+import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
 import LocationPicker from './LocationPicker';
 
 interface FormData {
   type: ItemType;
+  isLocation: boolean;
   name: string;
   description: string;
   category: string;
@@ -20,6 +23,7 @@ interface FormData {
   images: string[];
   tags: string[];
   parent_id: string | null;
+  metadata: Record<string, unknown>;
 }
 
 interface Props {
@@ -39,9 +43,11 @@ const STATUS_OPTIONS: { value: ItemStatus; label: string }[] = [
 export default function ItemForm({ initial, defaultParentId, defaultType = 'item', onSave, onClose }: Props) {
   const { user } = useAuth();
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   const [form, setForm] = useState<FormData>({
     type: initial?.type ?? defaultType,
+    isLocation: isLocationItem(initial as Item | undefined),
     name: initial?.name ?? '',
     description: initial?.description ?? '',
     category: initial?.category ?? '',
@@ -52,6 +58,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
     images: initial?.images ?? [],
     tags: initial?.tags ?? [],
     parent_id: initial?.parent_id !== undefined ? initial.parent_id : defaultParentId ?? null,
+    metadata: initial?.metadata ?? {},
   });
   const [tagInput, setTagInput] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -64,6 +71,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
     if (!user) return;
     fetchCategories(user.id, form.type).then(setCustomCategories);
   }, [user, form.type]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchTags(user.id).then((tags) => setAvailableTags(tags.map((tag) => tag.name)));
+  }, [user]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,10 +123,24 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
 
   const addTag = () => {
     const tag = tagInput.trim();
-    if (tag && !form.tags.includes(tag)) {
-      update('tags', [...form.tags, tag]);
+    const normalizedTag = tag.toLocaleLowerCase('zh-CN');
+    const matchedTag = availableTags.find((value) => value.toLocaleLowerCase('zh-CN') === normalizedTag);
+    const resolvedTag = matchedTag ?? tag;
+    const normalizedResolvedTag = resolvedTag.toLocaleLowerCase('zh-CN');
+    const hasDuplicateTag = form.tags.some((value) => value.toLocaleLowerCase('zh-CN') === normalizedResolvedTag);
+    if (resolvedTag && !hasDuplicateTag) {
+      update('tags', [...form.tags, resolvedTag]);
     }
     setTagInput('');
+  };
+
+  const toggleExistingTag = (tag: string) => {
+    if (form.tags.includes(tag)) {
+      removeTag(tag);
+      return;
+    }
+
+    update('tags', [...form.tags, tag]);
   };
 
   const removeTag = (tag: string) => {
@@ -143,12 +169,29 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
         warranty_date: form.warranty_date || null,
         images: form.images,
         tags: form.tags,
-        metadata: {},
+        metadata: updateLocationMetadata(form.metadata, form.type === 'container' && form.isLocation),
       });
     } finally {
       setSaving(false);
     }
   };
+
+  const containerLabel = form.type === 'container'
+    ? (form.isLocation ? '位置' : '收纳')
+    : '物品';
+  const normalizedTagInput = tagInput.trim().toLocaleLowerCase('zh-CN');
+  const suggestedTags = availableTags.filter((tag) => {
+    if (form.tags.includes(tag)) {
+      return false;
+    }
+
+    if (!normalizedTagInput) {
+      return true;
+    }
+
+    return tag.toLocaleLowerCase('zh-CN').includes(normalizedTagInput);
+  });
+  const hasExactSuggestedTag = suggestedTags.some((tag) => tag.toLocaleLowerCase('zh-CN') === normalizedTagInput);
 
   return (
     <>
@@ -168,7 +211,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
           <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <h2 className="font-semibold text-slate-900 text-lg">
-              {initial?.id ? '编辑' : '新增'}{form.type === 'container' ? '容器' : '物品'}
+              {initial?.id ? '编辑' : '新增'}{containerLabel}
             </h2>
             <motion.button
               onClick={onClose}
@@ -199,10 +242,29 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                       />
                     )}
                     <span className={`relative ${form.type === t ? 'text-slate-900' : 'text-slate-500'}`}>
-                      {t === 'item' ? '物品' : '容器'}
+                      {t === 'item' ? '物品' : '收纳'}
                     </span>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {form.type === 'container' && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <label className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">标记为位置</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      位置会出现在位置树里，适合卧室、客厅、阳台这类可导航空间。
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.isLocation}
+                    onChange={(event) => update('isLocation', event.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
+                  />
+                </label>
               </div>
             )}
 
@@ -212,7 +274,9 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                 type="text"
                 value={form.name}
                 onChange={(e) => update('name', e.target.value)}
-                placeholder={form.type === 'container' ? '如：卧室、衣柜、书桌...' : '如：蓝色羽绒服...'}
+                placeholder={form.type === 'container'
+                  ? (form.isLocation ? '如：卧室、客厅、阳台...' : '如：透明收纳箱、床头柜抽屉...')
+                  : '如：蓝色羽绒服...'}
                 required
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
               />
@@ -333,7 +397,7 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5">
                 <MapPin size={14} />
-                存放位置
+                放置位置
               </label>
               <motion.button
                 type="button"
@@ -342,8 +406,8 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-left text-slate-500 transition-colors"
               >
                 {form.parent_id
-                  ? `已选择容器 (${parentLabel ?? '加载中...'})`
-                  : '根目录（顶层）'}
+                  ? `已选择上级 (${parentLabel ?? '加载中...'})`
+                  : '顶层位置'}
               </motion.button>
             </div>
 
@@ -352,13 +416,36 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                 <Tag size={14} />
                 标签
               </label>
+              {availableTags.length > 0 && (
+                <div className="mb-3">
+                  <p className="mb-2 text-xs font-medium text-slate-400">从标签库选择</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTags.slice(0, 12).map((tag) => (
+                      <motion.button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleExistingTag(tag)}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                          form.tags.includes(tag)
+                            ? 'bg-sky-500 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {tag}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  placeholder="输入标签后按回车"
+                  placeholder="搜索已有标签，或输入新标签后按回车"
                   className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
                 />
                 <motion.button
@@ -371,6 +458,11 @@ export default function ItemForm({ initial, defaultParentId, defaultType = 'item
                   <Plus size={16} />
                 </motion.button>
               </div>
+              {normalizedTagInput && !hasExactSuggestedTag && (
+                <p className="mb-2 text-xs text-slate-400">
+                  未找到完全匹配的标签，继续回车可新建「{tagInput.trim()}」。
+                </p>
+              )}
               <AnimatePresence>
                 {form.tags.length > 0 && (
                   <motion.div

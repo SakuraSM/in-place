@@ -1,15 +1,19 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, X, Package, ChevronRight, Box, Archive } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../../app/providers/AuthContext';
-import { searchItemsPage, fetchAncestors } from '../../../legacy/items';
 import type { Item, ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import PaginationControls from '../components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
+import LocationTreePanel from '../components/LocationTreePanel';
+import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
+import { buildItemIdMap, buildItemPath, collectDescendantIds } from '../lib/locationTree';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+
+type TypeFilterValue = ItemType | 'all' | 'location';
 
 const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
   { value: 'all', label: '全部' },
@@ -18,11 +22,15 @@ const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
   { value: 'worn_out', label: '损耗' },
 ];
 
-const TYPE_FILTERS: { value: ItemType | 'all'; label: string; icon: React.ElementType }[] = [
+const TYPE_FILTERS: { value: TypeFilterValue; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: '全部', icon: Archive },
-  { value: 'container', label: '容器', icon: Box },
+  { value: 'location', label: '位置', icon: MapPin },
+  { value: 'container', label: '收纳', icon: Box },
   { value: 'item', label: '物品', icon: Package },
 ];
+
+const VALID_TYPE_VALUES = TYPE_FILTERS.map((f) => f.value);
+const VALID_STATUS_VALUES = STATUS_FILTERS.map((f) => f.value);
 
 interface ItemWithPath {
   item: Item;
@@ -30,69 +38,144 @@ interface ItemWithPath {
 }
 
 export default function SearchPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const { data: allItems = [], isLoading } = useAllInventoryItems();
+
   const [query, setQuery] = useState('');
-  const [appliedQuery, setAppliedQuery] = useState('');
-  const [results, setResults] = useState<ItemWithPath[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [paginationMeta, setPaginationMeta] = useState<{ page: number; totalPages: number; total: number; hasNextPage: boolean } | null>(null);
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<ItemType | 'all'>('all');
+
+  const typeParam = searchParams.get('type') as TypeFilterValue | null;
+  const statusParam = searchParams.get('status') as ItemStatus | 'all' | null;
+
+  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>(
+    statusParam && (VALID_STATUS_VALUES as string[]).includes(statusParam) ? statusParam : 'all',
+  );
+  const [typeFilter, setTypeFilter] = useState<TypeFilterValue>(
+    typeParam && (VALID_TYPE_VALUES as string[]).includes(typeParam) ? typeParam : 'all',
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showLocationSheet, setShowLocationSheet] = useState(false);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
-  const activeStatusFilter: ItemStatus | undefined =
-    typeFilter === 'container' || statusFilter === 'all' ? undefined : statusFilter;
-  const activeTypeFilter: ItemType | undefined = typeFilter === 'all' ? undefined : typeFilter;
 
-  const doSearch = useCallback(
-    async (q: string, nextPage: number, options?: { append?: boolean }) => {
-      if (!user) return;
-      setLoading(true);
-      try {
-        const response = await searchItemsPage(q, user.id, {
-          page: nextPage,
-          pageSize,
-          type: activeTypeFilter,
-          status: activeStatusFilter,
-        });
-        const data = response.data;
-        setPaginationMeta(response.meta);
+  const selectedLocationId = searchParams.get('locationId');
+  const itemMap = useMemo(() => buildItemIdMap(allItems), [allItems]);
+  const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
 
-        const withPaths = await Promise.all(
-          data.map(async (item) => {
-            const ancestors = await fetchAncestors(item.id);
-            const path = ancestors.slice(0, -1).map((a) => a.name).join(' > ');
-            return { item, path };
-          })
-        );
-        setResults((current) => (options?.append ? [...current, ...withPaths] : withPaths));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [activeStatusFilter, activeTypeFilter, pageSize, user]
-  );
-
-  const loadNextPage = useCallback(() => {
-    if (!isMobile || !paginationMeta?.hasNextPage || loading) {
+  useEffect(() => {
+    if (!selectedLocationId) {
       return;
     }
 
-    setPage((current) => (current === paginationMeta.page ? current + 1 : current));
-  }, [isMobile, loading, paginationMeta]);
+    const selectedItem = itemMap.get(selectedLocationId);
+    if (selectedItem && isLocationItem(selectedItem)) {
+      return;
+    }
 
-  useEffect(() => {
-    void doSearch(appliedQuery, page, { append: isMobile && page > 1 });
-  }, [appliedQuery, doSearch, isMobile, page]);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('locationId');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [itemMap, searchParams, selectedLocationId, setSearchParams]);
+
+  const descendantIds = useMemo(
+    () => (selectedLocationId ? collectDescendantIds(allItems, selectedLocationId) : null),
+    [allItems, selectedLocationId],
+  );
+
+  const itemsWithPaths = useMemo<ItemWithPath[]>(() => {
+    return allItems.map((item) => ({
+      item,
+      path: buildItemPath(item, itemMap),
+    }));
+  }, [allItems, itemMap]);
+
+  const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
+
+  const filteredResults = useMemo(() => {
+    return itemsWithPaths.filter(({ item }) => {
+      if (descendantIds && !descendantIds.has(item.id)) {
+        return false;
+      }
+
+      if (typeFilter === 'location' && !isLocationItem(item)) {
+        return false;
+      }
+
+      if (typeFilter === 'container' && (item.type !== 'container' || isLocationItem(item))) {
+        return false;
+      }
+
+      if (typeFilter === 'item' && item.type !== 'item') {
+        return false;
+      }
+
+      if (statusFilter !== 'all' && item.status !== statusFilter) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return [
+        item.name,
+        item.description,
+        item.category,
+        ...item.tags,
+      ]
+        .filter((field): field is string => Boolean(field))
+        .some((field) => field.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
+    });
+  }, [descendantIds, itemsWithPaths, normalizedQuery, statusFilter, typeFilter]);
 
   useEffect(() => {
     setPage(1);
-    setResults([]);
-  }, [pageSize, statusFilter, typeFilter]);
+  }, [query, statusFilter, typeFilter, pageSize, selectedLocationId]);
+
+  const total = filteredResults.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const displayedResults = useMemo(
+    () => (
+      isMobile
+        ? filteredResults.slice(0, page * pageSize)
+        : filteredResults.slice((page - 1) * pageSize, page * pageSize)
+    ),
+    [filteredResults, isMobile, page, pageSize],
+  );
+
+  const paginationMeta = {
+    page,
+    totalPages,
+    total,
+    hasNextPage: page < totalPages,
+  };
+
+  const handleSelectLocation = (locationId: string | null) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (locationId) {
+      nextSearchParams.set('locationId', locationId);
+    } else {
+      nextSearchParams.delete('locationId');
+    }
+    setSearchParams(nextSearchParams, { replace: true });
+    setShowLocationSheet(false);
+  };
+
+  const loadNextPage = useCallback(() => {
+    if (!isMobile || !paginationMeta.hasNextPage || isLoading) {
+      return;
+    }
+
+    setPage((current) => current + 1);
+  }, [isLoading, isMobile, paginationMeta.hasNextPage]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -117,48 +200,17 @@ export default function SearchPage() {
     };
   }, [isMobile, loadNextPage]);
 
-  useEffect(() => {
-    if (!isMobile) {
-      return;
-    }
-
-    const handleWindowScroll = () => {
-      const distanceFromBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-      if (distanceFromBottom < 160) {
-        loadNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleWindowScroll);
-    };
-  }, [isMobile, loadNextPage]);
-
-  const handleQueryChange = (value: string) => {
-    setQuery(value);
-    setPage(1);
-    setResults([]);
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setAppliedQuery(value);
-    }, 400);
-  };
-
-  const handleItemClick = (item: Item) => {
-    navigate(resolveItemDetailPath(item));
-  };
-
   const FilterSection = () => (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">类型</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">类型</p>
         <div className="flex flex-wrap gap-2">
           {TYPE_FILTERS.map(({ value, label, icon: Icon }) => (
             <button
               key={value}
+              type="button"
               onClick={() => setTypeFilter(value)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -170,14 +222,15 @@ export default function SearchPage() {
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">状态</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">状态</p>
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map(({ value, label }) => (
             <button
               key={value}
+              type="button"
               onClick={() => setStatusFilter(value)}
-              disabled={typeFilter === 'container'}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              disabled={typeFilter === 'location' || typeFilter === 'container'}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -186,44 +239,65 @@ export default function SearchPage() {
           ))}
         </div>
       </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">位置树</p>
+          {selectedLocation && (
+            <button
+              type="button"
+              onClick={() => handleSelectLocation(null)}
+              className="text-xs font-medium text-sky-500"
+            >
+              清空
+            </button>
+          )}
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-3">
+          <LocationTreePanel
+            items={allItems}
+            selectedLocationId={selectedLocationId}
+            onSelectLocation={handleSelectLocation}
+            allLabel="全部位置"
+            emptyLabel="先把收纳标记为位置，才能使用位置树筛选。"
+          />
+        </div>
+      </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      <div className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="px-4 pt-4 pb-3 space-y-3">
+    <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+      <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur-xl md:hidden">
+        <div className="space-y-3 px-4 pb-3 pt-4">
           <h1 className="text-xl font-bold text-slate-900">总览</h1>
           <div className="relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={query}
-              onChange={(e) => handleQueryChange(e.target.value)}
-              placeholder="在总览中搜索物品名称、描述、标签..."
-              className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索收纳、位置、物品名称、描述或标签..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             {query && (
               <button
-                onClick={() => {
-                  setQuery('');
-                  setAppliedQuery('');
-                  setPage(1);
-                  setResults([]);
-                  void doSearch('', 1);
-                }}
+                type="button"
+                onClick={() => setQuery('')}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X size={15} />
               </button>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {TYPE_FILTERS.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => setTypeFilter(value)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -231,13 +305,24 @@ export default function SearchPage() {
                 {label}
               </button>
             ))}
-            <div className="w-px bg-slate-200 shrink-0 self-stretch mx-1" />
+            <button
+              type="button"
+              onClick={() => setShowLocationSheet(true)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                selectedLocation ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <FolderTree size={12} />
+              {selectedLocation?.name ?? '位置树'}
+            </button>
+            <div className="mx-1 w-px shrink-0 self-stretch bg-slate-200" />
             {STATUS_FILTERS.map(({ value, label }) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => setStatusFilter(value)}
-                disabled={typeFilter === 'container'}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                disabled={typeFilter === 'location' || typeFilter === 'container'}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -248,29 +333,24 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <aside className="hidden md:flex flex-col w-72 lg:w-80 border-r border-slate-100 bg-white sticky top-0 h-screen overflow-y-auto">
-        <div className="px-6 pt-6 pb-4 border-b border-slate-50">
-          <h1 className="text-xl font-bold text-slate-900 mb-1">总览</h1>
-          <p className="mb-4 text-sm text-slate-500">查看全部内容，并附带搜索与筛选能力。</p>
+      <aside className="sticky top-0 hidden h-screen w-72 overflow-y-auto border-r border-slate-100 bg-white md:flex md:flex-col lg:w-80">
+        <div className="border-b border-slate-50 px-6 pb-4 pt-6">
+          <h1 className="mb-1 text-xl font-bold text-slate-900">总览</h1>
+          <p className="mb-4 text-sm text-slate-500">查看全部收纳、位置与物品，并通过位置树缩小范围。</p>
           <div className="relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={query}
-              onChange={(e) => handleQueryChange(e.target.value)}
-              placeholder="在总览中搜索物品名称、描述、标签..."
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索收纳、位置、物品名称、描述或标签..."
               autoFocus
-              className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             {query && (
               <button
-                onClick={() => {
-                  setQuery('');
-                  setAppliedQuery('');
-                  setPage(1);
-                  setResults([]);
-                  void doSearch('', 1);
-                }}
+                type="button"
+                onClick={() => setQuery('')}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X size={15} />
@@ -284,9 +364,13 @@ export default function SearchPage() {
         </div>
       </aside>
 
-      <div ref={scrollRootRef} data-scroll-root className="flex min-h-full flex-1 flex-col px-4 md:px-8 py-4 md:py-6 overflow-y-auto">
+      <div
+        ref={scrollRootRef}
+        data-scroll-root
+        className="flex min-h-full flex-1 flex-col overflow-y-auto px-4 py-4 md:px-8 md:py-6"
+      >
         <AnimatePresence mode="wait">
-          {loading && results.length === 0 && (
+          {isLoading ? (
             <motion.div
               key="loading"
               initial={{ opacity: 0 }}
@@ -294,11 +378,9 @@ export default function SearchPage() {
               exit={{ opacity: 0 }}
               className="flex items-center justify-center py-12"
             >
-              <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
             </motion.div>
-          )}
-
-          {!loading && results.length === 0 && (
+          ) : total === 0 ? (
             <motion.div
               key="no-results"
               initial={{ opacity: 0, y: 16 }}
@@ -307,55 +389,74 @@ export default function SearchPage() {
               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
               className="flex flex-col items-center justify-center py-16 text-center"
             >
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-3">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
                 <Package size={28} className="text-slate-300" />
               </div>
-              <p className="font-semibold text-slate-700 mb-1">总览中未找到结果</p>
-              <p className="text-slate-400 text-sm">尝试其他关键词或调整筛选条件</p>
-            </motion.div>
-          )}
-
-          {!loading && results.length > 0 && (
-            <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex min-h-full flex-col">
-              <p className="text-xs text-slate-400 mb-4">
-                共 {paginationMeta?.total ?? results.length} 个结果
-                {appliedQuery && <span className="ml-1">· 搜索词「{appliedQuery}」</span>}
+              <p className="mb-1 font-semibold text-slate-700">当前筛选下没有结果</p>
+              <p className="text-sm text-slate-400">
+                {selectedLocation ? `试试其他关键词，或切换位置「${selectedLocation.name}」。` : '试试其他关键词或调整筛选条件。'}
               </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex min-h-full flex-col"
+            >
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                <span>共 {total} 个结果</span>
+                {query && <span>· 搜索词「{query.trim()}」</span>}
+                {selectedLocation && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-sky-600">
+                    <MapPin size={11} />
+                    位置「{selectedLocation.name}」
+                  </span>
+                )}
+              </div>
+
               <motion.div
                 variants={staggerContainer}
                 initial="initial"
                 animate="animate"
-                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3"
+                className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"
               >
-                {results.map(({ item, path }) => (
+                {displayedResults.map(({ item, path }) => (
                   <motion.button
                     key={item.id}
                     variants={staggerItem}
-                    onClick={() => handleItemClick(item)}
+                    type="button"
+                    onClick={() => navigate(resolveItemDetailPath(item))}
                     whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                    className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-left flex items-center gap-3 cursor-pointer"
+                    className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm"
                   >
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
                       {item.images.length > 0 ? (
-                        <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
-                      ) : item.type === 'container' ? (
-                        <Box size={20} className="text-slate-300" />
-                      ) : (
+                        <img src={item.images[0]} alt={item.name} className="h-full w-full object-cover" />
+                      ) : item.type === 'item' ? (
                         <Package size={20} className="text-slate-300" />
+                      ) : isLocationItem(item) ? (
+                        <MapPin size={20} className="text-sky-400" />
+                      ) : (
+                        <Box size={20} className="text-slate-300" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="font-semibold text-slate-800 text-sm truncate">{item.name}</p>
-                        {item.type === 'item' && <StatusBadge status={item.status} />}
-                        {item.type === 'container' && (
-                          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-600 text-[10px] font-medium">容器</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold text-slate-800">{item.name}</p>
+                        {item.type === 'item' ? (
+                          <StatusBadge status={item.status} />
+                        ) : (
+                          <span className="shrink-0 rounded-md bg-sky-50 px-1.5 py-0.5 text-[10px] font-medium text-sky-600">
+                            {getContainerTypeLabel(item)}
+                          </span>
                         )}
                       </div>
                       {item.category && (
-                        <p className="text-xs text-slate-500 truncate mb-0.5">{item.category}</p>
+                        <p className="mb-0.5 truncate text-xs text-slate-500">{item.category}</p>
                       )}
                       {path && (
                         <div className="flex items-center gap-1 text-xs text-slate-400">
@@ -364,17 +465,18 @@ export default function SearchPage() {
                         </div>
                       )}
                     </div>
-                    <ChevronRight size={16} className="text-slate-300 shrink-0" />
+                    <ChevronRight size={16} className="shrink-0 text-slate-300" />
                   </motion.button>
                 ))}
               </motion.div>
-              {!isMobile && paginationMeta ? (
+
+              {!isMobile ? (
                 <div className="mt-auto pt-8 lg:sticky lg:bottom-6">
                   <PaginationControls
-                    page={paginationMeta.page}
+                    page={page}
                     pageSize={pageSize}
-                    total={paginationMeta.total}
-                    totalPages={paginationMeta.totalPages}
+                    total={total}
+                    totalPages={totalPages}
                     onPageChange={setPage}
                     onPageSizeChange={(nextPageSize) => {
                       setPageSize(nextPageSize);
@@ -383,20 +485,62 @@ export default function SearchPage() {
                     className="mt-0 bg-white/95 backdrop-blur lg:shadow-lg"
                   />
                 </div>
-              ) : null}
-              {isMobile && paginationMeta ? (
+              ) : (
                 <div className="pt-5 text-center text-xs text-slate-400">
-                  {loading && page > 1
-                    ? '正在加载更多...'
-                    : paginationMeta.hasNextPage
-                      ? `已加载 ${results.length} / ${paginationMeta.total}，继续上滑加载更多`
-                      : `已展示全部 ${paginationMeta.total} 个结果`}
+                  {paginationMeta.hasNextPage
+                    ? `已加载 ${displayedResults.length} / ${total}，继续上滑加载更多`
+                    : `已展示全部 ${total} 个结果`}
                 </div>
-              ) : null}
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {showLocationSheet && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden">
+            <motion.div
+              className="absolute inset-0 bg-black/25 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLocationSheet(false)}
+            />
+            <motion.div
+              className="relative flex max-h-[75vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+            >
+              <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200" />
+              <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-4 pt-2">
+                <div>
+                  <h2 className="font-semibold text-slate-900">位置树筛选</h2>
+                  <p className="mt-1 text-xs text-slate-400">选择一个位置后，总览只显示该位置下的内容。</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationSheet(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-4">
+                <LocationTreePanel
+                  items={allItems}
+                  selectedLocationId={selectedLocationId}
+                  onSelectLocation={handleSelectLocation}
+                  allLabel="全部位置"
+                  emptyLabel="先把收纳标记为位置，才能使用位置树筛选。"
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

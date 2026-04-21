@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tag } from 'lucide-react';
 import type { Category, Item, ItemStatus } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import LocationPicker from './LocationPicker';
 
 interface BulkEditPayload {
@@ -54,6 +55,25 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
 
     return categories.filter((categoryItem) => categoryItem.item_type === itemType);
   }, [categories, itemType]);
+
+  const selectedTypeLabel = useMemo(() => {
+    if (itemType === 'item') {
+      return '物品';
+    }
+
+    if (itemType !== 'container') {
+      return '对象';
+    }
+
+    const hasLocation = items.some(isLocationItem);
+    const hasStorage = items.some((item) => item.type === 'container' && !isLocationItem(item));
+
+    if (hasLocation && hasStorage) {
+      return '收纳/位置';
+    }
+
+    return getContainerTypeLabel(items[0]);
+  }, [itemType, items]);
 
   useEffect(() => {
     setCategory('');
@@ -132,7 +152,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <div>
               <h2 className="font-semibold text-slate-900 text-lg">批量编辑</h2>
-              <p className="text-xs text-slate-400 mt-1">已选择 {items.length} 个{itemType === 'container' ? '容器' : itemType === 'item' ? '物品' : '对象'}</p>
+              <p className="text-xs text-slate-400 mt-1">已选择 {items.length} 个{selectedTypeLabel}</p>
             </div>
             <motion.button
               onClick={onClose}
@@ -187,7 +207,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了容器和物品，类别和状态不会一起批量修改。
+                混合选择了收纳和物品，类别和状态不会一起批量修改。
               </div>
             )}
 
@@ -255,7 +275,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                   whileHover={{ borderColor: '#38bdf8' }}
                   className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-left text-slate-500 transition-colors"
                 >
-                  {parentId ? '已选择新容器' : '根目录（顶层）'}
+                  {parentId ? '已选择新的上级' : '顶层位置'}
                 </motion.button>
               )}
             </div>
