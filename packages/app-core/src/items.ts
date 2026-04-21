@@ -304,6 +304,9 @@ export function createItemsApi(request: AppCoreRequest) {
     pageSize?: number;
     type?: Item['type'];
     status?: Item['status'];
+    locationId?: string | null;
+    locationOnly?: boolean;
+    tags?: string[];
   } = {}): Promise<PaginatedResult<Item>> {
     void userId;
     const searchParams = new URLSearchParams();
@@ -327,6 +330,18 @@ export function createItemsApi(request: AppCoreRequest) {
       searchParams.set('status', options.status);
     }
 
+    if (options.locationId) {
+      searchParams.set('locationId', options.locationId);
+    }
+
+    if (options.locationOnly) {
+      searchParams.set('locationOnly', 'true');
+    }
+
+    if (options.tags && options.tags.length > 0) {
+      options.tags.forEach((tag) => searchParams.append('tags', tag));
+    }
+
     const suffix = searchParams.toString();
     const response = await request<{ data: ServerItem[]; meta?: Partial<PaginationMeta> }>(`/v1/items${suffix ? `?${suffix}` : ''}`);
     const items = response.data.map(mapItem);
@@ -339,6 +354,9 @@ export function createItemsApi(request: AppCoreRequest) {
   async function searchItems(query: string, userId: string, options: {
     type?: Item['type'];
     status?: Item['status'];
+    locationId?: string | null;
+    locationOnly?: boolean;
+    tags?: string[];
   } = {}): Promise<Item[]> {
     const response = await searchItemsPage(query, userId, options);
     return response.data;

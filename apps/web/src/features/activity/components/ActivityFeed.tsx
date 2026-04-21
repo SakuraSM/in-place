@@ -98,7 +98,7 @@ export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyM
   }
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2 overflow-x-hidden">
       {logs.map((entry) => {
         const actionConfig = ACTION_LABELS[entry.action];
         const Icon = actionConfig.icon;
@@ -135,7 +135,7 @@ export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyM
           return (
             <div
               key={entry.id}
-              className={`flex items-center gap-3 rounded-2xl border border-slate-100 bg-white ${compact ? 'px-3 py-3' : 'px-4 py-4'} shadow-sm`}
+              className={`flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white ${compact ? 'px-3 py-3' : 'px-4 py-4'} shadow-sm`}
             >
               {content}
             </div>
@@ -147,7 +147,7 @@ export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyM
             key={entry.id}
             type="button"
             onClick={() => onOpenItem?.(entry)}
-            className={`flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white text-left transition-colors hover:bg-slate-50 ${compact ? 'px-3 py-3' : 'px-4 py-4'} shadow-sm`}
+            className={`flex min-w-0 w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white text-left transition-colors hover:bg-slate-50 ${compact ? 'px-3 py-3' : 'px-4 py-4'} shadow-sm`}
           >
             {content}
           </button>

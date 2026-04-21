@@ -6,7 +6,7 @@ import { useAuth } from '../../../app/providers/AuthContext';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function SecurityPage() {
@@ -62,7 +62,7 @@ export default function SecurityPage() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        className="mx-auto w-full max-w-5xl px-4 py-5 md:px-8 md:py-6"
+        className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
       >
         <motion.div variants={staggerItem} className="mb-4 rounded-[28px] border border-slate-100 bg-white shadow-sm">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.12),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#fff7f7_100%)] px-5 py-5 md:px-6 md:py-6">

@@ -6,7 +6,7 @@ import { useAuth } from '../../../app/providers/AuthContext';
 import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { fetchItemStats } from '../../../legacy/items';
 import type { ItemStats } from '@inplace/domain';
 import { QuickLinkCard, SectionPanel } from '../components/ProfileUi';
@@ -185,7 +185,7 @@ export default function ProfilePage() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        className="mx-auto flex w-full max-w-[1560px] flex-1 flex-col overflow-y-auto px-4 py-5 md:px-8 md:py-6"
+        className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}
       >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">

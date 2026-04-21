@@ -96,22 +96,63 @@ export async function listItemsForUser(userId: string, query: ListItemsQuery) {
   const pageSize = query.pageSize ?? 20;
   const usePagination = query.page !== undefined || query.pageSize !== undefined;
 
-  const [totalRow] = await getDb()
-    .select({ value: count() })
-    .from(items)
-    .where(where);
-
-  const total = Number(totalRow?.value ?? 0);
-
   const rowsQuery = getDb()
     .select()
     .from(items)
     .where(where)
     .orderBy(desc(items.type), asc(items.name));
 
-  const rows = usePagination
-    ? await rowsQuery.limit(pageSize).offset((page - 1) * pageSize)
-    : await rowsQuery;
+  let rows = await rowsQuery;
+
+  if (query.locationOnly) {
+    rows = rows.filter((row) => row.type === 'container' && row.metadata?.location_tag === true);
+  }
+
+  if (query.locationId) {
+    const locationRows = await getDb()
+      .select({ id: items.id, parentId: items.parentId })
+      .from(items)
+      .where(eq(items.userId, userId));
+
+    const childrenMap = new Map<string, string[]>();
+    for (const row of locationRows) {
+      if (!row.parentId) {
+        continue;
+      }
+
+      const bucket = childrenMap.get(row.parentId) ?? [];
+      bucket.push(row.id);
+      childrenMap.set(row.parentId, bucket);
+    }
+
+    const descendantIds = new Set<string>();
+    const stack = [...(childrenMap.get(query.locationId) ?? [])];
+
+    while (stack.length > 0) {
+      const currentId = stack.pop();
+      if (!currentId || descendantIds.has(currentId)) {
+        continue;
+      }
+
+      descendantIds.add(currentId);
+      const children = childrenMap.get(currentId);
+      if (children) {
+        stack.push(...children);
+      }
+    }
+
+    rows = rows.filter((row) => descendantIds.has(row.id));
+  }
+
+  if (query.tags.length > 0) {
+    rows = rows.filter((row) => query.tags.some((tag) => row.tags.includes(tag)));
+  }
+
+  const total = rows.length;
+
+  if (usePagination) {
+    rows = rows.slice((page - 1) * pageSize, page * pageSize);
+  }
 
   const effectivePageSize = usePagination ? pageSize : Math.max(rows.length, 1);
   const totalPages = usePagination

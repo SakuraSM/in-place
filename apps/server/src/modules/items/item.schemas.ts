@@ -19,9 +19,27 @@ const nullableDateSchema = z.union([z.string(), z.date()]).nullable().optional()
 export const listItemsQuerySchema = z.object({
   parentId: z.string().uuid().optional(),
   rootOnly: z.coerce.boolean().optional(),
+  locationId: z.string().uuid().optional(),
+  locationOnly: z.coerce.boolean().optional(),
   query: z.string().trim().optional(),
   type: itemTypeSchema.optional(),
   status: itemStatusSchema.optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional().transform((value) => {
+    if (!value) {
+      return [];
+    }
+
+    const values = Array.isArray(value) ? value : [value];
+    const unique: string[] = [];
+
+    for (const entry of values.map((item) => item.trim()).filter(Boolean)) {
+      if (!unique.includes(entry)) {
+        unique.push(entry);
+      }
+    }
+
+    return unique;
+  }),
   page: z.coerce.number().int().min(1).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
 });

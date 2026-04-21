@@ -5,7 +5,7 @@ import type { ActivityLog } from '../../../legacy/database.types';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
 import { useAuth } from '../../../app/providers/AuthContext';
 import EmptyState from '../../../shared/ui/EmptyState';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import ActivityFeed from '../components/ActivityFeed';
 import { resolveItemDetailPath } from '../../inventory/lib/detailPath';
@@ -65,14 +65,14 @@ export default function ActivityPage() {
   }, [logs]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
       <div className={APP_PAGE_HEADER}>
         <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col overflow-y-auto px-4 py-6 md:px-8">
+      <div className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}>
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           {[
             { label: '手动录入', value: summary.manual_create, tone: 'bg-sky-50 text-sky-500' },

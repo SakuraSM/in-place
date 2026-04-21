@@ -9,6 +9,7 @@ import { fetchTags } from '../../../legacy/tags';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
 import LocationPicker from './LocationPicker';
+import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
 
 interface FormData {
   type: ItemType;
@@ -214,7 +215,7 @@ export default function ItemForm({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
         <motion.div
           className="absolute inset-0 bg-black/25 backdrop-blur-sm"
           initial={{ opacity: 0 }}
@@ -222,12 +223,12 @@ export default function ItemForm({
           onClick={onClose}
         />
         <motion.div
-          className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col"
-          initial={{ y: '100%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden bg-white shadow-2xl rounded-t-3xl md:max-h-[88vh] md:max-w-3xl md:rounded-3xl"
+          initial={{ y: 24, opacity: 0, scale: 0.98 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 340, damping: 30 }}
         >
-          <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
+          <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <h2 className="font-semibold text-slate-900 text-lg">
               {initial?.id ? '编辑' : '新增'}{containerLabel}
@@ -243,7 +244,8 @@ export default function ItemForm({
             </motion.button>
           </div>
 
-          <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
             {!initial?.id && !forceType && (
               <div className="relative flex p-1 bg-slate-100 rounded-xl">
                 {(['item', 'container'] as ItemType[]).map((t) => (
@@ -269,24 +271,47 @@ export default function ItemForm({
             )}
 
             {form.type === 'container' && !fixedLocation && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <label className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-slate-700">标记为位置</p>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">标记为位置</label>
+                <button
+                  type="button"
+                  onClick={() => update('isLocation', !form.isLocation)}
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
+                    form.isLocation
+                      ? 'border-sky-200 bg-sky-50'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                  }`}
+                  aria-pressed={form.isLocation}
+                >
+                  <div className="min-w-0">
+                    <p className={`text-sm font-medium ${form.isLocation ? 'text-sky-700' : 'text-slate-700'}`}>
+                      作为位置使用
+                    </p>
+                    <p className={`mt-0.5 text-xs ${form.isLocation ? 'text-sky-600' : 'text-slate-400'}`}>
+                      开启后可作为空间节点承载下级内容
+                    </p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={form.isLocation}
-                    onChange={(event) => update('isLocation', event.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
-                  />
-                </label>
+                  <span
+                    className={`relative ml-4 inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+                      form.isLocation ? 'bg-sky-500' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                        form.isLocation ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </span>
+                </button>
               </div>
             )}
 
             {form.type === 'container' && fixedLocation && (
-              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3">
-                <p className="text-sm font-medium text-sky-700">当前位置将直接作为「位置」创建</p>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">位置类型</label>
+                <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3">
+                  <p className="text-sm font-medium text-sky-700">当前位置将直接作为「位置」创建</p>
+                </div>
               </div>
             )}
 
@@ -395,22 +420,20 @@ export default function ItemForm({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">购买日期</label>
-                    <input
-                      type="date"
+                    <ModernDatePicker
                       value={form.purchase_date}
-                      onChange={(e) => update('purchase_date', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+                      onChange={(value) => update('purchase_date', value)}
+                      placeholder="选择购买日期"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">保修截止日期</label>
-                  <input
-                    type="date"
+                  <ModernDatePicker
                     value={form.warranty_date}
-                    onChange={(e) => update('warranty_date', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+                    onChange={(value) => update('warranty_date', value)}
+                    placeholder="选择保修截止日期"
                   />
                 </div>
               </>
@@ -581,8 +604,9 @@ export default function ItemForm({
                 onChange={handleImageUpload}
               />
             </div>
+            </div>
 
-            <div className="pb-4">
+            <div className="border-t border-slate-100 bg-white px-5 py-4">
               <motion.button
                 type="submit"
                 disabled={saving || !form.name.trim()}

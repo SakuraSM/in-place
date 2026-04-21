@@ -9,7 +9,7 @@ import type { Item } from '../../../legacy/database.types';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
 import ItemForm from '../components/ItemForm';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
+import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
 import {
   buildChildrenMap,
   buildItemIdMap,
@@ -73,7 +73,7 @@ export default function LocationTreePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_ROW} justify-between gap-3`}>
           <h1 className="text-xl font-bold text-slate-900">位置树</h1>
@@ -88,7 +88,7 @@ export default function LocationTreePage() {
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col px-4 py-5 md:overflow-y-auto md:px-8 md:py-5">
+      <div className={`flex min-h-0 w-full flex-1 flex-col md:overflow-y-auto ${APP_PAGE_CONTENT}`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -119,12 +119,12 @@ export default function LocationTreePage() {
               {selectedLocation ? (
                 <>
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1">
-                        <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
+                        <span className="inline-flex self-start rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
                           当前位置
                         </span>
-                        <h2 className="mt-3 text-2xl font-bold text-slate-900">{selectedLocation.name}</h2>
+                        <h2 className="mt-3 break-words text-2xl font-bold text-slate-900">{selectedLocation.name}</h2>
                         {selectedLocation.description && (
                           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
                             {selectedLocation.description}
@@ -132,11 +132,11 @@ export default function LocationTreePage() {
                         )}
                       </div>
 
-                      <div className="flex shrink-0 flex-wrap gap-2">
+                      <div className="grid w-full shrink-0 grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap">
                         <button
                           type="button"
                           onClick={() => navigate(`/overview?locationId=${selectedLocation.id}`)}
-                          className="inline-flex items-center gap-1.5 rounded-2xl bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
                         >
                           查看位置内容
                           <ExternalLink size={14} />
@@ -144,7 +144,7 @@ export default function LocationTreePage() {
                         <button
                           type="button"
                           onClick={() => navigate(resolveItemDetailPath(selectedLocation))}
-                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                         >
                           查看详情
                           <ChevronRight size={14} />
@@ -166,7 +166,7 @@ export default function LocationTreePage() {
                     )}
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                     {[
                       { label: '下级位置', value: selectedStats?.locations ?? 0, icon: MapPin, tone: 'bg-sky-50 text-sky-500' },
                       { label: '下级收纳', value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },

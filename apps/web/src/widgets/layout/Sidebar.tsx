@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
-import { HOME_CREATE_ROUTE } from '../../features/inventory/lib/homeRoute';
+import { buildHomeCreateRoute } from '../../features/inventory/lib/homeRoute';
 import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
 
 const navItems = [
@@ -26,6 +26,7 @@ export default function Sidebar({
   onToggle: () => void;
 }) {
   const location = useLocation();
+  const createRoute = buildHomeCreateRoute(location.pathname, location.search);
 
   return (
     <aside
@@ -68,7 +69,7 @@ export default function Sidebar({
         {collapsed ? (
           <div className="space-y-2">
             <NavLink
-              to={HOME_CREATE_ROUTE}
+              to={createRoute}
               title="立即新增"
               aria-label="立即新增"
               className="flex w-full items-center justify-center rounded-2xl bg-sky-50 py-2.5 text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
@@ -87,7 +88,7 @@ export default function Sidebar({
           </div>
         ) : (
           <NavLink
-            to={HOME_CREATE_ROUTE}
+            to={createRoute}
             title="立即新增"
             aria-label="立即新增"
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-medium text-sky-600 transition-colors hover:bg-sky-100 hover:text-sky-700"
