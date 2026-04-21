@@ -53,13 +53,21 @@ export default function HomeDashboard({
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         className="overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm md:p-6"
       >
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
-          <div>
-            <div className="flex flex-wrap gap-3">
+        <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+          <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 md:p-5">
+            <div className="max-w-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-500">快捷操作</p>
+              <h2 className="mt-2 text-lg font-semibold text-slate-900">常用入口集中在这里</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                新增、扫描和查看近期动态都可以直接处理，右侧同步展示当前整理概览。
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <button
                 type="button"
                 onClick={onCreate}
-                className="inline-flex items-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600"
               >
                 <Plus size={16} />
                 立即新增
@@ -67,7 +75,7 @@ export default function HomeDashboard({
               <button
                 type="button"
                 onClick={onOpenScan}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
               >
                 <Bot size={16} />
                 打开 AI 扫描
@@ -75,7 +83,7 @@ export default function HomeDashboard({
               <button
                 type="button"
                 onClick={onOpenActivity}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 sm:col-span-2 xl:col-span-1 2xl:col-span-2"
               >
                 <Clock3 size={16} />
                 查看操作记录
@@ -83,13 +91,13 @@ export default function HomeDashboard({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => onNavigateOverview?.(filter)}
-                className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors ${onNavigateOverview ? 'hover:bg-slate-100/80 cursor-pointer' : 'cursor-default'}`}
+                className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors xl:min-h-[144px] ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
               >
                 <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
                   <Icon size={18} />
