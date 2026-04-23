@@ -25,8 +25,8 @@ export default function ScanPage() {
   const { user } = useAuth();
   const cameraFileRef = useRef<HTMLInputElement>(null);
   const photoLibraryRef = useRef<HTMLInputElement>(null);
-  const latestDraftsRef = useRef<DraftItem[]>([]);
-  const latestSourceImageUrlRef = useRef<string | null>(null);
+  const activeDraftImageUrlsRef = useRef<string[]>([]);
+  const activeSourceImageUrlRef = useRef<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
@@ -37,6 +37,10 @@ export default function ScanPage() {
   const [croppingDraftIndex, setCroppingDraftIndex] = useState<number | null>(null);
   const [sourceImageUrl, setSourceImageUrl] = useState<string | null>(null);
   const [lastPickMode, setLastPickMode] = useState<'camera' | 'album'>('camera');
+  const lastPickModeMeta = lastPickMode === 'album'
+    ? { retryLabel: '重新选图', icon: ImageIcon }
+    : { retryLabel: '重新拍摄', icon: Camera };
+  const RetryPickIcon = lastPickModeMeta.icon;
 
   useEffect(() => {
     let active = true;
@@ -58,23 +62,13 @@ export default function ScanPage() {
     };
   }, []);
 
-  useEffect(() => {
-    latestDraftsRef.current = drafts;
-  }, [drafts]);
-
-  useEffect(() => {
-    latestSourceImageUrlRef.current = sourceImageUrl;
-  }, [sourceImageUrl]);
-
   useEffect(() => () => {
-    latestDraftsRef.current.forEach((draft) => {
-      if (draft.imageUrl) {
-        URL.revokeObjectURL(draft.imageUrl);
-      }
+    activeDraftImageUrlsRef.current.forEach((imageUrl) => {
+      URL.revokeObjectURL(imageUrl);
     });
 
-    if (latestSourceImageUrlRef.current) {
-      URL.revokeObjectURL(latestSourceImageUrlRef.current);
+    if (activeSourceImageUrlRef.current) {
+      URL.revokeObjectURL(activeSourceImageUrlRef.current);
     }
   }, []);
 
@@ -86,6 +80,27 @@ export default function ScanPage() {
     });
   };
 
+  const rememberDraftImageUrls = (entries: DraftItem[]) => {
+    const nextUrls = entries.flatMap((draft) => (draft.imageUrl ? [draft.imageUrl] : []));
+    const nextUrlSet = new Set(nextUrls);
+
+    activeDraftImageUrlsRef.current.forEach((imageUrl) => {
+      if (!nextUrlSet.has(imageUrl)) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    });
+
+    activeDraftImageUrlsRef.current = nextUrls;
+  };
+
+  const replaceSourceImageUrl = (nextUrl: string | null) => {
+    if (activeSourceImageUrlRef.current) {
+      URL.revokeObjectURL(activeSourceImageUrlRef.current);
+    }
+    activeSourceImageUrlRef.current = nextUrl;
+    setSourceImageUrl(nextUrl);
+  };
+
   const resetScanState = () => {
     setCapturedImage(null);
     setError('');
@@ -93,14 +108,10 @@ export default function ScanPage() {
     setEditingDraft(null);
     setDrafts((previous) => {
       revokeDraftImageUrls(previous);
+      activeDraftImageUrlsRef.current = [];
       return [];
     });
-    setSourceImageUrl((previousUrl) => {
-      if (previousUrl) {
-        URL.revokeObjectURL(previousUrl);
-      }
-      return null;
-    });
+    replaceSourceImageUrl(null);
   };
 
   const openPicker = (mode: 'camera' | 'album') => {
@@ -125,14 +136,10 @@ export default function ScanPage() {
     setCroppingDraftIndex(null);
     setDrafts((previous) => {
       revokeDraftImageUrls(previous);
+      activeDraftImageUrlsRef.current = [];
       return [];
     });
-    setSourceImageUrl((previousUrl) => {
-      if (previousUrl) {
-        URL.revokeObjectURL(previousUrl);
-      }
-      return URL.createObjectURL(file);
-    });
+    replaceSourceImageUrl(URL.createObjectURL(file));
 
     try {
       const results = await recognizeItemFromImage(file);
@@ -153,6 +160,7 @@ export default function ScanPage() {
         };
       }));
       setDrafts(nextDrafts);
+      rememberDraftImageUrls(nextDrafts);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'AI 识别失败，请重试');
     } finally {
@@ -217,22 +225,27 @@ export default function ScanPage() {
     const imageFile = await cropImageFromFile(capturedImage, crop, `scan-manual-${croppingDraftIndex + 1}`);
     const imageUrl = await createObjectUrl(imageFile);
 
-    setDrafts((prev) => prev.map((draft, index) => {
-      if (index !== croppingDraftIndex) {
-        return draft;
-      }
+    setDrafts((prev) => {
+      const nextDrafts = prev.map((draft, index) => {
+        if (index !== croppingDraftIndex) {
+          return draft;
+        }
 
-      if (draft.imageUrl) {
-        URL.revokeObjectURL(draft.imageUrl);
-      }
+        if (draft.imageUrl) {
+          URL.revokeObjectURL(draft.imageUrl);
+        }
 
-      return {
-        ...draft,
-        imageFile,
-        imageUrl,
-        cropBox: crop,
-      };
-    }));
+        return {
+          ...draft,
+          imageFile,
+          imageUrl,
+          cropBox: crop,
+        };
+      });
+
+      rememberDraftImageUrls(nextDrafts);
+      return nextDrafts;
+    });
     setCroppingDraftIndex(null);
   };
 
@@ -264,8 +277,8 @@ export default function ScanPage() {
   };
 
   const selectedCount = drafts.filter((d) => d.selected && !d.saved).length;
-  const pickAgainLabel = lastPickMode === 'album' ? '重新选图' : '重新拍摄';
   const resultCount = drafts.length;
+  const blobSourceImageUrl = sourceImageUrl?.startsWith('blob:') ? sourceImageUrl : null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -302,10 +315,10 @@ export default function ScanPage() {
                 </span>
               </div>
 
-              {capturedImage && sourceImageUrl ? (
+              {blobSourceImageUrl ? (
                 <div className="relative bg-slate-950">
                   <img
-                    src={sourceImageUrl}
+                    src={blobSourceImageUrl}
                     alt="待识别图片"
                     className="aspect-[4/3] w-full object-cover xl:aspect-[16/11]"
                   />
@@ -382,7 +395,7 @@ export default function ScanPage() {
                     <ImageIcon size={16} />
                     从相册选择
                   </button>
-                  {capturedImage && !analyzing && (
+                  {blobSourceImageUrl && !analyzing && (
                     <button
                       type="button"
                       onClick={() => {
@@ -391,8 +404,8 @@ export default function ScanPage() {
                       }}
                       className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                     >
-                      {lastPickMode === 'album' ? <ImageIcon size={16} /> : <Camera size={16} />}
-                      {pickAgainLabel}
+                      <RetryPickIcon size={16} />
+                      {lastPickModeMeta.retryLabel}
                     </button>
                   )}
                 </div>
@@ -628,9 +641,9 @@ export default function ScanPage() {
         />
       )}
 
-      {croppingDraftIndex !== null && sourceImageUrl && (
+      {croppingDraftIndex !== null && blobSourceImageUrl && (
         <CropImageSheet
-          imageUrl={sourceImageUrl}
+          imageUrl={blobSourceImageUrl}
           initialCrop={drafts[croppingDraftIndex]?.cropBox ?? null}
           onConfirm={handleManualCrop}
           onClose={() => setCroppingDraftIndex(null)}
