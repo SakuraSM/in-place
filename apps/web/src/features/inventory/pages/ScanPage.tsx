@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Sparkles, Check, Loader2, AlertCircle, Plus, CreditCard as Edit2, Crop, Package, Box } from 'lucide-react';
+import { Camera, Sparkles, Check, Loader2, AlertCircle, Plus, CreditCard as Edit2, Crop, Package, Box, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchAiAvailability, recognizeItemFromImage } from '../../../legacy/openai';
 import { createItem, uploadImage } from '../../../legacy/items';
@@ -23,7 +23,10 @@ interface DraftItem {
 
 export default function ScanPage() {
   const { user } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraFileRef = useRef<HTMLInputElement>(null);
+  const photoLibraryRef = useRef<HTMLInputElement>(null);
+  const latestDraftsRef = useRef<DraftItem[]>([]);
+  const latestSourceImageUrlRef = useRef<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
@@ -33,6 +36,7 @@ export default function ScanPage() {
   const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
   const [croppingDraftIndex, setCroppingDraftIndex] = useState<number | null>(null);
   const [sourceImageUrl, setSourceImageUrl] = useState<string | null>(null);
+  const [lastPickMode, setLastPickMode] = useState<'camera' | 'album'>('camera');
 
   useEffect(() => {
     let active = true;
@@ -54,13 +58,81 @@ export default function ScanPage() {
     };
   }, []);
 
-  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    latestDraftsRef.current = drafts;
+  }, [drafts]);
+
+  useEffect(() => {
+    latestSourceImageUrlRef.current = sourceImageUrl;
+  }, [sourceImageUrl]);
+
+  useEffect(() => () => {
+    latestDraftsRef.current.forEach((draft) => {
+      if (draft.imageUrl) {
+        URL.revokeObjectURL(draft.imageUrl);
+      }
+    });
+
+    if (latestSourceImageUrlRef.current) {
+      URL.revokeObjectURL(latestSourceImageUrlRef.current);
+    }
+  }, []);
+
+  const revokeDraftImageUrls = (entries: DraftItem[]) => {
+    entries.forEach((draft) => {
+      if (draft.imageUrl) {
+        URL.revokeObjectURL(draft.imageUrl);
+      }
+    });
+  };
+
+  const resetScanState = () => {
+    setCapturedImage(null);
+    setError('');
+    setCroppingDraftIndex(null);
+    setEditingDraft(null);
+    setDrafts((previous) => {
+      revokeDraftImageUrls(previous);
+      return [];
+    });
+    setSourceImageUrl((previousUrl) => {
+      if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      return null;
+    });
+  };
+
+  const openPicker = (mode: 'camera' | 'album') => {
+    setLastPickMode(mode);
+    if (mode === 'camera') {
+      cameraFileRef.current?.click();
+      return;
+    }
+
+    photoLibraryRef.current?.click();
+  };
+
+  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'camera' | 'album') => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    setLastPickMode(mode);
     setCapturedImage(file);
     setError('');
     setAnalyzing(true);
-    setDrafts([]);
+    setEditingDraft(null);
+    setCroppingDraftIndex(null);
+    setDrafts((previous) => {
+      revokeDraftImageUrls(previous);
+      return [];
+    });
+    setSourceImageUrl((previousUrl) => {
+      if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      return URL.createObjectURL(file);
+    });
 
     try {
       const results = await recognizeItemFromImage(file);
@@ -81,12 +153,6 @@ export default function ScanPage() {
         };
       }));
       setDrafts(nextDrafts);
-      setSourceImageUrl((previousUrl) => {
-        if (previousUrl) {
-          URL.revokeObjectURL(previousUrl);
-        }
-        return URL.createObjectURL(file);
-      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'AI 识别失败，请重试');
     } finally {
@@ -198,13 +264,15 @@ export default function ScanPage() {
   };
 
   const selectedCount = drafts.filter((d) => d.selected && !d.saved).length;
+  const pickAgainLabel = lastPickMode === 'album' ? '重新选图' : '重新拍摄';
+  const resultCount = drafts.length;
 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className={APP_PAGE_HEADER}>
         <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">AI 扫描</h1>
-          <p className="text-slate-400 text-xs mt-0.5">拍照自动识别物品并录入</p>
+          <p className="text-slate-400 text-xs mt-0.5">拍照或选图自动识别物品并录入</p>
         </div>
       </div>
 
@@ -217,74 +285,148 @@ export default function ScanPage() {
             <h3 className="font-semibold text-amber-800 mb-1">AI 功能即将开放</h3>
           </div>
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(420px,0.95fr)_minmax(520px,1.15fr)] xl:items-start">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px] 2xl:grid-cols-[minmax(0,1.2fr)_400px] xl:items-start">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-              className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm xl:sticky xl:top-28"
+              className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm xl:sticky xl:top-28"
             >
-              {capturedImage ? (
-                <div className="relative">
+              <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">识别图片</p>
+                  <p className="mt-1 text-xs text-slate-400">支持直接拍照，也支持从相册选取已有图片</p>
+                </div>
+                <span className="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-sky-600">
+                  多目标识别
+                </span>
+              </div>
+
+              {capturedImage && sourceImageUrl ? (
+                <div className="relative bg-slate-950">
                   <img
-                    src={URL.createObjectURL(capturedImage)}
-                    alt="拍摄的图片"
-                    className="w-full aspect-video object-cover"
+                    src={sourceImageUrl}
+                    alt="待识别图片"
+                    className="aspect-[4/3] w-full object-cover xl:aspect-[16/11]"
                   />
                   {analyzing && (
-                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
-                      <Loader2 size={32} className="text-white animate-spin" />
-                      <p className="text-white text-sm font-medium">AI 识别中...</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/65">
+                      <Loader2 size={32} className="animate-spin text-white" />
+                      <p className="text-sm font-medium text-white">AI 识别中...</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <motion.button
-                  onClick={() => fileRef.current?.click()}
-                  whileHover={{ backgroundColor: '#f0f9ff' }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full aspect-video flex flex-col items-center justify-center gap-3 bg-slate-50 transition-colors"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 8 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 18 }}
-                    className="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center"
-                  >
-                    <Camera size={28} className="text-sky-500" />
-                  </motion.div>
-                  <div className="text-center">
-                    <p className="font-semibold text-slate-700 mb-0.5">拍摄或选择图片</p>
-                    <p className="text-slate-400 text-sm">AI 将自动识别图中物品</p>
+                <div className="flex aspect-[4/3] flex-col items-center justify-center gap-4 bg-gradient-to-br from-sky-50 via-white to-slate-100 px-6 text-center xl:aspect-[16/11]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-sky-100">
+                    <Sparkles size={28} className="text-sky-500" />
                   </div>
-                </motion.button>
+                  <div className="space-y-1">
+                    <p className="text-lg font-semibold text-slate-800">拍照或导入一张物品照片</p>
+                    <p className="text-sm text-slate-500">AI 会自动识别图片中的多个物品，并生成待保存草稿</p>
+                  </div>
+                  <div className="grid w-full max-w-sm gap-3 sm:grid-cols-2 xl:hidden">
+                    <button
+                      type="button"
+                      disabled={analyzing}
+                      onClick={() => openPicker('camera')}
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                    >
+                      <Camera size={16} />
+                      拍照扫描
+                    </button>
+                    <button
+                      type="button"
+                      disabled={analyzing}
+                      onClick={() => openPicker('album')}
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      <ImageIcon size={16} />
+                      相册选图
+                    </button>
+                  </div>
+                </div>
               )}
             </motion.div>
 
-            {capturedImage && !analyzing && (
-              <div className="flex items-start xl:pt-2">
-                <button
-                  onClick={() => {
-                    setCapturedImage(null);
-                    setDrafts((prev) => {
-                      prev.forEach((draft) => draft.imageUrl && URL.revokeObjectURL(draft.imageUrl));
-                      return [];
-                    });
-                    setError('');
-                    setSourceImageUrl((previousUrl) => {
-                      if (previousUrl) {
-                        URL.revokeObjectURL(previousUrl);
-                      }
-                      return null;
-                    });
-                    fileRef.current?.click();
-                  }}
-                  className="w-full rounded-xl bg-slate-100 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 flex items-center justify-center gap-2"
-                >
-                  <Camera size={16} />
-                  重新拍摄
-                </button>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 24, delay: 0.04 }}
+              className="space-y-4 xl:sticky xl:top-28"
+            >
+              <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-slate-900">开始扫描</p>
+                  <p className="text-sm leading-6 text-slate-500">
+                    上传一张清晰图片，系统会自动识别物品、分类并生成可编辑的录入草稿。
+                  </p>
+                </div>
+
+                <div className="mt-5 grid gap-3">
+                  <button
+                    type="button"
+                    disabled={analyzing}
+                    onClick={() => openPicker('camera')}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                  >
+                    <Camera size={16} />
+                    拍照扫描
+                  </button>
+                  <button
+                    type="button"
+                    disabled={analyzing}
+                    onClick={() => openPicker('album')}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-4 py-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <ImageIcon size={16} />
+                    从相册选择
+                  </button>
+                  {capturedImage && !analyzing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetScanState();
+                        openPicker(lastPickMode);
+                      }}
+                      className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                    >
+                      {lastPickMode === 'album' ? <ImageIcon size={16} /> : <Camera size={16} />}
+                      {pickAgainLabel}
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    <p className="text-xs text-slate-400">识别结果</p>
+                    <p className="mt-2 text-2xl font-semibold text-slate-900">{resultCount}</p>
+                  </div>
+                  <div className="rounded-2xl bg-sky-50 px-4 py-3">
+                    <p className="text-xs text-sky-500">待保存</p>
+                    <p className="mt-2 text-2xl font-semibold text-sky-600">{selectedCount}</p>
+                  </div>
+                </div>
               </div>
-            )}
+
+              <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <p className="text-sm font-semibold text-slate-900">建议</p>
+                <ul className="mt-3 space-y-3 text-sm text-slate-500">
+                  <li className="flex gap-2">
+                    <Check size={16} className="mt-0.5 shrink-0 text-emerald-500" />
+                    尽量保持物品完整入镜，避免遮挡。
+                  </li>
+                  <li className="flex gap-2">
+                    <Check size={16} className="mt-0.5 shrink-0 text-emerald-500" />
+                    PC 端可先从相册导入，再批量确认识别结果。
+                  </li>
+                  <li className="flex gap-2">
+                    <Check size={16} className="mt-0.5 shrink-0 text-emerald-500" />
+                    识别后可手动裁图或编辑信息再保存。
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
           </div>
         )}
 
@@ -453,12 +595,20 @@ export default function ScanPage() {
       </div>
 
       <input
-        ref={fileRef}
+        ref={cameraFileRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={handleCapture}
+        onChange={(event) => void handleCapture(event, 'camera')}
+      />
+
+      <input
+        ref={photoLibraryRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => void handleCapture(event, 'album')}
       />
 
       {editingDraft && (
