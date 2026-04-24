@@ -5,6 +5,7 @@ import StatusBadge from '../../../shared/ui/StatusBadge';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { staggerItem } from '../../../shared/lib/animations';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 interface Props {
   item: Item;
@@ -62,8 +63,8 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
       >
         <div className="relative aspect-square bg-slate-50 overflow-hidden">
           {item.images.length > 0 ? (
-            <motion.img
-              src={item.images[0]}
+              <motion.img
+              src={buildInventoryImageUrl(item.images[0], 'card')}
               alt={item.name}
               className="w-full h-full object-cover"
               animate={{ scale: hovered ? 1.07 : 1 }}

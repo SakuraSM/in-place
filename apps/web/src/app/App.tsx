@@ -12,6 +12,7 @@ import ScanPage from '../features/inventory/pages/ScanPage';
 import ProfilePage from '../features/profile/pages/ProfilePage';
 import AiSettingsPage from '../features/profile/pages/AiSettingsPage';
 import SecurityPage from '../features/profile/pages/SecurityPage';
+import DataManagementPage from '../features/profile/pages/DataManagementPage';
 import CategoriesPage from '../features/inventory/pages/CategoriesPage';
 import TagsPage from '../features/tags/pages/TagsPage';
 import ScrollToTop from '../shared/ui/ScrollToTop';
@@ -134,6 +135,16 @@ export default function App() {
                 <ProtectedRoute>
                   <AppLayout>
                     <SecurityPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/data"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <DataManagementPage />
                   </AppLayout>
                 </ProtectedRoute>
               }

@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { staggerContainer, staggerItem, logoFloat, scaleIn } from '../../../shared/lib/animations';
-import BrandLockup from '../../../shared/ui/BrandLockup';
-
 export default function RegisterPage() {
   const { user, signUp } = useAuth();
   const navigate = useNavigate();
@@ -30,8 +28,8 @@ export default function RegisterPage() {
       setError('两次输入的密码不一致');
       return;
     }
-    if (password.length < 6) {
-      setError('密码长度至少 6 位');
+    if (password.length < 8) {
+      setError('密码至少需要 8 位');
       return;
     }
     setLoading(true);
@@ -77,12 +75,16 @@ export default function RegisterPage() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-      >
-        <motion.div variants={staggerItem} className="text-center mb-10">
-          <motion.div variants={logoFloat}>
-            <BrandLockup size="lg" className="justify-center" logoVariant="mark" />
+        >
+          <motion.div variants={staggerItem} className="text-center mb-10">
+            <motion.div variants={logoFloat}>
+              <img
+                src="/branding/inplace-logo-full.png"
+                alt="归位"
+                className="mx-auto block h-20 w-auto max-w-full object-contain md:h-24"
+              />
+            </motion.div>
           </motion.div>
-        </motion.div>
 
         <motion.div variants={staggerItem} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
           <h2 className="text-xl font-semibold text-slate-900 mb-6">创建账号</h2>
@@ -125,7 +127,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="至少 6 位"
+                  placeholder="至少 8 位"
                   required
                   className="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
                 />

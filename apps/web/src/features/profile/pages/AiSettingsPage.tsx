@@ -103,7 +103,7 @@ export default function AiSettingsPage() {
         animate="animate"
         className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
       >
-        <motion.div variants={staggerItem} className="mb-4 rounded-[28px] border border-slate-100 bg-white shadow-sm">
+        <motion.div variants={staggerItem} className="mb-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.16),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#fffaf0_100%)] px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-amber-100 text-amber-600">

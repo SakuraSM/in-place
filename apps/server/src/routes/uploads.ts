@@ -72,88 +72,89 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
 
   const uploadRoot = resolveUploadRoot(options.env);
 
-  // 在 fastifyStatic 之前注册一个动态缩略图处理器，遇到带尺寸参数的请求时短路返回缩放后的图片，
-  // 并落盘缓存到 storage/uploads/.cache 目录，下次命中可直接读盘。
-  app.get('/api/uploads/*', async (request, reply) => {
-    const query = (request.query ?? {}) as Record<string, unknown>;
-    if (!hasResizeQuery(query)) {
-      // 让后续的 fastify-static 处理原图请求
-      return reply.callNotFound();
-    }
-
-    const params = request.params as { '*'?: string };
-    const relative = params['*'] ?? '';
-    if (!relative) {
-      return reply.code(400).send({ error: 'INVALID_PATH', message: '缺少图片路径' });
-    }
-
-    // 防止越过上传根目录（即 ../ 注入）
-    const normalized = path.posix.normalize(relative);
-    if (normalized.startsWith('..') || normalized.includes('\0')) {
-      return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
-    }
-    const sourcePath = path.resolve(uploadRoot, normalized);
-    const relSourceFromRoot = path.relative(uploadRoot, sourcePath);
-    if (relSourceFromRoot.startsWith('..') || path.isAbsolute(relSourceFromRoot)) {
-      return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
-    }
-
-    let sourceStat;
-    try {
-      sourceStat = await stat(sourcePath);
-    } catch {
-      return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
-    }
-    if (!sourceStat.isFile()) {
-      return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
-    }
-
-    const sourceMime = resolveImageMimeType(sourcePath);
-    if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
-      // SVG/非图片直接交还原图通道
-      return reply.callNotFound();
-    }
-
-    const resizeOptions: ImageResizeOptions = {
-      width: parseDimension(query.w),
-      height: parseDimension(query.h),
-      quality: parseQuality(query.q),
-      fit: parseFit(query.fit),
-      format: parseFormat(query.format),
-    };
-
-    if (!resizeOptions.width && !resizeOptions.height && !resizeOptions.format && !resizeOptions.quality) {
-      return reply.callNotFound();
-    }
-
-    try {
-      const resized = await resolveResizedImage({
-        env: options.env,
-        sourceAbsolutePath: sourcePath,
-        sourceRelativePath: normalized,
-        sourceMtimeMs: sourceStat.mtimeMs,
-        sourceMimeType: sourceMime,
-        options: resizeOptions,
-      });
-
-      reply
-        .header('Content-Type', resized.mimeType)
-        .header('Content-Length', resized.size)
-        .header('Cache-Control', 'public, max-age=31536000, immutable');
-      return reply.send(createReadStream(resized.absolutePath));
-    } catch (error) {
-      request.log.error({ err: error, path: normalized }, 'image resize failed');
-      return reply.code(500).send({
-        error: 'RESIZE_FAILED',
-        message: error instanceof Error ? error.message : '图片缩放失败',
-      });
-    }
-  });
-
   await app.register(fastifyStatic, {
     root: uploadRoot,
-    prefix: '/api/uploads/',
-    decorateReply: false,
+    serve: false,
+  });
+
+  // 用单一路由同时承接原图和缩略图请求：无缩放参数时直接 sendFile，
+  // 有缩放参数时按规则生成/命中缓存后的变体，避免与 fastify-static 的默认 /* 注册冲突。
+  app.route({
+    method: ['GET', 'HEAD'],
+    url: '/api/uploads/*',
+    async handler(request, reply) {
+      const query = (request.query ?? {}) as Record<string, unknown>;
+      const params = request.params as { '*'?: string };
+      const relative = params['*'] ?? '';
+      if (!relative) {
+        return reply.code(400).send({ error: 'INVALID_PATH', message: '缺少图片路径' });
+      }
+
+      // 防止越过上传根目录（即 ../ 注入）
+      const normalized = path.posix.normalize(relative);
+      if (normalized.startsWith('..') || normalized.includes('\0')) {
+        return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
+      }
+      const sourcePath = path.resolve(uploadRoot, normalized);
+      const relSourceFromRoot = path.relative(uploadRoot, sourcePath);
+      if (relSourceFromRoot.startsWith('..') || path.isAbsolute(relSourceFromRoot)) {
+        return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
+      }
+
+      if (!hasResizeQuery(query)) {
+        return reply.sendFile(normalized, uploadRoot);
+      }
+
+      let sourceStat;
+      try {
+        sourceStat = await stat(sourcePath);
+      } catch {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
+      }
+      if (!sourceStat.isFile()) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
+      }
+
+      const sourceMime = resolveImageMimeType(sourcePath);
+      if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
+        return reply.sendFile(normalized, uploadRoot);
+      }
+
+      const resizeOptions: ImageResizeOptions = {
+        width: parseDimension(query.w),
+        height: parseDimension(query.h),
+        quality: parseQuality(query.q),
+        fit: parseFit(query.fit),
+        format: parseFormat(query.format),
+      };
+
+      if (!resizeOptions.width && !resizeOptions.height && !resizeOptions.format && !resizeOptions.quality) {
+        return reply.sendFile(normalized, uploadRoot);
+      }
+
+      try {
+        const resized = await resolveResizedImage({
+          env: options.env,
+          sourceAbsolutePath: sourcePath,
+          sourceRelativePath: normalized,
+          sourceMtimeMs: sourceStat.mtimeMs,
+          sourceMimeType: sourceMime,
+          options: resizeOptions,
+        });
+
+        reply
+          .header('Content-Type', resized.mimeType)
+          .header('Content-Length', resized.size)
+          .header('Cache-Control', 'public, max-age=31536000, immutable');
+        return reply.send(createReadStream(resized.absolutePath));
+      } catch (error) {
+        request.log.error({ err: error, path: normalized }, 'image resize failed');
+        return reply.code(500).send({
+          error: 'RESIZE_FAILED',
+          message: error instanceof Error ? error.message : '图片缩放失败',
+        });
+      }
+    },
   });
 
   app.post('/api/v1/uploads/images', { preHandler: app.authenticate }, async (request, reply) => {

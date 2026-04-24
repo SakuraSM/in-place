@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Box, Clock3, FolderTree, Package } from 'lucide-react';
+import { ArrowRight, Box, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
 import ActivityFeed from '../../activity/components/ActivityFeed';
+import { buildInventoryImageUrl } from '../lib/itemImage';
+import InventoryStatsGrid from '../../../shared/ui/InventoryStatsGrid';
 
 interface Props {
   stats: ItemStats | null;
@@ -37,80 +38,29 @@ export default function HomeDashboard({
   onOpenActivityItem,
   onNavigateOverview,
 }: Props) {
-  const statCards = [
-    { label: '总计', value: statsLoading ? '-' : stats?.total ?? 0, icon: FolderTree, tone: 'bg-sky-50 text-sky-500', filter: {} },
-    { label: '物品', value: statsLoading ? '-' : stats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500', filter: { type: 'item' } },
-    { label: '收纳', value: statsLoading ? '-' : stats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500', filter: { type: 'container' } },
-    { label: '借出中', value: statsLoading ? '-' : stats?.borrowed ?? 0, icon: Clock3, tone: 'bg-rose-50 text-rose-500', filter: { status: 'borrowed' } },
-  ];
-
-  // 让"最近添加""最近操作"在 xl 断点以"概览模块"高度对齐：
-  // 通过 ResizeObserver 实时测量概览模块高度，作为另外两栏的最大高度，列表内部使用 overflow-y-auto 兜底。
-  const overviewRef = useRef<HTMLDivElement | null>(null);
-  const [overviewHeight, setOverviewHeight] = useState<number | null>(null);
-  const [isXl, setIsXl] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(min-width: 1280px)').matches;
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mql = window.matchMedia('(min-width: 1280px)');
-    const handler = (event: MediaQueryListEvent) => setIsXl(event.matches);
-    setIsXl(mql.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-
-  useEffect(() => {
-    const node = overviewRef.current;
-    if (!node || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const next = Math.round(entry.contentRect.height);
-        setOverviewHeight((prev) => (prev === next ? prev : next));
-      }
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  const matchedHeightStyle = isXl && overviewHeight ? { height: overviewHeight } : undefined;
-
   return (
     <div className="mb-5 min-w-0 space-y-3 overflow-x-hidden md:mb-6">
-      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,1.1fr)] xl:items-start">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] xl:items-stretch">
         <motion.section
-          ref={overviewRef}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5 xl:flex xl:h-full xl:flex-col"
         >
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-2">
-            {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onNavigateOverview?.(filter)}
-                className={`rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left transition-colors ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
-              >
-                <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-2xl ${tone}`}>
-                  <Icon size={16} />
-                </div>
-                <p className="text-xl font-bold text-slate-900">{value}</p>
-                <p className="mt-0.5 text-[11px] text-slate-400">{label}</p>
-              </button>
-            ))}
-          </div>
+          <InventoryStatsGrid
+            stats={stats}
+            loading={statsLoading}
+            onNavigate={onNavigateOverview}
+            className="grid grid-cols-2 gap-3 xl:flex-1 xl:content-stretch xl:grid-cols-2"
+            cardClassName="bg-slate-50/70 p-3 xl:flex xl:min-h-[132px] xl:flex-col xl:justify-between"
+          />
         </motion.section>
 
-        <motion.section
+          <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.05 }}
-          style={matchedHeightStyle}
-          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:flex-col"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:h-full xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -132,10 +82,22 @@ export default function HomeDashboard({
                   onClick={() => onOpenItem(item)}
                   className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
                 >
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
-                    item.type === 'item' ? 'bg-amber-50 text-amber-500' : 'bg-sky-50 text-sky-500'
-                  }`}>
-                    {item.type === 'item' ? <Package size={16} /> : <Box size={16} />}
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${
+                      item.images[0]
+                        ? 'bg-slate-100'
+                        : item.type === 'item'
+                        ? 'bg-amber-50 text-amber-500'
+                        : 'bg-sky-50 text-sky-500'
+                    }`}
+                  >
+                    {item.images[0] ? (
+                      <img src={buildInventoryImageUrl(item.images[0], 'icon')} alt={item.name} className="h-full w-full object-cover" />
+                    ) : item.type === 'item' ? (
+                      <Package size={16} />
+                    ) : (
+                      <Box size={16} />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
@@ -153,13 +115,12 @@ export default function HomeDashboard({
           )}
         </motion.section>
 
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-          style={matchedHeightStyle}
-          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:flex-col"
-        >
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
+            className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:h-full xl:flex-col"
+          >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-slate-900">最近操作</h3>

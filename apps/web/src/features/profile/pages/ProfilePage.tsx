@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import { LogOut, Package, Box, User, ChevronRight, ShieldCheck, NotebookPen, Download, Mail, Settings2, Shield, Sparkles, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { LogOut, Box, User, NotebookPen, Mail, Settings2, Shield, Sparkles, HardDriveDownload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthContext';
-import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
+import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_VERSION } from '../../../shared/lib/appVersion';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { fetchItemStats } from '../../../legacy/items';
 import type { ItemStats } from '@inplace/domain';
 import { QuickLinkCard, SectionPanel } from '../components/ProfileUi';
+import InventoryStatsGrid from '../../../shared/ui/InventoryStatsGrid';
 
 export default function ProfilePage() {
   const { user, signOut, setCurrentUser } = useAuth();
@@ -22,15 +22,6 @@ export default function ProfilePage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [exportingFormat, setExportingFormat] = useState<'json' | 'csv' | null>(null);
-  const [exportMessage, setExportMessage] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [importPayload, setImportPayload] = useState<Record<string, unknown> | null>(null);
-  const [importFileName, setImportFileName] = useState('');
-  const [importMessage, setImportMessage] = useState<string | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
-  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setDisplayName(user?.displayName ?? '');
@@ -59,6 +50,13 @@ export default function ProfilePage() {
     navigate('/login', { replace: true });
   };
 
+  const handleNavigateOverview = (filter?: { type?: string; status?: string }) => {
+    const params = new URLSearchParams();
+    if (filter?.type) params.set('type', filter.type);
+    if (filter?.status) params.set('status', filter.status);
+    navigate(`/overview${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
   const fallbackDisplayName = user?.email?.split('@')[0] ?? '用户';
   const resolvedDisplayName = user?.displayName?.trim() || fallbackDisplayName;
   const profileChanged = displayName.trim() !== (user?.displayName ?? '').trim();
@@ -82,98 +80,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleExport = async (format: 'json' | 'csv') => {
-    setExportingFormat(format);
-    setExportError(null);
-    setExportMessage(null);
-
-    try {
-      const token = await getStoredAuthToken();
-      const response = await fetch(resolveApiUrl(`/v1/items/export?format=${format}`), {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (!response.ok) {
-        let message = '导出失败';
-        try {
-          const payload = await response.json() as { message?: string };
-          message = payload.message ?? message;
-        } catch {
-          const text = await response.text();
-          message = text || message;
-        }
-
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get('Content-Disposition');
-      const fileName = contentDisposition?.match(/filename="([^"]+)"/)?.[1] ?? `inplace-inventory.${format}`;
-      const objectUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(objectUrl);
-      setExportMessage(format === 'json' ? 'JSON 备份已开始下载' : 'CSV 导出已开始下载');
-    } catch (error) {
-      setExportError(error instanceof Error ? error.message : '导出失败');
-    } finally {
-      setExportingFormat(null);
-    }
-  };
-
-  const handleImportFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setImportError(null);
-    setImportMessage(null);
-
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text) as Record<string, unknown>;
-      setImportPayload(parsed);
-      setImportFileName(file.name);
-    } catch {
-      setImportPayload(null);
-      setImportFileName('');
-      setImportError('文件无法解析，请选择归位导出的 JSON 备份');
-    } finally {
-      event.target.value = '';
-    }
-  };
-
-  const handleImportConfirm = async () => {
-    if (!importPayload) {
-      return;
-    }
-
-    setImporting(true);
-    setImportError(null);
-    setImportMessage(null);
-
-    try {
-      await apiRequest<{ data: { categories: number; tags: number; items: number } }>('/v1/items/import', {
-        method: 'POST',
-        body: JSON.stringify(importPayload),
-      });
-      setImportPayload(null);
-      setImportFileName('');
-      setImportMessage('JSON 备份已导入');
-      setLoading(true);
-      await refreshStats();
-    } catch (error) {
-      setImportError(error instanceof Error ? error.message : '导入失败');
-    } finally {
-      setImporting(false);
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
       <div className={APP_PAGE_HEADER}>
@@ -188,7 +94,7 @@ export default function ProfilePage() {
         animate="animate"
         className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="grid gap-4 xl:grid-cols-2">
           <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
             <motion.div
               variants={staggerItem}
@@ -225,28 +131,8 @@ export default function ProfilePage() {
               </div>
             </motion.div>
 
-            <motion.div variants={staggerItem} className="grid grid-cols-2 gap-3">
-              {[
-                { label: '总物品', value: loading ? '-' : stats.items, icon: Package, color: 'bg-sky-50 text-sky-500' },
-                { label: '收纳数', value: loading ? '-' : stats.containers, icon: Box, color: 'bg-teal-50 text-teal-500' },
-                { label: '借出中', value: loading ? '-' : stats.borrowed, icon: ChevronRight, color: 'bg-amber-50 text-amber-500' },
-                { label: '总计', value: loading ? '-' : stats.total, icon: ShieldCheck, color: 'bg-emerald-50 text-emerald-500' },
-              ].map(({ label, value, icon: Icon, color }, i) => (
-                <motion.div
-                  key={label}
-                  initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 340, damping: 24, delay: 0.1 + i * 0.05 }}
-                  whileHover={{ y: -2, boxShadow: '0 6px 18px rgba(0,0,0,0.07)' }}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm"
-                >
-                  <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mb-2`}>
-                    <Icon size={18} />
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900">{value}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{label}</p>
-                </motion.div>
-              ))}
+            <motion.div variants={staggerItem}>
+              <InventoryStatsGrid stats={stats} loading={loading} onNavigate={handleNavigateOverview} />
             </motion.div>
 
             <motion.div variants={staggerItem} className="space-y-3">
@@ -281,6 +167,13 @@ export default function ProfilePage() {
                   title="账号安全"
                   description="修改密码并管理当前账号会话。"
                   tone="bg-rose-50 text-rose-500"
+                />
+                <QuickLinkCard
+                  to="/profile/data"
+                  icon={<HardDriveDownload size={20} />}
+                  title="数据管理"
+                  description="集中处理 JSON 备份导出、CSV 导出和 JSON 导入恢复。"
+                  tone="bg-sky-50 text-sky-500"
                 />
               </div>
             </motion.div>
@@ -321,65 +214,6 @@ export default function ProfilePage() {
             </motion.div>
 
             <motion.div variants={staggerItem}>
-              <SectionPanel
-                icon={<Download size={16} />}
-                title="数据导出"
-              >
-                <div className="grid gap-3 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-800">JSON 完整备份</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">包含结构化数据和应用内上传图片，适合迁移和完整恢复。</p>
-                    <button
-                      onClick={() => void handleExport('json')}
-                      disabled={exportingFormat !== null}
-                      className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
-                    >
-                      <Download size={15} />
-                      {exportingFormat === 'json' ? '导出中...' : '导出 JSON'}
-                    </button>
-                  </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-800">CSV 表格导出</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">适合在 Excel、Numbers 或 BI 工具里筛选、统计和二次分析。</p>
-                    <button
-                      onClick={() => void handleExport('csv')}
-                      disabled={exportingFormat !== null}
-                      className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-                    >
-                      <Download size={15} />
-                      {exportingFormat === 'csv' ? '导出中...' : '导出 CSV'}
-                    </button>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-800">JSON 备份导入</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">导入会覆盖当前账号下的物品、分类、标签和备份内附带的图片。</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <input
-                      ref={importInputRef}
-                      type="file"
-                      accept="application/json,.json"
-                      onChange={(event) => void handleImportFileChange(event)}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => importInputRef.current?.click()}
-                      disabled={importing}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-                    >
-                      <Upload size={15} />
-                      选择 JSON 文件
-                    </button>
-                    {importFileName ? <span className="text-sm text-slate-500">{importFileName}</span> : null}
-                  </div>
-                </div>
-                {exportMessage ? <p className="text-sm text-emerald-500">{exportMessage}</p> : null}
-                {exportError ? <p className="text-sm text-rose-500">{exportError}</p> : null}
-                {importMessage ? <p className="text-sm text-emerald-500">{importMessage}</p> : null}
-                {importError ? <p className="text-sm text-rose-500">{importError}</p> : null}
-              </SectionPanel>
-            </motion.div>
-            <motion.div variants={staggerItem}>
               <div className="overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm">
                 <div className="border-b border-rose-50 px-5 py-4 md:px-6">
                   <p className="text-sm font-semibold text-rose-600">退出登录</p>
@@ -401,7 +235,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <motion.p variants={staggerItem} className="text-center text-xs text-slate-300 py-2">归位 v{APP_VERSION}</motion.p>
       </motion.div>
 
       {showLogout && (
@@ -415,22 +248,6 @@ export default function ProfilePage() {
         />
       )}
 
-      {importPayload ? (
-        <ConfirmDialog
-          title="导入 JSON 备份"
-          message={`确定导入「${importFileName}」吗？这会覆盖当前账号下的物品、分类、标签和图片引用。`}
-          confirmLabel={importing ? '导入中...' : '确认导入'}
-          danger
-          onConfirm={handleImportConfirm}
-          onCancel={() => {
-            if (importing) {
-              return;
-            }
-            setImportPayload(null);
-            setImportFileName('');
-          }}
-        />
-      ) : null}
     </div>
   );
 }

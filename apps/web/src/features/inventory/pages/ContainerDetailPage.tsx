@@ -11,6 +11,7 @@ import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { getContainerTypeLabel } from '../lib/locationTag';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 export default function ContainerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -231,7 +232,7 @@ export default function ContainerDetailPage() {
             <div className="sticky top-24">
               <div className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:aspect-square">
                 <img
-                  src={container.images[activeImageIdx]}
+                  src={buildInventoryImageUrl(container.images[activeImageIdx], 'detail')}
                   alt={container.name}
                   className="h-full w-full object-contain object-center"
                 />
@@ -248,7 +249,7 @@ export default function ContainerDetailPage() {
                         i === activeImageIdx ? 'border-sky-500' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={url} alt="" className="h-full w-full object-cover object-center" />
+                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
                     </motion.button>
                   ))}
                 </div>
@@ -269,7 +270,7 @@ export default function ContainerDetailPage() {
         {container.images.length > 0 ? (
           <div className="rounded-2xl bg-white p-3 border border-slate-100 shadow-sm">
             <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-              <img src={container.images[activeImageIdx]} alt={container.name} className="w-full h-full object-cover" />
+                <img src={buildInventoryImageUrl(container.images[activeImageIdx], 'detail')} alt={container.name} className="w-full h-full object-cover" />
             </div>
             {container.images.length > 1 && (
               <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-hide">
@@ -281,7 +282,7 @@ export default function ContainerDetailPage() {
                       i === activeImageIdx ? 'border-sky-500' : 'border-transparent opacity-60'
                     }`}
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

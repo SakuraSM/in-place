@@ -21,6 +21,12 @@ export default function RegisterScreen() {
     setSubmitting(true);
     setError(null);
 
+    if (password.length < 8) {
+      setError('密码至少需要 8 位');
+      setSubmitting(false);
+      return;
+    }
+
     try {
       await signUp(email, password);
     } catch (nextError) {
@@ -53,7 +59,7 @@ export default function RegisterScreen() {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
-              placeholder="密码"
+              placeholder="密码（至少 8 位）"
               placeholderTextColor={palette.textSoft}
               style={inputStyle}
             />

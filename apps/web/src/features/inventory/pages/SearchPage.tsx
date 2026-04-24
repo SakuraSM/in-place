@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree, Tags } from 'lucide-react';
+import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree, Tags, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
@@ -16,6 +16,7 @@ import { buildItemIdMap, buildItemPath } from '../lib/locationTree';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { searchItemsPage } from '../../../legacy/items';
 import { useAuth } from '../../../app/providers/AuthContext';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 type TypeFilterValue = ItemType | 'all' | 'location';
 
@@ -50,13 +51,12 @@ export default function SearchPage() {
   const statusParam = searchParams.get('status') as ItemStatus | 'all' | null;
   const tagParams = searchParams.getAll('tag');
 
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>(
-    statusParam && (VALID_STATUS_VALUES as string[]).includes(statusParam) ? statusParam : 'all',
-  );
-  const [typeFilter, setTypeFilter] = useState<TypeFilterValue>(
-    typeParam && (VALID_TYPE_VALUES as string[]).includes(typeParam) ? typeParam : 'all',
-  );
-  const [selectedTags, setSelectedTags] = useState<string[]>(tagParams);
+  const statusFilter: ItemStatus | 'all' =
+    statusParam && (VALID_STATUS_VALUES as string[]).includes(statusParam) ? statusParam : 'all';
+  const typeFilter: TypeFilterValue =
+    typeParam && (VALID_TYPE_VALUES as string[]).includes(typeParam) ? typeParam : 'all';
+  const selectedTags = tagParams;
+  const selectedTagsKey = tagParams.join('\u0000');
   const [tagQuery, setTagQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
@@ -107,32 +107,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [query, selectedTags, statusFilter, typeFilter, pageSize, selectedLocationId]);
-
-  useEffect(() => {
-    const nextSearchParams = new URLSearchParams(searchParams);
-
-    if (typeFilter !== 'all') {
-      nextSearchParams.set('type', typeFilter);
-    } else {
-      nextSearchParams.delete('type');
-    }
-
-    if (statusFilter !== 'all') {
-      nextSearchParams.set('status', statusFilter);
-    } else {
-      nextSearchParams.delete('status');
-    }
-
-    nextSearchParams.delete('tag');
-    selectedTags.forEach((tag) => nextSearchParams.append('tag', tag));
-
-    const currentQuery = searchParams.toString();
-    const nextQuery = nextSearchParams.toString();
-    if (currentQuery !== nextQuery) {
-      setSearchParams(nextSearchParams, { replace: true });
-    }
-  }, [searchParams, selectedTags, setSearchParams, statusFilter, typeFilter]);
+  }, [query, selectedTagsKey, statusFilter, typeFilter, pageSize, selectedLocationId]);
 
   useEffect(() => {
     if (!showTagPopover) {
@@ -151,11 +126,53 @@ export default function SearchPage() {
     };
   }, [showTagPopover]);
 
+  const updateSearchFilters = useCallback((
+    updater: (nextSearchParams: URLSearchParams) => void,
+    options?: { replace?: boolean; resetPage?: boolean },
+  ) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    updater(nextSearchParams);
+
+    if (nextSearchParams.toString() === searchParams.toString()) {
+      return;
+    }
+
+    if (options?.resetPage ?? true) {
+      setPage(1);
+    }
+
+    setSearchParams(nextSearchParams, { replace: options?.replace ?? true });
+  }, [searchParams, setSearchParams]);
+
+  const handleTypeFilterChange = useCallback((value: TypeFilterValue) => {
+    updateSearchFilters((nextSearchParams) => {
+      if (value === 'all') {
+        nextSearchParams.delete('type');
+      } else {
+        nextSearchParams.set('type', value);
+      }
+
+      if (value === 'location' || value === 'container') {
+        nextSearchParams.delete('status');
+      }
+    });
+  }, [updateSearchFilters]);
+
+  const handleStatusFilterChange = useCallback((value: ItemStatus | 'all') => {
+    updateSearchFilters((nextSearchParams) => {
+      if (value === 'all') {
+        nextSearchParams.delete('status');
+      } else {
+        nextSearchParams.set('status', value);
+      }
+    });
+  }, [updateSearchFilters]);
+
   const effectiveTypeFilter = typeFilter === 'location' ? 'container' : typeFilter === 'all' ? undefined : typeFilter;
   const effectiveStatusFilter = typeFilter === 'location' || typeFilter === 'container' ? undefined : statusFilter === 'all' ? undefined : statusFilter;
 
   const { data: searchResponse, isLoading: isSearchLoading } = useQuery({
-    queryKey: ['inventory', 'overview-search', user?.id, normalizedQuery, effectiveTypeFilter, effectiveStatusFilter, selectedLocationId, selectedTags, page, pageSize, typeFilter],
+    queryKey: ['inventory', 'overview-search', user?.id, normalizedQuery, effectiveTypeFilter, effectiveStatusFilter, selectedLocationId, selectedTagsKey, page, pageSize, typeFilter],
     enabled: Boolean(user?.id),
     placeholderData: (previous) => previous,
     queryFn: async () => searchItemsPage(normalizedQuery, user!.id, {
@@ -193,26 +210,31 @@ export default function SearchPage() {
   }, [page, totalPages]);
 
   const handleSelectLocation = (locationId: string | null) => {
-    const nextSearchParams = new URLSearchParams(searchParams);
-    if (locationId) {
-      nextSearchParams.set('locationId', locationId);
-    } else {
-      nextSearchParams.delete('locationId');
-    }
-    setSearchParams(nextSearchParams, { replace: true });
+    updateSearchFilters((nextSearchParams) => {
+      if (locationId) {
+        nextSearchParams.set('locationId', locationId);
+      } else {
+        nextSearchParams.delete('locationId');
+      }
+    });
     setShowLocationSheet(false);
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((current) => (
-      current.includes(tag)
-        ? current.filter((value) => value !== tag)
-        : [...current, tag]
-    ));
+    updateSearchFilters((nextSearchParams) => {
+      const nextTags = selectedTags.includes(tag)
+        ? selectedTags.filter((value) => value !== tag)
+        : [...selectedTags, tag];
+
+      nextSearchParams.delete('tag');
+      nextTags.forEach((value) => nextSearchParams.append('tag', value));
+    });
   };
 
   const clearTags = () => {
-    setSelectedTags([]);
+    updateSearchFilters((nextSearchParams) => {
+      nextSearchParams.delete('tag');
+    });
     setTagQuery('');
   };
 
@@ -256,7 +278,7 @@ export default function SearchPage() {
             <button
               key={value}
               type="button"
-              onClick={() => setTypeFilter(value)}
+              onClick={() => handleTypeFilterChange(value)}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -275,7 +297,7 @@ export default function SearchPage() {
             <button
               key={value}
               type="button"
-              onClick={() => setStatusFilter(value)}
+              onClick={() => handleStatusFilterChange(value)}
               disabled={typeFilter === 'location' || typeFilter === 'container'}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -443,7 +465,7 @@ export default function SearchPage() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setTypeFilter(value)}
+                  onClick={() => handleTypeFilterChange(value)}
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
                     typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
@@ -459,7 +481,7 @@ export default function SearchPage() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setStatusFilter(value)}
+                  onClick={() => handleStatusFilterChange(value)}
                   disabled={typeFilter === 'location' || typeFilter === 'container'}
                   className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                     statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -606,7 +628,7 @@ export default function SearchPage() {
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
                       {item.images.length > 0 ? (
-                        <img src={item.images[0]} alt={item.name} className="h-full w-full object-cover" />
+                        <img src={buildInventoryImageUrl(item.images[0], 'icon')} alt={item.name} className="h-full w-full object-cover" />
                       ) : item.type === 'item' ? (
                         <Package size={20} className="text-slate-300" />
                       ) : isLocationItem(item) ? (
@@ -629,12 +651,20 @@ export default function SearchPage() {
                       {item.category && (
                         <p className="mb-0.5 truncate text-xs text-slate-500">{item.category}</p>
                       )}
-                      {path && (
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <ChevronRight size={10} />
-                          <span className="truncate">{path}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1 text-xs text-slate-400">
+                        {path ? (
+                          <>
+                            <Home size={11} className="shrink-0" />
+                            <ChevronRight size={10} />
+                            <span className="truncate">{path}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Home size={11} className="shrink-0" />
+                            <span className="truncate">根目录</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <ChevronRight size={16} className="shrink-0 text-slate-300" />
                   </motion.button>
