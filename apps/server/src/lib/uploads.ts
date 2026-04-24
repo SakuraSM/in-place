@@ -118,7 +118,12 @@ export async function resolveResizedImage(input: {
 
   await mkdir(cacheDir, { recursive: true });
 
-  let pipelineSharp = sharp(input.sourceAbsolutePath, { failOn: 'none' }).rotate();
+  let pipelineSharp = sharp(input.sourceAbsolutePath, {
+    // 不在解码层抛错（仅在 sharp 检测到完全无法解析的输入时报错）。
+    // 上传时已限制 mimetype 必须是 image/*，外加上传根目录路径校验，
+    // 此处放宽是为了兼容轻微元数据异常但仍能渲染的图片。
+    failOn: 'none',
+  }).rotate();
   if (input.options.width || input.options.height) {
     pipelineSharp = pipelineSharp.resize({
       width: input.options.width,
@@ -146,13 +151,18 @@ export async function resolveResizedImage(input: {
   // 先写入临时文件再原子重命名，避免并发请求读取到不完整的内容
   const tmpPath = `${cachePath}.${randomUUID()}.tmp`;
   await pipelineSharp.toFile(tmpPath);
-  const { rename } = await import('node:fs/promises');
+  const { rename, unlink } = await import('node:fs/promises');
   try {
     await rename(tmpPath, cachePath);
   } catch (error) {
-    // 若另一个并发请求已写入同名文件，rename 失败时直接清理临时文件
-    const { unlink } = await import('node:fs/promises');
+    // 仅吞掉"目标已存在"的并发竞态错误（Linux: EEXIST，Windows: EPERM/EACCES）；
+    // 其它错误（权限、磁盘满等）应直接抛出便于运维定位。
+    const code = (error as NodeJS.ErrnoException | null)?.code;
+    const isConcurrencyRace = code === 'EEXIST' || code === 'EPERM' || code === 'EACCES';
     await unlink(tmpPath).catch(() => undefined);
+    if (!isConcurrencyRace) {
+      throw error;
+    }
     const cached = await stat(cachePath).catch(() => null);
     if (!cached) throw error;
   }

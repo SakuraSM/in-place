@@ -15,22 +15,34 @@ import {
 } from '../lib/uploads.js';
 import type { AppEnv } from '../env.js';
 
-const MAX_DIMENSION = 4096;
+const MAX_DIMENSION = 2048;
+// 仅允许一组离散的"桶"尺寸：客户端无论传入多少，服务端都向上取最接近的桶值。
+// 该限制是缓存基数的上限（也意味着对同一原图最多生成 W×H×Q×fit×format 个变体），
+// 防止攻击者通过任意改变 w/h 不断触发 sharp 计算 / 写入磁盘（CodeQL: js/missing-rate-limiting 的风险缓解）。
+const DIMENSION_BUCKETS: ReadonlyArray<number> = [64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048];
+const QUALITY_BUCKETS: ReadonlyArray<number> = [50, 60, 70, 80, 90];
 const ALLOWED_FITS: ReadonlyArray<NonNullable<ImageResizeOptions['fit']>> = ['cover', 'contain', 'inside', 'outside', 'fill'];
 const ALLOWED_FORMATS: ReadonlyArray<NonNullable<ImageResizeOptions['format']>> = ['jpeg', 'png', 'webp', 'avif'];
+
+function snapToBucket(value: number, buckets: ReadonlyArray<number>): number {
+  for (const bucket of buckets) {
+    if (value <= bucket) return bucket;
+  }
+  return buckets[buckets.length - 1];
+}
 
 function parseDimension(value: unknown): number | undefined {
   if (typeof value !== 'string' || value === '') return undefined;
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
-  return Math.min(parsed, MAX_DIMENSION);
+  return snapToBucket(Math.min(parsed, MAX_DIMENSION), DIMENSION_BUCKETS);
 }
 
 function parseQuality(value: unknown): number | undefined {
   if (typeof value !== 'string' || value === '') return undefined;
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed)) return undefined;
-  return Math.min(100, Math.max(1, parsed));
+  return snapToBucket(Math.min(100, Math.max(1, parsed)), QUALITY_BUCKETS);
 }
 
 function parseFit(value: unknown): ImageResizeOptions['fit'] | undefined {
