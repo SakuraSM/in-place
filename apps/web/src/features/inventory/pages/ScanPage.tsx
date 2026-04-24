@@ -338,26 +338,6 @@ export default function ScanPage() {
                     <p className="text-lg font-semibold text-slate-800">拍照或导入一张物品照片</p>
                     <p className="text-sm text-slate-500">AI 会自动识别图片中的多个物品，并生成待保存草稿</p>
                   </div>
-                  <div className="grid w-full max-w-sm gap-3 sm:grid-cols-2 xl:hidden">
-                    <button
-                      type="button"
-                      disabled={analyzing}
-                      onClick={() => openPicker('camera')}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
-                    >
-                      <Camera size={16} />
-                      拍照扫描
-                    </button>
-                    <button
-                      type="button"
-                      disabled={analyzing}
-                      onClick={() => openPicker('album')}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                    >
-                      <ImageIcon size={16} />
-                      相册选图
-                    </button>
-                  </div>
                 </div>
               )}
             </motion.div>

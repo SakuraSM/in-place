@@ -263,7 +263,7 @@ export default function TagsPage() {
       <div
         ref={scrollRootRef}
         data-scroll-root
-        className={`flex min-h-0 flex-1 flex-col md:overflow-y-auto md:pb-32 ${APP_PAGE_CONTENT}`}
+        className={`flex min-h-0 flex-1 flex-col md:overflow-y-auto ${APP_PAGE_CONTENT}`}
       >
         {loading && tags.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-400">加载中...</div>
@@ -353,6 +353,23 @@ export default function TagsPage() {
                 : `已展示全部 ${paginationMeta.total} 个标签`}
           </div>
         ) : null}
+
+        {!isMobile && paginationMeta && paginationMeta.total > 0 ? (
+          <div className="mt-auto pt-6 md:sticky md:bottom-0 md:z-10">
+            <PaginationControls
+              page={paginationMeta.page}
+              pageSize={pageSize}
+              total={paginationMeta.total}
+              totalPages={paginationMeta.totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+              className="bg-white/95 backdrop-blur shadow-lg"
+            />
+          </div>
+        ) : null}
       </div>
 
       <motion.button
@@ -366,25 +383,6 @@ export default function TagsPage() {
       >
         <Plus size={24} />
       </motion.button>
-
-      {!isMobile && paginationMeta && paginationMeta.total > 0 ? (
-        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 hidden md:block md:left-64 lg:left-72">
-          <div className="pointer-events-auto px-8 pb-6">
-            <PaginationControls
-              page={paginationMeta.page}
-              pageSize={pageSize}
-              total={paginationMeta.total}
-              totalPages={paginationMeta.totalPages}
-              onPageChange={setPage}
-              onPageSizeChange={(nextPageSize) => {
-                setPageSize(nextPageSize);
-                setPage(1);
-              }}
-              className="mt-0 bg-white/95 backdrop-blur shadow-lg"
-            />
-          </div>
-        </div>
-      ) : null}
 
       <AnimatePresence>
         {showEditor && user ? (

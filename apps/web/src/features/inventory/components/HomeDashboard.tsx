@@ -45,31 +45,31 @@ export default function HomeDashboard({
 
   return (
     <div className="mb-5 min-w-0 space-y-3 overflow-x-hidden md:mb-6">
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-        className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
-      >
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => onNavigateOverview?.(filter)}
-              className={`rounded-3xl border border-slate-100 bg-slate-50/70 p-4 text-left transition-colors ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
-            >
-              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
-                <Icon size={18} />
-              </div>
-              <p className="text-2xl font-bold text-slate-900">{value}</p>
-              <p className="mt-1 text-xs text-slate-400">{label}</p>
-            </button>
-          ))}
-        </div>
-      </motion.section>
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,1.1fr)] xl:items-stretch">
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm md:p-5"
+        >
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-2">
+            {statCards.map(({ label, value, icon: Icon, tone, filter }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => onNavigateOverview?.(filter)}
+                className={`rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-left transition-colors ${onNavigateOverview ? 'cursor-pointer hover:bg-slate-100/80' : 'cursor-default'}`}
+              >
+                <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-2xl ${tone}`}>
+                  <Icon size={16} />
+                </div>
+                <p className="text-xl font-bold text-slate-900">{value}</p>
+                <p className="mt-0.5 text-[11px] text-slate-400">{label}</p>
+              </button>
+            ))}
+          </div>
+        </motion.section>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

@@ -436,59 +436,66 @@ export default function SearchPage() {
               </button>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {TYPE_FILTERS.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTypeFilter(value)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                  typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <Icon size={12} />
-                {label}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setShowLocationSheet(true)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                selectedLocation ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <FolderTree size={12} />
-              {selectedLocation?.name ?? '位置树'}
-            </button>
-            <div className="mx-1 w-px shrink-0 self-stretch bg-slate-200" />
-            {STATUS_FILTERS.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setStatusFilter(value)}
-                disabled={typeFilter === 'location' || typeFilter === 'container'}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                  statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {availableTags.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <button
-                type="button"
-                onClick={() => setShowTagSheet(true)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                  selectedTags.length > 0 ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <Tags size={12} />
-                {selectedTags.length > 0 ? `已选 ${selectedTags.length}` : '标签筛选'}
-              </button>
+          <div className="space-y-2">
+            <div role="group" aria-label="按类型筛选" className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-medium text-slate-400">类型</span>
+              {TYPE_FILTERS.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTypeFilter(value)}
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    typeFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Icon size={12} />
+                  {label}
+                </button>
+              ))}
             </div>
-          )}
+            <div role="group" aria-label="按状态筛选" className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-medium text-slate-400">状态</span>
+              {STATUS_FILTERS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setStatusFilter(value)}
+                  disabled={typeFilter === 'location' || typeFilter === 'container'}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                    statusFilter === value ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div role="group" aria-label="按范围筛选" className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-medium text-slate-400">范围</span>
+              <button
+                type="button"
+                onClick={() => setShowLocationSheet(true)}
+                title={selectedLocation?.name ?? '位置树'}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                  selectedLocation ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <FolderTree size={12} />
+                <span className="max-w-[8rem] truncate">{selectedLocation?.name ?? '位置树'}</span>
+              </button>
+              {availableTags.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowTagSheet(true)}
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    selectedTags.length > 0 ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Tags size={12} />
+                  {selectedTags.length > 0 ? `标签 · ${selectedTags.length}` : '标签筛选'}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
