@@ -1,10 +1,54 @@
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
+import path from 'node:path';
 import type { FastifyPluginAsync } from 'fastify';
 import { requireCurrentUser } from '../lib/authenticated-request.js';
 import { resolveRequestOrigin } from '../lib/request-origin.js';
-import { persistImageUpload, resolveUploadRoot } from '../lib/uploads.js';
+import {
+  persistImageUpload,
+  resolveImageMimeType,
+  resolveUploadRoot,
+  resolveResizedImage,
+  type ImageResizeOptions,
+} from '../lib/uploads.js';
 import type { AppEnv } from '../env.js';
+
+const MAX_DIMENSION = 4096;
+const ALLOWED_FITS: ReadonlyArray<NonNullable<ImageResizeOptions['fit']>> = ['cover', 'contain', 'inside', 'outside', 'fill'];
+const ALLOWED_FORMATS: ReadonlyArray<NonNullable<ImageResizeOptions['format']>> = ['jpeg', 'png', 'webp', 'avif'];
+
+function parseDimension(value: unknown): number | undefined {
+  if (typeof value !== 'string' || value === '') return undefined;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return Math.min(parsed, MAX_DIMENSION);
+}
+
+function parseQuality(value: unknown): number | undefined {
+  if (typeof value !== 'string' || value === '') return undefined;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return undefined;
+  return Math.min(100, Math.max(1, parsed));
+}
+
+function parseFit(value: unknown): ImageResizeOptions['fit'] | undefined {
+  if (typeof value !== 'string') return undefined;
+  return (ALLOWED_FITS as ReadonlyArray<string>).includes(value) ? (value as ImageResizeOptions['fit']) : undefined;
+}
+
+function parseFormat(value: unknown): ImageResizeOptions['format'] | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value === 'jpg' ? 'jpeg' : value;
+  return (ALLOWED_FORMATS as ReadonlyArray<string>).includes(normalized)
+    ? (normalized as ImageResizeOptions['format'])
+    : undefined;
+}
+
+function hasResizeQuery(query: Record<string, unknown>): boolean {
+  return Boolean(query.w || query.h || query.q || query.fit || query.format);
+}
 
 export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options) => {
   await app.register(multipart, {
@@ -14,8 +58,88 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
     },
   });
 
+  const uploadRoot = resolveUploadRoot(options.env);
+
+  // 在 fastifyStatic 之前注册一个动态缩略图处理器，遇到带尺寸参数的请求时短路返回缩放后的图片，
+  // 并落盘缓存到 storage/uploads/.cache 目录，下次命中可直接读盘。
+  app.get('/api/uploads/*', async (request, reply) => {
+    const query = (request.query ?? {}) as Record<string, unknown>;
+    if (!hasResizeQuery(query)) {
+      // 让后续的 fastify-static 处理原图请求
+      return reply.callNotFound();
+    }
+
+    const params = request.params as { '*'?: string };
+    const relative = params['*'] ?? '';
+    if (!relative) {
+      return reply.code(400).send({ error: 'INVALID_PATH', message: '缺少图片路径' });
+    }
+
+    // 防止越过上传根目录（即 ../ 注入）
+    const normalized = path.posix.normalize(relative);
+    if (normalized.startsWith('..') || normalized.includes('\0')) {
+      return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
+    }
+    const sourcePath = path.resolve(uploadRoot, normalized);
+    const relSourceFromRoot = path.relative(uploadRoot, sourcePath);
+    if (relSourceFromRoot.startsWith('..') || path.isAbsolute(relSourceFromRoot)) {
+      return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
+    }
+
+    let sourceStat;
+    try {
+      sourceStat = await stat(sourcePath);
+    } catch {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
+    }
+    if (!sourceStat.isFile()) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
+    }
+
+    const sourceMime = resolveImageMimeType(sourcePath);
+    if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
+      // SVG/非图片直接交还原图通道
+      return reply.callNotFound();
+    }
+
+    const resizeOptions: ImageResizeOptions = {
+      width: parseDimension(query.w),
+      height: parseDimension(query.h),
+      quality: parseQuality(query.q),
+      fit: parseFit(query.fit),
+      format: parseFormat(query.format),
+    };
+
+    if (!resizeOptions.width && !resizeOptions.height && !resizeOptions.format && !resizeOptions.quality) {
+      return reply.callNotFound();
+    }
+
+    try {
+      const resized = await resolveResizedImage({
+        env: options.env,
+        sourceAbsolutePath: sourcePath,
+        sourceRelativePath: normalized,
+        sourceMtimeMs: sourceStat.mtimeMs,
+        sourceMimeType: sourceMime,
+        options: resizeOptions,
+      });
+
+      reply
+        .header('Content-Type', resized.mimeType)
+        .header('Content-Length', resized.size)
+        .header('Cache-Control', 'public, max-age=31536000, immutable');
+      return reply.send(createReadStream(resized.absolutePath));
+    } catch (error) {
+      request.log.error({ err: error, path: normalized }, 'image resize failed');
+      return reply.code(500).send({
+        error: 'RESIZE_FAILED',
+        message: error instanceof Error ? error.message : '图片缩放失败',
+      });
+    }
+  });
+
   await app.register(fastifyStatic, {
-    root: resolveUploadRoot(options.env),
+    root: uploadRoot,
     prefix: '/api/uploads/',
     decorateReply: false,
   });

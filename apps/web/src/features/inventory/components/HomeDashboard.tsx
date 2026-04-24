@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Box, Clock3, FolderTree, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
@@ -43,10 +44,44 @@ export default function HomeDashboard({
     { label: '借出中', value: statsLoading ? '-' : stats?.borrowed ?? 0, icon: Clock3, tone: 'bg-rose-50 text-rose-500', filter: { status: 'borrowed' } },
   ];
 
+  // 让"最近添加""最近操作"在 xl 断点以"概览模块"高度对齐：
+  // 通过 ResizeObserver 实时测量概览模块高度，作为另外两栏的最大高度，列表内部使用 overflow-y-auto 兜底。
+  const overviewRef = useRef<HTMLDivElement | null>(null);
+  const [overviewHeight, setOverviewHeight] = useState<number | null>(null);
+  const [isXl, setIsXl] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(min-width: 1280px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 1280px)');
+    const handler = (event: MediaQueryListEvent) => setIsXl(event.matches);
+    setIsXl(mql.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    const node = overviewRef.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const next = Math.round(entry.contentRect.height);
+        setOverviewHeight((prev) => (prev === next ? prev : next));
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const matchedHeightStyle = isXl && overviewHeight ? { height: overviewHeight } : undefined;
+
   return (
     <div className="mb-5 min-w-0 space-y-3 overflow-x-hidden md:mb-6">
-      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,1.1fr)] xl:items-stretch">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,1.1fr)] xl:items-start">
         <motion.section
+          ref={overviewRef}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24 }}
@@ -74,7 +109,8 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.05 }}
-          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
+          style={matchedHeightStyle}
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -84,11 +120,11 @@ export default function HomeDashboard({
           </div>
 
           {recentItems.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-400">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-400 xl:flex-1">
               还没有新增内容，点右下角按钮开始整理吧。
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
               {recentItems.map((item) => (
                 <button
                   key={item.id}
@@ -121,7 +157,8 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.1 }}
-          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm"
+          style={matchedHeightStyle}
+          className="min-w-0 overflow-hidden rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm xl:flex xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -136,12 +173,14 @@ export default function HomeDashboard({
               查看全部
             </button>
           </div>
-          <ActivityFeed
-            logs={recentActivity}
-            compact
-            onOpenItem={onOpenActivityItem}
-            emptyMessage="还没有操作记录。创建或修改内容后，这里会自动出现。"
-          />
+          <div className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+            <ActivityFeed
+              logs={recentActivity}
+              compact
+              onOpenItem={onOpenActivityItem}
+              emptyMessage="还没有操作记录。创建或修改内容后，这里会自动出现。"
+            />
+          </div>
         </motion.section>
       </div>
     </div>

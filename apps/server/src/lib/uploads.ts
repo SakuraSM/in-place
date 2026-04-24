@@ -1,11 +1,13 @@
 import { createWriteStream } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
+import sharp from 'sharp';
 import type { AppEnv } from '../env.js';
 
 const DEFAULT_UPLOAD_DIR = './storage/uploads';
+const RESIZE_CACHE_DIRNAME = '.cache';
 
 export interface UploadedImageFile {
   file: NodeJS.ReadableStream;
@@ -38,6 +40,125 @@ function resolveExtension(file: UploadedImageFile) {
 
 export function resolveUploadRoot(env: AppEnv) {
   return path.resolve(process.cwd(), DEFAULT_UPLOAD_DIR);
+}
+
+export interface ImageResizeOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
+  format?: 'jpeg' | 'png' | 'webp' | 'avif';
+}
+
+const DEFAULT_QUALITY = 80;
+
+const FORMAT_TO_MIME: Record<NonNullable<ImageResizeOptions['format']>, string> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  avif: 'image/avif',
+};
+
+const MIME_TO_FORMAT: Record<string, NonNullable<ImageResizeOptions['format']>> = {
+  'image/jpeg': 'jpeg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/gif': 'webp',
+};
+
+const FORMAT_TO_EXTENSION: Record<NonNullable<ImageResizeOptions['format']>, string> = {
+  jpeg: '.jpg',
+  png: '.png',
+  webp: '.webp',
+  avif: '.avif',
+};
+
+export async function resolveResizedImage(input: {
+  env: AppEnv;
+  sourceAbsolutePath: string;
+  sourceRelativePath: string;
+  sourceMtimeMs: number;
+  sourceMimeType: string;
+  options: ImageResizeOptions;
+}): Promise<{ absolutePath: string; size: number; mimeType: string }> {
+  const targetFormat: NonNullable<ImageResizeOptions['format']> =
+    input.options.format ?? MIME_TO_FORMAT[input.sourceMimeType] ?? 'jpeg';
+  const quality = input.options.quality ?? DEFAULT_QUALITY;
+  const fit = input.options.fit ?? 'cover';
+
+  const cacheKey = createHash('sha1')
+    .update(input.sourceRelativePath)
+    .update('|')
+    .update(String(Math.round(input.sourceMtimeMs)))
+    .update('|')
+    .update(`w=${input.options.width ?? ''}`)
+    .update('|')
+    .update(`h=${input.options.height ?? ''}`)
+    .update('|')
+    .update(`q=${quality}`)
+    .update('|')
+    .update(`fit=${fit}`)
+    .update('|')
+    .update(`fmt=${targetFormat}`)
+    .digest('hex');
+
+  const cacheRoot = path.join(resolveUploadRoot(input.env), RESIZE_CACHE_DIRNAME);
+  const cacheDir = path.join(cacheRoot, cacheKey.slice(0, 2));
+  const cachePath = path.join(cacheDir, `${cacheKey}${FORMAT_TO_EXTENSION[targetFormat]}`);
+
+  try {
+    const cached = await stat(cachePath);
+    if (cached.isFile()) {
+      return { absolutePath: cachePath, size: cached.size, mimeType: FORMAT_TO_MIME[targetFormat] };
+    }
+  } catch {
+    // 缓存未命中，继续生成
+  }
+
+  await mkdir(cacheDir, { recursive: true });
+
+  let pipelineSharp = sharp(input.sourceAbsolutePath, { failOn: 'none' }).rotate();
+  if (input.options.width || input.options.height) {
+    pipelineSharp = pipelineSharp.resize({
+      width: input.options.width,
+      height: input.options.height,
+      fit,
+      withoutEnlargement: true,
+    });
+  }
+
+  switch (targetFormat) {
+    case 'jpeg':
+      pipelineSharp = pipelineSharp.jpeg({ quality, mozjpeg: true });
+      break;
+    case 'png':
+      pipelineSharp = pipelineSharp.png({ quality, compressionLevel: 9 });
+      break;
+    case 'webp':
+      pipelineSharp = pipelineSharp.webp({ quality });
+      break;
+    case 'avif':
+      pipelineSharp = pipelineSharp.avif({ quality });
+      break;
+  }
+
+  // 先写入临时文件再原子重命名，避免并发请求读取到不完整的内容
+  const tmpPath = `${cachePath}.${randomUUID()}.tmp`;
+  await pipelineSharp.toFile(tmpPath);
+  const { rename } = await import('node:fs/promises');
+  try {
+    await rename(tmpPath, cachePath);
+  } catch (error) {
+    // 若另一个并发请求已写入同名文件，rename 失败时直接清理临时文件
+    const { unlink } = await import('node:fs/promises');
+    await unlink(tmpPath).catch(() => undefined);
+    const cached = await stat(cachePath).catch(() => null);
+    if (!cached) throw error;
+  }
+
+  const finalStat = await stat(cachePath);
+  return { absolutePath: cachePath, size: finalStat.size, mimeType: FORMAT_TO_MIME[targetFormat] };
 }
 
 export function resolveImageMimeType(filename: string) {

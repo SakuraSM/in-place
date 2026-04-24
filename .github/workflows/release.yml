@@ -1,0 +1,94 @@
+name: Release
+
+# 每次发版（推送形如 v1.2.3 的标签）时：
+#   1. 解析标签得到目标版本号；
+#   2. 同步根 package.json、所有 workspace 包的 package.json 以及 apps/mobile/app.json 的 version 字段；
+#   3. 将变更提交回 main 分支，确保仓库内"当前版本"与最新发版保持一致；
+#   4. 基于该提交创建/更新 GitHub Release。
+#
+# Web/Server/Mobile 运行时显示的版本均由各自的 package.json / app.json 推导：
+#   - Web 通过 vite.config.ts 中的 `define: __APP_VERSION__` 在构建期注入；
+#   - Mobile 直接读取 app.json；
+#   - Docker 镜像由现有 docker-images.yml 工作流根据同一 tag 进行打包发布。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '目标版本号（不含前缀 v，例如 1.2.3）'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump-version:
+    name: Sync package versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve target version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$'; then
+            echo "::error::Invalid version: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump version in all package manifests
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/bump-version.mjs "$NEW_VERSION"
+
+      - name: Commit & push version bump to main
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git diff --quiet; then
+            echo "No version changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B main origin/main
+          # 重新执行版本同步脚本，避免 checkout 后丢失改动
+          node scripts/bump-version.mjs "$NEW_VERSION"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No version changes after rebase."
+            exit 0
+          fi
+          git commit -m "chore(release): v$NEW_VERSION"
+          git push origin main
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true

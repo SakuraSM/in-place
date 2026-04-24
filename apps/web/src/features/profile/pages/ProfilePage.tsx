@@ -6,6 +6,7 @@ import { useAuth } from '../../../app/providers/AuthContext';
 import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
+import { APP_VERSION } from '../../../shared/lib/appVersion';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { fetchItemStats } from '../../../legacy/items';
 import type { ItemStats } from '@inplace/domain';
@@ -400,7 +401,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <motion.p variants={staggerItem} className="text-center text-xs text-slate-300 py-2">归位 v0.1.0</motion.p>
+        <motion.p variants={staggerItem} className="text-center text-xs text-slate-300 py-2">归位 v{APP_VERSION}</motion.p>
       </motion.div>
 
       {showLogout && (

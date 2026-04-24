@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 import { buildHomeCreateRoute } from '../../features/inventory/lib/homeRoute';
 import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
+import { APP_VERSION } from '../../shared/lib/appVersion';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
@@ -161,7 +162,7 @@ export default function Sidebar({
 
       <div className={`border-t border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>
         <p className={`text-center text-xs text-slate-300 ${collapsed ? 'leading-5' : ''}`}>
-          {collapsed ? 'v0.1.0' : '归位 v0.1.0'}
+          {collapsed ? `v${APP_VERSION}` : `归位 v${APP_VERSION}`}
         </p>
       </div>
     </aside>
