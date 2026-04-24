@@ -155,12 +155,11 @@ export async function resolveResizedImage(input: {
   try {
     await rename(tmpPath, cachePath);
   } catch (error) {
-    // 仅吞掉"目标已存在"的并发竞态错误（Linux: EEXIST，Windows: EPERM/EACCES）；
+    // 仅吞掉"目标已存在"的并发竞态错误（EEXIST）；
     // 其它错误（权限、磁盘满等）应直接抛出便于运维定位。
     const code = (error as NodeJS.ErrnoException | null)?.code;
-    const isConcurrencyRace = code === 'EEXIST' || code === 'EPERM' || code === 'EACCES';
     await unlink(tmpPath).catch(() => undefined);
-    if (!isConcurrencyRace) {
+    if (code !== 'EEXIST') {
       throw error;
     }
     const cached = await stat(cachePath).catch(() => null);
