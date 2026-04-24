@@ -36,6 +36,7 @@ export function BrandHeader({ title, subtitle, accessory, compact = false }: Bra
           <Image
             source={require('../assets/inplace-logo-mark.png')}
             accessibilityIgnoresInvertColors
+            resizeMode="contain"
             style={{
               width: logoSize,
               height: logoSize,

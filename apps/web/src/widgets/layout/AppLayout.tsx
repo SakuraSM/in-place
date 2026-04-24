@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
 import { pageTransition } from '../../shared/lib/animations';
+import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'inplace:sidebar-collapsed';
 
@@ -36,6 +37,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         exit="exit"
       >
         {children}
+        <div className="px-4 pb-24 pt-3 md:hidden">
+          <BrandVersionFooter compact className="justify-center" />
+        </div>
       </motion.div>
       <BottomNav />
     </div>

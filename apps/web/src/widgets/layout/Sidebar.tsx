@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import BrandLockup from '../../shared/ui/BrandLockup';
 import { buildHomeCreateRoute } from '../../features/inventory/lib/homeRoute';
 import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
+import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
@@ -41,7 +42,7 @@ export default function Sidebar({
               <img
                 src="/branding/inplace-logo-mark.png"
                 alt="归位"
-                className="h-12 w-12 object-cover object-center"
+                className="h-12 w-12 object-contain object-center"
               />
             </div>
           ) : (
@@ -160,9 +161,7 @@ export default function Sidebar({
       </nav>
 
       <div className={`border-t border-slate-100 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>
-        <p className={`text-center text-xs text-slate-300 ${collapsed ? 'leading-5' : ''}`}>
-          {collapsed ? 'v0.1.0' : '归位 v0.1.0'}
-        </p>
+        <BrandVersionFooter compact={collapsed} className={collapsed ? 'flex-col gap-1.5' : 'justify-start'} />
       </div>
     </aside>
   );

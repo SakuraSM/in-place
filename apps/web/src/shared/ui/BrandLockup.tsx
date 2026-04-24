@@ -81,7 +81,7 @@ export default function BrandLockup({
           <img
             src={logoSrc}
             alt={title}
-            className={`h-full w-full ${logoVariant === 'mark' ? 'object-cover object-center' : 'object-contain object-center'}`}
+            className="h-full w-full object-contain object-center"
           />
         </LogoWrapper>
 

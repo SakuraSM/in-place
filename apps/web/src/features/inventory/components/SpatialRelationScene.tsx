@@ -3,6 +3,7 @@ import { Box, ChevronDown, ChevronRight, Image as ImageIcon, Layers3, Package } 
 import { motion } from 'framer-motion';
 import type { Item } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 interface Props {
   currentItem: Item;
@@ -29,9 +30,9 @@ function ItemVisual({
 
   if (item.images[0]) {
     return (
-      <div className={`overflow-hidden bg-white ring-1 ring-slate-200/75 ${classes}`}>
-        <img src={item.images[0]} alt={item.name} className="h-full w-full object-cover object-center" />
-      </div>
+        <div className={`overflow-hidden bg-white ring-1 ring-slate-200/75 ${classes}`}>
+        <img src={buildInventoryImageUrl(item.images[0], 'icon')} alt={item.name} className="h-full w-full object-cover object-center" />
+        </div>
     );
   }
 
@@ -121,7 +122,7 @@ function ChildCard({
       <div className="mb-3 overflow-hidden rounded-[18px] bg-slate-100">
         {item.images[0] ? (
           <img
-            src={item.images[0]}
+            src={buildInventoryImageUrl(item.images[0], 'landscape-card')}
             alt={item.name}
             className="aspect-[4/3] w-full object-cover object-center"
           />

@@ -11,6 +11,7 @@ import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -242,7 +243,7 @@ export default function ItemDetailPage() {
             <div className="sticky top-24">
               <div className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:aspect-square">
                 <img
-                  src={item.images[activeImageIdx]}
+                  src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')}
                   alt={item.name}
                   className="h-full w-full object-contain object-center"
                 />
@@ -259,7 +260,7 @@ export default function ItemDetailPage() {
                         i === activeImageIdx ? 'border-sky-500' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={url} alt="" className="h-full w-full object-cover object-center" />
+                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
                     </motion.button>
                   ))}
                 </div>
@@ -280,7 +281,7 @@ export default function ItemDetailPage() {
         {item.images.length > 0 && (
           <div className="bg-white">
             <div className="relative aspect-square overflow-hidden">
-              <img src={item.images[activeImageIdx]} alt={item.name} className="w-full h-full object-cover" />
+              <img src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')} alt={item.name} className="w-full h-full object-cover" />
             </div>
             {item.images.length > 1 && (
               <div className="flex gap-2 p-3 overflow-x-auto">
@@ -292,7 +293,7 @@ export default function ItemDetailPage() {
                       i === activeImageIdx ? 'border-sky-500' : 'border-transparent'
                     }`}
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

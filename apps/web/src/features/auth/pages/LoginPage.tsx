@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { staggerContainer, staggerItem, logoFloat } from '../../../shared/lib/animations';
-import BrandLockup from '../../../shared/ui/BrandLockup';
-
 export default function LoginPage() {
   const { user, signIn } = useAuth();
   const navigate = useNavigate();
@@ -42,12 +40,16 @@ export default function LoginPage() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-      >
-        <motion.div variants={staggerItem} className="text-center mb-10">
-          <motion.div variants={logoFloat}>
-            <BrandLockup size="lg" className="justify-center" logoVariant="mark" />
+        >
+          <motion.div variants={staggerItem} className="text-center mb-10">
+            <motion.div variants={logoFloat}>
+              <img
+                src="/branding/inplace-logo-full.png"
+                alt="归位"
+                className="mx-auto block h-20 w-auto max-w-full object-contain md:h-24"
+              />
+            </motion.div>
           </motion.div>
-        </motion.div>
 
         <motion.div variants={staggerItem} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
           <h2 className="text-xl font-semibold text-slate-900 mb-6">登录账号</h2>

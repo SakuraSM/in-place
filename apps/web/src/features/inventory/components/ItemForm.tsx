@@ -8,6 +8,7 @@ import { fetchCategories } from '../../../legacy/categories';
 import { fetchTags } from '../../../legacy/tags';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 import LocationPicker from './LocationPicker';
 import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
 
@@ -572,7 +573,7 @@ export default function ItemForm({
                       transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                       className="relative w-20 h-20 rounded-xl overflow-hidden"
                     >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(url)}

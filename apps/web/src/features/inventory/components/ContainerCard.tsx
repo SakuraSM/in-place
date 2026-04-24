@@ -5,6 +5,7 @@ import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { staggerItem } from '../../../shared/lib/animations';
+import { buildInventoryImageUrl } from '../lib/itemImage';
 
 const FALLBACK_COLORS = [
   { bg: 'bg-sky-50', text: 'text-sky-500' },
@@ -100,7 +101,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         <div className="relative aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3">
           {item.images.length > 0 ? (
             <motion.img
-              src={item.images[0]}
+              src={buildInventoryImageUrl(item.images[0], 'card')}
               alt={item.name}
               className="w-full h-full object-cover"
               animate={{ scale: hovered ? 1.07 : 1 }}
