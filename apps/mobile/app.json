@@ -7,15 +7,42 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "允许归位读取照片，用于上传物品图片和 AI 识别。",
+          "cameraPermission": "允许归位使用相机，用于拍照识别和上传物品图片。"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.inplace.mobile"
+      "bundleIdentifier": "com.inplace.mobile",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.inplace.mobile"
+      "package": "com.inplace.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_VIDEO"
+      ],
+      "allowBackup": false
     }
   }
 }

@@ -282,6 +282,18 @@ Key variables:
 Legacy transition variables still exist in the frontend example file because
 some UI code has not yet been fully migrated away from the previous Supabase-based data flow.
 
+### Mobile
+
+The Android and iOS app lives in [apps/mobile](apps/mobile). It uses the same API, domain, and app-core packages as the web app.
+
+Key variables:
+
+- `EXPO_PUBLIC_API_BASE_URL`: optional default API server used before a user configures a server inside the app
+- `EXPO_PROJECT_ID`: GitHub Actions repository variable used by EAS Build
+- `EXPO_TOKEN`: GitHub Actions secret used by EAS Build
+
+On first login or registration, enter the remote server address and account credentials in the app. The app normalizes the address to include `/api`, stores the selected server on device, and keeps the auth token in secure storage.
+
 ### Image Uploads
 
 - Images are uploaded to `POST /api/v1/uploads/images`
@@ -298,6 +310,11 @@ npm run dev:server
 npm run build
 npm run lint
 npm run typecheck
+npm run dev:mobile
+npm run android
+npm run ios
+npm run build:mobile:android
+npm run build:mobile:ios
 npm run db:up
 npm run db:down
 npm run db:logs

@@ -20,6 +20,16 @@ export async function createApp(env: AppEnv) {
   const app = Fastify({
     logger: env.NODE_ENV !== 'test',
     trustProxy: true,
+    bodyLimit: env.BACKUP_PAYLOAD_SIZE_MB * 1024 * 1024,
+  });
+
+  app.addHook('onRequest', async (_request, reply) => {
+    reply
+      .header('X-Content-Type-Options', 'nosniff')
+      .header('X-Frame-Options', 'DENY')
+      .header('Referrer-Policy', 'no-referrer')
+      .header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+      .header('Cross-Origin-Resource-Policy', 'same-origin');
   });
 
   const allowedOrigins = new Set(getAllowedCorsOrigins(env));

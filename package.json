@@ -31,7 +31,14 @@
     "single:up": "docker compose --env-file .env.single -f docker-compose.single.yml up -d",
     "single:down": "docker compose --env-file .env.single -f docker-compose.single.yml down",
     "single:logs": "docker compose --env-file .env.single -f docker-compose.single.yml logs -f",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "android": "npm run android --workspace @inplace/mobile",
+    "ios": "npm run ios --workspace @inplace/mobile",
+    "build:mobile:android": "npm run build:android --workspace @inplace/mobile",
+    "build:mobile:ios": "npm run build:ios --workspace @inplace/mobile",
+    "build:mobile": "npm run build:mobile:android && npm run build:mobile:ios"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.8.13",
+    "yaml": "^2.8.3"
   }
 }

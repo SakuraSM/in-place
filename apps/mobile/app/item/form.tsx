@@ -14,6 +14,7 @@ import { palette } from '@/shared/ui/theme';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TYPE_OPTIONS: ItemType[] = ['item', 'container'];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 interface FormState {
   type: ItemType;
@@ -24,6 +25,22 @@ interface FormState {
   price: string;
   tags: string;
   images: string[];
+}
+
+function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
+  if (asset.type && asset.type !== 'image') {
+    return '仅支持上传图片文件';
+  }
+
+  if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE_BYTES) {
+    return '图片不能超过 10MB，请压缩后重试';
+  }
+
+  if (asset.mimeType && !asset.mimeType.startsWith('image/')) {
+    return '仅支持上传图片文件';
+  }
+
+  return null;
 }
 
 export default function ItemFormScreen() {
@@ -136,7 +153,7 @@ export default function ItemFormScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      quality: 0.9,
+      quality: 0.82,
       selectionLimit: 1,
     });
 
@@ -145,12 +162,19 @@ export default function ItemFormScreen() {
     }
 
     const asset = result.assets[0];
+    const validationError = validatePickedImage(asset);
+    if (validationError) {
+      setSubmitError(validationError);
+      return;
+    }
+
     setUploadingImage(true);
 
     try {
       const uploadedUrl = await uploadImageFromUri({
         uri: asset.uri,
         fileName: asset.fileName,
+        mimeType: asset.mimeType,
       });
       setHasTouched(true);
       setDraft((current) => ({
@@ -190,7 +214,7 @@ export default function ItemFormScreen() {
       <BrandHeader
         compact
         title={isEditing ? '编辑物品' : '新建物品'}
-        subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '容器' : '物品'}。`}
+        subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '收纳' : '物品'}。`}
       />
 
       <SectionCard
@@ -210,7 +234,7 @@ export default function ItemFormScreen() {
                 style={[segmentButtonStyle, draft.type === option ? activeSegmentStyle : null]}
               >
                 <Text style={draft.type === option ? activeSegmentTextStyle : segmentTextStyle}>
-                  {option === 'container' ? '容器' : '物品'}
+                  {option === 'container' ? '收纳' : '物品'}
                 </Text>
               </Pressable>
             ))}
@@ -325,7 +349,11 @@ export default function ItemFormScreen() {
 
         <Field label="图片">
           <View style={{ gap: 12 }}>
-            <Pressable onPress={() => void handlePickImage()} style={secondaryButtonStyle}>
+            <Pressable
+              disabled={uploadingImage || mutation.isPending}
+              onPress={() => void handlePickImage()}
+              style={[secondaryButtonStyle, (uploadingImage || mutation.isPending) ? disabledButtonStyle : null]}
+            >
               {uploadingImage ? (
                 <ActivityIndicator />
               ) : (
@@ -356,7 +384,11 @@ export default function ItemFormScreen() {
           <Pressable onPress={applyInitialForm} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>重置</Text>
           </Pressable>
-          <Pressable onPress={() => void handleSubmit()} style={primaryButtonStyle}>
+          <Pressable
+            disabled={mutation.isPending || uploadingImage}
+            onPress={() => void handleSubmit()}
+            style={[primaryButtonStyle, (mutation.isPending || uploadingImage) ? disabledButtonStyle : null]}
+          >
             {mutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存</Text>}
           </Pressable>
         </View>
@@ -469,6 +501,10 @@ const primaryButtonStyle = {
   backgroundColor: palette.brand,
   paddingVertical: 14,
   alignItems: 'center' as const,
+};
+
+const disabledButtonStyle = {
+  opacity: 0.55,
 };
 
 const primaryButtonTextStyle = {

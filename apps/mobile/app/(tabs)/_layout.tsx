@@ -44,16 +44,30 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="locations"
+        options={{
+          title: '位置树',
+          tabBarIcon: ({ color, size }) => <Ionicons name="location-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="activity"
+        options={{
+          title: '操作记录',
+          tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="scan"
         options={{
-          title: '扫描',
+          title: 'AI 扫描',
           tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="categories"
         options={{
-          title: '分类',
+          title: '分类管理',
           tabBarIcon: ({ color, size }) => <Ionicons name="pricetags-outline" size={size} color={color} />,
         }}
       />

@@ -274,6 +274,18 @@ docker compose --env-file .env.compose up -d server web
 
 由于当前前端仍处于迁移阶段，示例文件中还保留了少量 legacy 变量，用于兼容尚未迁移完成的旧数据访问逻辑。
 
+### 移动端
+
+Android 和 iOS 应用位于 [apps/mobile](apps/mobile)，与 Web 共用同一套 API、domain 和 app-core 包。
+
+主要变量：
+
+- `EXPO_PUBLIC_API_BASE_URL`：用户在 App 内配置服务器前使用的默认 API 地址
+- `EXPO_PROJECT_ID`：GitHub Actions 中用于 EAS Build 的仓库变量
+- `EXPO_TOKEN`：GitHub Actions 中用于 EAS Build 的密钥
+
+首次登录或注册时，在 App 内输入远程服务器地址和账号密码。App 会把地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。
+
 ### 图片上传
 
 - 图片上传接口为 `POST /api/v1/uploads/images`
@@ -290,6 +302,11 @@ npm run dev:server
 npm run build
 npm run lint
 npm run typecheck
+npm run dev:mobile
+npm run android
+npm run ios
+npm run build:mobile:android
+npm run build:mobile:ios
 npm run db:up
 npm run db:down
 npm run db:logs

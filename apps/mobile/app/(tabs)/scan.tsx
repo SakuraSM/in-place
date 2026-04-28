@@ -15,6 +15,7 @@ import { palette } from '@/shared/ui/theme';
 interface SelectedAsset {
   uri: string;
   fileName?: string | null;
+  mimeType?: string | null;
 }
 
 interface DraftRecognition {
@@ -22,6 +23,24 @@ interface DraftRecognition {
   selected: boolean;
   saved: boolean;
   editing: boolean;
+}
+
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
+function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
+  if (asset.type && asset.type !== 'image') {
+    return '仅支持上传图片文件';
+  }
+
+  if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE_BYTES) {
+    return '图片不能超过 10MB，请压缩后重试';
+  }
+
+  if (asset.mimeType && !asset.mimeType.startsWith('image/')) {
+    return '仅支持上传图片文件';
+  }
+
+  return null;
 }
 
 export default function ScanTab() {
@@ -122,7 +141,7 @@ export default function ScanTab() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.9,
+      quality: 0.82,
       allowsEditing: true,
       selectionLimit: 1,
     });
@@ -131,9 +150,17 @@ export default function ScanTab() {
       return;
     }
 
+    const asset = result.assets[0];
+    const validationError = validatePickedImage(asset);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSelectedAsset({
-      uri: result.assets[0].uri,
-      fileName: result.assets[0].fileName,
+      uri: asset.uri,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
     });
   };
 
@@ -150,7 +177,7 @@ export default function ScanTab() {
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
-      quality: 0.9,
+      quality: 0.82,
       allowsEditing: true,
     });
 
@@ -158,9 +185,17 @@ export default function ScanTab() {
       return;
     }
 
+    const asset = result.assets[0];
+    const validationError = validatePickedImage(asset);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSelectedAsset({
-      uri: result.assets[0].uri,
-      fileName: result.assets[0].fileName,
+      uri: asset.uri,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
     });
   };
 
@@ -219,18 +254,25 @@ export default function ScanTab() {
   return (
     <Screen scroll>
       <Entrance>
-        <BrandHeader title="扫描" subtitle="拍照或选图后快速识别，把结果直接归位到库存里。" />
+        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" />
       </Entrance>
 
-      <SectionCard title="选择图片" subtitle="延续 Web 端扫描流，先取图，再做识别。" delay={70}>
+      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable onPress={() => void takePhoto()} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>拍照</Text>
+          <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
+            <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
           </Pressable>
-          <Pressable onPress={() => void pickImage()} style={secondaryButtonStyle}>
+          <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
           </Pressable>
-          <Pressable onPress={() => void handleRecognize()} style={primaryButtonStyle}>
+          <Pressable
+            disabled={!selectedAsset || recognizeMutation.isPending || saveMutation.isPending}
+            onPress={() => void handleRecognize()}
+            style={[
+              primaryButtonStyle,
+              (!selectedAsset || recognizeMutation.isPending || saveMutation.isPending) ? disabledButtonStyle : null,
+            ]}
+          >
             {recognizeMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>开始识别</Text>}
           </Pressable>
         </View>
@@ -254,7 +296,7 @@ export default function ScanTab() {
             (saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)) ? disabledButtonStyle : null,
           ]}
         >
-          {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存选中结果</Text>}
+          {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存选中</Text>}
         </Pressable>
 
         {drafts.length === 0 ? (
@@ -272,7 +314,7 @@ export default function ScanTab() {
               <View style={{ flex: 1, gap: 6 }}>
                 <Text style={draftTitleStyle}>{draft.result.name}</Text>
                 <Text style={hintStyle}>
-                  {(draft.result.type ?? 'item') === 'container' ? '容器' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
+                  {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
                 </Text>
                 <Text style={bodyStyle}>{draft.result.description || '暂无描述'}</Text>
                 <Text style={hintStyle}>

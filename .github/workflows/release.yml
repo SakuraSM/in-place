@@ -2,13 +2,13 @@ name: Release
 
 # 每次发版（推送形如 v1.2.3 的标签）时：
 #   1. 解析标签得到目标版本号；
-#   2. 同步根 package.json、所有 workspace 包的 package.json 以及 apps/mobile/app.json 的 version 字段；
+#   2. 同步根 package.json、所有 workspace 包的 package.json、apps/mobile/app.json 以及 Android versionName；
 #   3. 将变更提交回 main 分支，确保仓库内"当前版本"与最新发版保持一致；
 #   4. 基于该提交创建/更新 GitHub Release。
 #
 # Web/Server/Mobile 运行时显示的版本均由各自的 package.json / app.json 推导：
 #   - Web 通过 vite.config.ts 中的 `define: __APP_VERSION__` 在构建期注入；
-#   - Mobile 直接读取 app.json；
+#   - Mobile 直接读取 app.json，Android native 工程同步 versionName；
 #   - Docker 镜像由现有 docker-images.yml 工作流根据同一 tag 进行打包发布。
 
 on:
