@@ -2,12 +2,14 @@ import { Link, Redirect } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
+import { getMobileApiBaseUrl } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { palette, shadows } from '@/shared/ui/theme';
 
 export default function RegisterScreen() {
   const { signUp, session, loading } = useAuth();
+  const [apiBaseUrl, setApiBaseUrl] = useState(getMobileApiBaseUrl());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -28,7 +30,7 @@ export default function RegisterScreen() {
     }
 
     try {
-      await signUp(email, password);
+      await signUp(email.trim(), password, apiBaseUrl.trim());
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '注册失败');
     } finally {
@@ -41,11 +43,21 @@ export default function RegisterScreen() {
       <View style={{ position: 'absolute', top: -80, right: -30, width: 220, height: 220, borderRadius: 999, backgroundColor: '#dbeafe', opacity: 0.75 }} />
       <View style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 18 }}>
         <Entrance>
-          <BrandHeader title="创建账号" subtitle="首版先接入邮箱密码注册和登录。" />
+          <BrandHeader title="创建账号" subtitle="先配置服务器地址，再创建或加入你的归位空间。" />
         </Entrance>
 
         <Entrance delay={90}>
           <View style={cardStyle}>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              value={apiBaseUrl}
+              onChangeText={setApiBaseUrl}
+              placeholder="服务器地址，例如 https://demo.example.com/api"
+              placeholderTextColor={palette.textSoft}
+              style={inputStyle}
+            />
             <TextInput
               autoCapitalize="none"
               keyboardType="email-address"

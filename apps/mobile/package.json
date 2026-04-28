@@ -7,7 +7,10 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build:android": "eas build --platform android --profile production --non-interactive",
+    "build:ios": "eas build --platform ios --profile production --non-interactive",
+    "build:all": "eas build --platform all --profile production --non-interactive"
   },
   "dependencies": {
     "@inplace/api-client": "*",

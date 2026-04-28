@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 将仓库内所有 package.json 与 apps/mobile/app.json 的 version 字段统一为指定值。
+ * 将仓库内所有 package.json、apps/mobile/app.json 与 Android native versionName 统一为指定值。
  *
  * 用法：node scripts/bump-version.mjs <version>
  *   <version>  目标版本号，例如 1.2.3（不带 v 前缀）
@@ -30,6 +30,15 @@ const targets = [
   'packages/api-client/package.json',
   'packages/db/package.json',
   'packages/domain/package.json',
+];
+
+const textTargets = [
+  {
+    rel: 'apps/mobile/android/app/build.gradle',
+    update(content, version) {
+      return content.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
+    },
+  },
 ];
 
 async function main() {
@@ -78,6 +87,29 @@ async function main() {
     const trailingNewline = raw.endsWith('\n') ? '\n' : '';
     await writeFile(file, `${JSON.stringify(json, null, 2)}${trailingNewline}`);
     console.log(`Updated ${rel} -> ${version}`);
+    updated += 1;
+  }
+
+  for (const target of textTargets) {
+    const file = path.join(repoRoot, target.rel);
+    let raw;
+    try {
+      raw = await readFile(file, 'utf8');
+    } catch (error) {
+      if (error && error.code === 'ENOENT') {
+        console.warn(`Skip missing ${target.rel}`);
+        continue;
+      }
+      throw error;
+    }
+
+    const next = target.update(raw, version);
+    if (next === raw) {
+      continue;
+    }
+
+    await writeFile(file, next);
+    console.log(`Updated ${target.rel} -> ${version}`);
     updated += 1;
   }
 

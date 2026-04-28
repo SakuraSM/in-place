@@ -1,6 +1,7 @@
 import { createApiClient } from '@inplace/api-client';
 import { createAiApi, createCategoriesApi, createItemsApi, createTagsApi } from '@inplace/app-core';
 import { Platform } from 'react-native';
+import { secureServerConfigStorage } from '@/platform/config/secureServerConfigStorage';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
 
 const runtimeEnv = globalThis as {
@@ -9,12 +10,14 @@ const runtimeEnv = globalThis as {
   };
 };
 
-function resolveMobileApiBaseUrl() {
+function resolveDefaultMobileApiBaseUrl() {
   // 10.0.2.2 is the standard loopback alias for Android Emulator to reach the host machine.
   // For iOS simulators and physical devices, use your computer's local IP (e.g., 192.168.x.x).
   const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://127.0.0.1:4000';
-  const rawBaseUrl = runtimeEnv.process?.env?.EXPO_PUBLIC_API_BASE_URL?.trim() || defaultBaseUrl;
+  return runtimeEnv.process?.env?.EXPO_PUBLIC_API_BASE_URL?.trim() || defaultBaseUrl;
+}
 
+export function normalizeMobileApiBaseUrl(rawBaseUrl: string) {
   try {
     const url = new URL(rawBaseUrl);
     const normalizedPath = url.pathname.replace(/\/+$/, '');
@@ -37,10 +40,36 @@ function resolveMobileApiBaseUrl() {
   }
 }
 
-export const mobileApiClient = createApiClient({
-  baseUrl: resolveMobileApiBaseUrl(),
+const mobileApiClientConfig = {
+  baseUrl: normalizeMobileApiBaseUrl(resolveDefaultMobileApiBaseUrl()),
   tokenStorage: secureTokenStorage,
-});
+};
+
+export const mobileApiClient = createApiClient(mobileApiClientConfig);
+
+export function getMobileApiBaseUrl() {
+  return mobileApiClientConfig.baseUrl;
+}
+
+export function setMobileApiBaseUrl(rawBaseUrl: string) {
+  mobileApiClientConfig.baseUrl = normalizeMobileApiBaseUrl(rawBaseUrl.trim());
+  return mobileApiClientConfig.baseUrl;
+}
+
+export async function loadPersistedMobileApiBaseUrl() {
+  const storedBaseUrl = await secureServerConfigStorage.getApiBaseUrl();
+  if (storedBaseUrl) {
+    setMobileApiBaseUrl(storedBaseUrl);
+  }
+
+  return mobileApiClientConfig.baseUrl;
+}
+
+export async function saveMobileApiBaseUrl(rawBaseUrl: string) {
+  const normalizedBaseUrl = setMobileApiBaseUrl(rawBaseUrl);
+  await secureServerConfigStorage.setApiBaseUrl(normalizedBaseUrl);
+  return normalizedBaseUrl;
+}
 
 export const itemsApi = createItemsApi(mobileApiClient.request);
 export const categoriesApi = createCategoriesApi(mobileApiClient.request);

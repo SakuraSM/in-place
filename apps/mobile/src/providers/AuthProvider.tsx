@@ -2,14 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { AuthSession, AuthUser } from '@inplace/domain';
 import { ApiError } from '@inplace/api-client';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
-import { mobileApiClient } from '@/shared/api/mobileClient';
+import { loadPersistedMobileApiBaseUrl, mobileApiClient, saveMobileApiBaseUrl, setMobileApiBaseUrl } from '@/shared/api/mobileClient';
 
 interface AuthContextValue {
   user: AuthUser | null;
   session: AuthSession | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, apiBaseUrl: string) => Promise<void>;
+  signUp: (email: string, password: string, apiBaseUrl: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setCurrentUser: (user: AuthUser | null) => void;
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const bootstrap = async () => {
+      await loadPersistedMobileApiBaseUrl();
       const token = await secureTokenStorage.get();
       if (!token) {
         setLoading(false);
@@ -54,24 +55,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       loading,
-      async signIn(email: string, password: string) {
+      async signIn(email: string, password: string, apiBaseUrl: string) {
+        setMobileApiBaseUrl(apiBaseUrl);
         const response = await mobileApiClient.request<{ token: string; user: AuthUser }>('/v1/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email, password }),
           skipAuth: true,
         });
 
+        await saveMobileApiBaseUrl(apiBaseUrl);
         await secureTokenStorage.set(response.token);
         setSession({ token: response.token });
         setUser(response.user);
       },
-      async signUp(email: string, password: string) {
+      async signUp(email: string, password: string, apiBaseUrl: string) {
+        setMobileApiBaseUrl(apiBaseUrl);
         const response = await mobileApiClient.request<{ token: string; user: AuthUser }>('/v1/auth/register', {
           method: 'POST',
           body: JSON.stringify({ email, password }),
           skipAuth: true,
         });
 
+        await saveMobileApiBaseUrl(apiBaseUrl);
         await secureTokenStorage.set(response.token);
         setSession({ token: response.token });
         setUser(response.user);
