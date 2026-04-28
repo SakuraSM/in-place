@@ -77,6 +77,15 @@ export const tagsApi = createTagsApi(mobileApiClient.request);
 export const aiApi = createAiApi(mobileApiClient.request);
 export const activityApi = createActivityApi(mobileApiClient.request);
 
+function ensureBlobMimeType(sourceBlob: Blob, fallbackMimeType?: string | null) {
+  const normalizedFallback = fallbackMimeType?.trim();
+  if (sourceBlob.type || !normalizedFallback) {
+    return sourceBlob;
+  }
+
+  return new Blob([sourceBlob], { type: normalizedFallback });
+}
+
 export async function uploadImageFromUri(params: {
   uri: string;
   fileName?: string | null;
@@ -88,9 +97,7 @@ export async function uploadImageFromUri(params: {
   }
 
   const sourceBlob = await response.blob();
-  const blob = sourceBlob.type || !params.mimeType
-    ? sourceBlob
-    : new Blob([sourceBlob], { type: params.mimeType });
+  const blob = ensureBlobMimeType(sourceBlob, params.mimeType);
   const formData = new FormData();
   formData.append('file', blob, params.fileName ?? 'upload.jpg');
 
@@ -113,9 +120,7 @@ export async function recognizeItemsFromUri(params: {
   }
 
   const sourceBlob = await response.blob();
-  const blob = sourceBlob.type || !params.mimeType
-    ? sourceBlob
-    : new Blob([sourceBlob], { type: params.mimeType });
+  const blob = ensureBlobMimeType(sourceBlob, params.mimeType);
   const formData = new FormData();
   formData.append('image', blob, params.fileName ?? 'scan.jpg');
 
