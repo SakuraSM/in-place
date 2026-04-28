@@ -20,6 +20,12 @@ const ACTION_LABELS: Record<ActivityAction, string> = {
   delete: '删除',
 };
 
+function createEmptyActionSummary() {
+  return Object.fromEntries(
+    (Object.keys(ACTION_LABELS) as ActivityAction[]).map((action) => [action, 0]),
+  ) as Record<ActivityAction, number>;
+}
+
 export default function ActivityTab() {
   const { user } = useAuth();
   const activityQuery = useInfiniteQuery({
@@ -44,12 +50,7 @@ export default function ActivityTab() {
   const summary = logs.reduce<Record<ActivityAction, number>>((acc, entry) => {
     acc[entry.action] += 1;
     return acc;
-  }, {
-    manual_create: 0,
-    ai_scan_create: 0,
-    update: 0,
-    delete: 0,
-  });
+  }, createEmptyActionSummary());
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!activityQuery.hasNextPage || activityQuery.isFetchingNextPage) {

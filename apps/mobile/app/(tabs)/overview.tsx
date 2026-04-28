@@ -31,14 +31,34 @@ const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
   { value: 'worn_out', label: '损耗' },
 ];
 
+function resolveEffectiveTypeFilter(typeFilter: TypeFilterValue) {
+  if (typeFilter === 'location') {
+    return 'container';
+  }
+
+  if (typeFilter === 'all') {
+    return undefined;
+  }
+
+  return typeFilter;
+}
+
+function resolveEffectiveStatusFilter(typeFilter: TypeFilterValue, statusFilter: ItemStatus | 'all') {
+  if (typeFilter === 'location' || typeFilter === 'container' || statusFilter === 'all') {
+    return undefined;
+  }
+
+  return statusFilter;
+}
+
 export default function OverviewTab() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilterValue>('all');
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
   const debouncedQuery = useDebouncedValue(query, 250);
-  const effectiveTypeFilter = typeFilter === 'location' ? 'container' : typeFilter === 'all' ? undefined : typeFilter;
-  const effectiveStatusFilter = typeFilter === 'location' || typeFilter === 'container' ? undefined : statusFilter === 'all' ? undefined : statusFilter;
+  const effectiveTypeFilter = resolveEffectiveTypeFilter(typeFilter);
+  const effectiveStatusFilter = resolveEffectiveStatusFilter(typeFilter, statusFilter);
   const searchQuery = useInfiniteQuery({
     queryKey: ['mobile', 'search-items', user?.id, debouncedQuery, typeFilter, effectiveStatusFilter],
     enabled: Boolean(user),

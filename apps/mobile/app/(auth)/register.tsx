@@ -30,7 +30,9 @@ export default function RegisterScreen() {
     }
 
     try {
-      await signUp(email.trim(), password, apiBaseUrl.trim());
+      const normalizedEmail = email.trim();
+      const normalizedApiBaseUrl = apiBaseUrl.trim();
+      await signUp(normalizedEmail, password, normalizedApiBaseUrl);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '注册失败');
     } finally {

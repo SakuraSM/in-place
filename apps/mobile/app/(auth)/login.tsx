@@ -24,7 +24,9 @@ export default function LoginScreen() {
     setError(null);
 
     try {
-      await signIn(email.trim(), password, apiBaseUrl.trim());
+      const normalizedEmail = email.trim();
+      const normalizedApiBaseUrl = apiBaseUrl.trim();
+      await signIn(normalizedEmail, password, normalizedApiBaseUrl);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '登录失败');
     } finally {
