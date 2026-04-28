@@ -31,7 +31,10 @@ export function countLocationContents(items: Item[], locationId: string) {
   };
 
   while (stack.length > 0) {
-    const child = stack.pop()!;
+    const child = stack.pop();
+    if (!child) {
+      continue;
+    }
     stats.total += 1;
 
     if (child.type === 'item') {
