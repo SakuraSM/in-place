@@ -80,12 +80,19 @@ export const activityApi = createActivityApi(mobileApiClient.request);
 export async function uploadImageFromUri(params: {
   uri: string;
   fileName?: string | null;
+  mimeType?: string | null;
 }) {
   const response = await fetch(params.uri);
-  const blob = await response.blob();
+  if (!response.ok) {
+    throw new Error('图片读取失败，请重新选择后再试');
+  }
+
+  const sourceBlob = await response.blob();
+  const blob = sourceBlob.type || !params.mimeType
+    ? sourceBlob
+    : new Blob([sourceBlob], { type: params.mimeType });
   const formData = new FormData();
-  void params.fileName;
-  formData.append('file', blob);
+  formData.append('file', blob, params.fileName ?? 'upload.jpg');
 
   const data = await mobileApiClient.request<{ url: string }>('/v1/uploads/images', {
     method: 'POST',
@@ -98,12 +105,19 @@ export async function uploadImageFromUri(params: {
 export async function recognizeItemsFromUri(params: {
   uri: string;
   fileName?: string | null;
+  mimeType?: string | null;
 }) {
   const response = await fetch(params.uri);
-  const blob = await response.blob();
+  if (!response.ok) {
+    throw new Error('图片读取失败，请重新选择后再试');
+  }
+
+  const sourceBlob = await response.blob();
+  const blob = sourceBlob.type || !params.mimeType
+    ? sourceBlob
+    : new Blob([sourceBlob], { type: params.mimeType });
   const formData = new FormData();
-  void params.fileName;
-  formData.append('image', blob);
+  formData.append('image', blob, params.fileName ?? 'scan.jpg');
 
   const data = await mobileApiClient.request<{ items: import('@inplace/domain').AIRecognitionResult[] }>('/v1/ai/recognize', {
     method: 'POST',

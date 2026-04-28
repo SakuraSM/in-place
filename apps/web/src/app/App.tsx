@@ -1,33 +1,52 @@
+import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './providers/AuthContext';
 import ProtectedRoute from '../widgets/layout/ProtectedRoute';
 import AppLayout from '../widgets/layout/AppLayout';
-import LoginPage from '../features/auth/pages/LoginPage';
-import RegisterPage from '../features/auth/pages/RegisterPage';
-import HomePage from '../features/inventory/pages/HomePage';
-import ItemDetailPage from '../features/inventory/pages/ItemDetailPage';
-import SearchPage from '../features/inventory/pages/SearchPage';
-import ScanPage from '../features/inventory/pages/ScanPage';
-import ProfilePage from '../features/profile/pages/ProfilePage';
-import AiSettingsPage from '../features/profile/pages/AiSettingsPage';
-import SecurityPage from '../features/profile/pages/SecurityPage';
-import DataManagementPage from '../features/profile/pages/DataManagementPage';
-import CategoriesPage from '../features/inventory/pages/CategoriesPage';
-import TagsPage from '../features/tags/pages/TagsPage';
 import ScrollToTop from '../shared/ui/ScrollToTop';
-import ContainerDetailPage from '../features/inventory/pages/ContainerDetailPage';
-import LocationTreePage from '../features/inventory/pages/LocationTreePage';
-import ActivityPage from '../features/activity/pages/ActivityPage';
+
+const LoginPage = lazy(() => import('../features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('../features/auth/pages/RegisterPage'));
+const HomePage = lazy(() => import('../features/inventory/pages/HomePage'));
+const ItemDetailPage = lazy(() => import('../features/inventory/pages/ItemDetailPage'));
+const SearchPage = lazy(() => import('../features/inventory/pages/SearchPage'));
+const ScanPage = lazy(() => import('../features/inventory/pages/ScanPage'));
+const ProfilePage = lazy(() => import('../features/profile/pages/ProfilePage'));
+const AiSettingsPage = lazy(() => import('../features/profile/pages/AiSettingsPage'));
+const SecurityPage = lazy(() => import('../features/profile/pages/SecurityPage'));
+const DataManagementPage = lazy(() => import('../features/profile/pages/DataManagementPage'));
+const CategoriesPage = lazy(() => import('../features/inventory/pages/CategoriesPage'));
+const TagsPage = lazy(() => import('../features/tags/pages/TagsPage'));
+const ContainerDetailPage = lazy(() => import('../features/inventory/pages/ContainerDetailPage'));
+const LocationTreePage = lazy(() => import('../features/inventory/pages/LocationTreePage'));
+const ActivityPage = lazy(() => import('../features/activity/pages/ActivityPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
       staleTime: 1000 * 60 * 5,
     },
   },
 });
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-sm font-medium text-slate-500">
+      正在加载页面…
+    </div>
+  );
+}
+
+function ProtectedPage({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <AppLayout>{children}</AppLayout>
+    </ProtectedRoute>
+  );
+}
 
 export default function App() {
   return (
@@ -35,143 +54,28 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <HomePage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/item/:id"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ItemDetailPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/container/:id"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ContainerDetailPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/overview"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SearchPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/locations"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <LocationTreePage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/activity"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ActivityPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/search" element={<Navigate to="/overview" replace />} />
-            <Route
-              path="/scan"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ScanPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ProfilePage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/ai"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AiSettingsPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/security"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SecurityPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/data"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <DataManagementPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/categories"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <CategoriesPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/tags"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TagsPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/notes" element={<Navigate to="/tags" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/" element={<ProtectedPage><HomePage /></ProtectedPage>} />
+              <Route path="/item/:id" element={<ProtectedPage><ItemDetailPage /></ProtectedPage>} />
+              <Route path="/container/:id" element={<ProtectedPage><ContainerDetailPage /></ProtectedPage>} />
+              <Route path="/overview" element={<ProtectedPage><SearchPage /></ProtectedPage>} />
+              <Route path="/locations" element={<ProtectedPage><LocationTreePage /></ProtectedPage>} />
+              <Route path="/activity" element={<ProtectedPage><ActivityPage /></ProtectedPage>} />
+              <Route path="/search" element={<Navigate to="/overview" replace />} />
+              <Route path="/scan" element={<ProtectedPage><ScanPage /></ProtectedPage>} />
+              <Route path="/profile" element={<ProtectedPage><ProfilePage /></ProtectedPage>} />
+              <Route path="/profile/ai" element={<ProtectedPage><AiSettingsPage /></ProtectedPage>} />
+              <Route path="/profile/security" element={<ProtectedPage><SecurityPage /></ProtectedPage>} />
+              <Route path="/profile/data" element={<ProtectedPage><DataManagementPage /></ProtectedPage>} />
+              <Route path="/categories" element={<ProtectedPage><CategoriesPage /></ProtectedPage>} />
+              <Route path="/tags" element={<ProtectedPage><TagsPage /></ProtectedPage>} />
+              <Route path="/notes" element={<Navigate to="/tags" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
