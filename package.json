@@ -36,8 +36,5 @@
     "build:mobile:android": "npm run build:android --workspace @inplace/mobile",
     "build:mobile:ios": "npm run build:ios --workspace @inplace/mobile",
     "build:mobile": "npm run build:mobile:android && npm run build:mobile:ios"
-  },
-  "devDependencies": {
-    "eas-cli": "^18.8.1"
   }
 }

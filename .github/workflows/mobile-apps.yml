@@ -100,5 +100,5 @@ jobs:
 
       - name: Build with EAS
         if: ${{ env.EXPO_TOKEN != '' }}
-        run: npx eas-cli build --platform ${{ matrix.platform }} --profile "$EAS_PROFILE" --non-interactive
+        run: npx --yes eas-cli@18.8.1 build --platform ${{ matrix.platform }} --profile "$EAS_PROFILE" --non-interactive
         working-directory: apps/mobile

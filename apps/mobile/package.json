@@ -8,9 +8,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "build:android": "eas build --platform android --profile production --non-interactive",
-    "build:ios": "eas build --platform ios --profile production --non-interactive",
-    "build:all": "eas build --platform all --profile production --non-interactive"
+    "build:android": "npx --yes eas-cli@18.8.1 build --platform android --profile production --non-interactive",
+    "build:ios": "npx --yes eas-cli@18.8.1 build --platform ios --profile production --non-interactive",
+    "build:all": "npx --yes eas-cli@18.8.1 build --platform all --profile production --non-interactive"
   },
   "dependencies": {
     "@inplace/api-client": "*",
