@@ -219,13 +219,13 @@ export default function ScanTab() {
   return (
     <Screen scroll>
       <Entrance>
-        <BrandHeader title="扫描" subtitle="拍照或选图后快速识别，把结果直接归位到库存里。" />
+        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" />
       </Entrance>
 
-      <SectionCard title="选择图片" subtitle="延续 Web 端扫描流，先取图，再做识别。" delay={70}>
+      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable onPress={() => void takePhoto()} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>拍照</Text>
+            <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
           </Pressable>
           <Pressable onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
@@ -254,7 +254,7 @@ export default function ScanTab() {
             (saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)) ? disabledButtonStyle : null,
           ]}
         >
-          {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存选中结果</Text>}
+          {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存选中</Text>}
         </Pressable>
 
         {drafts.length === 0 ? (
@@ -272,7 +272,7 @@ export default function ScanTab() {
               <View style={{ flex: 1, gap: 6 }}>
                 <Text style={draftTitleStyle}>{draft.result.name}</Text>
                 <Text style={hintStyle}>
-                  {(draft.result.type ?? 'item') === 'container' ? '容器' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
+                  {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
                 </Text>
                 <Text style={bodyStyle}>{draft.result.description || '暂无描述'}</Text>
                 <Text style={hintStyle}>

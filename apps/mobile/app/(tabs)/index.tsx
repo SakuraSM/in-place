@@ -8,6 +8,7 @@ import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useAuth } from '@/providers/AuthProvider';
+import { getContainerTypeLabel } from '@/shared/lib/location';
 import { palette } from '@/shared/ui/theme';
 
 const PAGE_SIZE = 20;
@@ -56,7 +57,7 @@ export default function HomeTab() {
     >
       <BrandHeader title="归位" subtitle="让每件物品都有清晰归属，首页结构和 Web 保持同一套信息层次。" />
 
-      <SectionCard title="根目录" subtitle="容器与物品列表已经接入真实 API。" delay={80}>
+      <SectionCard title="根目录" subtitle="收纳、位置与物品列表已经接入真实 API。" delay={80}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable onPress={() => router.push('/item/form?type=container')} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>新建容器</Text>
@@ -75,7 +76,7 @@ export default function HomeTab() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{item.name}</Text>
                     <Text style={bodyStyle}>
-                      {item.type === 'container' ? '容器' : '物品'}{item.category ? ` · ${item.category}` : ''}
+                      {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}{item.category ? ` · ${item.category}` : ''}
                     </Text>
                   </View>
                   <Text style={metaStyle}>{item.status}</Text>

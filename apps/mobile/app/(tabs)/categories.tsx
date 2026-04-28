@@ -185,10 +185,10 @@ export default function CategoriesTab() {
   return (
     <Screen scroll>
       <Entrance>
-        <BrandHeader title="分类与标签" subtitle="把目录结构和标签体系放在同一套品牌化卡片里维护。" />
+        <BrandHeader title="分类管理 / 标签管理" subtitle="与 Web 端分类管理、标签管理保持一致，维护统一分类和标签库。" />
       </Entrance>
 
-      <SectionCard title="分类" subtitle="这里已经支持新建、编辑和删除。" delay={70}>
+      <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70}>
         <Text style={captionStyle}>分类数：{categories.length}</Text>
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {categoryMutation.isError ? <Text style={errorTextStyle}>{categoryMutation.error instanceof Error ? categoryMutation.error.message : '分类保存失败'}</Text> : null}
@@ -203,7 +203,7 @@ export default function CategoriesTab() {
                 style={[chipStyle, categoryDraft.item_type === value ? activeChipStyle : null]}
               >
                 <Text style={categoryDraft.item_type === value ? activeChipTextStyle : chipTextStyle}>
-                  {value === 'item' ? '物品分类' : '容器分类'}
+                  {value === 'item' ? '物品分类' : '收纳分类'}
                 </Text>
               </Pressable>
             ))}
@@ -262,7 +262,7 @@ export default function CategoriesTab() {
         ))}
       </SectionCard>
 
-      <SectionCard title="标签" subtitle="标签也已经支持增删改。" delay={150}>
+      <SectionCard title="标签管理" subtitle="维护统一标签库，减少重复命名，方便搜索和批量整理。" delay={150}>
         <Text style={captionStyle}>标签数：{tags.length}</Text>
         {tagMutation.isError ? <Text style={errorTextStyle}>{tagMutation.error instanceof Error ? tagMutation.error.message : '标签保存失败'}</Text> : null}
         {deleteTagMutation.isError ? <Text style={errorTextStyle}>{deleteTagMutation.error instanceof Error ? deleteTagMutation.error.message : '标签删除失败'}</Text> : null}

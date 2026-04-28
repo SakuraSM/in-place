@@ -1,5 +1,5 @@
 import { createApiClient } from '@inplace/api-client';
-import { createAiApi, createCategoriesApi, createItemsApi, createTagsApi } from '@inplace/app-core';
+import { createActivityApi, createAiApi, createCategoriesApi, createItemsApi, createTagsApi } from '@inplace/app-core';
 import { Platform } from 'react-native';
 import { secureServerConfigStorage } from '@/platform/config/secureServerConfigStorage';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
@@ -75,6 +75,7 @@ export const itemsApi = createItemsApi(mobileApiClient.request);
 export const categoriesApi = createCategoriesApi(mobileApiClient.request);
 export const tagsApi = createTagsApi(mobileApiClient.request);
 export const aiApi = createAiApi(mobileApiClient.request);
+export const activityApi = createActivityApi(mobileApiClient.request);
 
 export async function uploadImageFromUri(params: {
   uri: string;

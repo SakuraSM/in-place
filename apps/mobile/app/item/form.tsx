@@ -190,7 +190,7 @@ export default function ItemFormScreen() {
       <BrandHeader
         compact
         title={isEditing ? '编辑物品' : '新建物品'}
-        subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '容器' : '物品'}。`}
+        subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '收纳' : '物品'}。`}
       />
 
       <SectionCard
@@ -210,7 +210,7 @@ export default function ItemFormScreen() {
                 style={[segmentButtonStyle, draft.type === option ? activeSegmentStyle : null]}
               >
                 <Text style={draft.type === option ? activeSegmentTextStyle : segmentTextStyle}>
-                  {option === 'container' ? '容器' : '物品'}
+                  {option === 'container' ? '收纳' : '物品'}
                 </Text>
               </Pressable>
             ))}

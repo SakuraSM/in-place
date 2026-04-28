@@ -6,6 +6,7 @@ import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { getContainerTypeLabel } from '@/shared/lib/location';
 import { palette } from '@/shared/ui/theme';
 
 export default function ItemDetailScreen() {
@@ -47,7 +48,7 @@ export default function ItemDetailScreen() {
       <BrandHeader
         compact
         title={item.name}
-        subtitle={`${item.type === 'container' ? '容器' : '物品'} · ${item.status}`}
+        subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : '物品'} · ${item.status}`}
       />
 
       <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -74,9 +75,9 @@ export default function ItemDetailScreen() {
       </SectionCard>
 
       {item.type === 'container' ? (
-        <SectionCard title="容器内容" subtitle="继续下钻浏览这个容器里的物品和子容器。" delay={150}>
+        <SectionCard title="直接内容" subtitle={`继续下钻浏览这个${getContainerTypeLabel(item)}里的物品、收纳和位置。`} delay={150}>
           {children.length === 0 ? (
-            <Text style={bodyStyle}>这个容器里还没有内容。</Text>
+            <Text style={bodyStyle}>这个{getContainerTypeLabel(item)}里还没有直接内容。</Text>
           ) : (
             children.map((child) => (
               <Link key={child.id} href={`/item/${child.id}`} asChild>
@@ -84,7 +85,7 @@ export default function ItemDetailScreen() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{child.name}</Text>
                     <Text style={bodyStyle}>
-                      {child.type === 'container' ? '容器' : '物品'}{child.category ? ` · ${child.category}` : ''}
+                      {child.type === 'container' ? getContainerTypeLabel(child) : '物品'}{child.category ? ` · ${child.category}` : ''}
                     </Text>
                   </View>
                   <Text style={hintStyle}>{child.status}</Text>
