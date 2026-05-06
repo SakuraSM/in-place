@@ -1,173 +1,241 @@
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { InventoryStatsGrid } from '@/shared/ui/InventoryStatsGrid';
+import { Entrance } from '@/shared/ui/Entrance';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useAuth } from '@/providers/AuthProvider';
 import { getContainerTypeLabel } from '@/shared/lib/location';
-import { palette } from '@/shared/ui/theme';
+import { palette, shadows } from '@/shared/ui/theme';
 
-const PAGE_SIZE = 20;
+const RECENT_LIMIT = 3;
+
+function formatRecentTime(value: string) {
+  return new Date(value).toLocaleString('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 export default function HomeTab() {
   const { user } = useAuth();
-  const rootItemsQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'root-items', user?.id],
+
+  const statsQuery = useQuery({
+    queryKey: ['mobile', 'home-stats', user?.id],
     enabled: Boolean(user),
-    initialPageParam: 1,
-    queryFn: ({ pageParam }) => itemsApi.fetchChildrenPage(null, user!.id, { page: pageParam, pageSize: PAGE_SIZE }),
-    getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
+    queryFn: () => itemsApi.fetchItemStats(user!.id),
   });
 
-  if (rootItemsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载首页" loading body="正在读取根目录下的容器与物品。" /></Screen>;
+  const recentItemsQuery = useQuery({
+    queryKey: ['mobile', 'recent-items', user?.id],
+    enabled: Boolean(user),
+    staleTime: 1000 * 60,
+    queryFn: () => itemsApi.searchItems('', user!.id),
+  });
+
+  const stats = statsQuery.data ?? null;
+  const recentItems = (recentItemsQuery.data ?? [])
+    .slice()
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .slice(0, RECENT_LIMIT);
+
+  if (statsQuery.isError) {
+    return (
+      <Screen>
+        <StateBlock
+          title="首页加载失败"
+          body={statsQuery.error instanceof Error ? statsQuery.error.message : '请稍后重试。'}
+        />
+      </Screen>
+    );
   }
-
-  if (rootItemsQuery.isError) {
-    return <Screen><StateBlock title="首页加载失败" body={rootItemsQuery.error instanceof Error ? rootItemsQuery.error.message : '请稍后重试。'} /></Screen>;
-  }
-
-  const pages = rootItemsQuery.data?.pages ?? [];
-  const rootItems = pages.flatMap((page) => page.data);
-  const meta = pages[pages.length - 1]?.meta;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!rootItemsQuery.hasNextPage || rootItemsQuery.isFetchingNextPage) {
-      return;
-    }
-
-    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
-    if (distanceFromBottom < 160) {
-      void rootItemsQuery.fetchNextPage();
-    }
-  };
 
   return (
-    <Screen
-      scroll
-      scrollProps={{
-        onScroll: handleScroll,
-        scrollEventThrottle: 16,
-      }}
-    >
-      <BrandHeader title="归位" subtitle="让每件物品都有清晰归属，首页结构和 Web 保持同一套信息层次。" />
+    <View style={styles.root}>
+      <Screen scroll contentStyle={styles.screenContent}>
+        <BrandHeader title="归位" compact />
 
-      <SectionCard title="根目录" subtitle="收纳、位置与物品列表已经接入真实 API。" delay={80}>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable onPress={() => router.push('/item/form?type=container')} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>新建容器</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/item/form?type=item')} style={primaryButtonStyle}>
-            <Text style={primaryButtonTextStyle}>新建物品</Text>
-          </Pressable>
-        </View>
-        {rootItems.length === 0 ? (
-          <Text style={bodyStyle}>根目录还没有内容，后续第二阶段可以补创建入口。</Text>
-        ) : (
-          <>
-            {rootItems.map((item) => (
-              <Link key={item.id} href={`/item/${item.id}`} asChild>
-                <Pressable style={listRowStyle}>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={listTitleStyle}>{item.name}</Text>
-                    <Text style={bodyStyle}>
-                      {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}{item.category ? ` · ${item.category}` : ''}
-                    </Text>
-                  </View>
-                  <Text style={metaStyle}>{item.status}</Text>
-                </Pressable>
-              </Link>
-            ))}
-          </>
-        )}
-        {meta ? (
-          <Text style={metaCaptionStyle}>
-            已加载 {rootItems.length} / {meta.total} 项
-            {rootItemsQuery.hasNextPage ? '，继续上滑加载更多' : '，已全部加载完成'}
-          </Text>
-        ) : null}
-        {rootItemsQuery.isFetchingNextPage ? (
-          <View style={loadingMoreStyle}>
-            <ActivityIndicator color="#0ea5e9" />
-            <Text style={metaCaptionStyle}>正在加载更多...</Text>
+        <Entrance offset={12}>
+          <View style={[styles.statsCard, shadows.card]}>
+            <InventoryStatsGrid
+              stats={stats}
+              loading={statsQuery.isLoading}
+              onNavigate={() => router.push('/(tabs)/overview')}
+            />
           </View>
-        ) : null}
-      </SectionCard>
-    </Screen>
+        </Entrance>
+
+        <SectionCard
+          title="最近添加"
+          subtitle={`仅保留最近 ${RECENT_LIMIT} 条，快速回到刚录入的内容。`}
+          delay={120}
+        >
+          {recentItemsQuery.isLoading ? (
+            <Text style={styles.body}>正在加载...</Text>
+          ) : recentItems.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>还没有新增内容，点右下角按钮开始整理吧。</Text>
+            </View>
+          ) : (
+            <View style={styles.recentList}>
+              {recentItems.map((item) => (
+                <Link key={item.id} href={`/item/${item.id}`} asChild>
+                  <Pressable
+                    style={({ pressed }) => [styles.recentRow, pressed && styles.recentRowPressed]}
+                  >
+                    <View
+                      style={[
+                        styles.thumb,
+                        item.images[0]
+                          ? styles.thumbWithImage
+                          : item.type === 'item'
+                          ? styles.thumbItem
+                          : styles.thumbContainer,
+                      ]}
+                    >
+                      {item.images[0] ? (
+                        <Image source={{ uri: item.images[0] }} style={styles.thumbImage} />
+                      ) : (
+                        <Ionicons
+                          name={item.type === 'item' ? 'cube-outline' : 'cube'}
+                          size={18}
+                          color={item.type === 'item' ? '#f59e0b' : '#0ea5e9'}
+                        />
+                      )}
+                    </View>
+                    <View style={styles.recentMain}>
+                      <Text style={styles.recentTitle} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.recentMeta} numberOfLines={1}>
+                        {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatRecentTime(item.created_at)}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
+                  </Pressable>
+                </Link>
+              ))}
+            </View>
+          )}
+        </SectionCard>
+      </Screen>
+
+      <Pressable
+        accessibilityLabel="新建物品"
+        onPress={() => router.push('/item/form?type=item')}
+        style={({ pressed }) => [styles.fab, shadows.card, pressed && styles.fabPressed]}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </Pressable>
+    </View>
   );
 }
 
-const bodyStyle = {
-  fontSize: 15,
-  lineHeight: 22,
-  color: palette.textMuted,
-};
-
-const listRowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 14,
-};
-
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const metaStyle = {
-  fontSize: 12,
-  color: palette.textSoft,
-};
-
-const metaCaptionStyle = {
-  fontSize: 13,
-  color: palette.textSoft,
-  paddingTop: 8,
-};
-
-const loadingMoreStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 10,
-  justifyContent: 'center' as const,
-  paddingTop: 12,
-};
-
-const secondaryButtonStyle = {
-  flex: 1,
-  borderRadius: 16,
-  backgroundColor: palette.surface,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingVertical: 14,
-  alignItems: 'center' as const,
-};
-
-const secondaryButtonTextStyle = {
-  color: palette.text,
-  fontSize: 15,
-  fontWeight: '600' as const,
-};
-
-const primaryButtonStyle = {
-  flex: 1,
-  borderRadius: 16,
-  backgroundColor: palette.brand,
-  paddingVertical: 14,
-  alignItems: 'center' as const,
-};
-
-const primaryButtonTextStyle = {
-  color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '600' as const,
-};
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: palette.canvas,
+  },
+  screenContent: {
+    paddingBottom: 96,
+  },
+  statsCard: {
+    borderRadius: 24,
+    backgroundColor: palette.surface,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#eef2f7',
+  },
+  body: {
+    fontSize: 14,
+    color: palette.textSoft,
+  },
+  empty: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+  },
+  recentList: {
+    gap: 8,
+  },
+  recentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#eef2f7',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+  },
+  recentRowPressed: {
+    backgroundColor: '#f8fafc',
+  },
+  thumb: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbWithImage: {
+    backgroundColor: '#f1f5f9',
+  },
+  thumbItem: {
+    backgroundColor: '#fef3c7',
+  },
+  thumbContainer: {
+    backgroundColor: '#e0f2fe',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  recentMain: {
+    flex: 1,
+    gap: 2,
+  },
+  recentTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  recentMeta: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: palette.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.96 }],
+  },
+});

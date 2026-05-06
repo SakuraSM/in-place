@@ -97,7 +97,7 @@ export default function OverviewTab() {
         scrollEventThrottle: 16,
       }}
     >
-      <BrandHeader compact title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签，筛选项与 Web 端保持一致。" />
+      <BrandHeader compact title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签。" />
 
       <SectionCard title="检索空间" subtitle="支持类型、状态筛选，并向下滚动继续加载。" delay={70}>
         <TextInput
@@ -224,8 +224,8 @@ const chipStyle = {
 };
 
 const activeChipStyle = {
-  backgroundColor: palette.brand,
-  borderColor: palette.brand,
+  backgroundColor: '#e0f2fe',
+  borderColor: '#7dd3fc',
 };
 
 const disabledChipStyle = {
@@ -239,7 +239,7 @@ const chipTextStyle = {
 };
 
 const activeChipTextStyle = {
-  color: '#ffffff',
+  color: '#0369a1',
   fontSize: 13,
   fontWeight: '600' as const,
 };

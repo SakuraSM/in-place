@@ -15,17 +15,21 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: palette.brandStrong,
-        tabBarInactiveTintColor: palette.textSoft,
+        tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
-          height: 74,
-          paddingTop: 10,
-          paddingBottom: 12,
+          height: 64,
+          paddingTop: 6,
+          paddingBottom: 8,
           borderTopColor: palette.borderSoft,
           backgroundColor: 'rgba(255,255,255,0.96)',
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
       }}
     >
@@ -33,49 +37,62 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: '首页',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="overview"
         options={{
           title: '总览',
-          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="locations"
         options={{
           title: '位置树',
-          tabBarIcon: ({ color, size }) => <Ionicons name="location-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="activity"
-        options={{
-          title: '操作记录',
-          tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scan"
-        options={{
-          title: 'AI 扫描',
-          tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'location' : 'location-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="categories"
         options={{
-          title: '分类管理',
-          tabBarIcon: ({ color, size }) => <Ionicons name="pricetags-outline" size={size} color={color} />,
+          title: '分类',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'pricetags' : 'pricetags-outline'} size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: '扫描',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'camera' : 'camera-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: '我的',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={20} color={color} />
+          ),
+        }}
+      />
+      {/* 操作记录隐藏在底部导航中（与 web 端 BottomNav 保持一致），仍可通过页面跳转访问 */}
+      <Tabs.Screen
+        name="activity"
+        options={{
+          href: null,
+          title: '操作记录',
         }}
       />
     </Tabs>

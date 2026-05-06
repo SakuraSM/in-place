@@ -5,6 +5,7 @@ import type { Category, Database, ItemType, TagEntity } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, tagsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Dialog } from '@/shared/ui/Dialog';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -45,6 +46,8 @@ export default function CategoriesTab() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<Category | null>(null);
+  const [pendingDeleteTag, setPendingDeleteTag] = useState<TagEntity | null>(null);
 
   const categoriesQuery = useQuery({
     queryKey: ['mobile', 'categories', user?.id],
@@ -185,7 +188,7 @@ export default function CategoriesTab() {
   return (
     <Screen scroll>
       <Entrance>
-        <BrandHeader title="分类管理 / 标签管理" subtitle="与 Web 端分类管理、标签管理保持一致，维护统一分类和标签库。" />
+        <BrandHeader compact title="分类 / 标签" subtitle="维护统一分类与标签库，让首页与总览一致更清晰。" />
       </Entrance>
 
       <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70}>
@@ -254,7 +257,7 @@ export default function CategoriesTab() {
               <Pressable onPress={() => startEditCategory(category)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
-              <Pressable onPress={() => void deleteCategoryMutation.mutateAsync(category.id)} style={dangerMiniButtonStyle}>
+              <Pressable onPress={() => setPendingDeleteCategory(category)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
             </View>
@@ -314,13 +317,41 @@ export default function CategoriesTab() {
               <Pressable onPress={() => startEditTag(tag)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
-              <Pressable onPress={() => void deleteTagMutation.mutateAsync(tag.id)} style={dangerMiniButtonStyle}>
+              <Pressable onPress={() => setPendingDeleteTag(tag)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
             </View>
           </View>
         ))}
       </SectionCard>
+
+      <Dialog
+        visible={pendingDeleteCategory !== null}
+        onClose={() => setPendingDeleteCategory(null)}
+        title="删除分类"
+        message={pendingDeleteCategory ? `确定要删除分类「${pendingDeleteCategory.name}」吗？该操作无法撤销。` : ''}
+        confirmLabel={deleteCategoryMutation.isPending ? '删除中…' : '删除'}
+        danger
+        onConfirm={async () => {
+          if (!pendingDeleteCategory) return;
+          await deleteCategoryMutation.mutateAsync(pendingDeleteCategory.id);
+          setPendingDeleteCategory(null);
+        }}
+      />
+
+      <Dialog
+        visible={pendingDeleteTag !== null}
+        onClose={() => setPendingDeleteTag(null)}
+        title="删除标签"
+        message={pendingDeleteTag ? `确定要删除标签「${pendingDeleteTag.name}」吗？该操作无法撤销。` : ''}
+        confirmLabel={deleteTagMutation.isPending ? '删除中…' : '删除'}
+        danger
+        onConfirm={async () => {
+          if (!pendingDeleteTag) return;
+          await deleteTagMutation.mutateAsync(pendingDeleteTag.id);
+          setPendingDeleteTag(null);
+        }}
+      />
     </Screen>
   );
 }
