@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { ItemStatus, ItemType } from '@inplace/domain';
+import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
@@ -20,15 +21,15 @@ type TypeFilterValue = ItemType | 'all' | 'location';
 const TYPE_FILTERS: { value: TypeFilterValue; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'location', label: '位置' },
-  { value: 'container', label: '收纳' },
-  { value: 'item', label: '物品' },
+  { value: 'container', label: ITEM_TYPE_PRESENTATION.container.label },
+  { value: 'item', label: ITEM_TYPE_PRESENTATION.item.label },
 ];
 
 const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
   { value: 'all', label: '全部' },
-  { value: 'in_stock', label: '在库' },
-  { value: 'borrowed', label: '借出' },
-  { value: 'worn_out', label: '损耗' },
+  { value: 'in_stock', label: ITEM_STATUS_PRESENTATION.in_stock.label },
+  { value: 'borrowed', label: ITEM_STATUS_PRESENTATION.borrowed.label },
+  { value: 'worn_out', label: ITEM_STATUS_PRESENTATION.worn_out.label },
 ];
 
 function resolveEffectiveTypeFilter(typeFilter: TypeFilterValue) {
@@ -160,10 +161,10 @@ export default function OverviewTab() {
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={listTitleStyle}>{item.name}</Text>
                       <Text style={bodyStyle}>
-                        {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}{item.category ? ` · ${item.category}` : ''}
+                        {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
                       </Text>
                     </View>
-                    <Text style={metaStyle}>{item.status}</Text>
+                    <Text style={metaStyle}>{ITEM_STATUS_PRESENTATION[item.status].label}</Text>
                   </Pressable>
                 </Link>
               ))}

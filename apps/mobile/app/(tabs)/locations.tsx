@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -121,7 +122,7 @@ function DirectChildRow({ item }: { item: Item }) {
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={listTitleStyle}>{item.name}</Text>
           <Text style={bodyStyle}>
-            {item.type === 'item' ? '物品' : getContainerTypeLabel(item)}
+            {item.type === 'item' ? ITEM_TYPE_PRESENTATION.item.label : getContainerTypeLabel(item)}
             {item.category ? ` · ${item.category}` : ''}
           </Text>
         </View>

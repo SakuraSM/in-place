@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { AIRecognitionResult, Item } from '@inplace/domain';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -314,7 +315,7 @@ export default function ScanTab() {
               <View style={{ flex: 1, gap: 6 }}>
                 <Text style={draftTitleStyle}>{draft.result.name}</Text>
                 <Text style={hintStyle}>
-                  {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
+                  {ITEM_TYPE_PRESENTATION[draft.result.type ?? 'item'].label}{draft.result.category ? ` · ${draft.result.category}` : ''}
                 </Text>
                 <Text style={bodyStyle}>{draft.result.description || '暂无描述'}</Text>
                 <Text style={hintStyle}>

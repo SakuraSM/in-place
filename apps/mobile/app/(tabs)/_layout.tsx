@@ -1,7 +1,28 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
+import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { palette } from '@/shared/ui/theme';
+
+const MOBILE_TAB_ADAPTER: Record<AppNavigationItemId, {
+  name: string;
+  iconName: ComponentProps<typeof Ionicons>['name'];
+}> = {
+  home: { name: 'index', iconName: 'home-outline' },
+  overview: { name: 'overview', iconName: 'grid-outline' },
+  locations: { name: 'locations', iconName: 'location-outline' },
+  activity: { name: 'activity', iconName: 'time-outline' },
+  categories: { name: 'categories', iconName: 'pricetags-outline' },
+  tags: { name: 'categories', iconName: 'pricetags-outline' },
+  scan: { name: 'scan', iconName: 'scan-outline' },
+  profile: { name: 'profile', iconName: 'person-circle-outline' },
+};
+
+const mobileTabItems = getMobilePrimaryNavigationItems().map((item) => ({
+  ...item,
+  ...MOBILE_TAB_ADAPTER[item.id],
+}));
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
@@ -28,56 +49,17 @@ export default function TabsLayout() {
           fontWeight: '600',
         },
       }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '首页',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="overview"
-        options={{
-          title: '总览',
-          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="locations"
-        options={{
-          title: '位置树',
-          tabBarIcon: ({ color, size }) => <Ionicons name="location-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="activity"
-        options={{
-          title: '操作记录',
-          tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scan"
-        options={{
-          title: 'AI 扫描',
-          tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          title: '分类管理',
-          tabBarIcon: ({ color, size }) => <Ionicons name="pricetags-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: '我的',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" size={size} color={color} />,
-        }}
-      />
+      >
+      {mobileTabItems.map((item) => (
+        <Tabs.Screen
+          key={item.id}
+          name={item.name}
+          options={{
+            title: item.shortLabel,
+            tabBarIcon: ({ color, size }) => <Ionicons name={item.iconName} size={size} color={color} />,
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

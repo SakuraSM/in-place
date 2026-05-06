@@ -1,6 +1,7 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Pressable, Text, View } from 'react-native';
+import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
@@ -48,7 +49,7 @@ export default function ItemDetailScreen() {
       <BrandHeader
         compact
         title={item.name}
-        subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : '物品'} · ${item.status}`}
+        subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label} · ${ITEM_STATUS_PRESENTATION[item.status].label}`}
       />
 
       <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -85,10 +86,10 @@ export default function ItemDetailScreen() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{child.name}</Text>
                     <Text style={bodyStyle}>
-                      {child.type === 'container' ? getContainerTypeLabel(child) : '物品'}{child.category ? ` · ${child.category}` : ''}
+                       {child.type === 'container' ? getContainerTypeLabel(child) : ITEM_TYPE_PRESENTATION.item.label}{child.category ? ` · ${child.category}` : ''}
                     </Text>
                   </View>
-                  <Text style={hintStyle}>{child.status}</Text>
+                  <Text style={hintStyle}>{ITEM_STATUS_PRESENTATION[child.status].label}</Text>
                 </Pressable>
               </Link>
             ))

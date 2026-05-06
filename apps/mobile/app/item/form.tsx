@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item, ItemStatus, ItemType } from '@inplace/domain';
+import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -234,7 +235,7 @@ export default function ItemFormScreen() {
                 style={[segmentButtonStyle, draft.type === option ? activeSegmentStyle : null]}
               >
                 <Text style={draft.type === option ? activeSegmentTextStyle : segmentTextStyle}>
-                  {option === 'container' ? '收纳' : '物品'}
+                  {ITEM_TYPE_PRESENTATION[option].label}
                 </Text>
               </Pressable>
             ))}
@@ -314,7 +315,9 @@ export default function ItemFormScreen() {
                     }}
                     style={[chipStyle, draft.status === status ? activeChipStyle : null]}
                   >
-                    <Text style={draft.status === status ? activeChipTextStyle : chipTextStyle}>{status}</Text>
+                    <Text style={draft.status === status ? activeChipTextStyle : chipTextStyle}>
+                      {ITEM_STATUS_PRESENTATION[status].label}
+                    </Text>
                   </Pressable>
                 ))}
               </View>

@@ -2,6 +2,7 @@ import { Link, router } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -76,10 +77,10 @@ export default function HomeTab() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{item.name}</Text>
                     <Text style={bodyStyle}>
-                      {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}{item.category ? ` · ${item.category}` : ''}
+                       {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
                     </Text>
                   </View>
-                  <Text style={metaStyle}>{item.status}</Text>
+                  <Text style={metaStyle}>{ITEM_STATUS_PRESENTATION[item.status].label}</Text>
                 </Pressable>
               </Link>
             ))}

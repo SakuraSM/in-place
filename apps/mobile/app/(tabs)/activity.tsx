@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ActivityAction, ActivityLog } from '@inplace/domain';
+import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { activityApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -13,16 +14,9 @@ import { palette } from '@/shared/ui/theme';
 
 const PAGE_SIZE = 20;
 
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  manual_create: '手动录入',
-  ai_scan_create: 'AI 录入',
-  update: '修改',
-  delete: '删除',
-};
-
 function createEmptyActionSummary() {
   return Object.fromEntries(
-    (Object.keys(ACTION_LABELS) as ActivityAction[]).map((action) => [action, 0]),
+    (Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => [action, 0]),
   ) as Record<ActivityAction, number>;
 }
 
@@ -76,10 +70,10 @@ export default function ActivityTab() {
 
       <SectionCard title="记录概览" subtitle="当前已加载记录的动作统计。" delay={70}>
         <View style={statsGridStyle}>
-          {(Object.keys(ACTION_LABELS) as ActivityAction[]).map((action) => (
+          {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
             <View key={action} style={statCardStyle}>
               <Text style={statValueStyle}>{summary[action]}</Text>
-              <Text style={bodyStyle}>{ACTION_LABELS[action]}</Text>
+              <Text style={bodyStyle}>{ACTIVITY_ACTION_PRESENTATION[action].label}</Text>
             </View>
           ))}
         </View>
@@ -112,7 +106,7 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
       <View style={{ flex: 1, gap: 4 }}>
         <Text style={listTitleStyle}>{entry.item_name || '未命名对象'}</Text>
         <Text style={bodyStyle}>
-          {ACTION_LABELS[entry.action]} · {entry.item_type === 'container' ? '收纳' : '物品'}
+          {ACTIVITY_ACTION_PRESENTATION[entry.action].label} · {ITEM_TYPE_PRESENTATION[entry.item_type].label}
         </Text>
         <Text style={captionStyle}>
           {new Date(entry.created_at).toLocaleString('zh-CN', {
