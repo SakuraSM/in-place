@@ -70,7 +70,7 @@ jobs:
     name: Build ${{ matrix.platform }} app
     needs: validate
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && vars.EXPO_PROJECT_ID != '' }}
+    if: ${{ github.event_name != 'pull_request' }}
     strategy:
       fail-fast: false
       matrix:
@@ -94,11 +94,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Skip build when EXPO_TOKEN is unavailable
-        if: ${{ env.EXPO_TOKEN == '' }}
-        run: echo "EXPO_TOKEN is not configured; skipping EAS build."
+      - name: Validate EAS build configuration
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN secret is required for EAS builds."
+            exit 1
+          fi
+
+          node <<'NODE'
+          const { expo } = require('./apps/mobile/app.json');
+          const configuredProjectId =
+            process.env.EXPO_PROJECT_ID || expo?.extra?.eas?.projectId;
+
+          if (!configuredProjectId) {
+            console.error('::error::Set the EXPO_PROJECT_ID repository variable or configure expo.extra.eas.projectId in apps/mobile/app.json.');
+            process.exit(1);
+          }
+          NODE
 
       - name: Build with EAS
-        if: ${{ env.EXPO_TOKEN != '' }}
         run: npx --yes eas-cli@18.8.1 build --platform ${{ matrix.platform }} --profile "$EAS_PROFILE" --non-interactive
         working-directory: apps/mobile
