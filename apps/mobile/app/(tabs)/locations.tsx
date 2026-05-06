@@ -11,6 +11,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
+import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { buildChildrenMap, countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 
 const PAGE_SIZE = 200;
@@ -117,7 +118,7 @@ export default function LocationsTab() {
 
 function DirectChildRow({ item }: { item: Item }) {
   return (
-    <Link href={`/item/${item.id}`} asChild>
+    <Link href={resolveMobileDetailHref(item)} asChild>
       <Pressable style={rowStyle}>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={listTitleStyle}>{item.name}</Text>

@@ -12,6 +12,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="item/form" />
         <Stack.Screen name="item/[id]" />
+        <Stack.Screen name="container/[id]" />
       </Stack>
       </AuthProvider>
     </QueryProvider>

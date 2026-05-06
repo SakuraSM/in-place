@@ -1,17 +1,19 @@
 import { Link } from 'expo-router';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
-import { itemsApi } from '@/shared/api/mobileClient';
+import { itemsApi, tagsApi } from '@/shared/api/mobileClient';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { StatusBadge } from '@/shared/ui/StatusBadge';
+import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel } from '@/shared/lib/location';
 import { palette } from '@/shared/ui/theme';
 
@@ -57,11 +59,18 @@ export default function OverviewTab() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilterValue>('all');
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const debouncedQuery = useDebouncedValue(query, 250);
   const effectiveTypeFilter = resolveEffectiveTypeFilter(typeFilter);
   const effectiveStatusFilter = resolveEffectiveStatusFilter(typeFilter, statusFilter);
+  const selectedTagsKey = selectedTags.join('\u0000');
+  const tagsQuery = useQuery({
+    queryKey: ['mobile', 'overview-tags', user?.id],
+    enabled: Boolean(user),
+    queryFn: () => tagsApi.fetchTags(user!.id),
+  });
   const searchQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'search-items', user?.id, debouncedQuery, typeFilter, effectiveStatusFilter],
+    queryKey: ['mobile', 'search-items', user?.id, debouncedQuery, typeFilter, effectiveStatusFilter, selectedTagsKey],
     enabled: Boolean(user),
     initialPageParam: 1,
     queryFn: ({ pageParam }) => itemsApi.searchItemsPage(debouncedQuery, user!.id, {
@@ -70,6 +79,7 @@ export default function OverviewTab() {
       type: effectiveTypeFilter,
       status: effectiveStatusFilter,
       locationOnly: typeFilter === 'location',
+      tags: selectedTags,
     }),
     getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
   });
@@ -77,6 +87,18 @@ export default function OverviewTab() {
   const pages = searchQuery.data?.pages ?? [];
   const items = pages.flatMap((page) => page.data);
   const meta = pages[pages.length - 1]?.meta;
+  const tags = useMemo(
+    () => [...(tagsQuery.data ?? [])].sort((left, right) => left.name.localeCompare(right.name, 'zh-CN')),
+    [tagsQuery.data],
+  );
+
+  const toggleTag = (tagName: string) => {
+    setSelectedTags((current) => (
+      current.includes(tagName)
+        ? current.filter((value) => value !== tagName)
+        : [...current, tagName]
+    ));
+  };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!searchQuery.hasNextPage || searchQuery.isFetchingNextPage) {
@@ -90,6 +112,11 @@ export default function OverviewTab() {
     }
   };
 
+  if (tagsQuery.isError || searchQuery.isError) {
+    const error = tagsQuery.error ?? searchQuery.error;
+    return <Screen><StateBlock title="总览加载失败" body={error instanceof Error ? error.message : '请稍后重试。'} /></Screen>;
+  }
+
   return (
     <Screen
       scroll
@@ -100,7 +127,7 @@ export default function OverviewTab() {
     >
       <BrandHeader compact title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签，筛选项与 Web 端保持一致。" />
 
-      <SectionCard title="检索空间" subtitle="支持类型、状态筛选，并向下滚动继续加载。" delay={70}>
+      <SectionCard title="检索空间" subtitle="支持类型、状态、标签筛选，并向下滚动继续加载。" delay={70}>
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -147,6 +174,34 @@ export default function OverviewTab() {
           </View>
         </View>
 
+        <View style={filterGroupStyle}>
+          <Text style={filterLabelStyle}>标签</Text>
+          {tagsQuery.isLoading ? (
+            <Text style={bodyStyle}>正在加载标签筛选...</Text>
+          ) : (
+            <View style={chipWrapStyle}>
+              <Pressable
+                onPress={() => setSelectedTags([])}
+                style={[chipStyle, selectedTags.length === 0 ? activeChipStyle : null]}
+              >
+                <Text style={selectedTags.length === 0 ? activeChipTextStyle : chipTextStyle}>全部</Text>
+              </Pressable>
+              {tags.map((tag) => {
+                const active = selectedTags.includes(tag.name);
+                return (
+                  <Pressable
+                    key={tag.id}
+                    onPress={() => toggleTag(tag.name)}
+                    style={[chipStyle, active ? activeChipStyle : null]}
+                  >
+                    <Text style={active ? activeChipTextStyle : chipTextStyle}>{tag.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
         {searchQuery.isLoading ? <StateBlock title="正在搜索" loading body="第一次进入会拉取默认总览结果。" /> : null}
 
         {!searchQuery.isLoading && items.length === 0 ? (
@@ -156,7 +211,7 @@ export default function OverviewTab() {
         {!searchQuery.isLoading && items.length > 0
           ? <>
               {items.map((item) => (
-                <Link key={item.id} href={`/item/${item.id}`} asChild>
+                <Link key={item.id} href={resolveMobileDetailHref(item)} asChild>
                   <Pressable style={rowStyle}>
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={listTitleStyle}>{item.name}</Text>
@@ -164,7 +219,7 @@ export default function OverviewTab() {
                         {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
                       </Text>
                     </View>
-                    <Text style={metaStyle}>{ITEM_STATUS_PRESENTATION[item.status].label}</Text>
+                    <StatusBadge status={item.status} />
                   </Pressable>
                 </Link>
               ))}
@@ -264,11 +319,6 @@ const listTitleStyle = {
   fontSize: 16,
   fontWeight: '700' as const,
   color: palette.text,
-};
-
-const metaStyle = {
-  fontSize: 12,
-  color: palette.textSoft,
 };
 
 const resultMetaStyle = {

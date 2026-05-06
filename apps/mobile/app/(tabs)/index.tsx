@@ -2,13 +2,15 @@ import { Link, router } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useAuth } from '@/providers/AuthProvider';
+import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel } from '@/shared/lib/location';
 import { palette } from '@/shared/ui/theme';
 
@@ -72,7 +74,7 @@ export default function HomeTab() {
         ) : (
           <>
             {rootItems.map((item) => (
-              <Link key={item.id} href={`/item/${item.id}`} asChild>
+              <Link key={item.id} href={resolveMobileDetailHref(item)} asChild>
                 <Pressable style={listRowStyle}>
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{item.name}</Text>
@@ -80,7 +82,7 @@ export default function HomeTab() {
                        {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
                     </Text>
                   </View>
-                  <Text style={metaStyle}>{ITEM_STATUS_PRESENTATION[item.status].label}</Text>
+                  <StatusBadge status={item.status} />
                 </Pressable>
               </Link>
             ))}
@@ -122,11 +124,6 @@ const listTitleStyle = {
   fontSize: 16,
   fontWeight: '700' as const,
   color: palette.text,
-};
-
-const metaStyle = {
-  fontSize: 12,
-  color: palette.textSoft,
 };
 
 const metaCaptionStyle = {

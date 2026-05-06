@@ -5,6 +5,7 @@ import type { AuthUser } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, mobileApiClient } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -21,6 +22,7 @@ export default function ProfileTab() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const itemsQuery = useQuery({
     queryKey: ['mobile', 'profile-stats', user?.id],
     enabled: Boolean(user),
@@ -191,7 +193,13 @@ export default function ProfileTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="账号安全" subtitle="密码修改和退出操作放在最底部，减少误触。" delay={210}>
+      <SectionCard title="数据管理" subtitle="备份、恢复和表格导出需要文件下载与导入能力。" delay={210}>
+        <Text style={bodyStyle}>
+          Web 端已提供 JSON 完整备份、CSV 表格导出和 JSON 备份导入。移动端暂不提供本地文件导入/导出入口，请在 Web 端进入“我的 / 数据管理”完成这些操作。
+        </Text>
+      </SectionCard>
+
+      <SectionCard title="账号安全" subtitle="密码修改和退出操作放在最底部，减少误触。" delay={280}>
         <TextInput
           value={currentPassword}
           onChangeText={(value) => {
@@ -217,11 +225,21 @@ export default function ProfileTab() {
           <Pressable onPress={() => void passwordMutation.mutateAsync()} style={primaryButtonStyle}>
             {passwordMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>修改密码</Text>}
           </Pressable>
-          <Pressable onPress={() => void signOut()} style={buttonStyle}>
+          <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
             <Text style={buttonTextStyle}>退出登录</Text>
           </Pressable>
         </View>
       </SectionCard>
+
+      <ConfirmDialog
+        visible={isSignOutDialogOpen}
+        title="退出登录"
+        message="确定要退出当前账号吗？退出后需要重新登录才能继续管理库存。"
+        confirmLabel="退出"
+        danger
+        onCancel={() => setIsSignOutDialogOpen(false)}
+        onConfirm={() => void signOut()}
+      />
     </Screen>
   );
 }

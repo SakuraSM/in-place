@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { Category, Database, ItemType, TagEntity } from '@inplace/domain';
+import { ITEM_TYPE_PRESENTATION, MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, tagsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -23,6 +25,8 @@ interface TagDraft {
   description: string;
   color: string;
 }
+
+type ManagementSection = 'categories' | 'tags';
 
 const EMPTY_CATEGORY: CategoryDraft = {
   item_type: 'item',
@@ -45,6 +49,9 @@ export default function CategoriesTab() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<ManagementSection>('categories');
+  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<Category | null>(null);
+  const [deleteTagTarget, setDeleteTagTarget] = useState<TagEntity | null>(null);
 
   const categoriesQuery = useQuery({
     queryKey: ['mobile', 'categories', user?.id],
@@ -102,6 +109,7 @@ export default function CategoriesTab() {
         setCategoryDraft(EMPTY_CATEGORY);
         setEditingCategoryId(null);
       }
+      setDeleteCategoryTarget(null);
       await refreshAll();
     },
   });
@@ -145,6 +153,7 @@ export default function CategoriesTab() {
         setTagDraft(EMPTY_TAG);
         setEditingTagId(null);
       }
+      setDeleteTagTarget(null);
       await refreshAll();
     },
   });
@@ -160,6 +169,7 @@ export default function CategoriesTab() {
 
   const categories = categoriesQuery.data ?? [];
   const tags = tagsQuery.data ?? [];
+  const activeSectionLabel = activeSection === 'categories' ? '分类管理' : '标签管理';
 
   const startEditCategory = (category: Category) => {
     setMessage(null);
@@ -182,12 +192,32 @@ export default function CategoriesTab() {
     });
   };
 
+  const getColorLabel = (color: string) => {
+    return MANAGEMENT_COLOR_OPTIONS.find((option) => option.value === color)?.label ?? color;
+  };
+
   return (
     <Screen scroll>
       <Entrance>
-        <BrandHeader title="分类管理 / 标签管理" subtitle="与 Web 端分类管理、标签管理保持一致，维护统一分类和标签库。" />
+        <BrandHeader title="管理" subtitle={`${activeSectionLabel}与 Web 端保持一致，维护统一分类和标签库。`} />
       </Entrance>
 
+      <View style={segmentedStyle}>
+        {([
+          { value: 'categories' as const, label: `分类 ${categories.length}` },
+          { value: 'tags' as const, label: `标签 ${tags.length}` },
+        ]).map((option) => (
+          <Pressable
+            key={option.value}
+            onPress={() => setActiveSection(option.value)}
+            style={[segmentButtonStyle, activeSection === option.value ? activeSegmentStyle : null]}
+          >
+            <Text style={activeSection === option.value ? activeSegmentTextStyle : segmentTextStyle}>{option.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {activeSection === 'categories' ? (
       <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70}>
         <Text style={captionStyle}>分类数：{categories.length}</Text>
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
@@ -203,7 +233,7 @@ export default function CategoriesTab() {
                 style={[chipStyle, categoryDraft.item_type === value ? activeChipStyle : null]}
               >
                 <Text style={categoryDraft.item_type === value ? activeChipTextStyle : chipTextStyle}>
-                  {value === 'item' ? '物品分类' : '收纳分类'}
+                  {ITEM_TYPE_PRESENTATION[value].label}分类
                 </Text>
               </Pressable>
             ))}
@@ -227,6 +257,17 @@ export default function CategoriesTab() {
             placeholder="颜色，例如 sky"
             style={inputStyle}
           />
+          <View style={pillRowStyle}>
+            {MANAGEMENT_COLOR_OPTIONS.map((option) => (
+              <Pressable
+                key={option.value}
+                onPress={() => setCategoryDraft((current) => ({ ...current, color: option.value }))}
+                style={[chipStyle, categoryDraft.color === option.value ? activeChipStyle : null]}
+              >
+                <Text style={categoryDraft.color === option.value ? activeChipTextStyle : chipTextStyle}>{option.label}</Text>
+              </Pressable>
+            ))}
+          </View>
 
           <View style={actionRowStyle}>
             <Pressable
@@ -248,20 +289,24 @@ export default function CategoriesTab() {
           <View key={category.id} style={rowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>{category.name}</Text>
-              <Text style={bodyStyle}>{category.item_type} · {category.color} · {category.icon}</Text>
+              <Text style={bodyStyle}>
+                {ITEM_TYPE_PRESENTATION[category.item_type].label}分类 · {getColorLabel(category.color)} · {category.icon}
+              </Text>
             </View>
             <View style={miniRowStyle}>
               <Pressable onPress={() => startEditCategory(category)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
-              <Pressable onPress={() => void deleteCategoryMutation.mutateAsync(category.id)} style={dangerMiniButtonStyle}>
+              <Pressable onPress={() => setDeleteCategoryTarget(category)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
             </View>
           </View>
         ))}
       </SectionCard>
+      ) : null}
 
+      {activeSection === 'tags' ? (
       <SectionCard title="标签管理" subtitle="维护统一标签库，减少重复命名，方便搜索和批量整理。" delay={150}>
         <Text style={captionStyle}>标签数：{tags.length}</Text>
         {tagMutation.isError ? <Text style={errorTextStyle}>{tagMutation.error instanceof Error ? tagMutation.error.message : '标签保存失败'}</Text> : null}
@@ -287,6 +332,17 @@ export default function CategoriesTab() {
             placeholder="颜色，例如 sky"
             style={inputStyle}
           />
+          <View style={pillRowStyle}>
+            {MANAGEMENT_COLOR_OPTIONS.map((option) => (
+              <Pressable
+                key={option.value}
+                onPress={() => setTagDraft((current) => ({ ...current, color: option.value }))}
+                style={[chipStyle, tagDraft.color === option.value ? activeChipStyle : null]}
+              >
+                <Text style={tagDraft.color === option.value ? activeChipTextStyle : chipTextStyle}>{option.label}</Text>
+              </Pressable>
+            ))}
+          </View>
 
           <View style={actionRowStyle}>
             <Pressable
@@ -308,19 +364,50 @@ export default function CategoriesTab() {
           <View key={tag.id} style={rowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>{tag.name}</Text>
-              <Text style={bodyStyle}>{tag.description || '暂无说明'} · {tag.color}</Text>
+              <Text style={bodyStyle}>{tag.description || '暂无说明'} · {getColorLabel(tag.color)}</Text>
             </View>
             <View style={miniRowStyle}>
               <Pressable onPress={() => startEditTag(tag)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
-              <Pressable onPress={() => void deleteTagMutation.mutateAsync(tag.id)} style={dangerMiniButtonStyle}>
+              <Pressable onPress={() => setDeleteTagTarget(tag)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
             </View>
           </View>
         ))}
       </SectionCard>
+      ) : null}
+
+      <ConfirmDialog
+        visible={Boolean(deleteCategoryTarget)}
+        title="删除分类"
+        message={`确定要删除「${deleteCategoryTarget?.name ?? ''}」分类吗？已使用该分类的物品不会被删除，但会失去这个分类标记。`}
+        confirmLabel={deleteCategoryMutation.isPending ? '删除中...' : '删除'}
+        danger
+        loading={deleteCategoryMutation.isPending}
+        onCancel={() => setDeleteCategoryTarget(null)}
+        onConfirm={() => {
+          if (deleteCategoryTarget) {
+            void deleteCategoryMutation.mutateAsync(deleteCategoryTarget.id);
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        visible={Boolean(deleteTagTarget)}
+        title="删除标签"
+        message={`确定要删除「${deleteTagTarget?.name ?? ''}」标签吗？所有物品上的这个标签都会被同步移除。`}
+        confirmLabel={deleteTagMutation.isPending ? '删除中...' : '删除'}
+        danger
+        loading={deleteTagMutation.isPending}
+        onCancel={() => setDeleteTagTarget(null)}
+        onConfirm={() => {
+          if (deleteTagTarget) {
+            void deleteTagMutation.mutateAsync(deleteTagTarget.id);
+          }
+        }}
+      />
     </Screen>
   );
 }
@@ -353,6 +440,38 @@ const listTitleStyle = {
 const formStyle = {
   gap: 12,
   paddingTop: 8,
+};
+
+const segmentedStyle = {
+  flexDirection: 'row' as const,
+  gap: 10,
+};
+
+const segmentButtonStyle = {
+  flex: 1,
+  alignItems: 'center' as const,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: palette.border,
+  backgroundColor: palette.surface,
+  paddingVertical: 13,
+};
+
+const activeSegmentStyle = {
+  borderColor: palette.brand,
+  backgroundColor: palette.brand,
+};
+
+const segmentTextStyle = {
+  color: palette.textMuted,
+  fontSize: 15,
+  fontWeight: '700' as const,
+};
+
+const activeSegmentTextStyle = {
+  color: '#ffffff',
+  fontSize: 15,
+  fontWeight: '800' as const,
 };
 
 const inputStyle = {

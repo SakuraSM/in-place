@@ -10,6 +10,7 @@ import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { palette } from '@/shared/ui/theme';
 
 const PAGE_SIZE = 20;
@@ -126,7 +127,7 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
   }
 
   return (
-    <Link href={`/item/${entry.item_id}`} asChild>
+    <Link href={resolveMobileDetailHref({ id: entry.item_id, type: entry.item_type })} asChild>
       <Pressable>{content}</Pressable>
     </Link>
   );
