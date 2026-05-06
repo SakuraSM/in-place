@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import type { Item } from '@inplace/domain';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -24,6 +26,20 @@ function formatRecentTime(value: string) {
   });
 }
 
+function buildItemPath(item: Item, itemMap: Map<string, Item>): string {
+  const lineage: string[] = [];
+  const visited = new Set<string>();
+  let parentId: string | null = item.parent_id;
+  while (parentId && !visited.has(parentId)) {
+    visited.add(parentId);
+    const ancestor = itemMap.get(parentId);
+    if (!ancestor) break;
+    lineage.unshift(ancestor.name);
+    parentId = ancestor.parent_id;
+  }
+  return lineage.join(' > ');
+}
+
 export default function HomeTab() {
   const { user } = useAuth();
 
@@ -41,10 +57,15 @@ export default function HomeTab() {
   });
 
   const stats = statsQuery.data ?? null;
-  const recentItems = (recentItemsQuery.data ?? [])
-    .slice()
-    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
-    .slice(0, RECENT_LIMIT);
+  const allItems = recentItemsQuery.data ?? [];
+  const itemMap = useMemo(() => new Map(allItems.map((item) => [item.id, item])), [allItems]);
+  const recentItems = useMemo(
+    () => allItems
+      .slice()
+      .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+      .slice(0, RECENT_LIMIT),
+    [allItems],
+  );
 
   if (statsQuery.isError) {
     return (
@@ -85,7 +106,9 @@ export default function HomeTab() {
             </View>
           ) : (
             <View style={styles.recentList}>
-              {recentItems.map((item) => (
+              {recentItems.map((item) => {
+                const path = buildItemPath(item, itemMap);
+                return (
                 <Link key={item.id} href={`/item/${item.id}`} asChild>
                   <Pressable
                     style={({ pressed }) => [styles.recentRow, pressed && styles.recentRowPressed]}
@@ -117,11 +140,17 @@ export default function HomeTab() {
                       <Text style={styles.recentMeta} numberOfLines={1}>
                         {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatRecentTime(item.created_at)}
                       </Text>
+                      {path ? (
+                        <Text style={styles.recentPath} numberOfLines={1}>
+                          {path}
+                        </Text>
+                      ) : null}
                     </View>
                     <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
                   </Pressable>
                 </Link>
-              ))}
+                );
+              })}
             </View>
           )}
         </SectionCard>
@@ -222,6 +251,11 @@ const styles = StyleSheet.create({
   recentMeta: {
     fontSize: 12,
     color: '#94a3b8',
+  },
+  recentPath: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 2,
   },
   fab: {
     position: 'absolute',
