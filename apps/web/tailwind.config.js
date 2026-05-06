@@ -1,5 +1,8 @@
+import { tailwindPreset } from '@inplace/ui/tailwind-preset';
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  presets: [tailwindPreset],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {

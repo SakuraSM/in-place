@@ -16,6 +16,7 @@
     "@inplace/api-client": "*",
     "@inplace/app-core": "*",
     "@inplace/domain": "*",
+    "@inplace/ui": "*",
     "@tanstack/react-query": "^5.90.21",
     "expo": "^53.0.0",
     "expo-constants": "~17.1.8",
