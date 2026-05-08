@@ -1,11 +1,22 @@
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { cacheDirectory, readAsStringAsync, writeAsStringAsync } from 'expo-file-system/build/FileSystem';
-import { EncodingType } from 'expo-file-system/build/FileSystem.types';
 import { getMobileApiBaseUrl, mobileApiClient } from '@/shared/api/mobileClient';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
 
-export async function exportInventoryFile(format: 'json' | 'csv') {
+export interface PendingInventoryBackup {
+  fileName: string;
+  payload: Record<string, unknown>;
+}
+
+export interface InventoryFileExportResult {
+  fileUri: string;
+  shared: boolean;
+}
+
+const INVENTORY_BACKUP_PICKER_TYPE = '*/*';
+
+export async function exportInventoryFile(format: 'json' | 'csv'): Promise<InventoryFileExportResult> {
   const token = await secureTokenStorage.get();
   const response = await fetch(`${getMobileApiBaseUrl()}/v1/items/export?format=${format}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -27,14 +38,14 @@ export async function exportInventoryFile(format: 'json' | 'csv') {
   const fileContents = await response.text();
   const extension = format === 'json' ? 'json' : 'csv';
   const mimeType = format === 'json' ? 'application/json' : 'text/csv';
-  if (!cacheDirectory) {
+  if (!FileSystem.cacheDirectory) {
     throw new Error('当前设备不可用缓存目录，暂时无法导出文件');
   }
 
-  const targetUri = `${cacheDirectory}inplace-export-${Date.now()}.${extension}`;
+  const targetUri = `${FileSystem.cacheDirectory}inplace-export-${Date.now()}.${extension}`;
 
-  await writeAsStringAsync(targetUri, fileContents, {
-    encoding: EncodingType.UTF8,
+  await FileSystem.writeAsStringAsync(targetUri, fileContents, {
+    encoding: FileSystem.EncodingType.UTF8,
   });
 
   const canShare = await Sharing.isAvailableAsync();
@@ -56,9 +67,12 @@ export async function exportInventoryFile(format: 'json' | 'csv') {
   };
 }
 
-export async function pickAndImportInventoryBackup() {
+export async function pickInventoryBackupFile(): Promise<
+  | { canceled: true }
+  | { canceled: false; backup: PendingInventoryBackup }
+> {
   const result = await DocumentPicker.getDocumentAsync({
-    type: ['application/json', 'text/json'],
+    type: INVENTORY_BACKUP_PICKER_TYPE,
     copyToCacheDirectory: true,
     multiple: false,
   });
@@ -70,7 +84,7 @@ export async function pickAndImportInventoryBackup() {
   }
 
   const asset = result.assets[0];
-  const fileContents = await readAsStringAsync(asset.uri);
+  const fileContents = await FileSystem.readAsStringAsync(asset.uri);
   let parsed: Record<string, unknown>;
 
   try {
@@ -79,14 +93,23 @@ export async function pickAndImportInventoryBackup() {
     throw new Error('文件无法解析，请选择归位导出的 JSON 备份');
   }
 
+  return {
+    canceled: false,
+    backup: {
+      fileName: asset.name,
+      payload: parsed,
+    },
+  };
+}
+
+export async function importInventoryBackup(backup: PendingInventoryBackup) {
   const response = await mobileApiClient.request<{ data: { categories: number; tags: number; items: number } }>('/v1/items/import', {
     method: 'POST',
-    body: JSON.stringify(parsed),
+    body: JSON.stringify(backup.payload),
   });
 
   return {
-    canceled: false as const,
-    fileName: asset.name,
+    fileName: backup.fileName,
     summary: response.data,
   };
 }

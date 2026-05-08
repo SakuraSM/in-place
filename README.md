@@ -1,103 +1,84 @@
 # InPlace
 
-InPlace is a home inventory management project organized as a small monorepo.
-It is being migrated toward a PostgreSQL-first architecture with a dedicated API layer,
-shared database package, and a React web application.
+[中文说明](README.zh-CN.md)
 
-中文说明见 [README.zh-CN.md](README.zh-CN.md).
+InPlace is an open-source home inventory manager for keeping track of household items, where they are stored, and how they are organized. The project is maintained as a TypeScript monorepo with a React web app, an Expo mobile app, a Fastify API, and a PostgreSQL data layer.
 
-## Overview
-
-This repository is structured around three responsibilities:
-
-- `apps/web`: React + Vite frontend
-- `apps/server`: Fastify-based server application
-- `packages/db`: shared PostgreSQL schema, client, and migration tooling
-
-The goal of this layout is to keep persistence, business logic, and UI concerns separate,
-which makes the codebase easier to extend, test, and contribute to.
+The codebase is still evolving, but its current direction is stable: clients talk to the API, the API owns validation and persistence access, and PostgreSQL is the system of record.
 
 ## Features
 
-- React web application for browsing and managing inventory
-- Fastify server for application-facing backend capabilities
-- PostgreSQL schema managed in-repo with Drizzle ORM
-- Docker-based local PostgreSQL runtime
-- Workspace-based development with shared root scripts
-
-## Architecture
-
-The repository is moving away from a frontend-direct-to-database prototype shape
-and toward a more maintainable open source structure:
-
-- the web app should talk to the API
-- the API should own validation, orchestration, and persistence access
-- PostgreSQL should be the system of record
-- database schema and infrastructure should live in version control
-
-Additional architecture notes are available in
-[docs/architecture/target-architecture.md](docs/architecture/target-architecture.md).
+- Inventory, category, location, tag, and activity management.
+- Web client built with React, Vite, and shared domain packages.
+- Mobile client built with Expo and React Native.
+- Fastify API backed by PostgreSQL and Drizzle ORM.
+- Image upload support and server-side AI recognition hooks.
+- JSON and CSV data export, plus JSON backup import on mobile.
+- Docker Compose deployment for both split-service and all-in-one setups.
 
 ## Repository Layout
 
 ```text
 .
 ├── apps
-│   ├── server      # Fastify server
-│   └── web         # React + Vite frontend
+│   ├── mobile      # Expo / React Native app
+│   ├── server      # Fastify API
+│   └── web         # React + Vite web app
 ├── packages
-│   └── db          # Drizzle schema and database client
-├── infra
-│   └── postgres    # Local PostgreSQL runtime
-├── docs
-│   ├── architecture # Current and target architecture docs
-│   └── legacy       # Archived historical materials
-├── package.json
-└── README.md
+│   ├── api-client  # Shared API client helpers
+│   ├── app-core    # Cross-client application logic
+│   ├── db          # Drizzle schema, client, and migrations
+│   ├── domain      # Shared domain types and rules
+│   └── ui          # Shared design tokens and UI primitives
+├── docs            # Architecture notes and historical references
+├── infra           # Local infrastructure, including PostgreSQL
+├── docker-compose.yml
+├── docker-compose.single.yml
+└── package.json
 ```
 
-### Frontend source layout
+## Architecture
 
-Inside `apps/web/src`, code is intentionally split into explicit layers:
+InPlace is organized around a clear separation of responsibilities:
 
-- `app`: application entry, providers, and top-level routing
-- `features`: business-facing feature modules and pages
-- `widgets`: layout-level composition pieces
-- `shared`: reusable UI and helper utilities
-- `legacy`: temporary direct-access modules kept only for migration compatibility
+- `apps/web` and `apps/mobile` provide user interfaces.
+- `apps/server` exposes API routes, validates input, coordinates business workflows, and owns persistence access.
+- `packages/db` contains the PostgreSQL schema and migration tooling.
+- `packages/domain`, `packages/app-core`, `packages/api-client`, and `packages/ui` share reusable logic across clients.
 
-New frontend data-access logic should not be added to `legacy`.
+New data-access code should go through the API rather than adding direct database or legacy data-source access to frontend clients.
+
+More background is available in [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md).
 
 ## Requirements
 
 - Node.js `>= 20.10.0`
 - npm `>= 10`
 - Docker Desktop or a compatible Docker runtime
+- Expo tooling when working on the mobile app
 
-## Getting Started
+## Quick Start
 
-### 1. Install dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Start PostgreSQL
+Start the local PostgreSQL runtime:
 
 ```bash
 npm run db:up
 ```
 
-### 3. Create local environment files
+Create local environment files:
 
 ```bash
 cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-### 4. Start the development servers
-
-In separate terminals:
+Run the API and web app in separate terminals:
 
 ```bash
 npm run dev:server
@@ -107,59 +88,34 @@ npm run dev:server
 npm run dev:web
 ```
 
-## Docker Compose Deployment
+Run the mobile app:
 
-The repository now includes a full multi-service Docker Compose deployment at
-[docker-compose.yml](docker-compose.yml).
+```bash
+npm run dev:mobile
+```
 
-### Services
+For native mobile builds, use:
 
-- `postgres`: PostgreSQL 16
-- `server`: Fastify server container
-- `web`: Nginx container serving the frontend and proxying `/api` to the API container
+```bash
+npm run android
+npm run ios
+```
 
-### Single-Image Deployment
+## Deployment
 
-For simpler self-hosting, the repository also includes a bundled deployment at
-[docker-compose.single.yml](docker-compose.single.yml).
+The repository supports two Docker Compose deployment modes.
 
-This variant packages three runtime components into one image:
+### Split-Service Compose
 
-- PostgreSQL
-- Fastify API
-- Nginx + frontend assets
-
-It is intended as a convenience deployment option for a single host. The split
-deployment remains the better fit when you want clearer service boundaries,
-independent scaling, or separate lifecycle management.
+[docker-compose.yml](docker-compose.yml) runs PostgreSQL, the Fastify API, and the web frontend as separate services. This is the recommended option when you want clearer service boundaries and independent lifecycle management.
 
 Prepare the environment:
-
-```bash
-cp .env.single.example .env.single
-```
-
-Then start the bundled container:
-
-```bash
-docker compose --env-file .env.single -f docker-compose.single.yml up -d
-```
-
-Open the application:
-
-```text
-http://localhost:8080
-```
-
-The bundled image is published as `ghcr.io/sakurasm/inplace-all-in-one:latest`.
-
-### Prepare deployment environment
 
 ```bash
 cp .env.compose.example .env.compose
 ```
 
-Update `.env.compose` before the first deployment. At minimum, set:
+At minimum, update these values before starting the stack:
 
 ```env
 POSTGRES_PASSWORD=<generate-a-strong-password>
@@ -170,37 +126,45 @@ VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
 
-Images are published under `ghcr.io/sakurasm/inplace-*`.
-
-Then start the stack:
+Start the stack:
 
 ```bash
 docker compose --env-file .env.compose up -d server web
 ```
 
-In the single-host Docker Compose deployment, the `server` container applies
-checked-in database migrations automatically before the API starts. The same
-command therefore works for first boot and later updates.
-
-If you want PostgreSQL data on an external filesystem, set `POSTGRES_DATA_DIR`
-to an absolute host path before starting the stack, for example:
-
-```env
-POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
-```
-
-By default, Compose stores PostgreSQL data under `./storage/postgres` in the
-repository workspace.
-
-Open the application:
+Open the web app at:
 
 ```text
 http://localhost:8080
 ```
 
-### Verify the deployment
+The server container applies checked-in database migrations before the API starts, so the same command works for first boot and later updates.
 
-Pull the latest images explicitly if needed:
+### All-In-One Compose
+
+[docker-compose.single.yml](docker-compose.single.yml) packages PostgreSQL, the API, and Nginx-served frontend assets into one container. It is useful for simple single-host deployments.
+
+Prepare the environment:
+
+```bash
+cp .env.single.example .env.single
+```
+
+Start the bundled container:
+
+```bash
+docker compose --env-file .env.single -f docker-compose.single.yml up -d
+```
+
+The bundled image is published as:
+
+```text
+ghcr.io/sakurasm/inplace-all-in-one:latest
+```
+
+## Deployment Operations
+
+Pull images:
 
 ```bash
 docker compose --env-file .env.compose pull
@@ -212,43 +176,31 @@ Check container status:
 docker compose --env-file .env.compose ps
 ```
 
-Follow service logs:
+Follow logs:
 
 ```bash
 docker compose --env-file .env.compose logs -f
 ```
 
-Verify the API health endpoint through the web entrypoint:
+Check API health through the web entrypoint:
 
 ```text
 http://localhost:8080/api/v1/health
 ```
 
-### Stop or rebuild the stack
-
-Stop the deployment:
+Stop the split-service stack:
 
 ```bash
 docker compose --env-file .env.compose down
 ```
 
-Restart after a new image is published or configuration changes:
+If you want PostgreSQL data on a specific host path, set `POSTGRES_DATA_DIR` before starting Compose:
 
-```bash
-docker compose --env-file .env.compose up -d server web
+```env
+POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 ```
 
-### Deployment behavior
-
-The current Compose deployment is designed to keep the full platform verifiable
-even while the legacy frontend flow is still being migrated.
-
-- If legacy Supabase variables are not provided, the frontend runs in platform mode
-- Platform mode serves a deployment status page from the web container
-- The web container reaches the API over the internal Compose network and verifies API reachability and PostgreSQL connectivity through `/api/v1/health`
-
-This means the deployed stack is operational and observable even before all inventory features
-are fully migrated from the legacy data-access path to the new API + PostgreSQL architecture.
+By default, Compose stores PostgreSQL data under `./storage/postgres`.
 
 ## Environment Variables
 
@@ -258,63 +210,57 @@ See [apps/server/.env.example](apps/server/.env.example).
 
 Key variables:
 
-- `PORT`: API port
-- `DATABASE_URL`: PostgreSQL connection string
-- `CORS_ORIGIN`: allowed web origin during local development
-- `POSTGRES_DATA_DIR`: host directory used by Docker Compose to persist PostgreSQL data files
-- `JWT_SECRET`: signing key for JWT tokens, must be at least 32 characters
-- `MAX_UPLOAD_SIZE_MB`: maximum allowed upload size per image
-- `OPENAI_API_KEY`: API key used by the server-side AI recognition route
-- `OPENAI_BASE_URL`: AI provider base URL, defaults to `https://api.openai.com/v1`
-- `OPENAI_MODEL`: model name used for image recognition, defaults to `gpt-4o`
-- `APP_ENCRYPTION_KEY`: encryption key for per-user AI credentials stored by the profile settings page; use a dedicated random secret in production
+- `PORT`: API port.
+- `DATABASE_URL`: PostgreSQL connection string.
+- `CORS_ORIGIN`: allowed frontend origins.
+- `JWT_SECRET`: JWT signing key. Use at least 32 random characters.
+- `APP_ENCRYPTION_KEY`: encryption key for user-saved AI credentials. Use a dedicated production secret.
+- `MAX_UPLOAD_SIZE_MB`: maximum allowed upload size per image.
+- `BACKUP_PAYLOAD_SIZE_MB`: maximum backup import payload size.
+- `OPENAI_API_KEY`: optional default API key for server-side AI recognition.
+- `OPENAI_BASE_URL`: AI provider base URL. Defaults to `https://api.openai.com/v1`.
+- `OPENAI_MODEL`: model name used for image recognition.
 
-AI settings saved from the profile page are encrypted and stored on the server. The browser never receives or forwards the plaintext key, and per-user settings override the system defaults.
+AI settings saved from the profile page are encrypted on the server. The browser does not receive the plaintext key, and per-user settings override system defaults.
 
 ### Web
 
 See [apps/web/.env.example](apps/web/.env.example).
 
-Key variables:
+Key variable:
 
-- `VITE_API_BASE_URL`: base URL for the API
+- `VITE_API_BASE_URL`: base URL for the API.
 
-Legacy transition variables still exist in the frontend example file because
-some UI code has not yet been fully migrated away from the previous Supabase-based data flow.
+The frontend example file may still include legacy transition variables while older data-access paths are being retired.
 
 ### Mobile
 
-The Android and iOS app lives in [apps/mobile](apps/mobile). It uses the same API, domain, and app-core packages as the web app.
+The mobile app lives in [apps/mobile](apps/mobile). It uses the same API, domain, and app-core packages as the web app.
 
 Key variables:
 
-- `EXPO_PUBLIC_API_BASE_URL`: optional default API server used before a user configures a server inside the app
-- `EXPO_PROJECT_ID`: GitHub Actions repository variable used by EAS Build
-- `EXPO_TOKEN`: GitHub Actions secret used by EAS Build
+- `EXPO_PUBLIC_API_BASE_URL`: optional default API server before a user configures one in the app.
+- `EXPO_PROJECT_ID`: GitHub Actions repository variable used by EAS Build.
+- `EXPO_TOKEN`: GitHub Actions secret used by EAS Build.
 
-On first login or registration, enter the remote server address and account credentials in the app. The app normalizes the address to include `/api`, stores the selected server on device, and keeps the auth token in secure storage.
+On first login or registration, enter the server address and account credentials in the app. The app normalizes the server address to include `/api`, stores the selected server on device, and keeps the auth token in secure storage.
 
-### Image Uploads
+## Development Scripts
 
-- Images are uploaded to `POST /api/v1/uploads/images`
-- The server stores them under `./storage/uploads` and serves them from `/api/uploads/*`
-- In Docker Compose, uploaded files are persisted in the `inplace_uploads_data` volume
-
-## Available Scripts
-
-Run from the repository root:
+Run scripts from the repository root:
 
 ```bash
 npm run dev:web
 npm run dev:server
-npm run build
-npm run lint
-npm run typecheck
 npm run dev:mobile
 npm run android
 npm run ios
-npm run build:mobile:android
-npm run build:mobile:ios
+npm run build
+npm run build:web
+npm run build:server
+npm run build:mobile
+npm run lint
+npm run typecheck
 npm run db:up
 npm run db:down
 npm run db:logs
@@ -332,8 +278,6 @@ npm run single:logs
 
 ## Database Development
 
-The database package uses Drizzle ORM.
-
 Generate migrations:
 
 ```bash
@@ -346,51 +290,36 @@ Apply migrations:
 npm run db:migrate
 ```
 
-PostgreSQL runtime configuration lives in
-[infra/postgres/docker-compose.yml](infra/postgres/docker-compose.yml).
-
-Checked-in SQL migrations live under
-[packages/db/migrations](packages/db/migrations),
-and the runtime migration runner is implemented in
-[packages/db/scripts/migrate.ts](packages/db/scripts/migrate.ts).
+PostgreSQL runtime configuration lives in [infra/postgres/docker-compose.yml](infra/postgres/docker-compose.yml). Checked-in SQL migrations live under [packages/db/migrations](packages/db/migrations), and the runtime migration runner is implemented in [packages/db/scripts/migrate.ts](packages/db/scripts/migrate.ts).
 
 ## Current Status
 
-This repository has completed the structural migration to:
+The project has completed the structural move to workspaces, a dedicated API, a shared database package, and a local PostgreSQL runtime. Some legacy frontend data-access paths may still exist during migration; new work should prefer API-backed flows.
 
-- workspaces
-- dedicated API package
-- dedicated database package
-- local PostgreSQL runtime
-
-The business-layer migration is still in progress:
-
-- `apps/web` is already in the correct workspace
-- parts of the current frontend still use legacy direct data-access modules
-- those modules should be replaced incrementally with API-backed clients
-- Docker Compose deployment now covers the full platform path: web, server, and PostgreSQL, with schema migrations applied automatically during server startup
-- the Compose frontend defaults to platform mode until the legacy feature path is fully retired
-
-Legacy Supabase SQL artifacts are preserved for reference under
-[docs/legacy/supabase](docs/legacy/supabase).
+Legacy Supabase SQL artifacts are preserved only for reference under [docs/legacy/supabase](docs/legacy/supabase).
 
 ## Contributing
 
-Until contribution guidelines are formalized, use the following baseline:
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request and follow the project [Code of Conduct](CODE_OF_CONDUCT.md).
 
-1. Keep persistence logic out of the frontend.
-2. Add new database structures through `packages/db`.
-3. Prefer API endpoints over direct client-side database access.
-4. Run `npm run typecheck` and `npm run build` before submitting changes.
+Before submitting changes, run:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+If your change affects a specific app or package, also run the relevant workspace script where possible.
+
+Do not commit secrets, production credentials, or local environment files. Use the checked-in `.env*.example` files as templates.
 
 ## Roadmap
 
-- Replace remaining legacy frontend data access with API clients
-- Add domain services and repository boundaries in `apps/server`
-- Introduce automated tests for API and database flows
-- Add formal contribution and release documentation
+- Replace remaining legacy frontend data access with API clients.
+- Strengthen server-side domain service and repository boundaries.
+- Add automated tests for API, database, web, and mobile flows.
+- Expand release and self-hosting documentation.
 
 ## License
 
-This project is licensed under the Apache License 2.0.
-See [LICENSE](LICENSE).
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE).

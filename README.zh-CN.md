@@ -1,100 +1,84 @@
 # InPlace
 
-InPlace 是一个家庭物品管理项目，目前采用小型 monorepo 结构组织代码。
-仓库正在从“前端直连数据源”的原型形态，逐步迁移到以 PostgreSQL 为中心、带独立 API 层的工程化架构。
+[English version](README.md)
 
-English version: [README.md](README.md)
+InPlace 是一个开源的家庭物品管理项目，用于记录家中有哪些物品、放在哪里、如何分类和追踪变更。项目采用 TypeScript monorepo 组织，包含 React Web 应用、Expo 移动端应用、Fastify API 和 PostgreSQL 数据层。
 
-## 项目简介
-
-当前仓库主要由三部分组成：
-
-- `apps/web`：基于 React + Vite 的前端应用
-- `apps/server`：基于 Fastify 的服务端应用
-- `packages/db`：共享的 PostgreSQL Schema、数据库连接与迁移配置
-
-这种拆分方式的目标是把 UI、业务逻辑和持久化边界拆清楚，方便后续扩展、测试和协作开发。
+代码仍在持续演进，但当前方向已经明确：客户端通过 API 访问业务能力，API 负责校验和持久化访问，PostgreSQL 作为系统主数据源。
 
 ## 功能特性
 
-- 家庭物品管理 Web 应用
-- 基于 Fastify 的服务端
-- 使用 Drizzle ORM 管理 PostgreSQL Schema
-- 基于 Docker 的本地 PostgreSQL 运行环境
-- 基于 npm workspaces 的多包开发模式
-
-## 架构说明
-
-仓库正在从早期原型逐步迁移到更适合开源协作和长期维护的结构：
-
-- 前端通过 API 访问业务能力
-- API 负责参数校验、业务编排和数据库访问
-- PostgreSQL 作为系统主数据源
-- 数据库 Schema、迁移和本地基础设施全部纳入版本控制
-
-更多架构说明见
-[docs/architecture/target-architecture.md](docs/architecture/target-architecture.md)。
+- 物品、分类、位置、标签和操作记录管理。
+- 基于 React、Vite 和共享领域包的 Web 客户端。
+- 基于 Expo 和 React Native 的移动端客户端。
+- 基于 Fastify 的 API 服务，使用 PostgreSQL 和 Drizzle ORM。
+- 支持图片上传，并预留服务端 AI 识别能力。
+- 支持 JSON、CSV 导出，移动端支持 JSON 备份导入。
+- 支持拆分服务和一体化两种 Docker Compose 部署方式。
 
 ## 仓库结构
 
 ```text
 .
 ├── apps
-│   ├── server      # Fastify 服务端
-│   └── web         # React + Vite 前端
+│   ├── mobile      # Expo / React Native 应用
+│   ├── server      # Fastify API
+│   └── web         # React + Vite Web 应用
 ├── packages
-│   └── db          # Drizzle Schema 与数据库客户端
-├── infra
-│   └── postgres    # 本地 PostgreSQL 运行环境
-├── docs
-│   ├── architecture # 当前与目标架构文档
-│   └── legacy       # 历史遗留资料归档
-├── package.json
-└── README.md
+│   ├── api-client  # 共享 API 客户端辅助能力
+│   ├── app-core    # 跨客户端应用逻辑
+│   ├── db          # Drizzle schema、数据库客户端和迁移
+│   ├── domain      # 共享领域类型和规则
+│   └── ui          # 共享设计 token 和 UI 基础能力
+├── docs            # 架构说明与历史资料
+├── infra           # 本地基础设施，包括 PostgreSQL
+├── docker-compose.yml
+├── docker-compose.single.yml
+└── package.json
 ```
 
-### 前端源码结构
+## 架构说明
 
-`apps/web/src` 目前按明确分层组织：
+InPlace 按清晰的职责边界组织：
 
-- `app`：应用入口、Provider、顶层路由
-- `features`：面向业务的功能模块与页面
-- `widgets`：布局级拼装组件
-- `shared`：可复用 UI 与通用工具
-- `legacy`：迁移期保留的旧直连模块，仅用于兼容
+- `apps/web` 和 `apps/mobile` 负责用户界面。
+- `apps/server` 暴露 API 路由，负责输入校验、业务编排和持久化访问。
+- `packages/db` 维护 PostgreSQL schema 和迁移工具。
+- `packages/domain`、`packages/app-core`、`packages/api-client`、`packages/ui` 在多个客户端之间复用领域、应用和 UI 能力。
 
-新的前端数据访问逻辑不应继续放到 `legacy` 中。
+新的数据访问逻辑应优先通过 API 实现，不应继续在前端客户端中新增直接数据库访问或 legacy 数据源访问。
+
+更多背景见 [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md)。
 
 ## 环境要求
 
 - Node.js `>= 20.10.0`
 - npm `>= 10`
 - Docker Desktop 或兼容的 Docker 运行时
+- 开发移动端时需要 Expo 相关工具链
 
 ## 快速开始
 
-### 1. 安装依赖
+安装依赖：
 
 ```bash
 npm install
 ```
 
-### 2. 启动本地 PostgreSQL
+启动本地 PostgreSQL：
 
 ```bash
 npm run db:up
 ```
 
-### 3. 创建本地环境变量文件
+创建本地环境变量文件：
 
 ```bash
 cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-### 4. 启动开发服务
-
-分别在两个终端中执行：
+分别在两个终端中启动 API 和 Web：
 
 ```bash
 npm run dev:server
@@ -104,58 +88,34 @@ npm run dev:server
 npm run dev:web
 ```
 
-## Docker Compose 部署
-
-仓库现在已经包含完整的多服务部署文件：
-[docker-compose.yml](docker-compose.yml)。
-
-### 服务组成
-
-- `postgres`：PostgreSQL 16
-- `server`：Fastify 服务端容器
-- `web`：Nginx 前端容器，同时把 `/api` 反向代理到 API 服务
-
-### 单镜像部署
-
-如果希望进一步简化自部署方式，仓库也提供了一套一体化部署文件：
-[docker-compose.single.yml](docker-compose.single.yml)。
-
-这个版本会把三个运行时组件打进同一个镜像：
-
-- PostgreSQL
-- Fastify API
-- Nginx + 前端静态资源
-
-它更适合单机、低运维成本的部署场景。如果你希望服务边界更清晰、
-支持独立扩缩容，或分别管理生命周期，仍建议使用上面的拆分部署版本。
-
-先准备环境变量：
+启动移动端：
 
 ```bash
-cp .env.single.example .env.single
+npm run dev:mobile
 ```
 
-然后启动一体化容器：
+如需运行原生移动端构建：
 
 ```bash
-docker compose --env-file .env.single -f docker-compose.single.yml up -d
+npm run android
+npm run ios
 ```
 
-浏览器访问：
+## 部署
 
-```text
-http://localhost:8080
-```
+仓库支持两种 Docker Compose 部署方式。
 
-这个 bundled 镜像会发布到 `ghcr.io/sakurasm/inplace-all-in-one:latest`。
+### 拆分服务部署
 
-### 准备部署环境
+[docker-compose.yml](docker-compose.yml) 会以独立服务运行 PostgreSQL、Fastify API 和 Web 前端。希望服务边界清晰、方便独立管理生命周期时，建议使用这种方式。
+
+准备环境变量：
 
 ```bash
 cp .env.compose.example .env.compose
 ```
 
-首次部署前请先修改 `.env.compose`，至少配置这些值：
+首次启动前至少需要修改这些值：
 
 ```env
 POSTGRES_PASSWORD=<设置强密码>
@@ -166,25 +126,11 @@ VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
 
-镜像会发布到 `ghcr.io/sakurasm/inplace-*`。
-
-然后启动整套服务：
+启动服务：
 
 ```bash
 docker compose --env-file .env.compose up -d server web
 ```
-
-在单机 Docker Compose 部署中，`server` 容器会在启动 API 之前自动执行
-仓库中已纳入版本控制的数据库迁移，因此首次启动和后续更新都可以复用同一条命令。
-
-如果希望把 PostgreSQL 数据放到外部文件系统，请在启动前额外设置
-`POSTGRES_DATA_DIR` 为宿主机绝对路径，例如：
-
-```env
-POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
-```
-
-默认情况下，Compose 会把 PostgreSQL 数据保存在仓库内的 `./storage/postgres`。
 
 浏览器访问：
 
@@ -192,9 +138,33 @@ POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 http://localhost:8080
 ```
 
-### 验证部署状态
+`server` 容器会在 API 启动前自动执行已纳入版本控制的数据库迁移，因此首次启动和后续更新都可以复用同一条命令。
 
-如需先显式拉取最新镜像：
+### 一体化部署
+
+[docker-compose.single.yml](docker-compose.single.yml) 会把 PostgreSQL、API 和 Nginx 托管的前端静态资源打包进一个容器，适合简单的单机自部署场景。
+
+准备环境变量：
+
+```bash
+cp .env.single.example .env.single
+```
+
+启动一体化容器：
+
+```bash
+docker compose --env-file .env.single -f docker-compose.single.yml up -d
+```
+
+一体化镜像发布地址：
+
+```text
+ghcr.io/sakurasm/inplace-all-in-one:latest
+```
+
+## 部署运维
+
+拉取镜像：
 
 ```bash
 docker compose --env-file .env.compose pull
@@ -206,7 +176,7 @@ docker compose --env-file .env.compose pull
 docker compose --env-file .env.compose ps
 ```
 
-持续查看日志：
+查看日志：
 
 ```bash
 docker compose --env-file .env.compose logs -f
@@ -218,30 +188,19 @@ docker compose --env-file .env.compose logs -f
 http://localhost:8080/api/v1/health
 ```
 
-### 停止或重建服务
-
-停止整套服务：
+停止拆分服务部署：
 
 ```bash
 docker compose --env-file .env.compose down
 ```
 
-镜像更新或配置变更后重新启动：
+如果希望把 PostgreSQL 数据放到指定宿主机路径，请在启动 Compose 前设置 `POSTGRES_DATA_DIR`：
 
-```bash
-docker compose --env-file .env.compose up -d server web
+```env
+POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 ```
 
-### 当前部署行为说明
-
-由于业务层仍在从 legacy Supabase 访问路径迁移到 API + PostgreSQL 架构，
-当前 Compose 部署默认采用“平台模式”保证整套系统可以直接验证：
-
-- 如果没有提供 legacy Supabase 环境变量，前端会进入平台模式
-- 平台模式会展示部署状态页
-- Web 容器会通过 Compose 内部网络访问 API，并通过 `/api/v1/health` 校验 API 与 PostgreSQL 是否联通
-
-这意味着即使库存功能还没有全部切换到新 API，整套前端 + API + 数据库部署链路仍然是可启动、可访问、可观测的。
+默认情况下，Compose 会把 PostgreSQL 数据保存到 `./storage/postgres`。
 
 ## 环境变量
 
@@ -251,18 +210,18 @@ docker compose --env-file .env.compose up -d server web
 
 主要变量：
 
-- `PORT`：API 端口
-- `DATABASE_URL`：PostgreSQL 连接串
-- `CORS_ORIGIN`：本地开发允许的前端来源
-- `POSTGRES_DATA_DIR`：Docker Compose 下 PostgreSQL 数据文件映射到宿主机的目录
-- `JWT_SECRET`：JWT 签名密钥，至少 32 个字符
-- `MAX_UPLOAD_SIZE_MB`：单张图片允许的最大上传大小
-- `OPENAI_API_KEY`：服务端 AI 识别使用的 API Key
-- `OPENAI_BASE_URL`：AI 服务基础地址，默认 `https://api.openai.com/v1`
-- `OPENAI_MODEL`：AI 图片识别使用的模型名，默认 `gpt-4o`
-- `APP_ENCRYPTION_KEY`：用于加密用户在个人中心保存的 AI Key，生产环境请使用独立的 32 位以上随机字符串
+- `PORT`：API 端口。
+- `DATABASE_URL`：PostgreSQL 连接串。
+- `CORS_ORIGIN`：允许访问 API 的前端来源。
+- `JWT_SECRET`：JWT 签名密钥，建议使用至少 32 位随机字符串。
+- `APP_ENCRYPTION_KEY`：用户保存的 AI 凭据加密密钥，生产环境请使用独立密钥。
+- `MAX_UPLOAD_SIZE_MB`：单张图片最大上传大小。
+- `BACKUP_PAYLOAD_SIZE_MB`：备份导入最大请求体大小。
+- `OPENAI_API_KEY`：服务端 AI 识别使用的可选默认 API Key。
+- `OPENAI_BASE_URL`：AI 服务基础地址，默认 `https://api.openai.com/v1`。
+- `OPENAI_MODEL`：AI 图片识别使用的模型名。
 
-个人中心里的 AI 配置会加密保存在服务端数据库中，前端不会回显或透传明文 Key。当前账号自定义配置优先于系统默认配置。
+个人中心保存的 AI 配置会在服务端加密保存。前端不会回显明文 Key，账号级配置优先于系统默认配置。
 
 ### Web
 
@@ -270,43 +229,38 @@ docker compose --env-file .env.compose up -d server web
 
 主要变量：
 
-- `VITE_API_BASE_URL`：API 基础地址
+- `VITE_API_BASE_URL`：API 基础地址。
 
-由于当前前端仍处于迁移阶段，示例文件中还保留了少量 legacy 变量，用于兼容尚未迁移完成的旧数据访问逻辑。
+在旧数据访问路径完全退场前，前端示例文件中可能仍保留少量 legacy 迁移变量。
 
 ### 移动端
 
-Android 和 iOS 应用位于 [apps/mobile](apps/mobile)，与 Web 共用同一套 API、domain 和 app-core 包。
+移动端应用位于 [apps/mobile](apps/mobile)，与 Web 共用同一套 API、domain 和 app-core 包。
 
 主要变量：
 
-- `EXPO_PUBLIC_API_BASE_URL`：用户在 App 内配置服务器前使用的默认 API 地址
-- `EXPO_PROJECT_ID`：GitHub Actions 中用于 EAS Build 的仓库变量
-- `EXPO_TOKEN`：GitHub Actions 中用于 EAS Build 的密钥
+- `EXPO_PUBLIC_API_BASE_URL`：用户在 App 内配置服务器前使用的默认 API 地址。
+- `EXPO_PROJECT_ID`：GitHub Actions 中用于 EAS Build 的仓库变量。
+- `EXPO_TOKEN`：GitHub Actions 中用于 EAS Build 的密钥。
 
-首次登录或注册时，在 App 内输入远程服务器地址和账号密码。App 会把地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。
+首次登录或注册时，在 App 内输入服务器地址和账号密码。App 会把服务器地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。
 
-### 图片上传
-
-- 图片上传接口为 `POST /api/v1/uploads/images`
-- 服务端将文件保存到 `./storage/uploads`，并通过 `/api/uploads/*` 对外提供访问
-- 在 Docker Compose 部署中，上传文件会持久化在 `inplace_uploads_data` 卷中
-
-## 常用脚本
+## 开发脚本
 
 在仓库根目录执行：
 
 ```bash
 npm run dev:web
 npm run dev:server
-npm run build
-npm run lint
-npm run typecheck
 npm run dev:mobile
 npm run android
 npm run ios
-npm run build:mobile:android
-npm run build:mobile:ios
+npm run build
+npm run build:web
+npm run build:server
+npm run build:mobile
+npm run lint
+npm run typecheck
 npm run db:up
 npm run db:down
 npm run db:logs
@@ -324,8 +278,6 @@ npm run single:logs
 
 ## 数据库开发
 
-数据库层使用 Drizzle ORM。
-
 生成迁移：
 
 ```bash
@@ -338,51 +290,35 @@ npm run db:generate
 npm run db:migrate
 ```
 
-本地 PostgreSQL 配置位于
-[infra/postgres/docker-compose.yml](infra/postgres/docker-compose.yml)。
-
-已纳入版本控制的 SQL 迁移位于
-[packages/db/migrations](packages/db/migrations)，
-运行时迁移执行器位于
-[packages/db/scripts/migrate.ts](packages/db/scripts/migrate.ts)。
+本地 PostgreSQL 配置位于 [infra/postgres/docker-compose.yml](infra/postgres/docker-compose.yml)。已纳入版本控制的 SQL 迁移位于 [packages/db/migrations](packages/db/migrations)，运行时迁移执行器位于 [packages/db/scripts/migrate.ts](packages/db/scripts/migrate.ts)。
 
 ## 当前状态
 
-当前仓库已经完成这些结构性迁移：
+项目已经完成 workspaces、独立 API、共享数据库包和本地 PostgreSQL 运行环境等结构性迁移。迁移期间仍可能存在少量 legacy 前端数据访问路径；新功能应优先采用 API-backed 流程。
 
-- workspaces 改造
-- 独立 API 包
-- 独立数据库包
-- 本地 PostgreSQL 运行环境
+旧的 Supabase SQL 资料仅作为历史参考保留在 [docs/legacy/supabase](docs/legacy/supabase)。
 
-仍在进行中的部分：
+## 参与贡献
 
-- `apps/web` 已进入正确的工作区结构
-- 前端部分模块仍保留旧的直连数据访问逻辑
-- 这些模块后续需要逐步替换为 API 调用
-- Docker Compose 已覆盖完整平台链路：前端、服务端和 PostgreSQL，数据库结构迁移会在服务启动时自动执行
-- Compose 下的前端默认运行在平台模式，直到 legacy 业务链路完全退场
+欢迎参与贡献。提交 PR 前请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，并遵循项目的 [Code of Conduct](CODE_OF_CONDUCT.md)。
 
-旧的 Supabase SQL 迁移文件目前保留在
-[docs/legacy/supabase](docs/legacy/supabase)，仅作为历史参考。
+提交前请运行：
 
-## 贡献说明
+```bash
+npm run typecheck
+npm run build
+```
 
-在更完整的贡献规范完善前，默认遵循以下原则：
+如果改动只影响某个 app 或 package，也建议同时运行对应 workspace 的检查脚本。
 
-1. 不要把持久化逻辑继续堆到前端里。
-2. 新增数据库结构时，优先通过 `packages/db` 管理。
-3. 新功能优先走 API，而不是前端直接访问数据库。
-4. 提交前至少执行 `npm run typecheck` 和 `npm run build`。
-
-更多见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+请不要提交密钥、生产凭据或本地环境变量文件。仓库中的 `.env*.example` 文件仅作为配置模板使用。
 
 ## 路线图
 
-- 将剩余 legacy 前端数据访问替换为 API 客户端
-- 在 `apps/server` 中补齐领域服务与仓储边界
-- 为 API 和数据库流程补充自动化测试
-- 完善贡献、发布和版本维护文档
+- 将剩余 legacy 前端数据访问替换为 API 客户端。
+- 强化服务端领域服务与仓储边界。
+- 为 API、数据库、Web 和移动端流程补充自动化测试。
+- 完善发布和自部署文档。
 
 ## 许可证
 
