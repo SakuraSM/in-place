@@ -4,6 +4,7 @@ import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -53,14 +54,22 @@ export default function HomeTab() {
   return (
     <Screen
       scroll
+      contentInsetMode="page"
+      chrome="muted"
       scrollProps={{
         onScroll: handleScroll,
         scrollEventThrottle: 16,
       }}
     >
-      <BrandHeader title="归位" subtitle="让每件物品都有清晰归属，首页结构和 Web 保持同一套信息层次。" />
+      <Entrance variant="page">
+        <BrandHeader
+          title="归位"
+          subtitle="让每件物品都有清晰归属，首页结构和 Web 保持同一套信息层次。"
+          variant="hero"
+        />
+      </Entrance>
 
-      <SectionCard title="根目录" subtitle="收纳、位置与物品列表已经接入真实 API。" delay={80}>
+      <SectionCard title="快速开始" subtitle="新增入口与根目录列表收在同一节奏里，便于快速录入和继续整理。" delay={80}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable onPress={() => router.push('/item/form?type=container')} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>新建容器</Text>

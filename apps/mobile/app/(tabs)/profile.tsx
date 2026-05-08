@@ -1,9 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'expo-router';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import type { AuthUser } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
-import { aiApi, itemsApi, mobileApiClient } from '@/shared/api/mobileClient';
+import { aiApi, itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Entrance } from '@/shared/ui/Entrance';
@@ -11,17 +11,12 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
+import { fetchProfileUpdate } from '@/features/profile/mobileProfileApi';
 
 export default function ProfileTab() {
   const { user, signOut, setCurrentUser } = useAuth();
-  const queryClient = useQueryClient();
-  const [baseUrl, setBaseUrl] = useState('');
-  const [model, setModel] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const itemsQuery = useQuery({
     queryKey: ['mobile', 'profile-stats', user?.id],
@@ -35,13 +30,6 @@ export default function ProfileTab() {
   });
 
   useEffect(() => {
-    if (aiSettingsQuery.data) {
-      setBaseUrl(aiSettingsQuery.data.baseUrl ?? '');
-      setModel(aiSettingsQuery.data.model ?? '');
-    }
-  }, [aiSettingsQuery.data]);
-
-  useEffect(() => {
     setDisplayName(user?.displayName ?? '');
   }, [user?.displayName]);
 
@@ -50,39 +38,6 @@ export default function ProfileTab() {
     onSuccess: (nextUser) => {
       setCurrentUser(nextUser);
       setSaveMessage('昵称已更新');
-    },
-  });
-
-  const passwordMutation = useMutation({
-    mutationFn: () => fetchPasswordChange(currentPassword, newPassword),
-    onSuccess: () => {
-      setCurrentPassword('');
-      setNewPassword('');
-      setSaveMessage('密码已更新');
-    },
-  });
-
-  const saveAiMutation = useMutation({
-    mutationFn: () => aiApi.updateAiSettings({
-      baseUrl: baseUrl.trim(),
-      model: model.trim(),
-      ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
-    }),
-    onSuccess: async () => {
-      setApiKey('');
-      setSaveMessage('AI 配置已保存');
-      await queryClient.invalidateQueries({ queryKey: ['mobile', 'ai-settings', user?.id] });
-      await queryClient.invalidateQueries({ queryKey: ['mobile', 'ai-status', user?.id] });
-    },
-  });
-
-  const resetAiMutation = useMutation({
-    mutationFn: () => aiApi.resetAiSettings(),
-    onSuccess: async () => {
-      setApiKey('');
-      setSaveMessage('AI 配置已重置');
-      await queryClient.invalidateQueries({ queryKey: ['mobile', 'ai-settings', user?.id] });
-      await queryClient.invalidateQueries({ queryKey: ['mobile', 'ai-status', user?.id] });
     },
   });
 
@@ -104,11 +59,12 @@ export default function ProfileTab() {
   };
 
   return (
-    <Screen scroll>
-      <Entrance>
+    <Screen scroll contentInsetMode="page" chrome="muted">
+      <Entrance variant="page">
         <BrandHeader
           title="我的"
           subtitle={`当前账号：${user?.email ?? '未登录'}，把资料、统计和 AI 设置放在一个地方。`}
+          variant="hero"
         />
       </Entrance>
 
@@ -146,89 +102,44 @@ export default function ProfileTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="AI 配置" subtitle="这里沿用 Web 端的配置逻辑，并保持轻量入场动画。" delay={140}>
-        <Text style={bodyStyle}>启用状态：{aiSettings?.enabled ? '已启用' : '未启用'}</Text>
-        <Text style={bodyStyle}>来源：{aiSettings?.source ?? 'unknown'}</Text>
-        <TextInput
-          value={baseUrl}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setBaseUrl(value);
-          }}
-          placeholder="Base URL，例如 https://api.openai.com/v1"
-          style={inputStyle}
-          autoCapitalize="none"
-        />
-        <TextInput
-          value={model}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setModel(value);
-          }}
-          placeholder="模型，例如 gpt-4o"
-          style={inputStyle}
-          autoCapitalize="none"
-        />
-        <TextInput
-          value={apiKey}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setApiKey(value);
-          }}
-          placeholder={aiSettings?.hasStoredApiKey ? '留空则保持当前服务端密钥' : '输入后保存为账号级密钥'}
-          style={inputStyle}
-          autoCapitalize="none"
-          secureTextEntry
-        />
-        {saveMessage ? <Text style={successTextStyle}>{saveMessage}</Text> : null}
-        {saveAiMutation.isError ? <Text style={errorTextStyle}>{saveAiMutation.error instanceof Error ? saveAiMutation.error.message : '保存失败'}</Text> : null}
-        {resetAiMutation.isError ? <Text style={errorTextStyle}>{resetAiMutation.error instanceof Error ? resetAiMutation.error.message : '重置失败'}</Text> : null}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable onPress={() => void resetAiMutation.mutateAsync()} style={buttonStyle}>
-            {resetAiMutation.isPending ? <ActivityIndicator /> : <Text style={buttonTextStyle}>重置</Text>}
+      <SectionCard title="账户工作台" subtitle="把 AI 配置、账号安全和数据管理拆成独立页面，结构更清晰。" delay={140} density="compact">
+        <Link href="/profile/ai" asChild>
+          <Pressable style={navRowStyle}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={listTitleStyle}>AI 配置</Text>
+              <Text style={bodyStyle}>
+                {aiSettings?.enabled ? '当前已启用 AI 识别' : '当前未启用 AI 识别'} · {aiSettings?.source === 'user' ? '账号配置' : '系统默认'}
+              </Text>
+            </View>
+            <Text style={linkMetaStyle}>进入</Text>
           </Pressable>
-          <Pressable onPress={() => void saveAiMutation.mutateAsync()} style={primaryButtonStyle}>
-            {saveAiMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存</Text>}
+        </Link>
+
+        <Link href="/profile/security" asChild>
+          <Pressable style={navRowStyle}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={listTitleStyle}>账号安全</Text>
+              <Text style={bodyStyle}>修改密码、处理当前登录会话。</Text>
+            </View>
+            <Text style={linkMetaStyle}>进入</Text>
           </Pressable>
-        </View>
+        </Link>
+
+        <Link href="/profile/data" asChild>
+          <Pressable style={navRowStyle}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={listTitleStyle}>数据管理</Text>
+              <Text style={bodyStyle}>导出 JSON / CSV，并导入 JSON 备份。</Text>
+            </View>
+            <Text style={linkMetaStyle}>进入</Text>
+          </Pressable>
+        </Link>
       </SectionCard>
 
-      <SectionCard title="数据管理" subtitle="备份、恢复和表格导出需要文件下载与导入能力。" delay={210}>
-        <Text style={bodyStyle}>
-          Web 端已提供 JSON 完整备份、CSV 表格导出和 JSON 备份导入。移动端暂不提供本地文件导入/导出入口，请在 Web 端进入“我的 / 数据管理”完成这些操作。
-        </Text>
-      </SectionCard>
-
-      <SectionCard title="账号安全" subtitle="密码修改和退出操作放在最底部，减少误触。" delay={280}>
-        <TextInput
-          value={currentPassword}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setCurrentPassword(value);
-          }}
-          placeholder="当前密码"
-          style={inputStyle}
-          secureTextEntry
-        />
-        <TextInput
-          value={newPassword}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setNewPassword(value);
-          }}
-          placeholder="新密码"
-          style={inputStyle}
-          secureTextEntry
-        />
-        {passwordMutation.isError ? <Text style={errorTextStyle}>{passwordMutation.error instanceof Error ? passwordMutation.error.message : '密码修改失败'}</Text> : null}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable onPress={() => void passwordMutation.mutateAsync()} style={primaryButtonStyle}>
-            {passwordMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>修改密码</Text>}
-          </Pressable>
-          <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
-            <Text style={buttonTextStyle}>退出登录</Text>
-          </Pressable>
-        </View>
+      <SectionCard title="会话操作" subtitle="退出登录保留在首页底部，降低误触风险。" delay={210} density="compact" tone="muted">
+        <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
+          <Text style={buttonTextStyle}>退出登录</Text>
+        </Pressable>
       </SectionCard>
 
       <ConfirmDialog
@@ -242,22 +153,6 @@ export default function ProfileTab() {
       />
     </Screen>
   );
-}
-
-async function fetchProfileUpdate(displayName: string) {
-  const response = await mobileApiClient.request<{ user: AuthUser }>('/v1/auth/me', {
-    method: 'PATCH',
-    body: JSON.stringify({ displayName }),
-  });
-
-  return response.user;
-}
-
-async function fetchPasswordChange(currentPassword: string, newPassword: string) {
-  await mobileApiClient.request<void>('/v1/auth/password', {
-    method: 'PUT',
-    body: JSON.stringify({ currentPassword, newPassword }),
-  });
 }
 
 const bodyStyle = {
@@ -285,6 +180,26 @@ const statValueStyle = {
   fontSize: 24,
   fontWeight: '700' as const,
   color: palette.text,
+};
+
+const navRowStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 12,
+  borderTopWidth: 1,
+  borderTopColor: palette.borderSoft,
+  paddingTop: 12,
+};
+
+const listTitleStyle = {
+  fontSize: 16,
+  fontWeight: '700' as const,
+  color: palette.text,
+};
+
+const linkMetaStyle = {
+  color: palette.textSoft,
+  fontSize: 13,
 };
 
 const buttonStyle = {

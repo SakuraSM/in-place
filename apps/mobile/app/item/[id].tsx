@@ -58,9 +58,9 @@ export default function ItemDetailScreen() {
   const breadcrumb = ancestorsQuery.data?.map((ancestor) => ancestor.name).join(' / ') ?? item.name;
 
   return (
-    <Screen scroll>
+    <Screen scroll contentInsetMode="page" chrome="muted">
       <BrandHeader
-        compact
+        variant="page"
         title={item.name}
         subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label} · ${ITEM_STATUS_PRESENTATION[item.status].label}`}
       />
@@ -79,7 +79,7 @@ export default function ItemDetailScreen() {
         ) : null}
       </View>
 
-      <SectionCard title="基础信息" subtitle="和 Web 详情页保持一致的主信息卡片。" delay={80}>
+      <SectionCard title="基础信息" subtitle="和 Web 详情页保持一致的主信息卡片。" delay={80} density="compact">
         <StatusBadge status={item.status} />
         <Text style={hintStyle}>路径：{breadcrumb}</Text>
         <Text style={bodyStyle}>类别：{item.category || '未分类'}</Text>
@@ -90,7 +90,7 @@ export default function ItemDetailScreen() {
       </SectionCard>
 
       {item.type === 'container' ? (
-        <SectionCard title="直接内容" subtitle={`继续下钻浏览这个${getContainerTypeLabel(item)}里的物品、收纳和位置。`} delay={150}>
+        <SectionCard title="直接内容" subtitle={`继续下钻浏览这个${getContainerTypeLabel(item)}里的物品、收纳和位置。`} delay={150} density="compact">
           {children.length === 0 ? (
             <Text style={bodyStyle}>这个{getContainerTypeLabel(item)}里还没有直接内容。</Text>
           ) : (
@@ -111,7 +111,7 @@ export default function ItemDetailScreen() {
         </SectionCard>
       ) : null}
 
-      <SectionCard title="危险操作" subtitle="删除后不可撤销，容器下的内容也会一起删除。" delay={220}>
+      <SectionCard title="危险操作" subtitle="删除后不可撤销，容器下的内容也会一起删除。" delay={220} density="compact" tone="muted">
         {deleteMutation.isError ? (
           <Text style={errorTextStyle}>
             {deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}

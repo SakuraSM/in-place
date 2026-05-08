@@ -209,11 +209,11 @@ export default function ItemFormScreen() {
   const categories = categoriesQuery.data ?? [];
 
   return (
-    <Screen scroll>
+    <Screen scroll contentInsetMode="form" chrome="muted">
       <Stack.Screen options={{ title: isEditing ? '编辑物品' : '新建物品', headerShown: true }} />
 
       <BrandHeader
-        compact
+        variant="page"
         title={isEditing ? '编辑物品' : '新建物品'}
         subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '收纳' : '物品'}。`}
       />
@@ -222,6 +222,7 @@ export default function ItemFormScreen() {
         title="基础表单"
         subtitle="表单结构、分段切换和标签芯片向 Web 的信息密度对齐。"
         delay={70}
+        density="compact"
       >
         {!isEditing ? (
           <View style={segmentedStyle}>

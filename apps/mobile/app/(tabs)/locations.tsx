@@ -7,6 +7,7 @@ import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -59,16 +60,18 @@ export default function LocationsTab() {
   }
 
   return (
-    <Screen scroll>
-      <BrandHeader compact title="位置树" subtitle="与 Web 端位置树保持一致，查看位置导航、当前位置、统计和直接内容。" />
+    <Screen scroll contentInsetMode="page" chrome="muted">
+      <Entrance variant="page">
+        <BrandHeader variant="page" title="位置树" subtitle="与 Web 端位置树保持一致，查看位置导航、当前位置、统计和直接内容。" />
+      </Entrance>
 
       {locationItems.length === 0 ? (
-        <SectionCard title="还没有可展示的位置" subtitle="在 Web 端或后续移动端位置表单中标记位置后会显示在这里。" delay={70}>
+        <SectionCard title="还没有可展示的位置" subtitle="在 Web 端或后续移动端位置表单中标记位置后会显示在这里。" delay={70} density="compact">
           <Text style={bodyStyle}>位置是带有位置标记的容器，用于承载空间、房间或区域层级。</Text>
         </SectionCard>
       ) : (
         <>
-          <SectionCard title="位置导航" subtitle="选择一个位置，右侧信息在移动端折叠为下方卡片。" delay={70}>
+          <SectionCard title="位置导航" subtitle="选择一个位置，右侧信息在移动端折叠为下方卡片。" delay={70} density="compact">
             <View style={chipWrapStyle}>
               {locationItems.map((location) => (
                 <Pressable
@@ -101,7 +104,7 @@ export default function LocationsTab() {
                 </View>
               </SectionCard>
 
-              <SectionCard title="直接内容" subtitle={`${directChildren.length} 项`} delay={170}>
+              <SectionCard title="直接内容" subtitle={`${directChildren.length} 项`} delay={170} density="compact">
                 {directChildren.length === 0 ? (
                   <Text style={bodyStyle}>这个位置下还没有直接内容。</Text>
                 ) : (

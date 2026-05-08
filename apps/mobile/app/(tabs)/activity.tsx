@@ -7,6 +7,7 @@ import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/a
 import { useAuth } from '@/providers/AuthProvider';
 import { activityApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -62,14 +63,18 @@ export default function ActivityTab() {
   return (
     <Screen
       scroll
+      contentInsetMode="page"
+      chrome="muted"
       scrollProps={{
         onScroll: handleScroll,
         scrollEventThrottle: 16,
       }}
     >
-      <BrandHeader compact title="操作记录" subtitle="与 Web 端操作记录一致，汇总手动录入、AI 录入、修改和删除。" />
+      <Entrance variant="page">
+        <BrandHeader variant="page" title="操作记录" subtitle="与 Web 端操作记录一致，汇总手动录入、AI 录入、修改和删除。" />
+      </Entrance>
 
-      <SectionCard title="记录概览" subtitle="当前已加载记录的动作统计。" delay={70}>
+      <SectionCard title="记录概览" subtitle="当前已加载记录的动作统计。" delay={70} density="compact">
         <View style={statsGridStyle}>
           {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
             <View key={action} style={statCardStyle}>
@@ -80,7 +85,7 @@ export default function ActivityTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="操作记录" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按时间倒序展示'} delay={140}>
+      <SectionCard title="操作记录" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按时间倒序展示'} delay={140} density="compact">
         {logs.length === 0 ? (
           <Text style={bodyStyle}>还没有操作记录。</Text>
         ) : (

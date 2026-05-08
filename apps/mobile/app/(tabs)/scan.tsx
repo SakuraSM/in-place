@@ -253,12 +253,12 @@ export default function ScanTab() {
   }
 
   return (
-    <Screen scroll>
-      <Entrance>
-        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" />
+    <Screen scroll contentInsetMode="page" chrome="muted">
+      <Entrance variant="page">
+        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" variant="page" />
       </Entrance>
 
-      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70}>
+      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70} density="compact">
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
@@ -288,7 +288,7 @@ export default function ScanTab() {
         {error ? <Text style={errorStyle}>{error}</Text> : null}
       </SectionCard>
 
-      <SectionCard title="识别结果" subtitle="保持卡片式结果编排，编辑后再批量保存。" delay={150}>
+      <SectionCard title="识别结果" subtitle="保持卡片式结果编排，编辑后再批量保存。" delay={150} density="compact">
         <Pressable
           onPress={() => void handleSaveSelected()}
           disabled={saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)}

@@ -9,6 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi, tagsApi } from '@/shared/api/mobileClient';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -120,14 +121,18 @@ export default function OverviewTab() {
   return (
     <Screen
       scroll
+      contentInsetMode="page"
+      chrome="muted"
       scrollProps={{
         onScroll: handleScroll,
         scrollEventThrottle: 16,
       }}
     >
-      <BrandHeader compact title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签，筛选项与 Web 端保持一致。" />
+      <Entrance variant="page">
+        <BrandHeader variant="page" title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签，筛选项与 Web 端保持一致。" />
+      </Entrance>
 
-      <SectionCard title="检索空间" subtitle="支持类型、状态、标签筛选，并向下滚动继续加载。" delay={70}>
+      <SectionCard title="检索空间" subtitle="支持类型、状态、标签筛选，并向下滚动继续加载。" delay={70} density="compact">
         <TextInput
           value={query}
           onChangeText={setQuery}

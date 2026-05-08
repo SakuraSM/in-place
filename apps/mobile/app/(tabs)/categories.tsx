@@ -197,9 +197,9 @@ export default function CategoriesTab() {
   };
 
   return (
-    <Screen scroll>
-      <Entrance>
-        <BrandHeader title="管理" subtitle={`${activeSectionLabel}与 Web 端保持一致，维护统一分类和标签库。`} />
+    <Screen scroll contentInsetMode="page" chrome="muted">
+      <Entrance variant="page">
+        <BrandHeader title="管理" subtitle={`${activeSectionLabel}与 Web 端保持一致，维护统一分类和标签库。`} variant="page" />
       </Entrance>
 
       <View style={segmentedStyle}>
@@ -218,7 +218,7 @@ export default function CategoriesTab() {
       </View>
 
       {activeSection === 'categories' ? (
-      <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70}>
+      <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70} density="compact">
         <Text style={captionStyle}>分类数：{categories.length}</Text>
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {categoryMutation.isError ? <Text style={errorTextStyle}>{categoryMutation.error instanceof Error ? categoryMutation.error.message : '分类保存失败'}</Text> : null}
@@ -307,7 +307,7 @@ export default function CategoriesTab() {
       ) : null}
 
       {activeSection === 'tags' ? (
-      <SectionCard title="标签管理" subtitle="维护统一标签库，减少重复命名，方便搜索和批量整理。" delay={150}>
+      <SectionCard title="标签管理" subtitle="维护统一标签库，减少重复命名，方便搜索和批量整理。" delay={150} density="compact">
         <Text style={captionStyle}>标签数：{tags.length}</Text>
         {tagMutation.isError ? <Text style={errorTextStyle}>{tagMutation.error instanceof Error ? tagMutation.error.message : '标签保存失败'}</Text> : null}
         {deleteTagMutation.isError ? <Text style={errorTextStyle}>{deleteTagMutation.error instanceof Error ? deleteTagMutation.error.message : '标签删除失败'}</Text> : null}

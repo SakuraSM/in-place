@@ -7,29 +7,44 @@ interface BrandHeaderProps {
   subtitle?: string;
   accessory?: ReactNode;
   compact?: boolean;
+  variant?: 'hero' | 'page';
+  align?: 'top' | 'center';
 }
 
-export function BrandHeader({ title, subtitle, accessory, compact = false }: BrandHeaderProps) {
-  const logoSize = compact ? 52 : 64;
+export function BrandHeader({
+  title,
+  subtitle,
+  accessory,
+  compact = false,
+  variant,
+  align = 'top',
+}: BrandHeaderProps) {
+  const resolvedVariant = variant ?? (compact ? 'page' : 'hero');
+  const logoSize = resolvedVariant === 'hero' ? 52 : 38;
+  const titleSize = resolvedVariant === 'hero' ? 28 : 22;
+  const titleLineHeight = resolvedVariant === 'hero' ? 34 : 28;
 
   return (
     <View
       style={{
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: align === 'center' ? 'center' : 'flex-start',
         justifyContent: 'space-between',
-        gap: 14,
+        gap: 12,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 12 : 14, flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: align === 'center' ? 'center' : 'flex-start', gap: 12, flex: 1 }}>
         <View
           style={{
             width: logoSize,
             height: logoSize,
-            borderRadius: compact ? 18 : 22,
+            borderRadius: resolvedVariant === 'hero' ? 18 : 14,
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
+            backgroundColor: palette.surface,
+            borderWidth: 1,
+            borderColor: palette.borderSoft,
             ...shadows.card,
           }}
         >
@@ -43,12 +58,25 @@ export function BrandHeader({ title, subtitle, accessory, compact = false }: Bra
             }}
           />
         </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={{ fontSize: compact ? 24 : 30, fontWeight: '800', color: palette.text }}>
+        <View style={{ flex: 1, gap: resolvedVariant === 'hero' ? 6 : 2, paddingTop: resolvedVariant === 'hero' ? 2 : 0 }}>
+          <Text
+            style={{
+              fontSize: titleSize,
+              lineHeight: titleLineHeight,
+              fontWeight: '800',
+              color: palette.text,
+            }}
+          >
             {title}
           </Text>
           {subtitle ? (
-            <Text style={{ fontSize: compact ? 13 : 15, lineHeight: compact ? 18 : 22, color: palette.textSoft }}>
+            <Text
+              style={{
+                fontSize: resolvedVariant === 'hero' ? 14 : 13,
+                lineHeight: resolvedVariant === 'hero' ? 20 : 18,
+                color: palette.textSoft,
+              }}
+            >
               {subtitle}
             </Text>
           ) : null}

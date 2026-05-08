@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { palette } from '@/shared/ui/theme';
@@ -26,6 +27,7 @@ const mobileTabItems = getMobilePrimaryNavigationItems().map((item) => ({
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
+  const insets = useSafeAreaInsets();
 
   if (!loading && !session) {
     return <Redirect href="/(auth)/login" />;
@@ -38,9 +40,9 @@ export default function TabsLayout() {
         tabBarActiveTintColor: palette.brandStrong,
         tabBarInactiveTintColor: palette.textSoft,
         tabBarStyle: {
-          height: 74,
-          paddingTop: 10,
-          paddingBottom: 12,
+          height: 62 + Math.max(insets.bottom, 10),
+          paddingTop: 8,
+          paddingBottom: Math.max(insets.bottom, 10),
           borderTopColor: palette.borderSoft,
           backgroundColor: 'rgba(255,255,255,0.96)',
         },
