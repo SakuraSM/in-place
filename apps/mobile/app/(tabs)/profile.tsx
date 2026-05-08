@@ -63,25 +63,28 @@ export default function ProfileTab() {
       <Entrance variant="page">
         <BrandHeader
           title="我的"
-          subtitle={`当前账号：${user?.email ?? '未登录'}，把资料、统计和 AI 设置放在一个地方。`}
-          variant="hero"
+          subtitle={user?.email ?? '当前未登录'}
+          variant="page"
         />
       </Entrance>
 
-      <SectionCard title="资料与统计" subtitle="昵称、账户概况和库存统计会保持同步。" delay={70}>
-        <TextInput
-          value={displayName}
-          onChangeText={(value) => {
-            setSaveMessage(null);
-            setDisplayName(value);
-          }}
-          placeholder="昵称"
-          style={inputStyle}
-        />
+      <SectionCard title="资料与统计" subtitle="昵称和库存概况会保持同步。" delay={70} density="compact" headerMode="compact">
+        <View style={profileEditRowStyle}>
+          <TextInput
+            value={displayName}
+            onChangeText={(value) => {
+              setSaveMessage(null);
+              setDisplayName(value);
+            }}
+            placeholder="昵称"
+            style={[inputStyle, { flex: 1 }]}
+          />
+          <Pressable onPress={() => void profileMutation.mutateAsync()} style={primaryButtonStyle}>
+            {profileMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存</Text>}
+          </Pressable>
+        </View>
+        {saveMessage ? <Text style={successTextStyle}>{saveMessage}</Text> : null}
         {profileMutation.isError ? <Text style={errorTextStyle}>{profileMutation.error instanceof Error ? profileMutation.error.message : '昵称保存失败'}</Text> : null}
-        <Pressable onPress={() => void profileMutation.mutateAsync()} style={primaryButtonStyle}>
-          {profileMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存昵称</Text>}
-        </Pressable>
         <View style={statsGridStyle}>
           <View style={statCardStyle}>
             <Text style={statValueStyle}>{stats.items}</Text>
@@ -102,7 +105,7 @@ export default function ProfileTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="账户工作台" subtitle="把 AI 配置、账号安全和数据管理拆成独立页面，结构更清晰。" delay={140} density="compact">
+      <SectionCard title="账户工作台" subtitle="AI、账号安全和数据管理。" delay={140} density="compact" headerMode="compact">
         <Link href="/profile/ai" asChild>
           <Pressable style={navRowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
@@ -136,7 +139,7 @@ export default function ProfileTab() {
         </Link>
       </SectionCard>
 
-      <SectionCard title="会话操作" subtitle="退出登录保留在首页底部，降低误触风险。" delay={210} density="compact" tone="muted">
+      <SectionCard title="会话操作" subtitle="退出当前账号。" delay={210} density="compact" tone="muted" headerMode="compact">
         <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
           <Text style={buttonTextStyle}>退出登录</Text>
         </Pressable>
@@ -163,14 +166,14 @@ const bodyStyle = {
 const statsGridStyle = {
   flexDirection: 'row' as const,
   flexWrap: 'wrap' as const,
-  gap: 12,
+  gap: 10,
 };
 
 const statCardStyle = {
   minWidth: '47%' as const,
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 16,
+  padding: 14,
   gap: 4,
   borderWidth: 1,
   borderColor: palette.borderSoft,
@@ -216,16 +219,23 @@ const buttonTextStyle = {
 };
 
 const primaryButtonStyle = {
-  alignSelf: 'flex-start' as const,
   backgroundColor: palette.brand,
   borderRadius: 14,
-  paddingHorizontal: 16,
-  paddingVertical: 12,
+  paddingHorizontal: 15,
+  paddingVertical: 13,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
 };
 
 const primaryButtonTextStyle = {
   color: '#ffffff',
   fontWeight: '600' as const,
+};
+
+const profileEditRowStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 10,
 };
 
 const inputStyle = {

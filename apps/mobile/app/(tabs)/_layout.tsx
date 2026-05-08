@@ -2,6 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { palette } from '@/shared/ui/theme';
@@ -40,15 +41,26 @@ export default function TabsLayout() {
         tabBarActiveTintColor: palette.brandStrong,
         tabBarInactiveTintColor: palette.textSoft,
         tabBarStyle: {
-          height: 62 + Math.max(insets.bottom, 10),
-          paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 10),
+          height: 58 + Math.max(insets.bottom, 8),
+          paddingTop: 6,
+          paddingBottom: Math.max(insets.bottom, 8),
           borderTopColor: palette.borderSoft,
           backgroundColor: 'rgba(255,255,255,0.96)',
+          ...(Platform.OS === 'ios' ? {
+            shadowColor: '#0f172a',
+            shadowOpacity: 0.06,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: -6 },
+          } : {
+            elevation: 8,
+          }),
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
+        },
+        tabBarIconStyle: {
+          marginTop: 1,
         },
       }}
       >
@@ -58,7 +70,7 @@ export default function TabsLayout() {
           name={item.name}
           options={{
             title: item.shortLabel,
-            tabBarIcon: ({ color, size }) => <Ionicons name={item.iconName} size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? item.iconName.replace('-outline', '') as typeof item.iconName : item.iconName} size={23} color={color} />,
           }}
         />
       ))}

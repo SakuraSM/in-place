@@ -2,7 +2,7 @@ import { Link } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
@@ -61,6 +61,7 @@ export default function OverviewTab() {
   const [typeFilter, setTypeFilter] = useState<TypeFilterValue>('all');
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedQuery = useDebouncedValue(query, 250);
   const effectiveTypeFilter = resolveEffectiveTypeFilter(typeFilter);
   const effectiveStatusFilter = resolveEffectiveStatusFilter(typeFilter, statusFilter);
@@ -92,6 +93,7 @@ export default function OverviewTab() {
     () => [...(tagsQuery.data ?? [])].sort((left, right) => left.name.localeCompare(right.name, 'zh-CN')),
     [tagsQuery.data],
   );
+  const activeFilterCount = Number(typeFilter !== 'all') + Number(statusFilter !== 'all') + selectedTags.length;
 
   const toggleTag = (tagName: string) => {
     setSelectedTags((current) => (
@@ -129,83 +131,105 @@ export default function OverviewTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="总览" subtitle="搜索收纳、位置、物品名称、描述或标签，筛选项与 Web 端保持一致。" />
+        <BrandHeader variant="page" title="总览" subtitle="搜索和筛选所有收纳、位置与物品。" />
       </Entrance>
 
-      <SectionCard title="检索空间" subtitle="支持类型、状态、标签筛选，并向下滚动继续加载。" delay={70} density="compact">
+      <SectionCard title="检索" subtitle={meta ? `${meta.total} 个结果，向下滚动继续加载` : '输入关键词快速定位'} delay={70} density="compact" headerMode="compact">
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="搜索收纳、位置、物品名称、描述或标签..."
+          placeholder="搜索名称、位置、描述或标签"
           style={inputStyle}
         />
 
-        <View style={filterGroupStyle}>
-          <Text style={filterLabelStyle}>类型</Text>
-          <View style={chipWrapStyle}>
-            {TYPE_FILTERS.map(({ value, label }) => (
-              <Pressable
-                key={value}
-                onPress={() => {
-                  setTypeFilter(value);
-                  if (value === 'location' || value === 'container') {
-                    setStatusFilter('all');
-                  }
-                }}
-                style={[chipStyle, typeFilter === value ? activeChipStyle : null]}
-              >
-                <Text style={typeFilter === value ? activeChipTextStyle : chipTextStyle}>{label}</Text>
+        <Pressable onPress={() => setFiltersOpen((current) => !current)} style={filterToggleStyle}>
+          <View>
+            <Text style={filterToggleTitleStyle}>{filtersOpen ? '收起筛选' : '展开筛选'}</Text>
+            <Text style={bodyStyle}>
+              {activeFilterCount > 0 ? `已启用 ${activeFilterCount} 个筛选条件` : '类型、状态、标签可选'}
+            </Text>
+          </View>
+          <Text style={filterToggleTitleStyle}>{filtersOpen ? '收起' : '筛选'}</Text>
+        </Pressable>
+
+        {filtersOpen ? (
+          <View style={filterPanelStyle}>
+            <View style={filterGroupStyle}>
+              <Text style={filterLabelStyle}>类型</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRailStyle}>
+                {TYPE_FILTERS.map(({ value, label }) => (
+                  <Pressable
+                    key={value}
+                    onPress={() => {
+                      setTypeFilter(value);
+                      if (value === 'location' || value === 'container') {
+                        setStatusFilter('all');
+                      }
+                    }}
+                    style={[chipStyle, typeFilter === value ? activeChipStyle : null]}
+                  >
+                    <Text style={typeFilter === value ? activeChipTextStyle : chipTextStyle}>{label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={filterGroupStyle}>
+              <Text style={filterLabelStyle}>状态</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRailStyle}>
+                {STATUS_FILTERS.map(({ value, label }) => {
+                  const disabled = typeFilter === 'location' || typeFilter === 'container';
+                  return (
+                    <Pressable
+                      key={value}
+                      disabled={disabled}
+                      onPress={() => setStatusFilter(value)}
+                      style={[chipStyle, statusFilter === value ? activeChipStyle : null, disabled ? disabledChipStyle : null]}
+                    >
+                      <Text style={statusFilter === value ? activeChipTextStyle : chipTextStyle}>{label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            <View style={filterGroupStyle}>
+              <Text style={filterLabelStyle}>标签</Text>
+              {tagsQuery.isLoading ? (
+                <Text style={bodyStyle}>正在加载标签...</Text>
+              ) : (
+                <View style={chipWrapStyle}>
+                  <Pressable
+                    onPress={() => setSelectedTags([])}
+                    style={[chipStyle, selectedTags.length === 0 ? activeChipStyle : null]}
+                  >
+                    <Text style={selectedTags.length === 0 ? activeChipTextStyle : chipTextStyle}>全部</Text>
+                  </Pressable>
+                  {tags.map((tag) => {
+                    const active = selectedTags.includes(tag.name);
+                    return (
+                      <Pressable
+                        key={tag.id}
+                        onPress={() => toggleTag(tag.name)}
+                        style={[chipStyle, active ? activeChipStyle : null]}
+                      >
+                        <Text style={active ? activeChipTextStyle : chipTextStyle}>{tag.name}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          </View>
+        ) : selectedTags.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRailStyle}>
+            {selectedTags.map((tagName) => (
+              <Pressable key={tagName} onPress={() => toggleTag(tagName)} style={[chipStyle, activeChipStyle]}>
+                <Text style={activeChipTextStyle}>{tagName} ×</Text>
               </Pressable>
             ))}
-          </View>
-        </View>
-
-        <View style={filterGroupStyle}>
-          <Text style={filterLabelStyle}>状态</Text>
-          <View style={chipWrapStyle}>
-            {STATUS_FILTERS.map(({ value, label }) => {
-              const disabled = typeFilter === 'location' || typeFilter === 'container';
-              return (
-                <Pressable
-                  key={value}
-                  disabled={disabled}
-                  onPress={() => setStatusFilter(value)}
-                  style={[chipStyle, statusFilter === value ? activeChipStyle : null, disabled ? disabledChipStyle : null]}
-                >
-                  <Text style={statusFilter === value ? activeChipTextStyle : chipTextStyle}>{label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={filterGroupStyle}>
-          <Text style={filterLabelStyle}>标签</Text>
-          {tagsQuery.isLoading ? (
-            <Text style={bodyStyle}>正在加载标签筛选...</Text>
-          ) : (
-            <View style={chipWrapStyle}>
-              <Pressable
-                onPress={() => setSelectedTags([])}
-                style={[chipStyle, selectedTags.length === 0 ? activeChipStyle : null]}
-              >
-                <Text style={selectedTags.length === 0 ? activeChipTextStyle : chipTextStyle}>全部</Text>
-              </Pressable>
-              {tags.map((tag) => {
-                const active = selectedTags.includes(tag.name);
-                return (
-                  <Pressable
-                    key={tag.id}
-                    onPress={() => toggleTag(tag.name)}
-                    style={[chipStyle, active ? activeChipStyle : null]}
-                  >
-                    <Text style={active ? activeChipTextStyle : chipTextStyle}>{tag.name}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-        </View>
+          </ScrollView>
+        ) : null}
 
         {searchQuery.isLoading ? <StateBlock title="正在搜索" loading body="第一次进入会拉取默认总览结果。" /> : null}
 
@@ -263,10 +287,44 @@ const filterGroupStyle = {
   gap: 8,
 };
 
+const filterPanelStyle = {
+  gap: 12,
+  borderRadius: 18,
+  backgroundColor: palette.surfaceMuted,
+  borderWidth: 1,
+  borderColor: palette.borderSoft,
+  padding: 12,
+};
+
+const filterToggleStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'space-between' as const,
+  gap: 12,
+  borderRadius: 16,
+  backgroundColor: palette.surfaceMuted,
+  borderWidth: 1,
+  borderColor: palette.borderSoft,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+};
+
+const filterToggleTitleStyle = {
+  color: palette.text,
+  fontSize: 14,
+  fontWeight: '700' as const,
+};
+
 const filterLabelStyle = {
   color: palette.textSoft,
   fontSize: 12,
   fontWeight: '700' as const,
+};
+
+const chipRailStyle = {
+  flexDirection: 'row' as const,
+  gap: 8,
+  paddingRight: 2,
 };
 
 const chipWrapStyle = {
@@ -280,7 +338,7 @@ const chipStyle = {
   backgroundColor: palette.surfaceMuted,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingHorizontal: 12,
+  paddingHorizontal: 13,
   paddingVertical: 8,
 };
 

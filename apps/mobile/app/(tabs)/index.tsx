@@ -64,12 +64,12 @@ export default function HomeTab() {
       <Entrance variant="page">
         <BrandHeader
           title="归位"
-          subtitle="让每件物品都有清晰归属，首页结构和 Web 保持同一套信息层次。"
+          subtitle="快速录入、查看根目录，把物品放回该在的位置。"
           variant="hero"
         />
       </Entrance>
 
-      <SectionCard title="快速开始" subtitle="新增入口与根目录列表收在同一节奏里，便于快速录入和继续整理。" delay={80}>
+      <SectionCard title="快速开始" subtitle={meta ? `根目录 ${meta.total} 项` : '选择一个动作开始整理'} delay={80} headerMode="compact">
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable onPress={() => router.push('/item/form?type=container')} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>新建容器</Text>
@@ -79,7 +79,7 @@ export default function HomeTab() {
           </Pressable>
         </View>
         {rootItems.length === 0 ? (
-          <Text style={bodyStyle}>根目录还没有内容，后续第二阶段可以补创建入口。</Text>
+          <Text style={bodyStyle}>根目录还没有内容，先新建一个位置或物品。</Text>
         ) : (
           <>
             {rootItems.map((item) => (
@@ -88,7 +88,7 @@ export default function HomeTab() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={listTitleStyle}>{item.name}</Text>
                     <Text style={bodyStyle}>
-                       {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
+                      {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
                     </Text>
                   </View>
                   <StatusBadge status={item.status} />
@@ -126,7 +126,8 @@ const listRowStyle = {
   gap: 12,
   borderTopWidth: 1,
   borderTopColor: palette.borderSoft,
-  paddingTop: 14,
+  paddingTop: 12,
+  minHeight: 58,
 };
 
 const listTitleStyle = {
@@ -155,7 +156,7 @@ const secondaryButtonStyle = {
   backgroundColor: palette.surface,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -169,7 +170,7 @@ const primaryButtonStyle = {
   flex: 1,
   borderRadius: 16,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 

@@ -1,7 +1,8 @@
 import { Link } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
@@ -15,21 +16,29 @@ import { palette } from '@/shared/ui/theme';
 import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { buildChildrenMap, countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 
-const PAGE_SIZE = 200;
+const PAGE_SIZE = 100;
+
+const LOCATION_STAT_ITEMS = [
+  { key: 'locations', label: '位置' },
+  { key: 'containers', label: '收纳' },
+  { key: 'items', label: '物品' },
+  { key: 'total', label: '总数' },
+] as const;
 
 export default function LocationsTab() {
   const { user } = useAuth();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const itemsQuery = useQuery({
+  const itemsQuery = useInfiniteQuery({
     queryKey: ['mobile', 'locations', user?.id],
     enabled: Boolean(user),
-    queryFn: async () => {
-      const response = await itemsApi.searchItemsPage('', user!.id, { page: 1, pageSize: PAGE_SIZE });
-      return response.data;
-    },
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => itemsApi.searchItemsPage('', user!.id, { page: pageParam, pageSize: PAGE_SIZE }),
+    getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
   });
 
-  const items = itemsQuery.data ?? [];
+  const pages = itemsQuery.data?.pages ?? [];
+  const items = pages.flatMap((page) => page.data);
+  const meta = pages[pages.length - 1]?.meta;
   const locationItems = useMemo(() => items.filter(isLocationItem), [items]);
   const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const childrenMap = useMemo(() => buildChildrenMap(items), [items]);
@@ -59,20 +68,40 @@ export default function LocationsTab() {
     return <Screen><StateBlock title="位置树加载失败" body={itemsQuery.error instanceof Error ? itemsQuery.error.message : '请稍后重试。'} /></Screen>;
   }
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!itemsQuery.hasNextPage || itemsQuery.isFetchingNextPage) {
+      return;
+    }
+
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+    if (distanceFromBottom < 160) {
+      void itemsQuery.fetchNextPage();
+    }
+  };
+
   return (
-    <Screen scroll contentInsetMode="page" chrome="muted">
+    <Screen
+      scroll
+      contentInsetMode="page"
+      chrome="muted"
+      scrollProps={{
+        onScroll: handleScroll,
+        scrollEventThrottle: 16,
+      }}
+    >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="位置树" subtitle="与 Web 端位置树保持一致，查看位置导航、当前位置、统计和直接内容。" />
+        <BrandHeader variant="page" title="位置" subtitle="按空间查看物品归属，先选房间，再看下级内容。" />
       </Entrance>
 
       {locationItems.length === 0 ? (
-        <SectionCard title="还没有可展示的位置" subtitle="在 Web 端或后续移动端位置表单中标记位置后会显示在这里。" delay={70} density="compact">
+        <SectionCard title="还没有可展示的位置" subtitle="新建容器时标记为位置后，会显示在这里。" delay={70} density="compact">
           <Text style={bodyStyle}>位置是带有位置标记的容器，用于承载空间、房间或区域层级。</Text>
         </SectionCard>
       ) : (
         <>
-          <SectionCard title="位置导航" subtitle="选择一个位置，右侧信息在移动端折叠为下方卡片。" delay={70} density="compact">
-            <View style={chipWrapStyle}>
+          <SectionCard title="位置导航" subtitle={meta ? `已读取 ${items.length} / ${meta.total} 项` : '选择一个空间查看内容'} delay={70} density="compact" headerMode="compact">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={locationRailStyle}>
               {locationItems.map((location) => (
                 <Pressable
                   key={location.id}
@@ -82,34 +111,34 @@ export default function LocationsTab() {
                   <Text style={selectedLocationId === location.id ? activeChipTextStyle : chipTextStyle}>{location.name}</Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
           </SectionCard>
 
           {selectedLocation ? (
             <>
-              <SectionCard title="当前位置" subtitle={selectedLocation.name} delay={120}>
-                {selectedLocation.description ? <Text style={bodyStyle}>{selectedLocation.description}</Text> : null}
+              <SectionCard title={selectedLocation.name} subtitle={selectedLocation.description || '当前选择的位置'} delay={120}>
                 <View style={statsGridStyle}>
-                  {[
-                    { label: '下级位置', value: selectedStats?.locations ?? 0 },
-                    { label: '下级收纳', value: selectedStats?.containers ?? 0 },
-                    { label: '下级物品', value: selectedStats?.items ?? 0 },
-                    { label: '内容总数', value: selectedStats?.total ?? 0 },
-                  ].map((stat) => (
-                    <View key={stat.label} style={statCardStyle}>
-                      <Text style={statValueStyle}>{stat.value}</Text>
+                  {LOCATION_STAT_ITEMS.map((stat) => (
+                    <View key={stat.key} style={statCardStyle}>
+                      <Text style={statValueStyle}>{selectedStats?.[stat.key] ?? 0}</Text>
                       <Text style={captionStyle}>{stat.label}</Text>
                     </View>
                   ))}
                 </View>
               </SectionCard>
 
-              <SectionCard title="直接内容" subtitle={`${directChildren.length} 项`} delay={170} density="compact">
+              <SectionCard title="直接内容" subtitle={`${directChildren.length} 项`} delay={170} density="compact" headerMode="compact">
                 {directChildren.length === 0 ? (
                   <Text style={bodyStyle}>这个位置下还没有直接内容。</Text>
                 ) : (
                   directChildren.map((child) => <DirectChildRow key={child.id} item={child} />)
                 )}
+                {itemsQuery.isFetchingNextPage ? (
+                  <View style={loadingMoreStyle}>
+                    <ActivityIndicator color={palette.brandStrong} />
+                    <Text style={captionStyle}>正在继续读取层级...</Text>
+                  </View>
+                ) : null}
               </SectionCard>
             </>
           ) : null}
@@ -147,10 +176,10 @@ const captionStyle = {
   color: palette.textSoft,
 };
 
-const chipWrapStyle = {
+const locationRailStyle = {
   flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
   gap: 8,
+  paddingRight: 4,
 };
 
 const chipStyle = {
@@ -158,13 +187,13 @@ const chipStyle = {
   backgroundColor: palette.surfaceMuted,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingHorizontal: 12,
-  paddingVertical: 8,
+  paddingHorizontal: 14,
+  paddingVertical: 9,
 };
 
 const activeChipStyle = {
-  backgroundColor: palette.brandTint,
-  borderColor: '#7dd3fc',
+  backgroundColor: palette.brand,
+  borderColor: palette.brand,
 };
 
 const chipTextStyle = {
@@ -174,7 +203,7 @@ const chipTextStyle = {
 };
 
 const activeChipTextStyle = {
-  color: palette.brandStrong,
+  color: '#ffffff',
   fontSize: 13,
   fontWeight: '600' as const,
 };
@@ -188,8 +217,8 @@ const statsGridStyle = {
 const statCardStyle = {
   minWidth: '47%' as const,
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 16,
+  padding: 14,
   gap: 4,
   borderWidth: 1,
   borderColor: palette.borderSoft,
@@ -214,4 +243,12 @@ const listTitleStyle = {
   fontSize: 16,
   fontWeight: '700' as const,
   color: palette.text,
+};
+
+const loadingMoreStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: 8,
+  paddingTop: 10,
 };

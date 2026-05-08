@@ -22,27 +22,27 @@ export function SectionCard({
   tone = 'default',
   headerMode = 'default',
 }: SectionCardProps) {
-  const padding = density === 'compact' ? 16 : 20;
+  const padding = density === 'compact' ? 14 : 16;
 
   return (
     <Entrance delay={delay} variant="card">
       <View
         style={{
           backgroundColor: tone === 'muted' ? palette.surfaceMuted : palette.surface,
-          borderRadius: 24,
+          borderRadius: 20,
           padding,
-          gap: density === 'compact' ? 12 : 14,
+          gap: density === 'compact' ? 10 : 12,
           borderWidth: 1,
           borderColor: palette.borderSoft,
-          ...shadows.card,
+          ...shadows.sm,
         }}
       >
         <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
-          <Text style={{ fontSize: headerMode === 'compact' ? 18 : 22, fontWeight: '800', color: palette.text }}>
+          <Text style={{ fontSize: headerMode === 'compact' ? 17 : 21, fontWeight: '800', color: palette.text }}>
             {title}
           </Text>
           {subtitle ? (
-            <Text style={{ fontSize: 14, lineHeight: 20, color: palette.textSoft }}>
+            <Text style={{ fontSize: 13, lineHeight: 18, color: palette.textSoft }}>
               {subtitle}
             </Text>
           ) : null}

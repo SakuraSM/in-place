@@ -28,11 +28,11 @@ export function Screen({
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const contentSpacing = contentInsetMode === 'tight'
-    ? { horizontal: 18, vertical: 12, gap: 14 }
+    ? { horizontal: 16, vertical: 8, gap: 10 }
     : contentInsetMode === 'form'
-      ? { horizontal: 20, vertical: 16, gap: 16 }
-      : { horizontal: 20, vertical: 18, gap: 16 };
-  const topPadding = safeAreaTop === 'top-safe' ? insets.top + 10 : 0;
+      ? { horizontal: 16, vertical: 12, gap: 12 }
+      : { horizontal: 16, vertical: 12, gap: 12 };
+  const topPadding = safeAreaTop === 'top-safe' ? insets.top + 6 : 0;
   const bottomPadding = safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, 10) : 0;
   const containerStyle: ViewStyle = {
     flexGrow: 1,
@@ -47,7 +47,11 @@ export function Screen({
       <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
         <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
         <BackgroundChrome chrome={chrome} />
-        <ScrollView contentContainerStyle={[containerStyle, contentStyle]} {...scrollProps}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[containerStyle, contentStyle]}
+          {...scrollProps}
+        >
           {children as never}
         </ScrollView>
       </SafeAreaView>
@@ -86,24 +90,24 @@ const backgroundChromeStyle = {
 
 const topGlowStyle = {
   position: 'absolute' as const,
-  top: -72,
-  right: -28,
-  width: 210,
-  height: 210,
+  top: -78,
+  right: -68,
+  width: 186,
+  height: 186,
   borderRadius: 999,
-  backgroundColor: '#d8f1f5',
-  opacity: 0.52,
+  backgroundColor: '#dff7f4',
+  opacity: 0.36,
 };
 
 const sideGlowStyle = {
   position: 'absolute' as const,
-  left: -54,
-  top: 164,
-  width: 156,
-  height: 156,
+  left: -74,
+  top: 210,
+  width: 132,
+  height: 132,
   borderRadius: 999,
-  backgroundColor: '#e8f7fb',
-  opacity: 0.34,
+  backgroundColor: '#effaf7',
+  opacity: 0.2,
 };
 
 const mutedTopGlowStyle = {

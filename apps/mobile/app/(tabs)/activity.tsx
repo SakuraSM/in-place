@@ -71,10 +71,10 @@ export default function ActivityTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="操作记录" subtitle="与 Web 端操作记录一致，汇总手动录入、AI 录入、修改和删除。" />
+        <BrandHeader variant="page" title="记录" subtitle="查看录入、修改、删除等最近动作。" />
       </Entrance>
 
-      <SectionCard title="记录概览" subtitle="当前已加载记录的动作统计。" delay={70} density="compact">
+      <SectionCard title="记录概览" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按当前已加载记录统计'} delay={70} density="compact" headerMode="compact">
         <View style={statsGridStyle}>
           {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
             <View key={action} style={statCardStyle}>
@@ -85,7 +85,7 @@ export default function ActivityTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="操作记录" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按时间倒序展示'} delay={140} density="compact">
+      <SectionCard title="最近操作" subtitle="按时间倒序展示" delay={140} density="compact" headerMode="compact">
         {logs.length === 0 ? (
           <Text style={bodyStyle}>还没有操作记录。</Text>
         ) : (
@@ -151,22 +151,21 @@ const captionStyle = {
 
 const statsGridStyle = {
   flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
-  gap: 12,
+  gap: 8,
 };
 
 const statCardStyle = {
-  minWidth: '47%' as const,
+  flex: 1,
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 16,
+  padding: 12,
   gap: 4,
   borderWidth: 1,
   borderColor: palette.borderSoft,
 };
 
 const statValueStyle = {
-  fontSize: 24,
+  fontSize: 22,
   fontWeight: '700' as const,
   color: palette.text,
 };
@@ -177,7 +176,8 @@ const rowStyle = {
   gap: 12,
   borderTopWidth: 1,
   borderTopColor: palette.borderSoft,
-  paddingTop: 14,
+  paddingTop: 12,
+  minHeight: 68,
 };
 
 const listTitleStyle = {

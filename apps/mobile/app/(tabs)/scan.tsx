@@ -255,17 +255,28 @@ export default function ScanTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" variant="page" />
+        <BrandHeader title="扫描" subtitle="拍照或选图识别物品，确认后批量保存。" variant="page" />
       </Entrance>
 
-      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70} density="compact">
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+      <SectionCard title="图片来源" subtitle="先选择图片，再开始识别。" delay={70} density="compact" headerMode="compact">
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
           </Pressable>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
           </Pressable>
+        </View>
+
+        {selectedAsset ? (
+          <Image source={{ uri: selectedAsset.uri }} style={previewStyle} />
+        ) : (
+          <View style={emptyPreviewStyle}>
+            <Text style={hintStyle}>还没有选择图片</Text>
+          </View>
+        )}
+
+        <View style={{ flexDirection: 'row' }}>
           <Pressable
             disabled={!selectedAsset || recognizeMutation.isPending || saveMutation.isPending}
             onPress={() => void handleRecognize()}
@@ -278,17 +289,11 @@ export default function ScanTab() {
           </Pressable>
         </View>
 
-        {selectedAsset ? (
-          <Image source={{ uri: selectedAsset.uri }} style={previewStyle} />
-        ) : (
-          <Text style={hintStyle}>还没有选择图片。</Text>
-        )}
-
         {message ? <Text style={successStyle}>{message}</Text> : null}
         {error ? <Text style={errorStyle}>{error}</Text> : null}
       </SectionCard>
 
-      <SectionCard title="识别结果" subtitle="保持卡片式结果编排，编辑后再批量保存。" delay={150} density="compact">
+      <SectionCard title="识别结果" subtitle={drafts.length > 0 ? `已生成 ${drafts.length} 个候选结果` : '识别后会显示候选物品'} delay={150} density="compact" headerMode="compact">
         <Pressable
           onPress={() => void handleSaveSelected()}
           disabled={saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)}
@@ -301,7 +306,7 @@ export default function ScanTab() {
         </Pressable>
 
         {drafts.length === 0 ? (
-          <Text style={hintStyle}>识别结果会显示在这里。</Text>
+          <Text style={hintStyle}>结果会以卡片展示，可取消选择或展开编辑。</Text>
         ) : (
           drafts.map((draft, index) => (
             <Pressable
@@ -402,9 +407,9 @@ const successStyle = {
 
 const secondaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 15,
   backgroundColor: palette.canvasStrong,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -416,9 +421,9 @@ const secondaryButtonTextStyle = {
 
 const primaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 15,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -434,9 +439,20 @@ const primaryButtonTextStyle = {
 
 const previewStyle = {
   width: '100%' as const,
-  aspectRatio: 4 / 3,
-  borderRadius: 22,
+  aspectRatio: 16 / 10,
+  borderRadius: 18,
   backgroundColor: palette.canvasStrong,
+};
+
+const emptyPreviewStyle = {
+  minHeight: 112,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderStyle: 'dashed' as const,
+  borderColor: palette.border,
+  backgroundColor: palette.surfaceMuted,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
 };
 
 const draftCardStyle = {

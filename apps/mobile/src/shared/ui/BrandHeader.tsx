@@ -20,8 +20,8 @@ export function BrandHeader({
   align = 'top',
 }: BrandHeaderProps) {
   const resolvedVariant = variant ?? (compact ? 'page' : 'hero');
-  const logoSize = resolvedVariant === 'hero' ? 52 : 38;
-  const titleSize = resolvedVariant === 'hero' ? 28 : 22;
+  const logoSize = resolvedVariant === 'hero' ? 44 : 34;
+  const titleSize = resolvedVariant === 'hero' ? 30 : 24;
   const titleLineHeight = resolvedVariant === 'hero' ? 34 : 28;
 
   return (
@@ -38,14 +38,14 @@ export function BrandHeader({
           style={{
             width: logoSize,
             height: logoSize,
-            borderRadius: resolvedVariant === 'hero' ? 18 : 14,
+            borderRadius: resolvedVariant === 'hero' ? 16 : 12,
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
             backgroundColor: palette.surface,
             borderWidth: 1,
             borderColor: palette.borderSoft,
-            ...shadows.card,
+            ...shadows.sm,
           }}
         >
           <Image
@@ -58,7 +58,7 @@ export function BrandHeader({
             }}
           />
         </View>
-        <View style={{ flex: 1, gap: resolvedVariant === 'hero' ? 6 : 2, paddingTop: resolvedVariant === 'hero' ? 2 : 0 }}>
+        <View style={{ flex: 1, gap: resolvedVariant === 'hero' ? 3 : 1, paddingTop: resolvedVariant === 'hero' ? 1 : 0 }}>
           <Text
             style={{
               fontSize: titleSize,
@@ -73,7 +73,7 @@ export function BrandHeader({
             <Text
               style={{
                 fontSize: resolvedVariant === 'hero' ? 14 : 13,
-                lineHeight: resolvedVariant === 'hero' ? 20 : 18,
+                lineHeight: resolvedVariant === 'hero' ? 19 : 18,
                 color: palette.textSoft,
               }}
             >

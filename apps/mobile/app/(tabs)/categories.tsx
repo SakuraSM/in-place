@@ -199,7 +199,7 @@ export default function CategoriesTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="管理" subtitle={`${activeSectionLabel}与 Web 端保持一致，维护统一分类和标签库。`} variant="page" />
+        <BrandHeader title="管理" subtitle={`${activeSectionLabel}，维护分类和标签库。`} variant="page" />
       </Entrance>
 
       <View style={segmentedStyle}>
@@ -218,8 +218,7 @@ export default function CategoriesTab() {
       </View>
 
       {activeSection === 'categories' ? (
-      <SectionCard title="分类管理" subtitle="统一收纳和物品分类结构，让首页和总览都更清晰。" delay={70} density="compact">
-        <Text style={captionStyle}>分类数：{categories.length}</Text>
+      <SectionCard title="分类管理" subtitle="先选类型，再填写名称和颜色。" delay={70} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {categoryMutation.isError ? <Text style={errorTextStyle}>{categoryMutation.error instanceof Error ? categoryMutation.error.message : '分类保存失败'}</Text> : null}
         {deleteCategoryMutation.isError ? <Text style={errorTextStyle}>{deleteCategoryMutation.error instanceof Error ? deleteCategoryMutation.error.message : '分类删除失败'}</Text> : null}
@@ -243,18 +242,6 @@ export default function CategoriesTab() {
             value={categoryDraft.name}
             onChangeText={(value) => setCategoryDraft((current) => ({ ...current, name: value }))}
             placeholder="分类名称"
-            style={inputStyle}
-          />
-          <TextInput
-            value={categoryDraft.icon}
-            onChangeText={(value) => setCategoryDraft((current) => ({ ...current, icon: value }))}
-            placeholder="图标名，例如 FolderTree"
-            style={inputStyle}
-          />
-          <TextInput
-            value={categoryDraft.color}
-            onChangeText={(value) => setCategoryDraft((current) => ({ ...current, color: value }))}
-            placeholder="颜色，例如 sky"
             style={inputStyle}
           />
           <View style={pillRowStyle}>
@@ -307,8 +294,8 @@ export default function CategoriesTab() {
       ) : null}
 
       {activeSection === 'tags' ? (
-      <SectionCard title="标签管理" subtitle="维护统一标签库，减少重复命名，方便搜索和批量整理。" delay={150} density="compact">
-        <Text style={captionStyle}>标签数：{tags.length}</Text>
+      <SectionCard title="标签管理" subtitle="标签可用于搜索、筛选和批量整理。" delay={150} density="compact" headerMode="compact">
+        {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {tagMutation.isError ? <Text style={errorTextStyle}>{tagMutation.error instanceof Error ? tagMutation.error.message : '标签保存失败'}</Text> : null}
         {deleteTagMutation.isError ? <Text style={errorTextStyle}>{deleteTagMutation.error instanceof Error ? deleteTagMutation.error.message : '标签删除失败'}</Text> : null}
 
@@ -325,12 +312,6 @@ export default function CategoriesTab() {
             placeholder="标签描述"
             style={[inputStyle, { minHeight: 84, textAlignVertical: 'top' as const }]}
             multiline
-          />
-          <TextInput
-            value={tagDraft.color}
-            onChangeText={(value) => setTagDraft((current) => ({ ...current, color: value }))}
-            placeholder="颜色，例如 sky"
-            style={inputStyle}
           />
           <View style={pillRowStyle}>
             {MANAGEMENT_COLOR_OPTIONS.map((option) => (
@@ -438,8 +419,8 @@ const listTitleStyle = {
 };
 
 const formStyle = {
-  gap: 12,
-  paddingTop: 8,
+  gap: 10,
+  paddingTop: 4,
 };
 
 const segmentedStyle = {
@@ -450,11 +431,11 @@ const segmentedStyle = {
 const segmentButtonStyle = {
   flex: 1,
   alignItems: 'center' as const,
-  borderRadius: 18,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surface,
-  paddingVertical: 13,
+  paddingVertical: 12,
 };
 
 const activeSegmentStyle = {
@@ -476,11 +457,11 @@ const activeSegmentTextStyle = {
 
 const inputStyle = {
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
+  borderRadius: 14,
   borderWidth: 1,
   borderColor: palette.border,
   paddingHorizontal: 16,
-  paddingVertical: 14,
+  paddingVertical: 12,
   fontSize: 15,
   color: palette.text,
 };
@@ -497,7 +478,7 @@ const chipStyle = {
   borderWidth: 1,
   borderColor: palette.border,
   paddingHorizontal: 12,
-  paddingVertical: 8,
+  paddingVertical: 7,
 };
 
 const activeChipStyle = {
@@ -526,7 +507,7 @@ const secondaryButtonStyle = {
   flex: 1,
   borderRadius: 16,
   backgroundColor: palette.canvasStrong,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -540,7 +521,7 @@ const primaryButtonStyle = {
   flex: 1,
   borderRadius: 16,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
