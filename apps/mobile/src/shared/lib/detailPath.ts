@@ -14,3 +14,10 @@ export function resolveMobileDetailHref(item: { id: string; type: ItemType }): H
     params: { id: item.id },
   };
 }
+
+export function resolveMobileContainerBrowseHref(item: { id: string }): Href {
+  return {
+    pathname: '/container/browse/[id]',
+    params: { id: item.id },
+  };
+}

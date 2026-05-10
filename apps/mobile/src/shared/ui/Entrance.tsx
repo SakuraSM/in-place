@@ -19,11 +19,19 @@ interface EntranceProps {
 }
 
 const VARIANT_CONFIG = {
-  page: { offset: 14, scale: 0.995, duration: 240 },
-  card: { offset: 18, scale: 0.985, duration: 260 },
-  lift: { offset: 10, scale: 0.99, duration: 220 },
+  page: { offset: 8, scale: 0.998, duration: 180 },
+  card: { offset: 10, scale: 0.992, duration: 190 },
+  lift: { offset: 8, scale: 0.995, duration: 170 },
   none: { offset: 0, scale: 1, duration: 0 },
 } as const;
+
+const STAGGER_DELAY_MS = 28;
+const MAX_ENTRANCE_DELAY_MS = 80;
+const MIN_FADE_DURATION_MS = 140;
+
+function getEffectiveDelay(delay: number, staggerIndex: number) {
+  return Math.min(delay * 0.45 + staggerIndex * STAGGER_DELAY_MS, MAX_ENTRANCE_DELAY_MS);
+}
 
 export function Entrance({
   children,
@@ -65,7 +73,7 @@ export function Entrance({
 
   useEffect(() => {
     const shouldReduceMotion = reducedMotion || prefersReducedMotion || variant === 'none';
-    const effectiveDelay = delay + staggerIndex * 42;
+    const effectiveDelay = getEffectiveDelay(delay, staggerIndex);
     const targetDuration = VARIANT_CONFIG[variant].duration;
 
     if (shouldReduceMotion) {
@@ -82,7 +90,7 @@ export function Entrance({
     opacity.value = withDelay(
       effectiveDelay,
       withTiming(1, {
-        duration: Math.max(180, targetDuration - 20),
+        duration: Math.max(MIN_FADE_DURATION_MS, targetDuration - 20),
         easing: Easing.out(Easing.cubic),
       }),
     );

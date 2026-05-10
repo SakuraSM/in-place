@@ -27,9 +27,9 @@ export default function SecurityScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="账号安全" subtitle="把密码修改和会话操作收进独立页面，减少首页误触。" variant="page" />
+      <BrandHeader title="账号安全" variant="page" />
 
-      <SectionCard title="修改密码" subtitle="和 Web 端保持同一能力，密码至少 8 位。" delay={60} density="compact">
+      <SectionCard title="修改密码" subtitle="至少 8 位" delay={60} density="compact">
         <TextInput
           value={currentPassword}
           onChangeText={(value) => {
@@ -57,7 +57,7 @@ export default function SecurityScreen() {
         </Pressable>
       </SectionCard>
 
-      <SectionCard title="登录会话" subtitle="退出后需要重新登录才能继续使用归位。" delay={120} density="compact" tone="muted">
+      <SectionCard title="登录会话" delay={120} density="compact" tone="muted">
         <Pressable onPress={() => setShowLogout(true)} style={dangerButtonStyle}>
           <Text style={dangerButtonTextStyle}>退出登录</Text>
         </Pressable>

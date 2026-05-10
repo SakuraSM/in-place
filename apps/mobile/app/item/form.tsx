@@ -198,12 +198,12 @@ export default function ItemFormScreen() {
   };
 
   if (itemQuery.isLoading || categoriesQuery.isLoading) {
-    return <Screen><StateBlock title="正在准备表单" loading body="正在读取物品与分类信息。" /></Screen>;
+    return <Screen><StateBlock title="加载表单" loading /></Screen>;
   }
 
   if (itemQuery.isError || categoriesQuery.isError) {
     const error = itemQuery.error ?? categoriesQuery.error;
-    return <Screen><StateBlock title="表单加载失败" body={error instanceof Error ? error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="表单加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
   }
 
   const categories = categoriesQuery.data ?? [];
@@ -215,12 +215,12 @@ export default function ItemFormScreen() {
       <BrandHeader
         variant="page"
         title={isEditing ? '编辑物品' : '新建物品'}
-        subtitle={isEditing ? '修改基础信息并保存。' : `当前将创建${draft.type === 'container' ? '收纳' : '物品'}。`}
+        subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳' : '物品'}`}
       />
 
       <SectionCard
         title="基础表单"
-        subtitle="表单结构、分段切换和标签芯片向 Web 的信息密度对齐。"
+        subtitle={undefined}
         delay={70}
         density="compact"
       >
@@ -250,7 +250,7 @@ export default function ItemFormScreen() {
               setHasTouched(true);
               setDraft((current) => ({ ...current, name: value }));
             }}
-            placeholder="输入名称"
+            placeholder="名称"
             style={inputStyle}
           />
         </Field>
@@ -262,7 +262,7 @@ export default function ItemFormScreen() {
               setHasTouched(true);
               setDraft((current) => ({ ...current, description: value }));
             }}
-            placeholder="输入描述"
+            placeholder="描述"
             style={[inputStyle, { minHeight: 96, textAlignVertical: 'top' as const }]}
             multiline
           />
@@ -276,7 +276,7 @@ export default function ItemFormScreen() {
                 setHasTouched(true);
                 setDraft((current) => ({ ...current, category: value }));
               }}
-              placeholder="输入分类名称"
+              placeholder="分类"
               style={inputStyle}
             />
             {categories.length > 0 ? (

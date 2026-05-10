@@ -42,12 +42,12 @@ export default function ProfileTab() {
   });
 
   if (itemsQuery.isLoading || aiSettingsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载个人中心" loading body="正在读取统计信息和 AI 配置。" /></Screen>;
+    return <Screen><StateBlock title="加载个人中心" loading /></Screen>;
   }
 
   if (itemsQuery.isError || aiSettingsQuery.isError) {
     const error = itemsQuery.error ?? aiSettingsQuery.error;
-    return <Screen><StateBlock title="个人中心加载失败" body={error instanceof Error ? error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="个人中心加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
   }
 
   const aiSettings = aiSettingsQuery.data;
@@ -68,7 +68,7 @@ export default function ProfileTab() {
         />
       </Entrance>
 
-      <SectionCard title="资料与统计" subtitle="昵称和库存概况会保持同步。" delay={70} density="compact" headerMode="compact">
+      <SectionCard title="资料" delay={70} density="compact" headerMode="compact">
         <View style={profileEditRowStyle}>
           <TextInput
             value={displayName}
@@ -105,13 +105,13 @@ export default function ProfileTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="账户工作台" subtitle="AI、账号安全和数据管理。" delay={140} density="compact" headerMode="compact">
+      <SectionCard title="设置" delay={140} density="compact" headerMode="compact">
         <Link href="/profile/ai" asChild>
           <Pressable style={navRowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>AI 配置</Text>
               <Text style={bodyStyle}>
-                {aiSettings?.enabled ? '当前已启用 AI 识别' : '当前未启用 AI 识别'} · {aiSettings?.source === 'user' ? '账号配置' : '系统默认'}
+                {aiSettings?.enabled ? '已启用' : '未启用'} · {aiSettings?.source === 'user' ? '账号配置' : '系统默认'}
               </Text>
             </View>
             <Text style={linkMetaStyle}>进入</Text>
@@ -122,7 +122,7 @@ export default function ProfileTab() {
           <Pressable style={navRowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>账号安全</Text>
-              <Text style={bodyStyle}>修改密码、处理当前登录会话。</Text>
+              <Text style={bodyStyle}>密码与会话</Text>
             </View>
             <Text style={linkMetaStyle}>进入</Text>
           </Pressable>
@@ -132,14 +132,14 @@ export default function ProfileTab() {
           <Pressable style={navRowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>数据管理</Text>
-              <Text style={bodyStyle}>导出 JSON / CSV，并导入 JSON 备份。</Text>
+              <Text style={bodyStyle}>导入与导出</Text>
             </View>
             <Text style={linkMetaStyle}>进入</Text>
           </Pressable>
         </Link>
       </SectionCard>
 
-      <SectionCard title="会话操作" subtitle="退出当前账号。" delay={210} density="compact" tone="muted" headerMode="compact">
+      <SectionCard title="会话" delay={210} density="compact" tone="muted" headerMode="compact">
         <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
           <Text style={buttonTextStyle}>退出登录</Text>
         </Pressable>
@@ -148,7 +148,7 @@ export default function ProfileTab() {
       <ConfirmDialog
         visible={isSignOutDialogOpen}
         title="退出登录"
-        message="确定要退出当前账号吗？退出后需要重新登录才能继续管理库存。"
+        message="确定退出当前账号？"
         confirmLabel="退出"
         danger
         onCancel={() => setIsSignOutDialogOpen(false)}

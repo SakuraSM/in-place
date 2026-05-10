@@ -61,11 +61,11 @@ export default function LocationsTab() {
   }, [itemMap, locationItems, selectedLocationId]);
 
   if (itemsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载位置树" loading body="正在读取位置、收纳和物品层级。" /></Screen>;
+    return <Screen><StateBlock title="加载位置" loading /></Screen>;
   }
 
   if (itemsQuery.isError) {
-    return <Screen><StateBlock title="位置树加载失败" body={itemsQuery.error instanceof Error ? itemsQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="位置加载失败" body={itemsQuery.error instanceof Error ? itemsQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -91,16 +91,16 @@ export default function LocationsTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="位置" subtitle="按空间查看物品归属，先选房间，再看下级内容。" />
+        <BrandHeader variant="page" title="位置" />
       </Entrance>
 
       {locationItems.length === 0 ? (
-        <SectionCard title="还没有可展示的位置" subtitle="新建容器时标记为位置后，会显示在这里。" delay={70} density="compact">
-          <Text style={bodyStyle}>位置是带有位置标记的容器，用于承载空间、房间或区域层级。</Text>
+        <SectionCard title="暂无位置" delay={70} density="compact">
+          <Text style={bodyStyle}>新建收纳时可标记为位置。</Text>
         </SectionCard>
       ) : (
         <>
-          <SectionCard title="位置导航" subtitle={meta ? `已读取 ${items.length} / ${meta.total} 项` : '选择一个空间查看内容'} delay={70} density="compact" headerMode="compact">
+          <SectionCard title="位置导航" subtitle={meta ? `${items.length} / ${meta.total}` : undefined} delay={70} density="compact" headerMode="compact">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={locationRailStyle}>
               {locationItems.map((location) => (
                 <Pressable
@@ -136,7 +136,7 @@ export default function LocationsTab() {
                 {itemsQuery.isFetchingNextPage ? (
                   <View style={loadingMoreStyle}>
                     <ActivityIndicator color={palette.brandStrong} />
-                    <Text style={captionStyle}>正在继续读取层级...</Text>
+                    <Text style={captionStyle}>加载中...</Text>
                   </View>
                 ) : null}
               </SectionCard>

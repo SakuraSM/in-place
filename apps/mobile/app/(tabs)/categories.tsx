@@ -1,4 +1,7 @@
+import { Link } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { Category, Database, ItemType, TagEntity } from '@inplace/domain';
@@ -27,6 +30,15 @@ interface TagDraft {
 }
 
 type ManagementSection = 'categories' | 'tags';
+type WorkbenchAction = 'locations' | 'activity' | ManagementSection;
+
+interface WorkbenchShortcut {
+  action: WorkbenchAction;
+  label: string;
+  description: string;
+  iconName: ComponentProps<typeof Ionicons>['name'];
+  meta: string;
+}
 
 const EMPTY_CATEGORY: CategoryDraft = {
   item_type: 'item',
@@ -40,6 +52,64 @@ const EMPTY_TAG: TagDraft = {
   description: '',
   color: 'sky',
 };
+
+function createWorkbenchShortcuts(params: { categoriesCount: number; tagsCount: number }): WorkbenchShortcut[] {
+  return [
+    {
+      action: 'locations',
+      label: '位置树',
+      description: '按空间查看物品归属',
+      iconName: 'location-outline',
+      meta: '进入',
+    },
+    {
+      action: 'activity',
+      label: '操作记录',
+      description: '查看最近录入和修改',
+      iconName: 'time-outline',
+      meta: '进入',
+    },
+    {
+      action: 'categories',
+      label: '分类管理',
+      description: '维护物品和容器分类',
+      iconName: 'folder-open-outline',
+      meta: `${params.categoriesCount} 项`,
+    },
+    {
+      action: 'tags',
+      label: '标签管理',
+      description: '整理搜索和筛选标签',
+      iconName: 'pricetags-outline',
+      meta: `${params.tagsCount} 个`,
+    },
+  ];
+}
+
+function isManagementSection(action: WorkbenchAction): action is ManagementSection {
+  return action === 'categories' || action === 'tags';
+}
+
+function WorkbenchShortcutContent({
+  shortcut,
+  isActive = false,
+}: {
+  shortcut: WorkbenchShortcut;
+  isActive?: boolean;
+}) {
+  return (
+    <>
+      <View style={[workbenchIconStyle, isActive ? activeWorkbenchIconStyle : null]}>
+        <Ionicons name={shortcut.iconName} size={20} color={isActive ? '#ffffff' : palette.brandStrong} />
+      </View>
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text style={workbenchTitleStyle}>{shortcut.label}</Text>
+        <Text style={captionStyle}>{shortcut.description}</Text>
+      </View>
+      <Text style={workbenchMetaStyle}>{shortcut.meta}</Text>
+    </>
+  );
+}
 
 export default function CategoriesTab() {
   const { user } = useAuth();
@@ -159,17 +229,20 @@ export default function CategoriesTab() {
   });
 
   if (categoriesQuery.isLoading || tagsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载分类" loading body="分类和标签会一起读取。" /></Screen>;
+    return <Screen><StateBlock title="加载分类" loading /></Screen>;
   }
 
   if (categoriesQuery.isError || tagsQuery.isError) {
     const error = categoriesQuery.error ?? tagsQuery.error;
-    return <Screen><StateBlock title="分类加载失败" body={error instanceof Error ? error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="分类加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
   }
 
   const categories = categoriesQuery.data ?? [];
   const tags = tagsQuery.data ?? [];
-  const activeSectionLabel = activeSection === 'categories' ? '分类管理' : '标签管理';
+  const workbenchShortcuts = createWorkbenchShortcuts({
+    categoriesCount: categories.length,
+    tagsCount: tags.length,
+  });
 
   const startEditCategory = (category: Category) => {
     setMessage(null);
@@ -199,8 +272,53 @@ export default function CategoriesTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="管理" subtitle={`${activeSectionLabel}，维护分类和标签库。`} variant="page" />
+        <BrandHeader title="工作台" variant="page" />
       </Entrance>
+
+      <SectionCard title="常用入口" delay={50} density="compact" headerMode="compact">
+        <View style={workbenchGridStyle}>
+          {workbenchShortcuts.map((shortcut) => {
+            if (shortcut.action === 'locations') {
+              return (
+                <Link key={shortcut.action} href="/(tabs)/locations" asChild>
+                  <Pressable style={workbenchTileStyle}>
+                    <WorkbenchShortcutContent shortcut={shortcut} />
+                  </Pressable>
+                </Link>
+              );
+            }
+
+            if (shortcut.action === 'activity') {
+              return (
+                <Link key={shortcut.action} href="/(tabs)/activity" asChild>
+                  <Pressable style={workbenchTileStyle}>
+                    <WorkbenchShortcutContent shortcut={shortcut} />
+                  </Pressable>
+                </Link>
+              );
+            }
+
+            if (isManagementSection(shortcut.action)) {
+              const managementAction = shortcut.action;
+
+              return (
+                <Pressable
+                  key={managementAction}
+                  onPress={() => setActiveSection(managementAction)}
+                  style={[
+                    workbenchTileStyle,
+                    activeSection === managementAction ? activeWorkbenchTileStyle : null,
+                  ]}
+                >
+                  <WorkbenchShortcutContent shortcut={shortcut} isActive={activeSection === managementAction} />
+                </Pressable>
+              );
+            }
+
+            return null;
+          })}
+        </View>
+      </SectionCard>
 
       <View style={segmentedStyle}>
         {([
@@ -218,7 +336,7 @@ export default function CategoriesTab() {
       </View>
 
       {activeSection === 'categories' ? (
-      <SectionCard title="分类管理" subtitle="先选类型，再填写名称和颜色。" delay={70} density="compact" headerMode="compact">
+      <SectionCard title="分类" delay={70} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {categoryMutation.isError ? <Text style={errorTextStyle}>{categoryMutation.error instanceof Error ? categoryMutation.error.message : '分类保存失败'}</Text> : null}
         {deleteCategoryMutation.isError ? <Text style={errorTextStyle}>{deleteCategoryMutation.error instanceof Error ? deleteCategoryMutation.error.message : '分类删除失败'}</Text> : null}
@@ -294,7 +412,7 @@ export default function CategoriesTab() {
       ) : null}
 
       {activeSection === 'tags' ? (
-      <SectionCard title="标签管理" subtitle="标签可用于搜索、筛选和批量整理。" delay={150} density="compact" headerMode="compact">
+      <SectionCard title="标签" delay={150} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {tagMutation.isError ? <Text style={errorTextStyle}>{tagMutation.error instanceof Error ? tagMutation.error.message : '标签保存失败'}</Text> : null}
         {deleteTagMutation.isError ? <Text style={errorTextStyle}>{deleteTagMutation.error instanceof Error ? deleteTagMutation.error.message : '标签删除失败'}</Text> : null}
@@ -345,7 +463,7 @@ export default function CategoriesTab() {
           <View key={tag.id} style={rowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={listTitleStyle}>{tag.name}</Text>
-              <Text style={bodyStyle}>{tag.description || '暂无说明'} · {getColorLabel(tag.color)}</Text>
+              <Text style={bodyStyle}>{tag.description || '暂无'} · {getColorLabel(tag.color)}</Text>
             </View>
             <View style={miniRowStyle}>
               <Pressable onPress={() => startEditTag(tag)} style={miniButtonStyle}>
@@ -363,7 +481,7 @@ export default function CategoriesTab() {
       <ConfirmDialog
         visible={Boolean(deleteCategoryTarget)}
         title="删除分类"
-        message={`确定要删除「${deleteCategoryTarget?.name ?? ''}」分类吗？已使用该分类的物品不会被删除，但会失去这个分类标记。`}
+        message={`删除「${deleteCategoryTarget?.name ?? ''}」分类？`}
         confirmLabel={deleteCategoryMutation.isPending ? '删除中...' : '删除'}
         danger
         loading={deleteCategoryMutation.isPending}
@@ -378,7 +496,7 @@ export default function CategoriesTab() {
       <ConfirmDialog
         visible={Boolean(deleteTagTarget)}
         title="删除标签"
-        message={`确定要删除「${deleteTagTarget?.name ?? ''}」标签吗？所有物品上的这个标签都会被同步移除。`}
+        message={`删除「${deleteTagTarget?.name ?? ''}」标签？`}
         confirmLabel={deleteTagMutation.isPending ? '删除中...' : '删除'}
         danger
         loading={deleteTagMutation.isPending}
@@ -401,6 +519,53 @@ const captionStyle = {
 const bodyStyle = {
   fontSize: 15,
   color: palette.textMuted,
+};
+
+const workbenchGridStyle = {
+  flexDirection: 'row' as const,
+  flexWrap: 'wrap' as const,
+  gap: 10,
+};
+
+const workbenchTileStyle = {
+  width: '48%' as const,
+  minHeight: 134,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: palette.borderSoft,
+  backgroundColor: palette.surfaceMuted,
+  padding: 12,
+  gap: 10,
+};
+
+const activeWorkbenchTileStyle = {
+  borderColor: palette.brand,
+  backgroundColor: '#f0fdfa',
+};
+
+const workbenchIconStyle = {
+  width: 34,
+  height: 34,
+  borderRadius: 12,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  backgroundColor: '#e0f2fe',
+};
+
+const activeWorkbenchIconStyle = {
+  backgroundColor: palette.brand,
+};
+
+const workbenchTitleStyle = {
+  fontSize: 15,
+  fontWeight: '800' as const,
+  color: palette.text,
+};
+
+const workbenchMetaStyle = {
+  fontSize: 13,
+  fontWeight: '700' as const,
+  color: palette.brandStrong,
 };
 
 const rowStyle = {

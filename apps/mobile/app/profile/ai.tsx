@@ -57,33 +57,33 @@ export default function AiSettingsScreen() {
   });
 
   if (aiSettingsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载 AI 配置" loading body="正在读取当前账号的识别服务配置。" /></Screen>;
+    return <Screen><StateBlock title="加载 AI 配置" loading /></Screen>;
   }
 
   if (aiSettingsQuery.isError) {
-    return <Screen><StateBlock title="AI 配置加载失败" body={aiSettingsQuery.error instanceof Error ? aiSettingsQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="AI 配置失败" body={aiSettingsQuery.error instanceof Error ? aiSettingsQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   const aiSettings = aiSettingsQuery.data;
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="AI 配置" subtitle="单独维护识别服务配置，避免把个人中心首页堆得太满。" variant="page" />
+      <BrandHeader title="AI 配置" variant="page" />
 
-      <SectionCard title="当前状态" subtitle="当前账号使用的 AI 服务来源与启用情况。" delay={60} density="compact">
+      <SectionCard title="状态" delay={60} density="compact">
         <Text style={bodyStyle}>启用状态：{aiSettings?.enabled ? '已启用' : '未启用'}</Text>
         <Text style={bodyStyle}>来源：{aiSettings?.source === 'user' ? '账号配置' : '系统默认'}</Text>
         <Text style={bodyStyle}>已存密钥：{aiSettings?.hasStoredApiKey ? '是' : '否'}</Text>
       </SectionCard>
 
-      <SectionCard title="配置项" subtitle="这里与 Web 端的字段保持一致。" delay={110} density="compact">
+      <SectionCard title="配置" delay={110} density="compact">
         <TextInput
           value={baseUrl}
           onChangeText={(value) => {
             setMessage(null);
             setBaseUrl(value);
           }}
-          placeholder="Base URL，例如 https://api.openai.com/v1"
+          placeholder="Base URL"
           style={inputStyle}
           autoCapitalize="none"
         />
@@ -93,7 +93,7 @@ export default function AiSettingsScreen() {
             setMessage(null);
             setModel(value);
           }}
-          placeholder="模型，例如 gpt-5.4"
+          placeholder="模型"
           style={inputStyle}
           autoCapitalize="none"
         />
@@ -103,7 +103,7 @@ export default function AiSettingsScreen() {
             setMessage(null);
             setApiKey(value);
           }}
-          placeholder={aiSettings?.hasStoredApiKey ? '留空则保持当前服务端密钥' : '输入后保存为账号级密钥'}
+          placeholder={aiSettings?.hasStoredApiKey ? '留空不变' : 'API Key'}
           style={inputStyle}
           autoCapitalize="none"
           secureTextEntry

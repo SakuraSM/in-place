@@ -44,7 +44,7 @@ export default function LoginScreen() {
       <Entrance variant="page">
         <BrandHeader
           title="归位"
-          subtitle="配置服务器地址后，使用账号密码登录你的库存空间。"
+          subtitle="登录库存空间"
           variant="hero"
         />
       </Entrance>
@@ -57,7 +57,7 @@ export default function LoginScreen() {
             keyboardType="url"
             value={apiBaseUrl}
             onChangeText={setApiBaseUrl}
-            placeholder="服务器地址，例如 https://demo.example.com/api"
+            placeholder="服务器地址"
             placeholderTextColor={palette.textSoft}
             style={inputStyle}
           />

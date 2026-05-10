@@ -77,6 +77,12 @@ export const tagsApi = createTagsApi(mobileApiClient.request);
 export const aiApi = createAiApi(mobileApiClient.request);
 export const activityApi = createActivityApi(mobileApiClient.request);
 
+type ImageUploadAsset = {
+  uri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
 function ensureBlobMimeType(sourceBlob: Blob, fallbackMimeType?: string | null) {
   const normalizedFallback = fallbackMimeType?.trim();
   if (sourceBlob.type || !normalizedFallback) {
@@ -86,20 +92,50 @@ function ensureBlobMimeType(sourceBlob: Blob, fallbackMimeType?: string | null) 
   return new Blob([sourceBlob], { type: normalizedFallback });
 }
 
-export async function uploadImageFromUri(params: {
-  uri: string;
-  fileName?: string | null;
-  mimeType?: string | null;
-}) {
+function isNativeAssetUri(uri: string) {
+  return /^(asset-library|content|file|ph):/i.test(uri);
+}
+
+function resolveImageFileName(params: ImageUploadAsset, fallbackFileName: string) {
+  const trimmedFileName = params.fileName?.trim();
+  if (trimmedFileName) {
+    return trimmedFileName;
+  }
+
+  const uriFileName = params.uri.split(/[/?#]/).filter(Boolean).at(-1)?.trim();
+  return uriFileName || fallbackFileName;
+}
+
+function resolveImageMimeType(params: ImageUploadAsset) {
+  return params.mimeType?.trim() || 'image/jpeg';
+}
+
+async function appendImageAsset(formData: FormData, fieldName: string, params: ImageUploadAsset, fallbackFileName: string) {
+  const fileName = resolveImageFileName(params, fallbackFileName);
+  const mimeType = resolveImageMimeType(params);
+
+  if (isNativeAssetUri(params.uri)) {
+    formData.append(fieldName, {
+      uri: params.uri,
+      name: fileName,
+      type: mimeType,
+    } as unknown as Blob);
+    return;
+  }
+
   const response = await fetch(params.uri);
   if (!response.ok) {
     throw new Error('图片读取失败，请重新选择后再试');
   }
 
   const sourceBlob = await response.blob();
-  const blob = ensureBlobMimeType(sourceBlob, params.mimeType);
+  const blob = ensureBlobMimeType(sourceBlob, mimeType);
+  formData.append(fieldName, blob, fileName);
+}
+
+export async function uploadImageFromUri(params: ImageUploadAsset) {
   const formData = new FormData();
-  formData.append('file', blob, params.fileName ?? 'upload.jpg');
+  await appendImageAsset(formData, 'file', params, 'upload.jpg');
 
   const data = await mobileApiClient.request<{ url: string }>('/v1/uploads/images', {
     method: 'POST',
@@ -109,20 +145,9 @@ export async function uploadImageFromUri(params: {
   return data.url;
 }
 
-export async function recognizeItemsFromUri(params: {
-  uri: string;
-  fileName?: string | null;
-  mimeType?: string | null;
-}) {
-  const response = await fetch(params.uri);
-  if (!response.ok) {
-    throw new Error('图片读取失败，请重新选择后再试');
-  }
-
-  const sourceBlob = await response.blob();
-  const blob = ensureBlobMimeType(sourceBlob, params.mimeType);
+export async function recognizeItemsFromUri(params: ImageUploadAsset) {
   const formData = new FormData();
-  formData.append('image', blob, params.fileName ?? 'scan.jpg');
+  await appendImageAsset(formData, 'image', params, 'scan.jpg');
 
   const data = await mobileApiClient.request<{ items: import('@inplace/domain').AIRecognitionResult[] }>('/v1/ai/recognize', {
     method: 'POST',

@@ -1,181 +1,321 @@
-import { Link, router } from 'expo-router';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
-import { Entrance } from '@/shared/ui/Entrance';
+import { Ionicons } from '@expo/vector-icons';
+import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Item } from '@inplace/domain';
+import { activityApi, categoriesApi, itemsApi } from '@/shared/api/mobileClient';
 import { Screen } from '@/shared/ui/Screen';
-import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
-import { StatusBadge } from '@/shared/ui/StatusBadge';
-import { itemsApi } from '@/shared/api/mobileClient';
+import { palette, shadows } from '@/shared/ui/theme';
+import { buildChildrenMap } from '@/shared/lib/location';
 import { useAuth } from '@/providers/AuthProvider';
-import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
-import { getContainerTypeLabel } from '@/shared/lib/location';
-import { palette } from '@/shared/ui/theme';
+import { HomeDashboard } from '@/features/home/HomeDashboard';
+import { HomeItemFormSheet } from '@/features/home/HomeItemFormSheet';
+import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBulkEditSheet';
 
-const PAGE_SIZE = 20;
+type ViewMode = 'type' | 'category';
+
+const ROOT_PAGE_SIZE = 100;
+const ALL_ITEMS_PAGE_SIZE = 100;
+const ALL_ITEMS_MAX_PAGES = 20;
+const RECENT_ACTIVITY_PAGE_SIZE = 3;
+const FLOATING_ACTION_BUTTON_SIZE = 56;
+const FLOATING_ACTION_BUTTON_ICON_SIZE = 28;
+const FLOATING_ACTION_BUTTON_RIGHT = 20;
+const FLOATING_ACTION_BUTTON_BOTTOM_OFFSET = 20;
 
 export default function HomeTab() {
   const { user } = useAuth();
-  const rootItemsQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'root-items', user?.id],
+  const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+  const [viewMode, setViewMode] = useState<ViewMode>('category');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+
+  const rootItemsQuery = useQuery({
+    queryKey: ['mobile', 'home-root-items', user?.id],
     enabled: Boolean(user),
-    initialPageParam: 1,
-    queryFn: ({ pageParam }) => itemsApi.fetchChildrenPage(null, user!.id, { page: pageParam, pageSize: PAGE_SIZE }),
-    getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
+    queryFn: () => fetchAllRootItems(user!.id),
   });
 
+  const allItemsQuery = useQuery({
+    queryKey: ['mobile', 'home-all-items', user?.id],
+    enabled: Boolean(user),
+    staleTime: 1000 * 60,
+    queryFn: () => fetchAllHomeItems(user!.id),
+  });
+
+  const statsQuery = useQuery({
+    queryKey: ['mobile', 'home-stats', user?.id],
+    enabled: Boolean(user),
+    staleTime: 1000 * 60,
+    queryFn: () => itemsApi.fetchItemStats(user!.id),
+  });
+
+  const recentActivityQuery = useQuery({
+    queryKey: ['mobile', 'home-recent-activity', user?.id],
+    enabled: Boolean(user),
+    staleTime: 1000 * 30,
+    queryFn: async () => {
+      const response = await activityApi.fetchActivityLogsPage(user!.id, { page: 1, pageSize: RECENT_ACTIVITY_PAGE_SIZE });
+      return response.data;
+    },
+  });
+
+  const categoriesQuery = useQuery({
+    queryKey: ['mobile', 'home-categories', user?.id],
+    enabled: Boolean(user),
+    staleTime: 1000 * 60,
+    queryFn: () => categoriesApi.fetchCategories(user!.id),
+  });
+
+  const allItems = allItemsQuery.data ?? [];
+  const recentItems = useMemo(
+    () => [...allItems]
+      .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+      .slice(0, 3),
+    [allItems],
+  );
+  const recentItemPaths = useMemo(() => buildRecentItemPaths(recentItems, allItems), [allItems, recentItems]);
+  const selectedItems = useMemo(
+    () => (rootItemsQuery.data ?? []).filter((item) => selectedIds.includes(item.id)),
+    [rootItemsQuery.data, selectedIds],
+  );
+
   if (rootItemsQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载首页" loading body="正在读取根目录下的容器与物品。" /></Screen>;
+    return <Screen><StateBlock title="加载首页" loading /></Screen>;
   }
 
-  if (rootItemsQuery.isError) {
-    return <Screen><StateBlock title="首页加载失败" body={rootItemsQuery.error instanceof Error ? rootItemsQuery.error.message : '请稍后重试。'} /></Screen>;
+  if (rootItemsQuery.isError || allItemsQuery.isError || statsQuery.isError || recentActivityQuery.isError || categoriesQuery.isError) {
+    const error = rootItemsQuery.error ?? allItemsQuery.error ?? statsQuery.error ?? recentActivityQuery.error ?? categoriesQuery.error;
+    return <Screen><StateBlock title="首页加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
   }
 
-  const pages = rootItemsQuery.data?.pages ?? [];
-  const rootItems = pages.flatMap((page) => page.data);
-  const meta = pages[pages.length - 1]?.meta;
+  const handleToggleSelectionMode = () => {
+    setSelectionMode((current) => {
+      if (current) {
+        setSelectedIds([]);
+      }
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!rootItemsQuery.hasNextPage || rootItemsQuery.isFetchingNextPage) {
-      return;
-    }
+      return !current;
+    });
+  };
 
-    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
-    if (distanceFromBottom < 160) {
-      void rootItemsQuery.fetchNextPage();
-    }
+  const handleToggleSelected = (itemId: string) => {
+    setSelectedIds((current) => (
+      current.includes(itemId)
+        ? current.filter((id) => id !== itemId)
+        : [...current, itemId]
+    ));
+  };
+
+  const handleBulkSave = async (payload: BulkEditPayload) => {
+    await itemsApi.updateItemsBatch(selectedIds, payload);
+    await queryClient.invalidateQueries({ queryKey: ['mobile'] });
+    setIsBulkEditOpen(false);
+    setSelectedIds([]);
+    setSelectionMode(false);
   };
 
   return (
-    <Screen
-      scroll
-      contentInsetMode="page"
-      chrome="muted"
-      scrollProps={{
-        onScroll: handleScroll,
-        scrollEventThrottle: 16,
-      }}
-    >
-      <Entrance variant="page">
-        <BrandHeader
-          title="归位"
-          subtitle="快速录入、查看根目录，把物品放回该在的位置。"
-          variant="hero"
+    <View style={screenRootStyle}>
+      <Screen scroll contentInsetMode="page" chrome="muted" contentStyle={{ paddingBottom: 112 }}>
+        <HomeDashboard
+          stats={statsQuery.data ?? null}
+          statsLoading={statsQuery.isLoading}
+          recentItems={recentItems}
+          recentItemPaths={recentItemPaths}
+          recentActivity={recentActivityQuery.data ?? []}
+          rootItems={rootItemsQuery.data ?? []}
+          allItems={allItems}
+          categories={categoriesQuery.data ?? []}
+          viewMode={viewMode}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onToggleSelectionMode={handleToggleSelectionMode}
+          onChangeViewMode={setViewMode}
+          onToggleSelected={handleToggleSelected}
         />
-      </Entrance>
-
-      <SectionCard title="快速开始" subtitle={meta ? `根目录 ${meta.total} 项` : '选择一个动作开始整理'} delay={80} headerMode="compact">
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable onPress={() => router.push('/item/form?type=container')} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>新建容器</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/item/form?type=item')} style={primaryButtonStyle}>
-            <Text style={primaryButtonTextStyle}>新建物品</Text>
-          </Pressable>
-        </View>
-        {rootItems.length === 0 ? (
-          <Text style={bodyStyle}>根目录还没有内容，先新建一个位置或物品。</Text>
-        ) : (
-          <>
-            {rootItems.map((item) => (
-              <Link key={item.id} href={resolveMobileDetailHref(item)} asChild>
-                <Pressable style={listRowStyle}>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={listTitleStyle}>{item.name}</Text>
-                    <Text style={bodyStyle}>
-                      {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}{item.category ? ` · ${item.category}` : ''}
-                    </Text>
-                  </View>
-                  <StatusBadge status={item.status} />
-                </Pressable>
-              </Link>
-            ))}
-          </>
-        )}
-        {meta ? (
-          <Text style={metaCaptionStyle}>
-            已加载 {rootItems.length} / {meta.total} 项
-            {rootItemsQuery.hasNextPage ? '，继续上滑加载更多' : '，已全部加载完成'}
-          </Text>
-        ) : null}
-        {rootItemsQuery.isFetchingNextPage ? (
-          <View style={loadingMoreStyle}>
-            <ActivityIndicator color="#0ea5e9" />
-            <Text style={metaCaptionStyle}>正在加载更多...</Text>
+      </Screen>
+      {!selectionMode ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="新增物品"
+          hitSlop={8}
+          onPress={() => setIsAddSheetOpen(true)}
+          style={[floatingButtonStyle, { bottom: Math.max(insets.bottom, 10) + FLOATING_ACTION_BUTTON_BOTTOM_OFFSET }]}
+        >
+          <Ionicons name="add" size={FLOATING_ACTION_BUTTON_ICON_SIZE} color="#ffffff" />
+        </Pressable>
+      ) : null}
+      {selectionMode && selectedIds.length > 0 ? (
+        <View style={[bulkActionBarStyle, { bottom: Math.max(insets.bottom, 10) + 14 }]}>
+          <View style={bulkActionHeaderStyle}>
+            <Text style={bulkActionTitleStyle}>已选择 {selectedIds.length} 项</Text>
           </View>
-        ) : null}
-      </SectionCard>
-    </Screen>
+          <View style={bulkActionGridStyle}>
+            <Pressable onPress={() => setIsBulkEditOpen(true)} style={bulkEditButtonStyle}>
+              <Ionicons name="create-outline" size={16} color="#ffffff" />
+              <Text style={bulkEditButtonTextStyle}>批量编辑</Text>
+            </Pressable>
+            <Pressable style={bulkDeleteButtonStyle}>
+              <Ionicons name="trash-outline" size={16} color={palette.danger} />
+              <Text style={bulkDeleteButtonTextStyle}>批量删除</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+      <HomeItemFormSheet visible={isAddSheetOpen} onClose={() => setIsAddSheetOpen(false)} />
+      <HomeBulkEditSheet
+        visible={isBulkEditOpen}
+        items={selectedItems}
+        allItems={allItems}
+        categories={categoriesQuery.data ?? []}
+        onClose={() => setIsBulkEditOpen(false)}
+        onSave={handleBulkSave}
+      />
+    </View>
   );
 }
 
-const bodyStyle = {
-  fontSize: 15,
-  lineHeight: 22,
-  color: palette.textMuted,
-};
+async function fetchAllRootItems(userId: string) {
+  const collectedItems: Item[] = [];
+  let page = 1;
+  let hasNextPage = true;
 
-const listRowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 12,
-  minHeight: 58,
-};
+  while (hasNextPage && page <= ALL_ITEMS_MAX_PAGES) {
+    const response = await itemsApi.fetchChildrenPage(null, userId, { page, pageSize: ROOT_PAGE_SIZE });
+    collectedItems.push(...response.data);
+    hasNextPage = response.meta.hasNextPage;
+    page += 1;
+  }
 
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
+  return collectedItems;
+}
 
-const metaCaptionStyle = {
-  fontSize: 13,
-  color: palette.textSoft,
-  paddingTop: 8,
-};
+async function fetchAllHomeItems(userId: string) {
+  const collectedItems: Item[] = [];
+  let page = 1;
+  let hasNextPage = true;
 
-const loadingMoreStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 10,
-  justifyContent: 'center' as const,
-  paddingTop: 12,
-};
+  while (hasNextPage && page <= ALL_ITEMS_MAX_PAGES) {
+    const response = await itemsApi.searchItemsPage('', userId, { page, pageSize: ALL_ITEMS_PAGE_SIZE });
+    collectedItems.push(...response.data);
+    hasNextPage = response.meta.hasNextPage;
+    page += 1;
+  }
 
-const secondaryButtonStyle = {
+  return collectedItems;
+}
+
+function buildRecentItemPaths(recentItems: Item[], allItems: Item[]) {
+  const childrenMap = buildChildrenMap(allItems);
+  const itemMap = new Map(allItems.map((item) => [item.id, item]));
+  const rootIds = new Set((childrenMap.get(null) ?? []).map((item) => item.id));
+
+  return Object.fromEntries(
+    recentItems.map((item) => {
+      const lineage: string[] = [];
+      let parentId = item.parent_id;
+
+      while (parentId) {
+        const parent = itemMap.get(parentId);
+        if (!parent) {
+          break;
+        }
+
+        lineage.unshift(parent.name);
+        if (rootIds.has(parent.id)) {
+          break;
+        }
+
+        parentId = parent.parent_id;
+      }
+
+      return [item.id, lineage.length > 0 ? lineage.join(' > ') : '顶层'];
+    }),
+  );
+}
+
+const screenRootStyle = {
   flex: 1,
-  borderRadius: 16,
-  backgroundColor: palette.surface,
+};
+
+const floatingButtonStyle = {
+  position: 'absolute' as const,
+  right: FLOATING_ACTION_BUTTON_RIGHT,
+  width: FLOATING_ACTION_BUTTON_SIZE,
+  height: FLOATING_ACTION_BUTTON_SIZE,
+  borderRadius: 999,
+  backgroundColor: palette.brand,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  ...shadows.lg,
+};
+
+const bulkActionBarStyle = {
+  position: 'absolute' as const,
+  left: 16,
+  right: 16,
+  borderRadius: 24,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingVertical: 13,
-  alignItems: 'center' as const,
+  backgroundColor: 'rgba(255, 255, 255, 0.96)',
+  padding: 12,
+  ...shadows.lg,
 };
 
-const secondaryButtonTextStyle = {
+const bulkActionHeaderStyle = {
+  paddingHorizontal: 4,
+  paddingBottom: 10,
+};
+
+const bulkActionTitleStyle = {
+  fontSize: 14,
+  fontWeight: '800' as const,
   color: palette.text,
-  fontSize: 15,
-  fontWeight: '600' as const,
 };
 
-const primaryButtonStyle = {
+const bulkActionGridStyle = {
+  flexDirection: 'row' as const,
+  gap: 10,
+};
+
+const bulkEditButtonStyle = {
   flex: 1,
+  minHeight: 46,
   borderRadius: 16,
   backgroundColor: palette.brand,
-  paddingVertical: 13,
+  flexDirection: 'row' as const,
   alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: 6,
 };
 
-const primaryButtonTextStyle = {
+const bulkEditButtonTextStyle = {
+  fontSize: 14,
+  fontWeight: '800' as const,
   color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '600' as const,
+};
+
+const bulkDeleteButtonStyle = {
+  flex: 1,
+  minHeight: 46,
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: '#fecdd3',
+  backgroundColor: '#fff1f2',
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: 6,
+};
+
+const bulkDeleteButtonTextStyle = {
+  fontSize: 14,
+  fontWeight: '800' as const,
+  color: palette.danger,
 };

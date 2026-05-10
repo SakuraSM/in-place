@@ -1,7 +1,9 @@
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
+import type { Item } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -10,9 +12,43 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
-import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
+import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel } from '@/shared/lib/location';
 import { palette } from '@/shared/ui/theme';
+import { formatInventoryDate, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import {
+  actionRowStyle,
+  bodyStyle,
+  categoryPillStyle,
+  dangerButtonStyle,
+  dangerButtonTextStyle,
+  detailKickerStyle,
+  detailTitleStyle,
+  errorTextStyle,
+  heroImageCardStyle,
+  heroImageStyle,
+  hintStyle,
+  infoIconStyle,
+  infoRowStyle,
+  infoValueStyle,
+  listTitleStyle,
+  metricGridStyle,
+  metricLabelStyle,
+  metricStyle,
+  metricValueStyle,
+  pathNodeStyle,
+  pathRailStyle,
+  pathTextStyle,
+  primaryButtonStyle,
+  primaryButtonTextStyle,
+  rowStyle,
+  secondaryButtonStyle,
+  secondaryButtonTextStyle,
+  tagPillStyle,
+  tagWrapStyle,
+  titleCardHeaderStyle,
+  typePillStyle,
+} from '@/features/inventory/mobileDetailStyles';
 
 export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,11 +79,11 @@ export default function ItemDetailScreen() {
   });
 
   if (itemQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载详情" loading /></Screen>;
+    return <Screen><StateBlock title="加载详情" loading /></Screen>;
   }
 
   if (itemQuery.isError) {
-    return <Screen><StateBlock title="详情加载失败" body={itemQuery.error instanceof Error ? itemQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="详情加载失败" body={itemQuery.error instanceof Error ? itemQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   if (!item) {
@@ -55,63 +91,96 @@ export default function ItemDetailScreen() {
   }
 
   const children = childrenQuery.data ?? [];
-  const breadcrumb = ancestorsQuery.data?.map((ancestor) => ancestor.name).join(' / ') ?? item.name;
+  const ancestors = (ancestorsQuery.data ?? []).filter((ancestor) => ancestor.id !== item.id);
+  const itemTypeLabel = item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label;
+  const activeImageUri = resolveInventoryImageUri(item.images[0]);
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <BrandHeader
         variant="page"
         title={item.name}
-        subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label} · ${ITEM_STATUS_PRESENTATION[item.status].label}`}
+        subtitle={`${itemTypeLabel} · ${ITEM_STATUS_PRESENTATION[item.status].label}`}
       />
 
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={actionRowStyle}>
         <Pressable onPress={() => router.back()} style={secondaryButtonStyle}>
+          <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
           <Text style={secondaryButtonTextStyle}>返回</Text>
         </Pressable>
         <Pressable onPress={() => router.push(`/item/form?id=${item.id}`)} style={secondaryButtonStyle}>
+          <Ionicons name="create-outline" size={16} color={palette.textMuted} />
           <Text style={secondaryButtonTextStyle}>编辑</Text>
         </Pressable>
         {item.type === 'container' ? (
           <Pressable onPress={() => router.push(`/item/form?parentId=${item.id}&type=item`)} style={primaryButtonStyle}>
+            <Ionicons name="add" size={17} color="#ffffff" />
             <Text style={primaryButtonTextStyle}>添加内容</Text>
           </Pressable>
         ) : null}
       </View>
 
-      <SectionCard title="基础信息" subtitle="和 Web 详情页保持一致的主信息卡片。" delay={80} density="compact">
-        <StatusBadge status={item.status} />
-        <Text style={hintStyle}>路径：{breadcrumb}</Text>
-        <Text style={bodyStyle}>类别：{item.category || '未分类'}</Text>
-        <Text style={bodyStyle}>描述：{item.description || '暂无描述'}</Text>
-        <Text style={bodyStyle}>价格：{item.price ?? '未设置'}</Text>
-        <Text style={bodyStyle}>标签：{item.tags.length ? item.tags.join('、') : '暂无标签'}</Text>
-        <Text style={bodyStyle}>图片数：{item.images.length}</Text>
+      {activeImageUri ? (
+        <View style={heroImageCardStyle}>
+          <Image source={{ uri: activeImageUri }} resizeMode="cover" style={heroImageStyle} />
+        </View>
+      ) : null}
+
+      <SectionCard title="基础信息" delay={80} density="compact">
+        <View style={titleCardHeaderStyle}>
+          <View style={{ flex: 1 }}>
+            <Text style={detailKickerStyle}>{itemTypeLabel}详情</Text>
+            <Text style={detailTitleStyle}>{item.name}</Text>
+          </View>
+          <StatusBadge status={item.status} />
+        </View>
+        {item.category ? <Text style={categoryPillStyle}>{item.category}</Text> : null}
+        <Text style={bodyStyle}>{item.description || '暂无描述'}</Text>
       </SectionCard>
 
       {item.type === 'container' ? (
-        <SectionCard title="直接内容" subtitle={`继续下钻浏览这个${getContainerTypeLabel(item)}里的物品、收纳和位置。`} delay={150} density="compact">
+        <SectionCard title={`${itemTypeLabel}信息`} delay={110} density="compact">
+          <View style={metricGridStyle}>
+            <Metric label="直接包含" value={`${children.length}`} />
+            <Metric label={`${itemTypeLabel}层级`} value={`${ancestors.length + 1}`} />
+          </View>
+        </SectionCard>
+      ) : (
+        <PurchaseInfoCard item={item} />
+      )}
+
+      <PathCard ancestors={ancestors} />
+
+      {item.tags.length > 0 ? (
+        <SectionCard title="标签" delay={140} density="compact">
+          <View style={tagWrapStyle}>
+            {item.tags.map((tag) => (
+              <Text key={tag} style={tagPillStyle}>{tag}</Text>
+            ))}
+          </View>
+        </SectionCard>
+      ) : null}
+
+      <SectionCard title="时间信息" delay={160} density="compact">
+        <View style={metricGridStyle}>
+          <Metric label="创建时间" value={formatInventoryDate(item.created_at)} />
+          <Metric label="最后更新" value={formatInventoryDate(item.updated_at)} />
+        </View>
+      </SectionCard>
+
+      {item.type === 'container' ? (
+        <SectionCard title="直接内容" subtitle={`短按下级收纳继续下钻，长按查看详情。`} delay={180} density="compact">
           {children.length === 0 ? (
             <Text style={bodyStyle}>这个{getContainerTypeLabel(item)}里还没有直接内容。</Text>
           ) : (
-            children.map((child) => (
-              <Link key={child.id} href={resolveMobileDetailHref(child)} asChild>
-                <Pressable style={rowStyle}>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={listTitleStyle}>{child.name}</Text>
-                    <Text style={bodyStyle}>
-                       {child.type === 'container' ? getContainerTypeLabel(child) : ITEM_TYPE_PRESENTATION.item.label}{child.category ? ` · ${child.category}` : ''}
-                    </Text>
-                  </View>
-                  <StatusBadge status={child.status} />
-                </Pressable>
-              </Link>
-            ))
+            <View style={{ gap: 10 }}>
+              {children.map((child) => <ChildRow key={child.id} child={child} />)}
+            </View>
           )}
         </SectionCard>
       ) : null}
 
-      <SectionCard title="危险操作" subtitle="删除后不可撤销，容器下的内容也会一起删除。" delay={220} density="compact" tone="muted">
+      <SectionCard title="危险操作" delay={220} density="compact" tone="muted">
         {deleteMutation.isError ? (
           <Text style={errorTextStyle}>
             {deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}
@@ -125,7 +194,7 @@ export default function ItemDetailScreen() {
       <ConfirmDialog
         visible={isDeleteDialogOpen}
         title={`确认删除${item.type === 'container' ? getContainerTypeLabel(item) : '物品'}`}
-        message={`确定要删除「${item.name}」吗？此操作不可撤销。${item.type === 'container' ? `该${getContainerTypeLabel(item)}下的所有内容也会一起删除。` : ''}`}
+        message={`删除「${item.name}」？${item.type === 'container' ? `下级内容也会删除。` : ''}`}
         confirmLabel={deleteMutation.isPending ? '删除中...' : '删除'}
         danger
         loading={deleteMutation.isPending}
@@ -136,75 +205,90 @@ export default function ItemDetailScreen() {
   );
 }
 
-const bodyStyle = {
-  fontSize: 15,
-  lineHeight: 22,
-  color: palette.textMuted,
-};
+function PurchaseInfoCard({ item }: { item: Item }) {
+  if (!item.price && !item.purchase_date && !item.warranty_date) {
+    return null;
+  }
 
-const hintStyle = {
-  fontSize: 13,
-  color: palette.textSoft,
-};
+  return (
+    <SectionCard title="购买信息" delay={110} density="compact">
+      <View style={{ gap: 10 }}>
+        {item.price ? <InfoRow icon="cash-outline" label="购买价格" value={`¥${item.price.toFixed(2)}`} /> : null}
+        {item.purchase_date ? <InfoRow icon="calendar-outline" label="购买日期" value={item.purchase_date} /> : null}
+        {item.warranty_date ? <InfoRow icon="shield-checkmark-outline" label="保修截止" value={item.warranty_date} /> : null}
+      </View>
+    </SectionCard>
+  );
+}
 
-const rowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 14,
-};
+function PathCard({ ancestors }: { ancestors: Item[] }) {
+  if (ancestors.length === 0) {
+    return null;
+  }
 
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
+  return (
+    <SectionCard title="所在路径" delay={130} density="compact">
+      <View style={pathRailStyle}>
+        <Text style={pathTextStyle}>顶层</Text>
+        {ancestors.map((ancestor) => (
+          <View key={ancestor.id} style={pathNodeStyle}>
+            <Ionicons name="chevron-forward" size={13} color={palette.textSoft} />
+            <Text numberOfLines={1} style={pathTextStyle}>{ancestor.name}</Text>
+          </View>
+        ))}
+      </View>
+    </SectionCard>
+  );
+}
 
-const secondaryButtonStyle = {
-  borderRadius: 16,
-  backgroundColor: palette.surface,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-};
+function ChildRow({ child }: { child: Item }) {
+  const row = (
+    <View style={rowStyle}>
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text numberOfLines={1} style={listTitleStyle}>{child.name}</Text>
+        <Text numberOfLines={1} style={bodyStyle}>
+          {child.type === 'container' ? getContainerTypeLabel(child) : ITEM_TYPE_PRESENTATION.item.label}{child.category ? ` · ${child.category}` : ''}
+        </Text>
+      </View>
+      {child.type === 'item' ? <StatusBadge status={child.status} /> : <Text style={typePillStyle}>{getContainerTypeLabel(child)}</Text>}
+      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
+    </View>
+  );
 
-const secondaryButtonTextStyle = {
-  color: palette.text,
-  fontSize: 14,
-  fontWeight: '600' as const,
-};
+  if (child.type === 'container') {
+    return (
+      <Pressable
+        delayLongPress={500}
+        onLongPress={() => router.push(resolveMobileDetailHref(child))}
+        onPress={() => router.push(resolveMobileContainerBrowseHref(child))}
+      >
+        {row}
+      </Pressable>
+    );
+  }
 
-const primaryButtonStyle = {
-  borderRadius: 16,
-  backgroundColor: palette.brand,
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-};
+  return <Pressable onPress={() => router.push(resolveMobileDetailHref(child))}>{row}</Pressable>;
+}
 
-const primaryButtonTextStyle = {
-  color: '#ffffff',
-  fontSize: 14,
-  fontWeight: '600' as const,
-};
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={metricStyle}>
+      <Text style={metricLabelStyle}>{label}</Text>
+      <Text numberOfLines={1} style={metricValueStyle}>{value}</Text>
+    </View>
+  );
+}
 
-const dangerButtonStyle = {
-  alignItems: 'center' as const,
-  borderRadius: 16,
-  backgroundColor: palette.danger,
-  paddingVertical: 14,
-};
-
-const dangerButtonTextStyle = {
-  color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '700' as const,
-};
-
-const errorTextStyle = {
-  color: palette.danger,
-  fontSize: 14,
-  lineHeight: 20,
-};
+function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+  return (
+    <View style={infoRowStyle}>
+      <View style={infoIconStyle}>
+        <Ionicons name={icon} size={17} color={palette.brand} />
+      </View>
+      <View>
+        <Text style={hintStyle}>{label}</Text>
+        <Text style={infoValueStyle}>{value}</Text>
+      </View>
+    </View>
+  );
+}

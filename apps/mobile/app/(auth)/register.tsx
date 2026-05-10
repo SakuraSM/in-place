@@ -48,7 +48,7 @@ export default function RegisterScreen() {
       contentStyle={{ justifyContent: 'center', gap: 18 }}
     >
       <Entrance variant="page">
-        <BrandHeader title="创建账号" subtitle="先配置服务器地址，再创建或加入你的归位空间。" variant="hero" />
+        <BrandHeader title="创建账号" subtitle="加入归位" variant="hero" />
       </Entrance>
 
       <Entrance delay={90} variant="card">
@@ -59,7 +59,7 @@ export default function RegisterScreen() {
             keyboardType="url"
             value={apiBaseUrl}
             onChangeText={setApiBaseUrl}
-            placeholder="服务器地址，例如 https://demo.example.com/api"
+            placeholder="服务器地址"
             placeholderTextColor={palette.textSoft}
             style={inputStyle}
           />

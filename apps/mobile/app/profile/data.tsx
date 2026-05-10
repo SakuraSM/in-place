@@ -70,9 +70,9 @@ export default function DataManagementScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="数据管理" subtitle="移动端现在也可以导出 JSON / CSV，并导入 JSON 备份。" variant="page" />
+      <BrandHeader title="数据管理" variant="page" />
 
-      <SectionCard title="数据导出" subtitle="按用途选择完整备份或表格导出。" delay={60} density="compact">
+      <SectionCard title="导出" delay={60} density="compact">
         <Pressable onPress={() => void exportJsonMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
           {exportJsonMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>导出 JSON 备份</Text>}
         </Pressable>
@@ -81,7 +81,7 @@ export default function DataManagementScreen() {
         </Pressable>
       </SectionCard>
 
-      <SectionCard title="JSON 备份导入" subtitle="选择归位导出的 JSON 备份文件，导入会覆盖当前账号数据。" delay={120} density="compact" tone="muted">
+      <SectionCard title="导入 JSON" subtitle="会覆盖当前数据" delay={120} density="compact" tone="muted">
         <Pressable onPress={() => void pickImportMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
           {pickImportMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>选择 JSON 备份</Text>}
         </Pressable>
@@ -96,7 +96,7 @@ export default function DataManagementScreen() {
       <ConfirmDialog
         visible={Boolean(pendingBackup)}
         title="导入 JSON 备份"
-        message={`确定导入「${pendingBackup?.fileName ?? ''}」吗？这会覆盖当前账号下的物品、分类、标签和图片引用。`}
+        message={`导入「${pendingBackup?.fileName ?? ''}」？当前数据会被覆盖。`}
         confirmLabel={importMutation.isPending ? '导入中...' : '确认导入'}
         danger
         loading={importMutation.isPending}

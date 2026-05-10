@@ -33,11 +33,11 @@ export default function ActivityTab() {
   });
 
   if (activityQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载操作记录" loading body="正在读取手动录入、AI 录入、修改和删除记录。" /></Screen>;
+    return <Screen><StateBlock title="加载记录" loading /></Screen>;
   }
 
   if (activityQuery.isError) {
-    return <Screen><StateBlock title="操作记录加载失败" body={activityQuery.error instanceof Error ? activityQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="记录加载失败" body={activityQuery.error instanceof Error ? activityQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   const pages = activityQuery.data?.pages ?? [];
@@ -71,10 +71,10 @@ export default function ActivityTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="记录" subtitle="查看录入、修改、删除等最近动作。" />
+        <BrandHeader variant="page" title="记录" />
       </Entrance>
 
-      <SectionCard title="记录概览" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按当前已加载记录统计'} delay={70} density="compact" headerMode="compact">
+      <SectionCard title="概览" subtitle={meta ? `${logs.length} / ${meta.total}` : undefined} delay={70} density="compact" headerMode="compact">
         <View style={statsGridStyle}>
           {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
             <View key={action} style={statCardStyle}>
@@ -85,20 +85,20 @@ export default function ActivityTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="最近操作" subtitle="按时间倒序展示" delay={140} density="compact" headerMode="compact">
+      <SectionCard title="最近操作" delay={140} density="compact" headerMode="compact">
         {logs.length === 0 ? (
-          <Text style={bodyStyle}>还没有操作记录。</Text>
+          <Text style={bodyStyle}>暂无记录</Text>
         ) : (
           logs.map((entry) => <ActivityRow key={entry.id} entry={entry} />)
         )}
         {activityQuery.isFetchingNextPage ? (
           <View style={loadingMoreStyle}>
             <ActivityIndicator color="#0ea5e9" />
-            <Text style={captionStyle}>正在加载更多记录...</Text>
+            <Text style={captionStyle}>加载更多...</Text>
           </View>
         ) : meta ? (
           <Text style={captionStyle}>
-            {activityQuery.hasNextPage ? '继续上滑加载更多' : `已展示全部 ${meta.total} 条记录`}
+            {activityQuery.hasNextPage ? '上滑加载' : `共 ${meta.total} 条`}
           </Text>
         ) : null}
       </SectionCard>
