@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
@@ -12,6 +13,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
+import { LocationSelectField } from '@/features/home/LocationSelectField';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TYPE_OPTIONS: ItemType[] = ['item', 'container'];
@@ -24,9 +26,14 @@ interface FormState {
   category: string;
   status: ItemStatus;
   price: string;
+  purchaseDate: string;
+  warrantyDate: string;
   tags: string;
   images: string[];
+  parentId: string | null;
 }
+
+type DateFieldKey = 'purchaseDate' | 'warrantyDate';
 
 function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
   if (asset.type && asset.type !== 'image') {
@@ -76,13 +83,17 @@ export default function ItemFormScreen() {
     category: itemQuery.data?.category ?? '',
     status: itemQuery.data?.status ?? 'in_stock',
     price: itemQuery.data?.price === null || itemQuery.data?.price === undefined ? '' : String(itemQuery.data.price),
+    purchaseDate: itemQuery.data?.purchase_date ?? '',
+    warrantyDate: itemQuery.data?.warranty_date ?? '',
     tags: itemQuery.data?.tags.join(', ') ?? '',
     images: itemQuery.data?.images ?? [],
-  }), [effectiveType, itemQuery.data]);
+    parentId: isEditing ? itemQuery.data?.parent_id ?? null : parentId ?? null,
+  }), [effectiveType, isEditing, itemQuery.data, parentId]);
 
   const [draft, setDraft] = useState<FormState>(initialForm);
   const [hasTouched, setHasTouched] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(null);
 
   useEffect(() => {
     if (!hasTouched) {
@@ -98,15 +109,15 @@ export default function ItemFormScreen() {
 
       const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
         user_id: user.id,
-        parent_id: isEditing ? itemQuery.data?.parent_id ?? null : parentId ?? null,
+        parent_id: draft.parentId,
         type: draft.type,
         name: draft.name.trim(),
         description: draft.description.trim(),
         category: draft.category.trim(),
         status: draft.status,
         price: draft.price.trim() ? Number(draft.price.trim()) : null,
-        purchase_date: null,
-        warranty_date: null,
+        purchase_date: draft.purchaseDate.trim() || null,
+        warranty_date: draft.warrantyDate.trim() || null,
         images: draft.images,
         tags: draft.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
         metadata: isEditing ? itemQuery.data?.metadata ?? {} : {},
@@ -195,6 +206,27 @@ export default function ItemFormScreen() {
       ...current,
       images: current.images.filter((imageUrl) => imageUrl !== url),
     }));
+  };
+
+  const updateDateField = (field: DateFieldKey, value: string) => {
+    setHasTouched(true);
+    setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!activeDateField) {
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      setActiveDateField(null);
+    }
+
+    if (event.type === 'dismissed' || !selectedDate) {
+      return;
+    }
+
+    updateDateField(activeDateField, formatDateInput(selectedDate));
   };
 
   if (itemQuery.isLoading || categoriesQuery.isLoading) {
@@ -336,6 +368,21 @@ export default function ItemFormScreen() {
                 style={inputStyle}
               />
             </Field>
+
+            <View style={dateGridStyle}>
+              <DateField
+                label="购买日期"
+                value={draft.purchaseDate}
+                onOpen={() => setActiveDateField('purchaseDate')}
+                onClear={() => updateDateField('purchaseDate', '')}
+              />
+              <DateField
+                label="保修日期"
+                value={draft.warrantyDate}
+                onOpen={() => setActiveDateField('warrantyDate')}
+                onClear={() => updateDateField('warrantyDate', '')}
+              />
+            </View>
           </>
         ) : null}
 
@@ -382,6 +429,18 @@ export default function ItemFormScreen() {
           </View>
         </Field>
 
+        <Field label="放置位置">
+          <LocationSelectField
+            userId={user?.id}
+            selectedParentId={draft.parentId}
+            excludedIds={isEditing && itemQuery.data?.type === 'container' ? [itemQuery.data.id] : []}
+            onChange={(nextParentId) => {
+              setHasTouched(true);
+              setDraft((current) => ({ ...current, parentId: nextParentId }));
+            }}
+          />
+        </Field>
+
         {submitError ? <Text style={{ color: palette.danger }}>{submitError}</Text> : null}
 
         <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -397,6 +456,15 @@ export default function ItemFormScreen() {
           </Pressable>
         </View>
       </SectionCard>
+
+      {activeDateField ? (
+        <DateTimePicker
+          value={parseDateInput(draft[activeDateField]) ?? new Date()}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'inline' : 'default'}
+          onChange={handleDateChange}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -410,6 +478,48 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+function DateField({
+  label,
+  value,
+  onOpen,
+  onClear,
+}: {
+  label: string;
+  value: string;
+  onOpen: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <View style={{ flex: 1, gap: 8 }}>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: palette.textMuted }}>{label}</Text>
+      <Pressable onPress={onOpen} style={dateButtonStyle}>
+        <Text style={value ? dateButtonTextStyle : dateButtonPlaceholderStyle}>{value || '选择日期'}</Text>
+      </Pressable>
+      {value ? (
+        <Pressable onPress={onClear} style={dateClearButtonStyle}>
+          <Text style={dateClearTextStyle}>清除</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function parseDateInput(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDateInput(value: Date) {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, '0');
+  const day = `${value.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 const inputStyle = {
   backgroundColor: palette.surfaceMuted,
   borderRadius: 16,
@@ -419,6 +529,42 @@ const inputStyle = {
   paddingVertical: 14,
   fontSize: 15,
   color: palette.text,
+};
+
+const dateGridStyle = {
+  flexDirection: 'row' as const,
+  gap: 10,
+};
+
+const dateButtonStyle = {
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: palette.border,
+  backgroundColor: palette.surfaceMuted,
+  paddingHorizontal: 14,
+  paddingVertical: 14,
+};
+
+const dateButtonTextStyle = {
+  color: palette.text,
+  fontSize: 15,
+  fontWeight: '700' as const,
+};
+
+const dateButtonPlaceholderStyle = {
+  color: palette.textSoft,
+  fontSize: 15,
+};
+
+const dateClearButtonStyle = {
+  alignSelf: 'flex-start' as const,
+  paddingVertical: 4,
+};
+
+const dateClearTextStyle = {
+  color: palette.textSoft,
+  fontSize: 13,
+  fontWeight: '700' as const,
 };
 
 const segmentedStyle = {

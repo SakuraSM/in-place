@@ -1,9 +1,12 @@
-import { Link } from 'expo-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import type { Href } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import type { ComponentProps } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { aiApi, itemsApi } from '@/shared/api/mobileClient';
+import { aiApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Entrance } from '@/shared/ui/Entrance';
@@ -11,138 +14,96 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
-import { fetchProfileUpdate } from '@/features/profile/mobileProfileApi';
+
+interface ProfileMenuItem {
+  href?: Href;
+  title: string;
+  subtitle: string;
+  iconName: ComponentProps<typeof Ionicons>['name'];
+  danger?: boolean;
+  onPress?: () => void;
+}
 
 export default function ProfileTab() {
-  const { user, signOut, setCurrentUser } = useAuth();
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
+  const { user, signOut } = useAuth();
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
-  const itemsQuery = useQuery({
-    queryKey: ['mobile', 'profile-stats', user?.id],
-    enabled: Boolean(user),
-    queryFn: () => itemsApi.fetchItemStats(user!.id),
-  });
   const aiSettingsQuery = useQuery({
     queryKey: ['mobile', 'ai-settings', user?.id],
     enabled: Boolean(user),
     queryFn: () => aiApi.fetchAiSettings(),
   });
 
-  useEffect(() => {
-    setDisplayName(user?.displayName ?? '');
-  }, [user?.displayName]);
-
-  const profileMutation = useMutation({
-    mutationFn: () => fetchProfileUpdate(displayName),
-    onSuccess: (nextUser) => {
-      setCurrentUser(nextUser);
-      setSaveMessage('昵称已更新');
-    },
-  });
-
-  if (itemsQuery.isLoading || aiSettingsQuery.isLoading) {
+  if (aiSettingsQuery.isLoading) {
     return <Screen><StateBlock title="加载个人中心" loading /></Screen>;
   }
 
-  if (itemsQuery.isError || aiSettingsQuery.isError) {
-    const error = itemsQuery.error ?? aiSettingsQuery.error;
-    return <Screen><StateBlock title="个人中心加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
+  if (aiSettingsQuery.isError) {
+    return <Screen><StateBlock title="个人中心加载失败" body={aiSettingsQuery.error instanceof Error ? aiSettingsQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   const aiSettings = aiSettingsQuery.data;
-  const stats = itemsQuery.data ?? {
-    total: 0,
-    containers: 0,
-    items: 0,
-    borrowed: 0,
-  };
+  const menuItems: ProfileMenuItem[] = [
+    {
+      href: '/profile/edit',
+      title: '个人资料',
+      subtitle: user?.displayName || user?.email || '未设置昵称',
+      iconName: 'person-outline',
+    },
+    {
+      href: '/profile/ai',
+      title: 'AI 配置',
+      subtitle: `${aiSettings?.enabled ? '已启用' : '未启用'} · ${aiSettings?.source === 'user' ? '账号配置' : '系统默认'}`,
+      iconName: 'sparkles-outline',
+    },
+    {
+      href: '/profile/security',
+      title: '账号安全',
+      subtitle: '密码与会话',
+      iconName: 'shield-checkmark-outline',
+    },
+    {
+      href: '/profile/data',
+      title: '数据管理',
+      subtitle: '导入与导出',
+      iconName: 'server-outline',
+    },
+    {
+      href: '/profile/about',
+      title: '关于',
+      subtitle: '版本与开源信息',
+      iconName: 'information-circle-outline',
+    },
+    {
+      title: '退出登录',
+      subtitle: '退出当前账号',
+      iconName: 'log-out-outline',
+      danger: true,
+      onPress: () => setIsSignOutDialogOpen(true),
+    },
+  ];
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader
-          title="我的"
-          subtitle={user?.email ?? '当前未登录'}
-          variant="page"
-        />
+        <BrandHeader title="我的" variant="page" />
       </Entrance>
 
-      <SectionCard title="资料" delay={70} density="compact" headerMode="compact">
-        <View style={profileEditRowStyle}>
-          <TextInput
-            value={displayName}
-            onChangeText={(value) => {
-              setSaveMessage(null);
-              setDisplayName(value);
-            }}
-            placeholder="昵称"
-            style={[inputStyle, { flex: 1 }]}
-          />
-          <Pressable onPress={() => void profileMutation.mutateAsync()} style={primaryButtonStyle}>
-            {profileMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存</Text>}
-          </Pressable>
-        </View>
-        {saveMessage ? <Text style={successTextStyle}>{saveMessage}</Text> : null}
-        {profileMutation.isError ? <Text style={errorTextStyle}>{profileMutation.error instanceof Error ? profileMutation.error.message : '昵称保存失败'}</Text> : null}
-        <View style={statsGridStyle}>
-          <View style={statCardStyle}>
-            <Text style={statValueStyle}>{stats.items}</Text>
-            <Text style={bodyStyle}>物品</Text>
+      <SectionCard title="账户" delay={70} density="compact" headerMode="compact">
+        <View style={profileSummaryStyle}>
+          <View style={avatarStyle}>
+            <Text style={avatarTextStyle}>{(user?.displayName || user?.email || '归').slice(0, 1).toUpperCase()}</Text>
           </View>
-          <View style={statCardStyle}>
-            <Text style={statValueStyle}>{stats.containers}</Text>
-            <Text style={bodyStyle}>容器</Text>
-          </View>
-          <View style={statCardStyle}>
-            <Text style={statValueStyle}>{stats.borrowed}</Text>
-            <Text style={bodyStyle}>借出</Text>
-          </View>
-          <View style={statCardStyle}>
-            <Text style={statValueStyle}>{stats.total}</Text>
-            <Text style={bodyStyle}>总计</Text>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={profileNameStyle}>{user?.displayName || '未设置昵称'}</Text>
+            <Text style={bodyStyle}>{user?.email ?? '未登录'}</Text>
           </View>
         </View>
       </SectionCard>
 
-      <SectionCard title="设置" delay={140} density="compact" headerMode="compact">
-        <Link href="/profile/ai" asChild>
-          <Pressable style={navRowStyle}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={listTitleStyle}>AI 配置</Text>
-              <Text style={bodyStyle}>
-                {aiSettings?.enabled ? '已启用' : '未启用'} · {aiSettings?.source === 'user' ? '账号配置' : '系统默认'}
-              </Text>
-            </View>
-            <Text style={linkMetaStyle}>进入</Text>
-          </Pressable>
-        </Link>
-
-        <Link href="/profile/security" asChild>
-          <Pressable style={navRowStyle}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={listTitleStyle}>账号安全</Text>
-              <Text style={bodyStyle}>密码与会话</Text>
-            </View>
-            <Text style={linkMetaStyle}>进入</Text>
-          </Pressable>
-        </Link>
-
-        <Link href="/profile/data" asChild>
-          <Pressable style={navRowStyle}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={listTitleStyle}>数据管理</Text>
-              <Text style={bodyStyle}>导入与导出</Text>
-            </View>
-            <Text style={linkMetaStyle}>进入</Text>
-          </Pressable>
-        </Link>
-      </SectionCard>
-
-      <SectionCard title="会话" delay={210} density="compact" tone="muted" headerMode="compact">
-        <Pressable onPress={() => setIsSignOutDialogOpen(true)} style={buttonStyle}>
-          <Text style={buttonTextStyle}>退出登录</Text>
-        </Pressable>
+      <SectionCard title="设置" delay={120} density="compact" headerMode="compact">
+        <View style={menuStyle}>
+          {menuItems.map((item) => <ProfileMenuRow key={item.title} item={item} />)}
+        </View>
       </SectionCard>
 
       <ConfirmDialog
@@ -158,103 +119,93 @@ export default function ProfileTab() {
   );
 }
 
-const bodyStyle = {
-  fontSize: 15,
-  color: palette.textMuted,
-};
+function ProfileMenuRow({ item }: { item: ProfileMenuItem }) {
+  const handlePress = () => {
+    if (item.onPress) {
+      item.onPress();
+      return;
+    }
 
-const statsGridStyle = {
-  flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
-  gap: 10,
-};
+    if (item.href) {
+      router.push(item.href);
+    }
+  };
 
-const statCardStyle = {
-  minWidth: '47%' as const,
-  backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
-  padding: 14,
-  gap: 4,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-};
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={handlePress}
+      style={({ pressed }) => [
+        menuRowStyle,
+        item.danger ? dangerMenuRowStyle : null,
+        pressed ? menuRowPressedStyle : null,
+      ]}
+    >
+      <View style={[iconStyle, item.danger ? dangerIconStyle : null]}>
+        <Ionicons name={item.iconName} size={20} color={item.danger ? palette.danger : palette.brandStrong} />
+      </View>
+      <View style={menuTextStyle}>
+        <Text numberOfLines={1} style={[menuTitleStyle, item.danger ? dangerTitleStyle : null]}>{item.title}</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={bodyStyle}>{item.subtitle}</Text>
+      </View>
+      {item.href ? (
+        <View style={chevronBoxStyle}>
+          <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
 
-const statValueStyle = {
-  fontSize: 24,
-  fontWeight: '700' as const,
-  color: palette.text,
+const bodyStyle = { fontSize: 14, color: palette.textMuted };
+const profileSummaryStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
+const avatarStyle = {
+  width: 52,
+  height: 52,
+  borderRadius: 18,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  backgroundColor: palette.brand,
 };
-
-const navRowStyle = {
+const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '900' as const };
+const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '800' as const };
+const menuStyle = { gap: 10, width: '100%' as const };
+const menuRowStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 12,
-};
-
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const linkMetaStyle = {
-  color: palette.textSoft,
-  fontSize: 13,
-};
-
-const buttonStyle = {
-  alignSelf: 'flex-start' as const,
-  backgroundColor: palette.canvasStrong,
-  borderRadius: 14,
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-};
-
-const buttonTextStyle = {
-  color: palette.text,
-  fontWeight: '600' as const,
-};
-
-const primaryButtonStyle = {
-  backgroundColor: palette.brand,
-  borderRadius: 14,
-  paddingHorizontal: 15,
-  paddingVertical: 13,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
-
-const primaryButtonTextStyle = {
-  color: '#ffffff',
-  fontWeight: '600' as const,
-};
-
-const profileEditRowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 10,
-};
-
-const inputStyle = {
-  backgroundColor: palette.surfaceMuted,
+  width: '100%' as const,
+  minHeight: 60,
   borderRadius: 16,
   borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  fontSize: 15,
-  color: palette.text,
+  borderColor: palette.borderSoft,
+  backgroundColor: palette.surfaceMuted,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
 };
-
-const successTextStyle = {
-  color: '#15803d',
-  fontSize: 14,
+const menuRowPressedStyle = {
+  opacity: 0.72,
 };
-
-const errorTextStyle = {
-  color: palette.danger,
-  fontSize: 14,
+const menuTextStyle = {
+  flex: 1,
+  minWidth: 0,
+  gap: 3,
 };
+const iconStyle = {
+  width: 36,
+  height: 36,
+  flexShrink: 0,
+  borderRadius: 13,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  backgroundColor: '#e0f2fe',
+};
+const chevronBoxStyle = {
+  flexShrink: 0,
+  width: 24,
+  alignItems: 'flex-end' as const,
+};
+const menuTitleStyle = { color: palette.text, fontSize: 16, fontWeight: '800' as const };
+const dangerMenuRowStyle = { backgroundColor: '#fff1f2', borderColor: '#fecdd3' };
+const dangerIconStyle = { backgroundColor: '#ffe4e6' };
+const dangerTitleStyle = { color: palette.danger };

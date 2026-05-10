@@ -29,6 +29,10 @@ export default function RootLayout() {
             <Stack.Screen name="profile/ai" />
             <Stack.Screen name="profile/security" />
             <Stack.Screen name="profile/data" />
+            <Stack.Screen name="profile/edit" />
+            <Stack.Screen name="profile/about" />
+            <Stack.Screen name="manage/categories" />
+            <Stack.Screen name="manage/tags" />
           </Stack>
         </AuthProvider>
       </QueryProvider>

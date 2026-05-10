@@ -59,8 +59,8 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   },
   {
     id: 'categories',
-    label: '工作台',
-    shortLabel: '工作台',
+    label: '管理',
+    shortLabel: '管理',
     section: 'management',
     priority: 50,
     isDesktopPrimary: true,

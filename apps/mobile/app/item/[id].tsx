@@ -91,17 +91,15 @@ export default function ItemDetailScreen() {
   }
 
   const children = childrenQuery.data ?? [];
+  const childContainers = children.filter((child) => child.type === 'container');
+  const childItems = children.filter((child) => child.type === 'item');
   const ancestors = (ancestorsQuery.data ?? []).filter((ancestor) => ancestor.id !== item.id);
   const itemTypeLabel = item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label;
   const activeImageUri = resolveInventoryImageUri(item.images[0]);
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <BrandHeader
-        variant="page"
-        title={item.name}
-        subtitle={`${itemTypeLabel} · ${ITEM_STATUS_PRESENTATION[item.status].label}`}
-      />
+      <BrandHeader variant="page" title="详情" />
 
       <View style={actionRowStyle}>
         <Pressable onPress={() => router.back()} style={secondaryButtonStyle}>
@@ -126,20 +124,34 @@ export default function ItemDetailScreen() {
         </View>
       ) : null}
 
-      <SectionCard title="基础信息" delay={80} density="compact">
-        <View style={titleCardHeaderStyle}>
-          <View style={{ flex: 1 }}>
-            <Text style={detailKickerStyle}>{itemTypeLabel}详情</Text>
-            <Text style={detailTitleStyle}>{item.name}</Text>
+      <SectionCard title="概览" delay={80} density="compact">
+        <View style={overviewHeaderStyle}>
+          <View style={overviewIconStyle}>
+            <Ionicons name={item.type === 'container' ? 'cube-outline' : 'pricetag-outline'} size={24} color={palette.brandStrong} />
           </View>
-          <StatusBadge status={item.status} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <View style={titleCardHeaderStyle}>
+              <View style={{ flex: 1 }}>
+                <Text style={detailKickerStyle}>{itemTypeLabel}</Text>
+                <Text style={detailTitleStyle}>{item.name}</Text>
+              </View>
+              <StatusBadge status={item.status} />
+            </View>
+            <View style={summaryPillRowStyle}>
+              <Text style={typePillStyle}>{itemTypeLabel}</Text>
+              {item.category ? <Text style={categoryPillStyle}>{item.category}</Text> : null}
+            </View>
+          </View>
         </View>
-        {item.category ? <Text style={categoryPillStyle}>{item.category}</Text> : null}
         <Text style={bodyStyle}>{item.description || '暂无描述'}</Text>
       </SectionCard>
 
       {item.type === 'container' ? (
         <SectionCard title={`${itemTypeLabel}信息`} delay={110} density="compact">
+          <View style={metricGridStyle}>
+            <Metric label="下级收纳" value={`${childContainers.length}`} />
+            <Metric label="下级物品" value={`${childItems.length}`} />
+          </View>
           <View style={metricGridStyle}>
             <Metric label="直接包含" value={`${children.length}`} />
             <Metric label={`${itemTypeLabel}层级`} value={`${ancestors.length + 1}`} />
@@ -168,19 +180,26 @@ export default function ItemDetailScreen() {
         </View>
       </SectionCard>
 
-      {item.type === 'container' ? (
-        <SectionCard title="直接内容" subtitle={`短按下级收纳继续下钻，长按查看详情。`} delay={180} density="compact">
-          {children.length === 0 ? (
-            <Text style={bodyStyle}>这个{getContainerTypeLabel(item)}里还没有直接内容。</Text>
-          ) : (
-            <View style={{ gap: 10 }}>
-              {children.map((child) => <ChildRow key={child.id} child={child} />)}
-            </View>
-          )}
+      {item.images.length > 1 ? (
+        <SectionCard title={`图片 ${item.images.length}`} delay={175} density="compact">
+          <View style={imageGridStyle}>
+            {item.images.map((imageUrl) => {
+              const imageUri = resolveInventoryImageUri(imageUrl);
+              return imageUri ? <Image key={imageUrl} source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} /> : null;
+            })}
+          </View>
         </SectionCard>
       ) : null}
 
-      <SectionCard title="危险操作" delay={220} density="compact" tone="muted">
+      {item.type === 'container' && childContainers.length > 0 ? (
+        <ChildrenSection title={`下级收纳 ${childContainers.length}`} childrenItems={childContainers} delay={190} />
+      ) : null}
+
+      {item.type === 'container' && childItems.length > 0 ? (
+        <ChildrenSection title={`下级物品 ${childItems.length}`} childrenItems={childItems} delay={210} />
+      ) : null}
+
+      <SectionCard title="危险操作" delay={230} density="compact" tone="muted">
         {deleteMutation.isError ? (
           <Text style={errorTextStyle}>
             {deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}
@@ -205,15 +224,33 @@ export default function ItemDetailScreen() {
   );
 }
 
+function ChildrenSection({
+  title,
+  childrenItems,
+  delay,
+}: {
+  title: string;
+  childrenItems: Item[];
+  delay: number;
+}) {
+  return (
+    <SectionCard title={title} subtitle="短按进入，长按详情" delay={delay} density="compact">
+      <View style={{ gap: 10 }}>
+        {childrenItems.map((child) => <ChildRow key={child.id} child={child} />)}
+      </View>
+    </SectionCard>
+  );
+}
+
 function PurchaseInfoCard({ item }: { item: Item }) {
-  if (!item.price && !item.purchase_date && !item.warranty_date) {
+  if (item.price === null && !item.purchase_date && !item.warranty_date) {
     return null;
   }
 
   return (
     <SectionCard title="购买信息" delay={110} density="compact">
       <View style={{ gap: 10 }}>
-        {item.price ? <InfoRow icon="cash-outline" label="购买价格" value={`¥${item.price.toFixed(2)}`} /> : null}
+        {item.price !== null ? <InfoRow icon="cash-outline" label="购买价格" value={`¥${item.price.toFixed(2)}`} /> : null}
         {item.purchase_date ? <InfoRow icon="calendar-outline" label="购买日期" value={item.purchase_date} /> : null}
         {item.warranty_date ? <InfoRow icon="shield-checkmark-outline" label="保修截止" value={item.warranty_date} /> : null}
       </View>
@@ -287,8 +324,42 @@ function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap;
       </View>
       <View>
         <Text style={hintStyle}>{label}</Text>
-        <Text style={infoValueStyle}>{value}</Text>
+        <Text selectable style={infoValueStyle}>{value}</Text>
       </View>
     </View>
   );
 }
+
+const overviewHeaderStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'flex-start' as const,
+  gap: 12,
+};
+
+const overviewIconStyle = {
+  width: 48,
+  height: 48,
+  borderRadius: 16,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  backgroundColor: '#e0f2fe',
+};
+
+const summaryPillRowStyle = {
+  flexDirection: 'row' as const,
+  flexWrap: 'wrap' as const,
+  gap: 8,
+};
+
+const imageGridStyle = {
+  flexDirection: 'row' as const,
+  flexWrap: 'wrap' as const,
+  gap: 10,
+};
+
+const thumbImageStyle = {
+  width: 88,
+  height: 88,
+  borderRadius: 16,
+  backgroundColor: palette.surfaceMuted,
+};

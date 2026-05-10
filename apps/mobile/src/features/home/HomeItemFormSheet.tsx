@@ -2,13 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, getMobileApiBaseUrl, itemsApi, tagsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { updateLocationMetadata } from '@/shared/lib/location';
 import { palette, shadows } from '@/shared/ui/theme';
+import { LocationSelectField } from './LocationSelectField';
 
 interface HomeItemFormSheetProps {
   visible: boolean;
@@ -27,11 +29,13 @@ interface FormState {
   warrantyDate: string;
   tags: string;
   images: string[];
+  parentId: string | null;
 }
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TYPE_OPTIONS: ItemType[] = ['item', 'container'];
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+type DateFieldKey = 'purchaseDate' | 'warrantyDate';
 
 const INITIAL_FORM: FormState = {
   type: 'item',
@@ -45,6 +49,7 @@ const INITIAL_FORM: FormState = {
   warrantyDate: '',
   tags: '',
   images: [],
+  parentId: null,
 };
 
 export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) {
@@ -53,6 +58,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
   const [draft, setDraft] = useState<FormState>(INITIAL_FORM);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(null);
 
   const categoriesQuery = useQuery({
     queryKey: ['mobile', 'home-form-categories', user?.id, draft.type],
@@ -75,6 +81,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
     if (visible) {
       setDraft(INITIAL_FORM);
       setSubmitError(null);
+      setActiveDateField(null);
     }
   }, [visible]);
 
@@ -86,7 +93,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
       const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
         user_id: user.id,
-        parent_id: null,
+        parent_id: draft.parentId,
         type: draft.type,
         name: draft.name.trim(),
         description: draft.description.trim(),
@@ -121,6 +128,22 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
     setDraft((current) => ({ ...current, [key]: value }));
   };
 
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!activeDateField) {
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      setActiveDateField(null);
+    }
+
+    if (event.type === 'dismissed' || !selectedDate) {
+      return;
+    }
+
+    updateDraft(activeDateField, formatDateInput(selectedDate));
+  };
+
   const handleClose = () => {
     if (mutation.isPending || uploadingImage) {
       return;
@@ -128,6 +151,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
     setSubmitError(null);
     setDraft(INITIAL_FORM);
+    setActiveDateField(null);
     onClose();
   };
 
@@ -283,21 +307,22 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
                     <TextInput value={draft.price} onChangeText={(value) => updateDraft('price', value)} placeholder="0.00" keyboardType="decimal-pad" style={inputStyle} />
                   </Field>
                   <Field label="购买日期">
-                    <TextInput value={draft.purchaseDate} onChangeText={(value) => updateDraft('purchaseDate', value)} placeholder="YYYY-MM-DD" style={inputStyle} />
+                    <DateInputButton value={draft.purchaseDate} onOpen={() => setActiveDateField('purchaseDate')} onClear={() => updateDraft('purchaseDate', '')} />
                   </Field>
                 </View>
 
                 <Field label="保修截止日期">
-                  <TextInput value={draft.warrantyDate} onChangeText={(value) => updateDraft('warrantyDate', value)} placeholder="YYYY-MM-DD" style={inputStyle} />
+                  <DateInputButton value={draft.warrantyDate} onOpen={() => setActiveDateField('warrantyDate')} onClear={() => updateDraft('warrantyDate', '')} />
                 </Field>
               </>
             ) : null}
 
             <Field label="放置位置">
-              <View style={readonlyFieldStyle}>
-                <Ionicons name="location-outline" size={16} color={palette.textSoft} />
-                <Text style={readonlyFieldTextStyle}>顶层位置</Text>
-              </View>
+              <LocationSelectField
+                userId={user?.id}
+                selectedParentId={draft.parentId}
+                onChange={(parentId) => updateDraft('parentId', parentId)}
+              />
             </Field>
 
             <Field label="标签">
@@ -351,10 +376,50 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
               {mutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={footerPrimaryTextStyle}>保存</Text>}
             </Pressable>
           </View>
+
+          {activeDateField ? (
+            <DateTimePicker
+              value={parseDateInput(draft[activeDateField]) ?? new Date()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'inline' : 'default'}
+              onChange={handleDateChange}
+            />
+          ) : null}
         </View>
       </View>
     </Modal>
   );
+}
+
+function DateInputButton({ value, onOpen, onClear }: { value: string; onOpen: () => void; onClear: () => void }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Pressable onPress={onOpen} style={inputButtonStyle}>
+        <Text style={value ? inputButtonTextStyle : inputButtonPlaceholderStyle}>{value || '选择日期'}</Text>
+      </Pressable>
+      {value ? (
+        <Pressable onPress={onClear} style={dateClearButtonStyle}>
+          <Text style={dateClearTextStyle}>清除</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function parseDateInput(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDateInput(value: Date) {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, '0');
+  const day = `${value.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -528,6 +593,39 @@ const inputStyle = {
   color: palette.text,
 };
 
+const inputButtonStyle = {
+  minHeight: 48,
+  borderRadius: 15,
+  borderWidth: 1,
+  borderColor: palette.border,
+  backgroundColor: palette.surfaceMuted,
+  paddingHorizontal: 14,
+  paddingVertical: 13,
+  justifyContent: 'center' as const,
+};
+
+const inputButtonTextStyle = {
+  color: palette.text,
+  fontSize: 15,
+  fontWeight: '700' as const,
+};
+
+const inputButtonPlaceholderStyle = {
+  color: palette.textSoft,
+  fontSize: 15,
+};
+
+const dateClearButtonStyle = {
+  alignSelf: 'flex-start' as const,
+  paddingVertical: 2,
+};
+
+const dateClearTextStyle = {
+  color: palette.textSoft,
+  fontSize: 13,
+  fontWeight: '700' as const,
+};
+
 const multilineInputStyle = {
   minHeight: 84,
   textAlignVertical: 'top' as const,
@@ -621,23 +719,6 @@ const switchThumbActiveStyle = {
 const fieldGridStyle = {
   flexDirection: 'row' as const,
   gap: 12,
-};
-
-const readonlyFieldStyle = {
-  minHeight: 48,
-  borderRadius: 15,
-  borderWidth: 1,
-  borderColor: palette.border,
-  backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const readonlyFieldTextStyle = {
-  fontSize: 15,
-  color: palette.textMuted,
 };
 
 const secondaryButtonStyle = {
