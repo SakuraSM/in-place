@@ -8,11 +8,12 @@ COPY apps/mobile/package.json apps/mobile/package.json
 COPY packages/app-core/package.json packages/app-core/package.json
 COPY packages/domain/package.json packages/domain/package.json
 COPY packages/api-client/package.json packages/api-client/package.json
+COPY packages/ui/package.json packages/ui/package.json
 COPY packages/db/package.json packages/db/package.json
 
-RUN npm ci --ignore-scripts \
+RUN --mount=type=cache,target=/root/.npm npm ci --include=optional --ignore-scripts \
   && npm rebuild esbuild \
-  && mkdir -p apps/web/node_modules apps/server/node_modules apps/mobile/node_modules packages/app-core/node_modules packages/domain/node_modules packages/api-client/node_modules packages/db/node_modules
+  && mkdir -p apps/web/node_modules apps/server/node_modules apps/mobile/node_modules packages/app-core/node_modules packages/domain/node_modules packages/api-client/node_modules packages/ui/node_modules packages/db/node_modules
 
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /app
@@ -32,6 +33,7 @@ COPY --from=deps /app/apps/mobile/node_modules ./apps/mobile/node_modules
 COPY --from=deps /app/packages/app-core/node_modules ./packages/app-core/node_modules
 COPY --from=deps /app/packages/domain/node_modules ./packages/domain/node_modules
 COPY --from=deps /app/packages/api-client/node_modules ./packages/api-client/node_modules
+COPY --from=deps /app/packages/ui/node_modules ./packages/ui/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
 COPY package.json package-lock.json .npmrc tsconfig.json tsconfig.base.json ./
 COPY apps/web ./apps/web
@@ -40,11 +42,12 @@ COPY apps/server/tsconfig.json ./apps/server/tsconfig.json
 COPY packages/app-core ./packages/app-core
 COPY packages/domain ./packages/domain
 COPY packages/api-client ./packages/api-client
+COPY packages/ui ./packages/ui
 COPY packages/db/tsconfig.json ./packages/db/tsconfig.json
 
 RUN npm run build --workspace @inplace/web
 
-FROM --platform=$TARGETPLATFORM nginx:1.27-alpine AS runner
+FROM nginx:1.27-alpine AS runner
 
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
