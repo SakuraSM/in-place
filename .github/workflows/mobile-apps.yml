@@ -113,6 +113,7 @@ jobs:
 
       - name: Validate EAS build configuration
         if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
+        working-directory: apps/mobile
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
             echo "::error::EXPO_TOKEN secret is required for EAS builds."
@@ -123,7 +124,7 @@ jobs:
 
           node <<'NODE'
           const fs = require('node:fs');
-          const { expo } = require('./apps/mobile/app.json');
+          const { expo } = require('./app.json');
           const resolved = JSON.parse(fs.readFileSync('/tmp/expo-config.json', 'utf8'));
           const configuredProjectId =
             process.env.EXPO_PROJECT_ID || resolved?.extra?.eas?.projectId || expo?.extra?.eas?.projectId;
