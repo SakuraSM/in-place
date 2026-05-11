@@ -17,6 +17,7 @@
     "@inplace/api-client": "*",
     "@inplace/app-core": "*",
     "@inplace/domain": "*",
+    "@inplace/ui": "*",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.90.21",
     "framer-motion": "^12.35.0",

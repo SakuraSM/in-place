@@ -8,25 +8,44 @@ interface SectionCardProps {
   subtitle?: string;
   children: ReactNode;
   delay?: number;
+  density?: 'comfortable' | 'compact';
+  tone?: 'default' | 'muted';
+  headerMode?: 'default' | 'compact';
 }
 
-export function SectionCard({ title, subtitle, children, delay = 0 }: SectionCardProps) {
+export function SectionCard({
+  title,
+  subtitle,
+  children,
+  delay = 0,
+  density = 'comfortable',
+  tone = 'default',
+  headerMode = 'default',
+}: SectionCardProps) {
+  const padding = density === 'compact' ? 14 : 16;
+
   return (
-    <Entrance delay={delay}>
+    <Entrance delay={delay} variant="card">
       <View
         style={{
-          backgroundColor: palette.surface,
-          borderRadius: 24,
-          padding: 20,
-          gap: 14,
+          backgroundColor: tone === 'muted' ? palette.surfaceMuted : palette.surface,
+          borderRadius: 20,
+          padding,
+          gap: density === 'compact' ? 10 : 12,
           borderWidth: 1,
           borderColor: palette.borderSoft,
-          ...shadows.card,
+          ...shadows.sm,
         }}
       >
-        <View style={{ gap: 4 }}>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.text }}>{title}</Text>
-          {subtitle ? <Text style={{ fontSize: 14, lineHeight: 20, color: palette.textSoft }}>{subtitle}</Text> : null}
+        <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
+          <Text style={{ fontSize: headerMode === 'compact' ? 17 : 21, fontWeight: '800', color: palette.text }}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text style={{ fontSize: 13, lineHeight: 18, color: palette.textSoft }}>
+              {subtitle}
+            </Text>
+          ) : null}
         </View>
         {children as never}
       </View>

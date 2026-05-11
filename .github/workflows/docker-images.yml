@@ -72,6 +72,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Set up QEMU
+        if: github.event_name != 'pull_request'
         uses: docker/setup-qemu-action@v3
 
       - name: Log in to GitHub Container Registry
@@ -100,13 +101,14 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          load: ${{ github.event_name == 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-          provenance: mode=max
-          sbom: true
+          provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || 'false' }}
+          sbom: ${{ github.event_name != 'pull_request' }}
           build-args: |
             VITE_API_BASE_URL=/api
 

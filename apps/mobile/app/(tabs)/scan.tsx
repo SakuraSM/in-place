@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import type { AIRecognitionResult, Item } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
+import { ScanCropSheet } from '@/features/scan/ScanCropSheet';
+import { ScanRecognitionResults, type DraftRecognition } from '@/features/scan/ScanRecognitionResults';
+import { cropImageFromUri, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox, type ScanSourceImage } from '@/features/scan/scanImageCrop';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
@@ -16,16 +19,12 @@ interface SelectedAsset {
   uri: string;
   fileName?: string | null;
   mimeType?: string | null;
-}
-
-interface DraftRecognition {
-  result: AIRecognitionResult;
-  selected: boolean;
-  saved: boolean;
-  editing: boolean;
+  width: number;
+  height: number;
 }
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const CROPPED_IMAGE_MIME_TYPE = 'image/jpeg';
 
 function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
   if (asset.type && asset.type !== 'image') {
@@ -43,11 +42,45 @@ function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
   return null;
 }
 
+function toScanSourceImage(asset: SelectedAsset): ScanSourceImage {
+  return {
+    uri: asset.uri,
+    width: Math.max(1, asset.width),
+    height: Math.max(1, asset.height),
+  };
+}
+
+function generateDraftId(result: AIRecognitionResult, position: number) {
+  const normalizedName = result.name.trim().replace(/\s+/g, '-').toLowerCase() || 'scan';
+  return `${Date.now()}-${position + 1}-${normalizedName}`;
+}
+
+async function createRecognitionDrafts(results: AIRecognitionResult[], asset: SelectedAsset): Promise<DraftRecognition[]> {
+  const sourceImage = toScanSourceImage(asset);
+
+  return Promise.all(results.map(async (result, position) => {
+    const cropBox = normalizeBoundingBox(result) ?? fullImageCropBox();
+    const croppedImage = await cropImageFromUri(sourceImage, cropBox);
+
+    return {
+      id: generateDraftId(result, position),
+      result,
+      selected: true,
+      saved: false,
+      editing: false,
+      imageUri: croppedImage.uri,
+      cropBox,
+    };
+  }));
+}
+
 export default function ScanTab() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedAsset, setSelectedAsset] = useState<SelectedAsset | null>(null);
   const [drafts, setDrafts] = useState<DraftRecognition[]>([]);
+  const [croppingDraftId, setCroppingDraftId] = useState<string | null>(null);
+  const [cropSaving, setCropSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -65,15 +98,6 @@ export default function ScanTab() {
 
       return recognizeItemsFromUri(selectedAsset);
     },
-    onSuccess: (results) => {
-      setDrafts(results.map((result) => ({
-        result,
-        selected: true,
-        saved: false,
-        editing: false,
-      })));
-      setMessage(results.length > 0 ? `识别完成，共 ${results.length} 个结果` : '未识别到可用结果');
-    },
   });
 
   const saveMutation = useMutation({
@@ -87,13 +111,16 @@ export default function ScanTab() {
         throw new Error('请至少选择一个识别结果');
       }
 
-      let uploadedImageUrl: string | null = null;
-      if (selectedAsset) {
-        uploadedImageUrl = await uploadImageFromUri(selectedAsset);
-      }
-
       const createdItems = await Promise.all(
-        selectedDrafts.map((draft) => {
+        selectedDrafts.map(async (draft) => {
+          const uploadedImageUrl = draft.imageUri
+            ? await uploadImageFromUri({
+              uri: draft.imageUri,
+              fileName: `${draft.id}.jpg`,
+              mimeType: CROPPED_IMAGE_MIME_TYPE,
+            })
+            : null;
+
           const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
             user_id: user.id,
             parent_id: null,
@@ -142,7 +169,7 @@ export default function ScanTab() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.82,
-      allowsEditing: true,
+      allowsEditing: false,
       selectionLimit: 1,
     });
 
@@ -161,6 +188,8 @@ export default function ScanTab() {
       uri: asset.uri,
       fileName: asset.fileName,
       mimeType: asset.mimeType,
+      width: asset.width,
+      height: asset.height,
     });
   };
 
@@ -178,7 +207,7 @@ export default function ScanTab() {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       quality: 0.82,
-      allowsEditing: true,
+      allowsEditing: false,
     });
 
     if (result.canceled || result.assets.length === 0) {
@@ -196,6 +225,8 @@ export default function ScanTab() {
       uri: asset.uri,
       fileName: asset.fileName,
       mimeType: asset.mimeType,
+      width: asset.width,
+      height: asset.height,
     });
   };
 
@@ -204,7 +235,15 @@ export default function ScanTab() {
     setMessage(null);
 
     try {
-      await recognizeMutation.mutateAsync();
+      if (!selectedAsset) {
+        throw new Error('请先选择图片');
+      }
+
+      const results = await recognizeMutation.mutateAsync();
+      const nextDrafts = await createRecognitionDrafts(results, selectedAsset);
+      setDrafts(nextDrafts);
+      setCroppingDraftId(null);
+      setMessage(results.length > 0 ? `识别完成，共 ${results.length} 个结果` : '未识别到可用结果');
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '识别失败');
     }
@@ -221,50 +260,82 @@ export default function ScanTab() {
     }
   };
 
-  const toggleDraft = (index: number) => {
-    setDrafts((current) => current.map((draft, currentIndex) => (
-      currentIndex === index ? { ...draft, selected: !draft.selected } : draft
+  const toggleDraft = (draftId: string) => {
+    setDrafts((current) => current.map((draft) => (
+      draft.id === draftId ? { ...draft, selected: !draft.selected } : draft
     )));
   };
 
-  const toggleDraftEditing = (index: number) => {
-    setDrafts((current) => current.map((draft, currentIndex) => (
-      currentIndex === index ? { ...draft, editing: !draft.editing } : draft
+  const toggleDraftEditing = (draftId: string) => {
+    setDrafts((current) => current.map((draft) => (
+      draft.id === draftId ? { ...draft, editing: !draft.editing } : draft
     )));
   };
 
-  const updateDraft = (index: number, updater: (draft: DraftRecognition) => DraftRecognition) => {
-    setDrafts((current) => current.map((draft, currentIndex) => (
-      currentIndex === index ? updater(draft) : draft
+  const updateDraft = (draftId: string, updater: (draft: DraftRecognition) => DraftRecognition) => {
+    setDrafts((current) => current.map((draft) => (
+      draft.id === draftId ? updater(draft) : draft
     )));
+  };
+
+  const handleConfirmCrop = async (cropBox: NormalizedCropBox) => {
+    if (!selectedAsset || !croppingDraftId) {
+      return;
+    }
+
+    setCropSaving(true);
+    setError(null);
+
+    try {
+      const croppedImage = await cropImageFromUri(toScanSourceImage(selectedAsset), cropBox);
+      updateDraft(croppingDraftId, (draft) => ({
+        ...draft,
+        imageUri: croppedImage.uri,
+        cropBox,
+      }));
+      setCroppingDraftId(null);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : '裁剪失败，请重试');
+    } finally {
+      setCropSaving(false);
+    }
   };
 
   if (aiStatusQuery.isLoading) {
-    return <Screen><StateBlock title="正在检查 AI 状态" loading /></Screen>;
+    return <Screen><StateBlock title="检查 AI 状态" loading /></Screen>;
   }
 
   if (aiStatusQuery.isError) {
-    return <Screen><StateBlock title="AI 状态读取失败" body={aiStatusQuery.error instanceof Error ? aiStatusQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="AI 状态失败" body={aiStatusQuery.error instanceof Error ? aiStatusQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   if (!aiStatusQuery.data) {
-    return <Screen><StateBlock title="AI 功能未启用" body="请先在个人中心配置服务端 AI 设置。" /></Screen>;
+    return <Screen><StateBlock title="AI 未启用" body="先配置 AI" /></Screen>;
   }
 
   return (
-    <Screen scroll>
-      <Entrance>
-        <BrandHeader title="AI 扫描" subtitle="拍照或选图自动识别物品并录入。" />
+    <Screen scroll contentInsetMode="page" chrome="muted">
+      <Entrance variant="page">
+        <BrandHeader title="扫描" subtitle="拍照或选图识别" variant="page" />
       </Entrance>
 
-      <SectionCard title="识别图片" subtitle="支持直接拍照，也支持从相册选取已有图片。" delay={70}>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+      <SectionCard title="图片" delay={70} density="compact" headerMode="compact">
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
           </Pressable>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
           </Pressable>
+        </View>
+
+        {selectedAsset ? (
+          <Image source={{ uri: selectedAsset.uri }} style={previewStyle} />
+        ) : (
+          <View style={emptyPreviewStyle}><Text style={hintStyle}>未选择图片</Text></View>
+        )}
+
+        <View style={{ flexDirection: 'row' }}>
           <Pressable
             disabled={!selectedAsset || recognizeMutation.isPending || saveMutation.isPending}
             onPress={() => void handleRecognize()}
@@ -277,112 +348,33 @@ export default function ScanTab() {
           </Pressable>
         </View>
 
-        {selectedAsset ? (
-          <Image source={{ uri: selectedAsset.uri }} style={previewStyle} />
-        ) : (
-          <Text style={hintStyle}>还没有选择图片。</Text>
-        )}
-
         {message ? <Text style={successStyle}>{message}</Text> : null}
         {error ? <Text style={errorStyle}>{error}</Text> : null}
       </SectionCard>
 
-      <SectionCard title="识别结果" subtitle="保持卡片式结果编排，编辑后再批量保存。" delay={150}>
-        <Pressable
-          onPress={() => void handleSaveSelected()}
-          disabled={saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)}
-          style={[
-            primaryButtonStyle,
-            (saveMutation.isPending || drafts.every((draft) => !draft.selected || draft.saved)) ? disabledButtonStyle : null,
-          ]}
-        >
-          {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>保存选中</Text>}
-        </Pressable>
-
-        {drafts.length === 0 ? (
-          <Text style={hintStyle}>识别结果会显示在这里。</Text>
-        ) : (
-          drafts.map((draft, index) => (
-            <Pressable
-              key={`${draft.result.name}-${index}`}
-              onPress={() => toggleDraft(index)}
-              style={[
-                draftCardStyle,
-                draft.selected ? activeDraftCardStyle : null,
-              ]}
-            >
-              <View style={{ flex: 1, gap: 6 }}>
-                <Text style={draftTitleStyle}>{draft.result.name}</Text>
-                <Text style={hintStyle}>
-                  {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}{draft.result.category ? ` · ${draft.result.category}` : ''}
-                </Text>
-                <Text style={bodyStyle}>{draft.result.description || '暂无描述'}</Text>
-                <Text style={hintStyle}>
-                  标签：{draft.result.tags.length ? draft.result.tags.join('、') : '暂无'}
-                </Text>
-                <Pressable onPress={() => toggleDraftEditing(index)} style={miniButtonStyle}>
-                  <Text style={miniButtonTextStyle}>{draft.editing ? '收起编辑' : '编辑结果'}</Text>
-                </Pressable>
-                {draft.editing ? (
-                  <View style={{ gap: 8 }}>
-                    <TextInput
-                      value={draft.result.name}
-                      onChangeText={(value) => updateDraft(index, (current) => ({
-                        ...current,
-                        result: { ...current.result, name: value },
-                      }))}
-                      placeholder="名称"
-                      style={inputStyle}
-                    />
-                    <TextInput
-                      value={draft.result.category}
-                      onChangeText={(value) => updateDraft(index, (current) => ({
-                        ...current,
-                        result: { ...current.result, category: value },
-                      }))}
-                      placeholder="分类"
-                      style={inputStyle}
-                    />
-                    <TextInput
-                      value={draft.result.description}
-                      onChangeText={(value) => updateDraft(index, (current) => ({
-                        ...current,
-                        result: { ...current.result, description: value },
-                      }))}
-                      placeholder="描述"
-                      style={[inputStyle, { minHeight: 84, textAlignVertical: 'top' as const }]}
-                      multiline
-                    />
-                    <TextInput
-                      value={draft.result.tags.join(', ')}
-                      onChangeText={(value) => updateDraft(index, (current) => ({
-                        ...current,
-                        result: {
-                          ...current.result,
-                          tags: value.split(',').map((tag) => tag.trim()).filter(Boolean),
-                        },
-                      }))}
-                      placeholder="标签，英文逗号分隔"
-                      style={inputStyle}
-                    />
-                  </View>
-                ) : null}
-              </View>
-              <Text style={draft.saved ? savedStyle : selectStyle}>
-                {draft.saved ? '已保存' : draft.selected ? '已选中' : '未选中'}
-              </Text>
-            </Pressable>
-          ))
-        )}
+      <SectionCard title="识别结果" subtitle={drafts.length > 0 ? `${drafts.length} 个结果` : undefined} delay={150} density="compact" headerMode="compact">
+        <ScanRecognitionResults
+          drafts={drafts}
+          saving={saveMutation.isPending}
+          onSaveSelected={() => void handleSaveSelected()}
+          onToggleDraft={toggleDraft}
+          onToggleEditing={toggleDraftEditing}
+          onChangeDraft={updateDraft}
+          onCropDraft={setCroppingDraftId}
+        />
       </SectionCard>
+
+      <ScanCropSheet
+        visible={Boolean(croppingDraftId)}
+        sourceImage={selectedAsset ? toScanSourceImage(selectedAsset) : null}
+        initialCropBox={drafts.find((draft) => draft.id === croppingDraftId)?.cropBox ?? null}
+        saving={cropSaving}
+        onClose={() => setCroppingDraftId(null)}
+        onConfirm={(cropBox) => void handleConfirmCrop(cropBox)}
+      />
     </Screen>
   );
 }
-
-const bodyStyle = {
-  fontSize: 15,
-  color: palette.textMuted,
-};
 
 const hintStyle = {
   fontSize: 14,
@@ -401,9 +393,9 @@ const successStyle = {
 
 const secondaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 15,
   backgroundColor: palette.canvasStrong,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -415,9 +407,9 @@ const secondaryButtonTextStyle = {
 
 const primaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 15,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 13,
   alignItems: 'center' as const,
 };
 
@@ -433,65 +425,18 @@ const primaryButtonTextStyle = {
 
 const previewStyle = {
   width: '100%' as const,
-  aspectRatio: 4 / 3,
-  borderRadius: 22,
+  aspectRatio: 16 / 10,
+  borderRadius: 18,
   backgroundColor: palette.canvasStrong,
 };
 
-const draftCardStyle = {
-  flexDirection: 'row' as const,
-  gap: 12,
-  borderRadius: 20,
+const emptyPreviewStyle = {
+  minHeight: 112,
+  borderRadius: 18,
   borderWidth: 1,
+  borderStyle: 'dashed' as const,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  padding: 16,
-};
-
-const activeDraftCardStyle = {
-  borderColor: '#7dd3fc',
-  backgroundColor: palette.brandTint,
-};
-
-const draftTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const selectStyle = {
-  color: '#0369a1',
-  fontSize: 13,
-  fontWeight: '600' as const,
-};
-
-const savedStyle = {
-  color: '#15803d',
-  fontSize: 13,
-  fontWeight: '700' as const,
-};
-
-const miniButtonStyle = {
-  alignSelf: 'flex-start' as const,
-  borderRadius: 10,
-  backgroundColor: palette.canvasStrong,
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-};
-
-const miniButtonTextStyle = {
-  color: palette.text,
-  fontSize: 13,
-  fontWeight: '600' as const,
-};
-
-const inputStyle = {
-  backgroundColor: palette.surface,
-  borderRadius: 14,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  fontSize: 14,
-  color: palette.text,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
 };

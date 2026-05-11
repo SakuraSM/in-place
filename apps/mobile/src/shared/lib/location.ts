@@ -10,6 +10,18 @@ export function getContainerTypeLabel(item: Pick<Item, 'type' | 'metadata'> | nu
   return isLocationItem(item) ? '位置' : '收纳';
 }
 
+export function updateLocationMetadata(metadata: Record<string, unknown> | undefined, isLocation: boolean) {
+  const nextMetadata = { ...(metadata ?? {}) };
+
+  if (isLocation) {
+    nextMetadata[LOCATION_TAG_KEY] = true;
+    return nextMetadata;
+  }
+
+  delete nextMetadata[LOCATION_TAG_KEY];
+  return nextMetadata;
+}
+
 export function buildChildrenMap(items: Item[]) {
   return items.reduce<Map<string | null, Item[]>>((map, item) => {
     const key = item.parent_id ?? null;

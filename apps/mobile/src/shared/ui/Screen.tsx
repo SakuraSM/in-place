@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { SafeAreaView, ScrollView, View, type ScrollViewProps, type ViewStyle } from 'react-native';
+import { ScrollView, StatusBar, View, type ScrollViewProps, type StatusBarStyle, type ViewStyle } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette } from './theme';
 
 interface ScreenProps {
@@ -7,23 +8,50 @@ interface ScreenProps {
   scroll?: boolean;
   contentStyle?: ViewStyle;
   scrollProps?: ScrollViewProps;
+  safeAreaTop?: 'top-safe' | 'immersive';
+  safeAreaBottom?: 'bottom-safe' | 'none';
+  statusBarStyle?: StatusBarStyle;
+  contentInsetMode?: 'page' | 'tight' | 'form';
+  chrome?: 'default' | 'muted' | 'none';
 }
 
-export function Screen({ children, scroll = false, contentStyle, scrollProps }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = false,
+  contentStyle,
+  scrollProps,
+  safeAreaTop = 'top-safe',
+  safeAreaBottom = 'bottom-safe',
+  statusBarStyle = 'dark-content',
+  contentInsetMode = 'page',
+  chrome = 'default',
+}: ScreenProps) {
+  const insets = useSafeAreaInsets();
+  const contentSpacing = contentInsetMode === 'tight'
+    ? { horizontal: 16, vertical: 8, gap: 10 }
+    : contentInsetMode === 'form'
+      ? { horizontal: 16, vertical: 12, gap: 12 }
+      : { horizontal: 16, vertical: 12, gap: 12 };
+  const topPadding = safeAreaTop === 'top-safe' ? insets.top + 6 : 0;
+  const bottomPadding = safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, 10) : 0;
   const containerStyle: ViewStyle = {
     flexGrow: 1,
-    padding: 20,
-    gap: 16,
+    paddingHorizontal: contentSpacing.horizontal,
+    paddingTop: topPadding + contentSpacing.vertical,
+    paddingBottom: bottomPadding + contentSpacing.vertical,
+    gap: contentSpacing.gap,
   };
 
   if (scroll) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.canvas }}>
-        <View style={backgroundChromeStyle}>
-          <View style={topGlowStyle} />
-          <View style={sideGlowStyle} />
-        </View>
-        <ScrollView contentContainerStyle={[containerStyle, contentStyle]} {...scrollProps}>
+      <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
+        <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
+        <BackgroundChrome chrome={chrome} />
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[containerStyle, contentStyle]}
+          {...scrollProps}
+        >
           {children as never}
         </ScrollView>
       </SafeAreaView>
@@ -31,13 +59,24 @@ export function Screen({ children, scroll = false, contentStyle, scrollProps }: 
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.canvas }}>
-      <View style={backgroundChromeStyle}>
-        <View style={topGlowStyle} />
-        <View style={sideGlowStyle} />
-      </View>
+    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
+      <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
+      <BackgroundChrome chrome={chrome} />
       <View style={[containerStyle, { flex: 1 }, contentStyle]}>{children as never}</View>
     </SafeAreaView>
+  );
+}
+
+function BackgroundChrome({ chrome }: { chrome: 'default' | 'muted' | 'none' }) {
+  if (chrome === 'none') {
+    return null;
+  }
+
+  return (
+    <View style={backgroundChromeStyle}>
+      <View style={[topGlowStyle, chrome === 'muted' ? mutedTopGlowStyle : null]} />
+      <View style={[sideGlowStyle, chrome === 'muted' ? mutedSideGlowStyle : null]} />
+    </View>
   );
 }
 
@@ -51,22 +90,30 @@ const backgroundChromeStyle = {
 
 const topGlowStyle = {
   position: 'absolute' as const,
-  top: -90,
-  right: -40,
-  width: 220,
-  height: 220,
+  top: -78,
+  right: -68,
+  width: 186,
+  height: 186,
   borderRadius: 999,
-  backgroundColor: '#dbeafe',
-  opacity: 0.65,
+  backgroundColor: '#dff7f4',
+  opacity: 0.36,
 };
 
 const sideGlowStyle = {
   position: 'absolute' as const,
-  left: -60,
-  top: 180,
-  width: 180,
-  height: 180,
+  left: -74,
+  top: 210,
+  width: 132,
+  height: 132,
   borderRadius: 999,
-  backgroundColor: '#e0f2fe',
-  opacity: 0.45,
+  backgroundColor: '#effaf7',
+  opacity: 0.2,
+};
+
+const mutedTopGlowStyle = {
+  opacity: 0.28,
+};
+
+const mutedSideGlowStyle = {
+  opacity: 0.2,
 };

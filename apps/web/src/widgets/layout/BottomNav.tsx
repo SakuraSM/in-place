@@ -1,15 +1,23 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User, MapPinned } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, MapPinned, Clock3, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 
-const tabs = [
-  { to: '/', icon: Home, label: '首页' },
-  { to: '/overview', icon: Search, label: '总览' },
-  { to: '/locations', icon: MapPinned, label: '位置树' },
-  { to: '/categories', icon: Shapes, label: '分类' },
-  { to: '/scan', icon: Camera, label: '扫描' },
-  { to: '/profile', icon: User, label: '我的' },
-];
+const WEB_MOBILE_NAVIGATION_ADAPTER: Record<AppNavigationItemId, { to: string; icon: LucideIcon }> = {
+  home: { to: '/', icon: Home },
+  overview: { to: '/overview', icon: Search },
+  locations: { to: '/locations', icon: MapPinned },
+  activity: { to: '/activity', icon: Clock3 },
+  categories: { to: '/categories', icon: Shapes },
+  tags: { to: '/tags', icon: Shapes },
+  scan: { to: '/scan', icon: Camera },
+  profile: { to: '/profile', icon: User },
+};
+
+const tabs = getMobilePrimaryNavigationItems().map((item) => ({
+  ...item,
+  ...WEB_MOBILE_NAVIGATION_ADAPTER[item.id],
+}));
 
 export default function BottomNav() {
   const location = useLocation();
@@ -17,7 +25,7 @@ export default function BottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-100 safe-bottom">
       <div className="flex items-center max-w-lg mx-auto px-1">
-        {tabs.map(({ to, icon: Icon, label }) => {
+        {tabs.map(({ to, icon: Icon, shortLabel }) => {
           const isActive = to === '/'
             ? location.pathname === '/'
             : location.pathname.startsWith(to);
@@ -48,7 +56,7 @@ export default function BottomNav() {
                   />
                 </div>
                 <span className={`text-[10px] transition-colors duration-150 ${isActive ? 'font-semibold text-sky-600' : 'font-medium text-slate-400'}`}>
-                  {label}
+                  {shortLabel}
                 </span>
               </motion.div>
             </NavLink>

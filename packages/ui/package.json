@@ -1,0 +1,30 @@
+{
+  "name": "@inplace/ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./tokens": {
+      "types": "./src/tokens/index.ts",
+      "default": "./src/tokens/index.ts"
+    },
+    "./tailwind-preset": {
+      "types": "./src/platform/web/tailwind-preset.ts",
+      "default": "./src/platform/web/tailwind-preset.ts"
+    },
+    "./mobile": {
+      "types": "./src/platform/mobile/styles.ts",
+      "default": "./src/platform/mobile/styles.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

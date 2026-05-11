@@ -14,20 +14,20 @@ export function StateBlock({ title, body, loading = false }: StateBlockProps) {
       <View
         style={{
           backgroundColor: palette.surface,
-          borderRadius: 24,
-          padding: 24,
-          gap: 10,
+          borderRadius: 20,
+          padding: 18,
+          gap: 8,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: 1,
           borderColor: palette.borderSoft,
-          ...shadows.card,
+          ...shadows.sm,
         }}
       >
         {loading ? <ActivityIndicator color={palette.brandStrong} /> : null}
-        <Text style={{ fontSize: 22, fontWeight: '800', color: palette.text }}>{title}</Text>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: palette.text, textAlign: 'center' }}>{title}</Text>
         {body ? (
-          <Text style={{ fontSize: 15, lineHeight: 22, color: palette.textMuted, textAlign: 'center' }}>
+          <Text style={{ fontSize: 14, lineHeight: 20, color: palette.textMuted, textAlign: 'center' }}>
             {body}
           </Text>
         ) : null}

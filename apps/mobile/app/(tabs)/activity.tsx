@@ -3,26 +3,22 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ActivityAction, ActivityLog } from '@inplace/domain';
+import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { activityApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { palette } from '@/shared/ui/theme';
 
 const PAGE_SIZE = 20;
 
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  manual_create: '手动录入',
-  ai_scan_create: 'AI 录入',
-  update: '修改',
-  delete: '删除',
-};
-
 function createEmptyActionSummary() {
   return Object.fromEntries(
-    (Object.keys(ACTION_LABELS) as ActivityAction[]).map((action) => [action, 0]),
+    (Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => [action, 0]),
   ) as Record<ActivityAction, number>;
 }
 
@@ -37,11 +33,11 @@ export default function ActivityTab() {
   });
 
   if (activityQuery.isLoading) {
-    return <Screen><StateBlock title="正在加载操作记录" loading body="正在读取手动录入、AI 录入、修改和删除记录。" /></Screen>;
+    return <Screen><StateBlock title="加载记录" loading /></Screen>;
   }
 
   if (activityQuery.isError) {
-    return <Screen><StateBlock title="操作记录加载失败" body={activityQuery.error instanceof Error ? activityQuery.error.message : '请稍后重试。'} /></Screen>;
+    return <Screen><StateBlock title="记录加载失败" body={activityQuery.error instanceof Error ? activityQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   const pages = activityQuery.data?.pages ?? [];
@@ -67,38 +63,42 @@ export default function ActivityTab() {
   return (
     <Screen
       scroll
+      contentInsetMode="page"
+      chrome="muted"
       scrollProps={{
         onScroll: handleScroll,
         scrollEventThrottle: 16,
       }}
     >
-      <BrandHeader compact title="操作记录" subtitle="与 Web 端操作记录一致，汇总手动录入、AI 录入、修改和删除。" />
+      <Entrance variant="page">
+        <BrandHeader variant="page" title="记录" />
+      </Entrance>
 
-      <SectionCard title="记录概览" subtitle="当前已加载记录的动作统计。" delay={70}>
+      <SectionCard title="概览" subtitle={meta ? `${logs.length} / ${meta.total}` : undefined} delay={70} density="compact" headerMode="compact">
         <View style={statsGridStyle}>
-          {(Object.keys(ACTION_LABELS) as ActivityAction[]).map((action) => (
+          {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
             <View key={action} style={statCardStyle}>
               <Text style={statValueStyle}>{summary[action]}</Text>
-              <Text style={bodyStyle}>{ACTION_LABELS[action]}</Text>
+              <Text style={bodyStyle}>{ACTIVITY_ACTION_PRESENTATION[action].label}</Text>
             </View>
           ))}
         </View>
       </SectionCard>
 
-      <SectionCard title="操作记录" subtitle={meta ? `已加载 ${logs.length} / ${meta.total}` : '按时间倒序展示'} delay={140}>
+      <SectionCard title="最近操作" delay={140} density="compact" headerMode="compact">
         {logs.length === 0 ? (
-          <Text style={bodyStyle}>还没有操作记录。</Text>
+          <Text style={bodyStyle}>暂无记录</Text>
         ) : (
           logs.map((entry) => <ActivityRow key={entry.id} entry={entry} />)
         )}
         {activityQuery.isFetchingNextPage ? (
           <View style={loadingMoreStyle}>
             <ActivityIndicator color="#0ea5e9" />
-            <Text style={captionStyle}>正在加载更多记录...</Text>
+            <Text style={captionStyle}>加载更多...</Text>
           </View>
         ) : meta ? (
           <Text style={captionStyle}>
-            {activityQuery.hasNextPage ? '继续上滑加载更多' : `已展示全部 ${meta.total} 条记录`}
+            {activityQuery.hasNextPage ? '上滑加载' : `共 ${meta.total} 条`}
           </Text>
         ) : null}
       </SectionCard>
@@ -112,7 +112,7 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
       <View style={{ flex: 1, gap: 4 }}>
         <Text style={listTitleStyle}>{entry.item_name || '未命名对象'}</Text>
         <Text style={bodyStyle}>
-          {ACTION_LABELS[entry.action]} · {entry.item_type === 'container' ? '收纳' : '物品'}
+          {ACTIVITY_ACTION_PRESENTATION[entry.action].label} · {ITEM_TYPE_PRESENTATION[entry.item_type].label}
         </Text>
         <Text style={captionStyle}>
           {new Date(entry.created_at).toLocaleString('zh-CN', {
@@ -132,7 +132,7 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
   }
 
   return (
-    <Link href={`/item/${entry.item_id}`} asChild>
+    <Link href={resolveMobileDetailHref({ id: entry.item_id, type: entry.item_type })} asChild>
       <Pressable>{content}</Pressable>
     </Link>
   );
@@ -151,22 +151,21 @@ const captionStyle = {
 
 const statsGridStyle = {
   flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
-  gap: 12,
+  gap: 8,
 };
 
 const statCardStyle = {
-  minWidth: '47%' as const,
+  flex: 1,
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 18,
-  padding: 16,
+  borderRadius: 16,
+  padding: 12,
   gap: 4,
   borderWidth: 1,
   borderColor: palette.borderSoft,
 };
 
 const statValueStyle = {
-  fontSize: 24,
+  fontSize: 22,
   fontWeight: '700' as const,
   color: palette.text,
 };
@@ -177,7 +176,8 @@ const rowStyle = {
   gap: 12,
   borderTopWidth: 1,
   borderTopColor: palette.borderSoft,
-  paddingTop: 14,
+  paddingTop: 12,
+  minHeight: 68,
 };
 
 const listTitleStyle = {

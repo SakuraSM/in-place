@@ -29,10 +29,19 @@ on:
       - 'packages/domain/**'
   workflow_dispatch:
     inputs:
+      platform:
+        description: 'EAS build platform'
+        required: true
+        default: 'android'
+        type: choice
+        options:
+          - android
+          - ios
+          - all
       profile:
         description: 'EAS build profile'
         required: true
-        default: 'production'
+        default: 'preview'
         type: choice
         options:
           - development
@@ -80,38 +89,67 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_PROJECT_ID: ${{ vars.EXPO_PROJECT_ID }}
-      EAS_PROFILE: ${{ github.event.inputs.profile || 'production' }}
+      EAS_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'production' }}
+      EAS_PLATFORM: ${{ github.event_name == 'workflow_dispatch' && inputs.platform || 'all' }}
     steps:
+      - name: Skip unselected platform
+        if: ${{ env.EAS_PLATFORM != 'all' && env.EAS_PLATFORM != matrix.platform }}
+        run: echo "Skipping ${{ matrix.platform }} because platform input is $EAS_PLATFORM."
+
       - name: Checkout repository
+        if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
       - name: Install dependencies
+        if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
         run: npm ci
 
       - name: Validate EAS build configuration
+        if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
             echo "::error::EXPO_TOKEN secret is required for EAS builds."
             exit 1
           fi
 
+          npx --yes expo config --json > /tmp/expo-config.json
+
           node <<'NODE'
+          const fs = require('node:fs');
           const { expo } = require('./apps/mobile/app.json');
+          const resolved = JSON.parse(fs.readFileSync('/tmp/expo-config.json', 'utf8'));
           const configuredProjectId =
-            process.env.EXPO_PROJECT_ID || expo?.extra?.eas?.projectId;
+            process.env.EXPO_PROJECT_ID || resolved?.extra?.eas?.projectId || expo?.extra?.eas?.projectId;
 
           if (!configuredProjectId) {
             console.error('::error::Set the EXPO_PROJECT_ID repository variable or configure expo.extra.eas.projectId in apps/mobile/app.json.');
             process.exit(1);
           }
+
+          if (resolved.slug !== 'in-place') {
+            console.error(`::error::Expo slug must be "in-place", got "${resolved.slug}".`);
+            process.exit(1);
+          }
+
+          if (resolved.owner !== 'sakurasms-organization') {
+            console.error(`::error::Expo owner must be "sakurasms-organization", got "${resolved.owner}".`);
+            process.exit(1);
+          }
+
+          if (configuredProjectId !== 'afd05e9a-91f0-4533-aabe-7fc6a4007f96') {
+            console.error(`::error::Unexpected Expo project ID: ${configuredProjectId}`);
+            process.exit(1);
+          }
           NODE
 
       - name: Build with EAS
+        if: ${{ env.EAS_PLATFORM == 'all' || env.EAS_PLATFORM == matrix.platform }}
         run: npx --yes eas-cli@18.8.1 build --platform ${{ matrix.platform }} --profile "$EAS_PROFILE" --non-interactive
         working-directory: apps/mobile

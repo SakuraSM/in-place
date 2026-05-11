@@ -1,21 +1,27 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getDesktopPrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import BrandLockup from '../../shared/ui/BrandLockup';
 import { buildHomeCreateRoute } from '../../features/inventory/lib/homeRoute';
 import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
 import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
 
-const navItems = [
-  { to: '/', icon: Home, label: '首页' },
-  { to: '/overview', icon: Search, label: '总览' },
-  { to: '/locations', icon: MapPinned, label: '位置树' },
-  { to: '/activity', icon: Clock3, label: '操作记录' },
-  { to: '/categories', icon: Shapes, label: '分类管理' },
-  { to: '/tags', icon: StickyNote, label: '标签管理' },
-  { to: '/scan', icon: Camera, label: 'AI 扫描' },
-  { to: '/profile', icon: User, label: '我的' },
-];
+const WEB_NAVIGATION_ADAPTER: Record<AppNavigationItemId, { to: string; icon: LucideIcon }> = {
+  home: { to: '/', icon: Home },
+  overview: { to: '/overview', icon: Search },
+  locations: { to: '/locations', icon: MapPinned },
+  activity: { to: '/activity', icon: Clock3 },
+  categories: { to: '/categories', icon: Shapes },
+  tags: { to: '/tags', icon: StickyNote },
+  scan: { to: '/scan', icon: Camera },
+  profile: { to: '/profile', icon: User },
+};
+
+const navItems = getDesktopPrimaryNavigationItems().map((item) => ({
+  ...item,
+  ...WEB_NAVIGATION_ADAPTER[item.id],
+}));
 
 const sidebarEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
