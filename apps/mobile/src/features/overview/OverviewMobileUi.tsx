@@ -9,6 +9,9 @@ import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
 import { buildMobileItemPath, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 
+const LOCATION_TREE_INDENT_WIDTH = 18;
+const LOCATION_TREE_MAX_DEPTH = 5;
+
 export function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={filterRowStyle}>
@@ -56,11 +59,12 @@ export function ResultRow({ item, path }: { item: Item; path: string }) {
           {item.type === 'item' ? <StatusBadge status={item.status} /> : <Text style={containerPillStyle}>{getContainerTypeLabel(item)}</Text>}
         </View>
         {item.category ? <Text numberOfLines={1} style={resultCategoryStyle}>{item.category}</Text> : null}
-        <View style={pathLineStyle}>
-          <Ionicons name="home-outline" size={13} color={palette.textSoft} />
-          <Ionicons name="chevron-forward" size={11} color={palette.textSoft} />
-          <Text numberOfLines={1} style={pathTextStyle}>{path || '根目录'}</Text>
-        </View>
+        {path ? (
+          <View style={pathLineStyle}>
+            <Ionicons name="location-outline" size={13} color={palette.textSoft} />
+            <Text numberOfLines={1} style={pathTextStyle}>{path}</Text>
+          </View>
+        ) : null}
       </View>
       <Ionicons name="chevron-forward" size={20} color={palette.textSoft} />
     </Pressable>
@@ -82,19 +86,26 @@ export function LocationFilterSheet({
   onClose: () => void;
   onSelect: (locationId: string | null) => void;
 }) {
+  const treeRows = buildLocationTreeRows(locations, itemMap);
+
   return (
     <BottomSheet visible={visible} title="位置树筛选" onClose={onClose}>
       <Pressable onPress={() => onSelect(null)} style={[sheetOptionStyle, !selectedLocationId ? sheetOptionActiveStyle : null]}>
         <Text style={sheetOptionTextStyle}>全部位置</Text>
         {!selectedLocationId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
       </Pressable>
-      {locations.map((location) => {
-        const active = selectedLocationId === location.id;
+      {treeRows.map((row) => {
+        const active = selectedLocationId === row.location.id;
+        const indent = Math.min(row.depth, LOCATION_TREE_MAX_DEPTH) * LOCATION_TREE_INDENT_WIDTH;
         return (
-          <Pressable key={location.id} onPress={() => onSelect(location.id)} style={[sheetOptionStyle, active ? sheetOptionActiveStyle : null]}>
+          <Pressable
+            key={row.location.id}
+            onPress={() => onSelect(row.location.id)}
+            style={[sheetOptionStyle, active ? sheetOptionActiveStyle : null, { paddingLeft: 14 + indent }]}
+          >
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text numberOfLines={1} style={sheetOptionTextStyle}>{location.name}</Text>
-              <Text numberOfLines={1} style={sheetOptionMetaStyle}>{buildMobileItemPath(location, itemMap) || '根目录'}</Text>
+              <Text numberOfLines={1} style={sheetOptionTextStyle}>{row.location.name}</Text>
+              {row.path ? <Text numberOfLines={1} style={sheetOptionMetaStyle}>{row.path}</Text> : null}
             </View>
             {active ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
           </Pressable>
@@ -102,6 +113,40 @@ export function LocationFilterSheet({
       })}
     </BottomSheet>
   );
+}
+
+function buildLocationTreeRows(locations: Item[], itemMap: Map<string, Item>) {
+  const locationMap = new Map(locations.map((location) => [location.id, location]));
+  const childrenMap = new Map<string | null, Item[]>();
+
+  for (const location of locations) {
+    const parentId = location.parent_id && locationMap.has(location.parent_id) ? location.parent_id : null;
+    const siblings = childrenMap.get(parentId) ?? [];
+    siblings.push(location);
+    childrenMap.set(parentId, siblings);
+  }
+
+  for (const siblings of childrenMap.values()) {
+    siblings.sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'));
+  }
+
+  const rows: { location: Item; depth: number; path: string }[] = [];
+  const visited = new Set<string>();
+
+  const appendRows = (parentId: string | null, depth: number) => {
+    for (const location of childrenMap.get(parentId) ?? []) {
+      if (visited.has(location.id)) {
+        continue;
+      }
+
+      visited.add(location.id);
+      rows.push({ location, depth, path: buildMobileItemPath(location, itemMap) });
+      appendRows(location.id, depth + 1);
+    }
+  };
+
+  appendRows(null, 0);
+  return rows;
 }
 
 export function TagFilterSheet({

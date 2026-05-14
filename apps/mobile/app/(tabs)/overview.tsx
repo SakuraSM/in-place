@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import type { ItemStatus } from '@inplace/domain';
+import type { Item, ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
@@ -42,6 +42,7 @@ import {
 } from '@/features/overview/overviewMobileData';
 
 const PAGE_SIZE = 20;
+type OverviewViewMode = 'hierarchy' | 'flat';
 
 interface FilterOption<TValue extends string> {
   value: TValue;
@@ -63,6 +64,11 @@ const STATUS_FILTERS: FilterOption<ItemStatus | 'all'>[] = [
   { value: 'worn_out', label: ITEM_STATUS_PRESENTATION.worn_out.label },
 ];
 
+const VIEW_MODE_FILTERS: FilterOption<OverviewViewMode>[] = [
+  { value: 'hierarchy', label: '层级', icon: 'git-branch-outline' },
+  { value: 'flat', label: '平铺', icon: 'grid-outline' },
+];
+
 const VALID_TYPE_VALUES = new Set(TYPE_FILTERS.map((option) => option.value));
 const VALID_STATUS_VALUES = new Set(STATUS_FILTERS.map((option) => option.value));
 
@@ -73,6 +79,7 @@ export default function OverviewTab() {
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
+  const [viewMode, setViewMode] = useState<OverviewViewMode>('hierarchy');
   const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
@@ -120,12 +127,25 @@ export default function OverviewTab() {
   const locations = useMemo(() => allItems.filter(isLocationItem), [allItems]);
   const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
   const pages = searchQuery.data?.pages ?? [];
-  const items = pages.flatMap((page) => page.data);
+  const flatItems = pages.flatMap((page) => page.data);
   const meta = pages[pages.length - 1]?.meta;
-  const total = meta?.total ?? items.length;
+  const hierarchyItems = useMemo(
+    () => buildHierarchyItems({
+      items: allItems,
+      parentId: selectedLocationId,
+      query: debouncedQuery,
+      typeFilter,
+      statusFilter,
+      selectedTags,
+    }),
+    [allItems, debouncedQuery, selectedLocationId, selectedTags, statusFilter, typeFilter],
+  );
+  const hierarchyContainers = hierarchyItems.filter((item) => item.type === 'container');
+  const hierarchyLeafItems = hierarchyItems.filter((item) => item.type === 'item');
+  const total = viewMode === 'hierarchy' ? hierarchyItems.length : meta?.total ?? flatItems.length;
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!searchQuery.hasNextPage || searchQuery.isFetchingNextPage) {
+    if (viewMode !== 'flat' || !searchQuery.hasNextPage || searchQuery.isFetchingNextPage) {
       return;
     }
 
@@ -219,6 +239,17 @@ export default function OverviewTab() {
             />
           ))}
         </FilterRow>
+        <FilterRow label="视图">
+          {VIEW_MODE_FILTERS.map((option) => (
+            <FilterChip
+              key={option.value}
+              active={viewMode === option.value}
+              icon={option.icon}
+              label={option.label}
+              onPress={() => setViewMode(option.value)}
+            />
+          ))}
+        </FilterRow>
         <FilterRow label="范围">
           <FilterChip
             active={Boolean(selectedLocation)}
@@ -238,22 +269,32 @@ export default function OverviewTab() {
       <View style={resultDividerStyle} />
       <Text style={resultSummaryStyle}>共 {total} 个结果</Text>
 
-      {searchQuery.isLoading || allItemsQuery.isLoading ? <StateBlock title="搜索中" loading /> : null}
-      {!searchQuery.isLoading && items.length === 0 ? <StateBlock title="暂无结果" body="换个关键词试试" /> : null}
+      {(viewMode === 'flat' && searchQuery.isLoading) || allItemsQuery.isLoading ? <StateBlock title="搜索中" loading /> : null}
 
-      <View style={resultListStyle}>
-        {items.map((item) => (
-          <ResultRow key={item.id} item={item} path={buildMobileItemPath(item, itemMap)} />
-        ))}
-      </View>
+      {viewMode === 'hierarchy' ? (
+        <>
+          {hierarchyItems.length === 0 && !allItemsQuery.isLoading ? <StateBlock title="暂无结果" body="换个关键词试试" /> : null}
+          <HierarchyResultGroup title={`下级收纳 ${hierarchyContainers.length}`} items={hierarchyContainers} itemMap={itemMap} />
+          <HierarchyResultGroup title={`下级物品 ${hierarchyLeafItems.length}`} items={hierarchyLeafItems} itemMap={itemMap} />
+        </>
+      ) : (
+        <>
+          {!searchQuery.isLoading && flatItems.length === 0 ? <StateBlock title="暂无结果" body="换个关键词试试" /> : null}
+          <View style={resultListStyle}>
+            {flatItems.map((item) => (
+              <ResultRow key={item.id} item={item} path={buildMobileItemPath(item, itemMap)} />
+            ))}
+          </View>
+        </>
+      )}
 
-      {meta ? (
+      {viewMode === 'flat' && meta ? (
         <Text style={loadedMetaStyle}>
-          {searchQuery.hasNextPage ? `已加载 ${items.length} / ${meta.total}，继续上滑加载更多` : `已展示全部 ${meta.total} 个结果`}
+          {searchQuery.hasNextPage ? `已加载 ${flatItems.length} / ${meta.total}，继续上滑加载更多` : `已展示全部 ${meta.total} 个结果`}
         </Text>
       ) : null}
 
-      {searchQuery.isFetchingNextPage ? (
+      {viewMode === 'flat' && searchQuery.isFetchingNextPage ? (
         <View style={loadingMoreStyle}>
           <ActivityIndicator color={palette.brand} />
           <Text style={loadedMetaStyle}>加载更多...</Text>
@@ -280,4 +321,82 @@ export default function OverviewTab() {
       />
     </Screen>
   );
+}
+
+function HierarchyResultGroup({
+  title,
+  items,
+  itemMap,
+}: {
+  title: string;
+  items: Item[];
+  itemMap: Map<string, Item>;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={resultListStyle}>
+      <Text style={resultSummaryStyle}>{title}</Text>
+      {items.map((item) => (
+        <ResultRow key={item.id} item={item} path={buildMobileItemPath(item, itemMap)} />
+      ))}
+    </View>
+  );
+}
+
+function buildHierarchyItems({
+  items,
+  parentId,
+  query,
+  typeFilter,
+  statusFilter,
+  selectedTags,
+}: {
+  items: Item[];
+  parentId: string | null;
+  query: string;
+  typeFilter: TypeFilterValue;
+  statusFilter: ItemStatus | 'all';
+  selectedTags: string[];
+}) {
+  const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
+
+  return items.filter((item) => {
+    if ((item.parent_id ?? null) !== parentId) {
+      return false;
+    }
+
+    if (!matchesTypeFilter(item, typeFilter)) {
+      return false;
+    }
+
+    if (item.type === 'item' && statusFilter !== 'all' && item.status !== statusFilter) {
+      return false;
+    }
+
+    if (selectedTags.length > 0 && !selectedTags.every((tag) => item.tags.includes(tag))) {
+      return false;
+    }
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return [item.name, item.description, item.category, ...item.tags]
+      .some((value) => value.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
+  });
+}
+
+function matchesTypeFilter(item: Item, typeFilter: TypeFilterValue) {
+  if (typeFilter === 'all') {
+    return true;
+  }
+
+  if (typeFilter === 'location') {
+    return isLocationItem(item);
+  }
+
+  return item.type === typeFilter;
 }

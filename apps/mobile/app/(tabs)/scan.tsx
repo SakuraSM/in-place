@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import type { AIRecognitionResult, Item } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
+import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { ScanCropSheet } from '@/features/scan/ScanCropSheet';
 import { ScanRecognitionResults, type DraftRecognition } from '@/features/scan/ScanRecognitionResults';
 import { cropImageFromUri, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox, type ScanSourceImage } from '@/features/scan/scanImageCrop';
@@ -160,9 +161,9 @@ export default function ScanTab() {
     setMessage(null);
     setDrafts([]);
 
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('请先允许访问相册');
+    const permissionError = await getMediaLibraryPermissionError();
+    if (permissionError) {
+      setError(permissionError);
       return;
     }
 

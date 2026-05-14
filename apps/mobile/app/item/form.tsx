@@ -8,11 +8,13 @@ import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
+import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
+import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { LocationSelectField } from '@/features/home/LocationSelectField';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
@@ -156,9 +158,9 @@ export default function ItemFormScreen() {
 
   const handlePickImage = async () => {
     setSubmitError(null);
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setSubmitError('请先允许访问相册');
+    const permissionError = await getMediaLibraryPermissionError();
+    if (permissionError) {
+      setSubmitError(permissionError);
       return;
     }
 
@@ -416,7 +418,7 @@ export default function ItemFormScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                 {draft.images.map((imageUrl) => (
                   <View key={imageUrl} style={imageCardStyle}>
-                    <Image source={{ uri: imageUrl }} style={imageStyle} />
+                    <Image source={{ uri: resolveInventoryImageUri(imageUrl) ?? imageUrl }} style={imageStyle} />
                     <Pressable onPress={() => removeImage(imageUrl)} style={imageRemoveButtonStyle}>
                       <Text style={imageRemoveTextStyle}>删除</Text>
                     </Pressable>

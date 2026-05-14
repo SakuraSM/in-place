@@ -78,15 +78,14 @@ export default function ContainerBrowseScreen() {
 
       <SectionCard title="当前路径" subtitle="短按进入，长按详情" delay={60} density="compact">
         <View style={pathRailStyle}>
-          <Text style={pathTextStyle}>顶层</Text>
-          {pathItems.map((pathItem) => (
+          {pathItems.map((pathItem, index) => (
             <View key={pathItem.id} style={pathNodeStyle}>
-              <Ionicons name="chevron-forward" size={13} color={palette.textSoft} />
+              {index > 0 ? <Ionicons name="chevron-forward" size={13} color={palette.textSoft} /> : null}
               <Text numberOfLines={1} style={pathTextStyle}>{pathItem.name}</Text>
             </View>
           ))}
           <View style={pathNodeStyle}>
-            <Ionicons name="chevron-forward" size={13} color={palette.textSoft} />
+            {pathItems.length > 0 ? <Ionicons name="chevron-forward" size={13} color={palette.textSoft} /> : null}
             <Text numberOfLines={1} style={activePathTextStyle}>{container.name}</Text>
           </View>
         </View>

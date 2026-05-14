@@ -7,9 +7,11 @@ import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, Text,
 import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
-import { categoriesApi, getMobileApiBaseUrl, itemsApi, tagsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
+import { categoriesApi, itemsApi, tagsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
+import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { updateLocationMetadata } from '@/shared/lib/location';
 import { palette, shadows } from '@/shared/ui/theme';
+import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { LocationSelectField } from './LocationSelectField';
 
 interface HomeItemFormSheetProps {
@@ -157,9 +159,9 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
   const handlePickImage = async () => {
     setSubmitError(null);
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setSubmitError('请先允许访问相册');
+    const permissionError = await getMediaLibraryPermissionError();
+    if (permissionError) {
+      setSubmitError(permissionError);
       return;
     }
 
@@ -461,19 +463,7 @@ function mergeTagInput(currentValue: string, tag: string) {
 }
 
 function resolveImageUri(url: string) {
-  if (/^https?:\/\//.test(url)) {
-    return url;
-  }
-
-  if (url.startsWith('/api/')) {
-    try {
-      return `${new URL(getMobileApiBaseUrl()).origin}${url}`;
-    } catch {
-      return url;
-    }
-  }
-
-  return url;
+  return resolveInventoryImageUri(url) ?? url;
 }
 
 const modalRootStyle = {

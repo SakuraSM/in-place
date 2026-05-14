@@ -137,10 +137,11 @@ export default function ItemDetailScreen() {
               </View>
               <StatusBadge status={item.status} />
             </View>
-            <View style={summaryPillRowStyle}>
-              <Text style={typePillStyle}>{itemTypeLabel}</Text>
-              {item.category ? <Text style={categoryPillStyle}>{item.category}</Text> : null}
-            </View>
+            {item.category ? (
+              <View style={summaryPillRowStyle}>
+                <Text style={categoryPillStyle}>{item.category}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
         <Text style={bodyStyle}>{item.description || '暂无描述'}</Text>
@@ -264,12 +265,11 @@ function PathCard({ ancestors }: { ancestors: Item[] }) {
   }
 
   return (
-    <SectionCard title="所在路径" delay={130} density="compact">
+    <SectionCard title="收纳位置" delay={130} density="compact">
       <View style={pathRailStyle}>
-        <Text style={pathTextStyle}>顶层</Text>
-        {ancestors.map((ancestor) => (
+        {ancestors.map((ancestor, index) => (
           <View key={ancestor.id} style={pathNodeStyle}>
-            <Ionicons name="chevron-forward" size={13} color={palette.textSoft} />
+            {index > 0 ? <Ionicons name="chevron-forward" size={13} color={palette.textSoft} /> : null}
             <Text numberOfLines={1} style={pathTextStyle}>{ancestor.name}</Text>
           </View>
         ))}

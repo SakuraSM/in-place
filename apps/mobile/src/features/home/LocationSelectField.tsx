@@ -5,6 +5,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'rea
 import type { Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { getContainerTypeLabel } from '@/shared/lib/location';
+import { formatMobileLocationPath } from '@/features/inventory/mobileInventoryFormat';
 import { palette, shadows } from '@/shared/ui/theme';
 
 interface LocationSelectFieldProps {
@@ -50,7 +51,7 @@ export function LocationSelectField({
     }
   }, [isOpen]);
 
-  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? '加载位置...' : '顶层位置';
+  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? '加载位置...' : '未选择收纳位置';
   const containers = currentContainersQuery.data ?? [];
 
   const handleSelect = (parentId: string | null) => {
@@ -95,18 +96,19 @@ export function LocationSelectField({
               <Text numberOfLines={1} style={selectedSummaryTextStyle}>{selectedLabel}</Text>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
-              <Pressable onPress={() => handleNavigate(-1)} style={breadcrumbChipStyle}>
-                <Ionicons name="home-outline" size={13} color={palette.brand} />
-                <Text style={breadcrumbChipTextStyle}>顶层</Text>
-              </Pressable>
-              {breadcrumbs.map((breadcrumb, index) => (
-                <Pressable key={breadcrumb.id} onPress={() => handleNavigate(index)} style={breadcrumbChipStyle}>
-                  <Ionicons name="chevron-forward" size={12} color={palette.textSoft} />
-                  <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
+            {breadcrumbs.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
+                <Pressable onPress={() => handleNavigate(-1)} style={breadcrumbIconChipStyle}>
+                  <Ionicons name="home-outline" size={13} color={palette.brand} />
                 </Pressable>
-              ))}
-            </ScrollView>
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <Pressable key={breadcrumb.id} onPress={() => handleNavigate(index)} style={breadcrumbChipStyle}>
+                    {index > 0 ? <Ionicons name="chevron-forward" size={12} color={palette.textSoft} /> : null}
+                    <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : null}
 
             <ScrollView contentContainerStyle={sheetContentStyle}>
               <Pressable
@@ -114,7 +116,7 @@ export function LocationSelectField({
                 style={[locationRowStyle, selectedParentId === currentParentId ? selectedLocationRowStyle : null]}
               >
                 <Ionicons name="home-outline" size={17} color={palette.textSoft} />
-                <Text style={locationRowTextStyle}>{currentParentId ? '当前位置' : '顶层位置'}</Text>
+                <Text style={locationRowTextStyle}>{currentParentId ? '选当前位置' : '不设置位置'}</Text>
                 {selectedParentId === currentParentId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
               </Pressable>
 
@@ -161,7 +163,7 @@ export function LocationSelectField({
 }
 
 function formatLocationPath(items: Item[]) {
-  return items.length > 0 ? `顶层 > ${items.map((item) => item.name).join(' > ')}` : '顶层位置';
+  return formatMobileLocationPath(items) || '未选择收纳位置';
 }
 
 const fieldButtonStyle = {
@@ -274,6 +276,12 @@ const breadcrumbChipStyle = {
   backgroundColor: palette.surfaceMuted,
   paddingHorizontal: 10,
   paddingVertical: 7,
+};
+
+const breadcrumbIconChipStyle = {
+  ...breadcrumbChipStyle,
+  width: 32,
+  justifyContent: 'center' as const,
 };
 
 const breadcrumbChipTextStyle = {

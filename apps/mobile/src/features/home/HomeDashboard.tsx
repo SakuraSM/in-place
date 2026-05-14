@@ -3,12 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ActivityLog, Category, Item, ItemStats } from '@inplace/domain';
 import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { Image, Pressable, Text, View } from 'react-native';
-import { getMobileApiBaseUrl } from '@/shared/api/mobileClient';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { countLocationContents, getContainerTypeLabel } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { palette, shadows } from '@/shared/ui/theme';
+import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 
 type ViewMode = 'type' | 'category';
 
@@ -115,7 +115,7 @@ export function HomeDashboard({
               <EmptyBlock text="暂无新增" />
             ) : (
               recentItems.slice(0, RECENT_SECTION_LIMIT).map((item) => (
-                <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] || '顶层'} />
+                <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] ?? ''} />
               ))
             )}
           </DashboardSection>
@@ -228,9 +228,13 @@ function ModeButton({
   onChangeViewMode: (mode: ViewMode) => void;
 }) {
   const isActive = mode === viewMode;
+  const iconName = mode === 'type' ? 'git-branch-outline' : 'grid-outline';
+  const label = mode === 'type' ? '层级' : '平铺';
+
   return (
     <Pressable onPress={() => onChangeViewMode(mode)} style={[modeButtonStyle, isActive ? modeButtonActiveStyle : null]}>
-      <Ionicons name={mode === 'type' ? 'grid-outline' : 'git-branch-outline'} size={18} color={isActive ? palette.text : palette.textSoft} />
+      <Ionicons name={iconName} size={16} color={isActive ? palette.text : palette.textSoft} />
+      <Text style={[modeButtonTextStyle, isActive ? modeButtonActiveTextStyle : null]}>{label}</Text>
     </Pressable>
   );
 }
@@ -245,7 +249,7 @@ function RecentItemRow({ item, path }: { item: Item; path: string }) {
         <Text numberOfLines={1} style={mutedTextStyle}>
           {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatShortDateTime(item.created_at)}
         </Text>
-        <Text numberOfLines={1} style={captionTextStyle}>{path}</Text>
+        {path ? <Text numberOfLines={1} style={captionTextStyle}>{path}</Text> : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
     </View>
@@ -492,23 +496,7 @@ function resolveOverviewHrefForGroup(items: Item[]) {
 }
 
 function resolveImageUri(url: string | undefined) {
-  if (!url) {
-    return null;
-  }
-
-  if (/^https?:\/\//.test(url)) {
-    return url;
-  }
-
-  if (url.startsWith('/api/')) {
-    try {
-      return `${new URL(getMobileApiBaseUrl()).origin}${url}`;
-    } catch {
-      return url;
-    }
-  }
-
-  return url;
+  return resolveInventoryImageUri(url);
 }
 
 function formatShortDateTime(value: string) {
@@ -560,16 +548,29 @@ const viewToggleStyle = {
 };
 
 const modeButtonStyle = {
-  width: 34,
+  minWidth: 58,
   height: 32,
   borderRadius: 11,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
+  flexDirection: 'row' as const,
+  gap: 4,
+  paddingHorizontal: 8,
 };
 
 const modeButtonActiveStyle = {
   backgroundColor: '#ffffff',
   ...shadows.sm,
+};
+
+const modeButtonTextStyle = {
+  fontSize: 12,
+  fontWeight: '800' as const,
+  color: palette.textSoft,
+};
+
+const modeButtonActiveTextStyle = {
+  color: palette.text,
 };
 
 const selectionNoticeStyle = {

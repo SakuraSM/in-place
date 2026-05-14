@@ -2,21 +2,58 @@ import { getMobileApiBaseUrl } from '@/shared/api/mobileClient';
 
 import type { Item } from '@inplace/domain';
 
+const UPLOAD_PATH_PREFIX = '/api/uploads/';
+const MOBILE_IMAGE_FORMAT = 'jpeg';
+const PATH_SEPARATOR = ' > ';
+
+function resolveMobileApiOrigin() {
+  try {
+    return new URL(getMobileApiBaseUrl()).origin;
+  } catch {
+    return null;
+  }
+}
+
+function formatMobileUploadImageUri(url: URL) {
+  url.searchParams.set('format', MOBILE_IMAGE_FORMAT);
+  return url.toString();
+}
+
 export function resolveInventoryImageUri(url: string | undefined) {
   if (!url) {
     return null;
   }
 
   if (/^https?:\/\//.test(url)) {
-    return url;
-  }
-
-  if (url.startsWith('/api/')) {
     try {
-      return `${new URL(getMobileApiBaseUrl()).origin}${url}`;
+      const parsedUrl = new URL(url);
+      if (!parsedUrl.pathname.startsWith(UPLOAD_PATH_PREFIX)) {
+        return url;
+      }
+
+      const mobileApiOrigin = resolveMobileApiOrigin();
+      if (!mobileApiOrigin) {
+        return formatMobileUploadImageUri(parsedUrl);
+      }
+
+      return formatMobileUploadImageUri(new URL(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`, mobileApiOrigin));
     } catch {
       return url;
     }
+  }
+
+  if (url.startsWith(UPLOAD_PATH_PREFIX)) {
+    const mobileApiOrigin = resolveMobileApiOrigin();
+    if (!mobileApiOrigin) {
+      return url;
+    }
+
+    return formatMobileUploadImageUri(new URL(url, mobileApiOrigin));
+  }
+
+  if (url.startsWith('/api/')) {
+    const mobileApiOrigin = resolveMobileApiOrigin();
+    return mobileApiOrigin ? `${mobileApiOrigin}${url}` : url;
   }
 
   return url;
@@ -41,5 +78,13 @@ export function buildMobileItemPath(item: Item, itemMap: Map<string, Item>) {
     currentParentId = parent.parent_id;
   }
 
-  return names.join(' > ');
+  return formatMobilePath(names);
+}
+
+export function formatMobilePath(names: string[]) {
+  return names.filter(Boolean).join(PATH_SEPARATOR);
+}
+
+export function formatMobileLocationPath(items: Pick<Item, 'name'>[]) {
+  return formatMobilePath(items.map((item) => item.name));
 }

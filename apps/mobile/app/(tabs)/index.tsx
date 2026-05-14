@@ -8,7 +8,6 @@ import { activityApi, categoriesApi, itemsApi } from '@/shared/api/mobileClient'
 import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette, shadows } from '@/shared/ui/theme';
-import { buildChildrenMap } from '@/shared/lib/location';
 import { useAuth } from '@/providers/AuthProvider';
 import { HomeDashboard } from '@/features/home/HomeDashboard';
 import { HomeItemFormSheet } from '@/features/home/HomeItemFormSheet';
@@ -29,7 +28,7 @@ export default function HomeTab() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
-  const [viewMode, setViewMode] = useState<ViewMode>('category');
+  const [viewMode, setViewMode] = useState<ViewMode>('type');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
@@ -212,30 +211,26 @@ async function fetchAllHomeItems(userId: string) {
 }
 
 function buildRecentItemPaths(recentItems: Item[], allItems: Item[]) {
-  const childrenMap = buildChildrenMap(allItems);
   const itemMap = new Map(allItems.map((item) => [item.id, item]));
-  const rootIds = new Set((childrenMap.get(null) ?? []).map((item) => item.id));
 
   return Object.fromEntries(
     recentItems.map((item) => {
       const lineage: string[] = [];
+      const visited = new Set<string>();
       let parentId = item.parent_id;
 
-      while (parentId) {
+      while (parentId && !visited.has(parentId)) {
+        visited.add(parentId);
         const parent = itemMap.get(parentId);
         if (!parent) {
           break;
         }
 
         lineage.unshift(parent.name);
-        if (rootIds.has(parent.id)) {
-          break;
-        }
-
         parentId = parent.parent_id;
       }
 
-      return [item.id, lineage.length > 0 ? lineage.join(' > ') : '顶层'];
+      return [item.id, lineage.join(' > ')];
     }),
   );
 }

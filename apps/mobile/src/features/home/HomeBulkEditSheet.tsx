@@ -4,6 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, View 
 import type { Category, Item, ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION } from '@inplace/app-core';
 import { buildChildrenMap, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
+import { formatMobilePath } from '@/features/inventory/mobileInventoryFormat';
 import { palette, shadows } from '@/shared/ui/theme';
 
 export interface BulkEditPayload {
@@ -359,22 +360,23 @@ function LocationHierarchyPicker({
         <Ionicons name="location-outline" size={16} color={palette.brand} />
         <Text numberOfLines={1} style={selectedLocationTextStyle}>{selectedParentPath}</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
-        <Pressable onPress={() => onNavigate(-1)} style={breadcrumbChipStyle}>
-          <Ionicons name="home-outline" size={13} color={palette.brand} />
-          <Text style={breadcrumbChipTextStyle}>顶层</Text>
-        </Pressable>
-        {breadcrumbs.map((breadcrumb, index) => (
-          <Pressable key={breadcrumb.id} onPress={() => onNavigate(index)} style={breadcrumbChipStyle}>
-            <Ionicons name="chevron-forward" size={12} color={palette.textSoft} />
-            <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
+      {breadcrumbs.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
+          <Pressable onPress={() => onNavigate(-1)} style={breadcrumbIconChipStyle}>
+            <Ionicons name="home-outline" size={13} color={palette.brand} />
           </Pressable>
-        ))}
-      </ScrollView>
+          {breadcrumbs.map((breadcrumb, index) => (
+            <Pressable key={breadcrumb.id} onPress={() => onNavigate(index)} style={breadcrumbChipStyle}>
+              {index > 0 ? <Ionicons name="chevron-forward" size={12} color={palette.textSoft} /> : null}
+              <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
 
       <Pressable onPress={() => onSelect(currentParentId)} style={[locationRowStyle, selectedParentId === currentParentId ? selectedLocationRowStyle : null]}>
         <Ionicons name="home-outline" size={16} color={palette.textSoft} />
-        <Text style={locationRowTextStyle}>{currentParentId ? '当前位置' : '顶层位置'}</Text>
+        <Text style={locationRowTextStyle}>{currentParentId ? '选当前位置' : '不设置位置'}</Text>
         {selectedParentId === currentParentId ? <Ionicons name="checkmark" size={16} color={palette.brand} /> : null}
       </Pressable>
 
@@ -401,7 +403,7 @@ function LocationHierarchyPicker({
 
 function buildParentPath(parentId: string | null, itemMap: Map<string, Item>) {
   if (!parentId) {
-    return '顶层位置';
+    return '未选择收纳位置';
   }
 
   const names: string[] = [];
@@ -419,7 +421,7 @@ function buildParentPath(parentId: string | null, itemMap: Map<string, Item>) {
     currentId = item.parent_id;
   }
 
-  return names.length > 0 ? `顶层 > ${names.join(' > ')}` : '顶层位置';
+  return formatMobilePath(names) || '未选择收纳位置';
 }
 
 const modalRootStyle = {
@@ -694,6 +696,12 @@ const breadcrumbChipStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 4,
+};
+
+const breadcrumbIconChipStyle = {
+  ...breadcrumbChipStyle,
+  width: 32,
+  justifyContent: 'center' as const,
 };
 
 const breadcrumbChipTextStyle = {
