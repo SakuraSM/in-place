@@ -1,5 +1,6 @@
 import type { ElementType } from 'react';
 import { Bot, ChevronRight, PencilLine, Trash2 } from 'lucide-react';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { ActivityAction, ActivityLog } from '../../../legacy/database.types';
 
 const ACTION_LABELS: Record<ActivityAction, { label: string; tone: string; icon: ElementType }> = {
@@ -103,7 +104,7 @@ export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyM
         const actionConfig = ACTION_LABELS[entry.action];
         const Icon = actionConfig.icon;
         const changedSummary = getChangedFieldSummary(entry);
-        const itemTypeLabel = entry.item_type === 'item' ? '物品' : '收纳/位置';
+        const itemTypeLabel = entry.item_type === 'item' ? INVENTORY_NODE_LABELS.item : INVENTORY_NODE_LABELS.mixedContainer;
         const clickable = Boolean(entry.item_id) && entry.action !== 'delete' && onOpenItem;
 
         const content = (

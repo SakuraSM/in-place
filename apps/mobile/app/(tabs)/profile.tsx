@@ -3,12 +3,13 @@ import type { Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -88,7 +89,7 @@ export default function ProfileTab() {
         <BrandHeader title="我的" variant="page" />
       </Entrance>
 
-      <SectionCard title="账户" delay={70} density="compact" headerMode="compact">
+      <SectionCard title="账户" delay={70} density="dense" headerMode="compact">
         <View style={profileSummaryStyle}>
           <View style={avatarStyle}>
             <Text style={avatarTextStyle}>{(user?.displayName || user?.email || '归').slice(0, 1).toUpperCase()}</Text>
@@ -100,7 +101,7 @@ export default function ProfileTab() {
         </View>
       </SectionCard>
 
-      <SectionCard title="设置" delay={120} density="compact" headerMode="compact">
+      <SectionCard title="设置" delay={120} density="dense" headerMode="compact">
         <View style={menuStyle}>
           {menuItems.map((item) => <ProfileMenuRow key={item.title} item={item} />)}
         </View>
@@ -132,28 +133,14 @@ function ProfileMenuRow({ item }: { item: ProfileMenuItem }) {
   };
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <CompactListRow
+      title={item.title}
+      subtitle={item.subtitle}
+      iconName={item.iconName}
+      danger={item.danger}
+      chevron={Boolean(item.href)}
       onPress={handlePress}
-      style={({ pressed }) => [
-        menuRowStyle,
-        item.danger ? dangerMenuRowStyle : null,
-        pressed ? menuRowPressedStyle : null,
-      ]}
-    >
-      <View style={[iconStyle, item.danger ? dangerIconStyle : null]}>
-        <Ionicons name={item.iconName} size={20} color={item.danger ? palette.danger : palette.brandStrong} />
-      </View>
-      <View style={menuTextStyle}>
-        <Text numberOfLines={1} style={[menuTitleStyle, item.danger ? dangerTitleStyle : null]}>{item.title}</Text>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={bodyStyle}>{item.subtitle}</Text>
-      </View>
-      {item.href ? (
-        <View style={chevronBoxStyle}>
-          <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-        </View>
-      ) : null}
-    </Pressable>
+    />
   );
 }
 
@@ -169,43 +156,4 @@ const avatarStyle = {
 };
 const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '900' as const };
 const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '800' as const };
-const menuStyle = { gap: 10, width: '100%' as const };
-const menuRowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  width: '100%' as const,
-  minHeight: 60,
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-};
-const menuRowPressedStyle = {
-  opacity: 0.72,
-};
-const menuTextStyle = {
-  flex: 1,
-  minWidth: 0,
-  gap: 3,
-};
-const iconStyle = {
-  width: 36,
-  height: 36,
-  flexShrink: 0,
-  borderRadius: 13,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: '#e0f2fe',
-};
-const chevronBoxStyle = {
-  flexShrink: 0,
-  width: 24,
-  alignItems: 'flex-end' as const,
-};
-const menuTitleStyle = { color: palette.text, fontSize: 16, fontWeight: '800' as const };
-const dangerMenuRowStyle = { backgroundColor: '#fff1f2', borderColor: '#fecdd3' };
-const dangerIconStyle = { backgroundColor: '#ffe4e6' };
-const dangerTitleStyle = { color: palette.danger };
+const menuStyle = { gap: 8, width: '100%' as const };

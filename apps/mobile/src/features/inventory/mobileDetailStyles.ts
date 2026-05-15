@@ -14,12 +14,12 @@ export const hintStyle = {
 export const rowStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  gap: 12,
-  borderRadius: 18,
+  gap: 10,
+  borderRadius: 14,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
-  padding: 12,
+  padding: 10,
 };
 
 export const listTitleStyle = {
@@ -29,8 +29,8 @@ export const listTitleStyle = {
 };
 
 export const secondaryButtonStyle = {
-  minHeight: 44,
-  borderRadius: 16,
+  minHeight: 40,
+  borderRadius: 13,
   backgroundColor: palette.surface,
   borderWidth: 1,
   borderColor: palette.border,
@@ -49,8 +49,8 @@ export const secondaryButtonTextStyle = {
 
 export const primaryButtonStyle = {
   flex: 1,
-  minHeight: 44,
-  borderRadius: 16,
+  minHeight: 40,
+  borderRadius: 13,
   backgroundColor: palette.brand,
   paddingHorizontal: 16,
   flexDirection: 'row' as const,
@@ -68,9 +68,9 @@ export const primaryButtonTextStyle = {
 
 export const dangerButtonStyle = {
   alignItems: 'center' as const,
-  borderRadius: 16,
+  borderRadius: 14,
   backgroundColor: palette.danger,
-  paddingVertical: 14,
+  paddingVertical: 12,
 };
 
 export const dangerButtonTextStyle = {
@@ -91,18 +91,18 @@ export const actionRowStyle = {
 };
 
 export const heroImageCardStyle = {
-  borderRadius: 24,
+  borderRadius: 18,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
-  padding: 8,
+  padding: 6,
   ...shadows.sm,
 };
 
 export const heroImageStyle = {
   width: '100%' as const,
-  aspectRatio: 1,
-  borderRadius: 18,
+  aspectRatio: 4 / 3,
+  borderRadius: 14,
   backgroundColor: palette.surfaceMuted,
 };
 

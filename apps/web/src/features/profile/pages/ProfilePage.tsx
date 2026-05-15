@@ -151,7 +151,7 @@ export default function ProfilePage() {
                   to="/categories"
                   icon={<Box size={20} />}
                   title="分类管理"
-                  description="统一收纳和物品分类结构，让首页和总览都更清晰。"
+                  description="统一位置、收纳容器和物品分类结构，让首页和总览都更清晰。"
                   tone="bg-sky-50 text-sky-500"
                 />
                 <QuickLinkCard

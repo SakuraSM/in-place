@@ -1,5 +1,6 @@
 import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
+import { isLocationItem } from '@/shared/lib/location';
 
 const ALL_ITEMS_PAGE_SIZE = 100;
 const ALL_ITEMS_MAX_PAGES = 20;
@@ -32,6 +33,61 @@ export function buildAvailableTags(items: Item[]) {
   return Object.entries(tagCounts)
     .map(([name, count]) => ({ name, count }))
     .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'));
+}
+
+export function buildHierarchyItems({
+  items,
+  parentId,
+  query,
+  typeFilter,
+  statusFilter,
+  selectedTags,
+}: {
+  items: Item[];
+  parentId: string | null;
+  query: string;
+  typeFilter: TypeFilterValue;
+  statusFilter: ItemStatus | 'all';
+  selectedTags: string[];
+}) {
+  const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
+
+  return items.filter((item) => {
+    if ((item.parent_id ?? null) !== parentId) {
+      return false;
+    }
+
+    if (!matchesTypeFilter(item, typeFilter)) {
+      return false;
+    }
+
+    if (item.type === 'item' && statusFilter !== 'all' && item.status !== statusFilter) {
+      return false;
+    }
+
+    if (selectedTags.length > 0 && !selectedTags.every((tag) => item.tags.includes(tag))) {
+      return false;
+    }
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return [item.name, item.description, item.category, ...item.tags]
+      .some((value) => value.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
+  });
+}
+
+function matchesTypeFilter(item: Item, typeFilter: TypeFilterValue) {
+  if (typeFilter === 'all') {
+    return true;
+  }
+
+  if (typeFilter === 'location') {
+    return isLocationItem(item);
+  }
+
+  return item.type === typeFilter;
 }
 
 export function normalizeTypeFilter(value: TypeFilterValue | undefined, validValues: Set<TypeFilterValue>) {

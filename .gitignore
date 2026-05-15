@@ -5,6 +5,7 @@
 apps/*/.env
 apps/*/.env.local
 .env.compose
+apps/mobile/in-place-*.json
 
 # Node modules
 node_modules/

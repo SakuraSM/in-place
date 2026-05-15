@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import type { Item, ItemStatus } from '@inplace/domain';
+import type { ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
@@ -14,14 +14,13 @@ import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
 import { buildMobileItemPath } from '@/features/inventory/mobileInventoryFormat';
+import { OverviewFilterControls, type FilterOption, type OverviewViewMode } from '@/features/overview/OverviewFilterControls';
+import { HierarchyResultGroup } from '@/features/overview/OverviewResults';
 import {
-  FilterChip,
-  FilterRow,
   LocationFilterSheet,
   ResultRow,
   TagFilterSheet,
   clearButtonStyle,
-  filterPanelStyle,
   loadedMetaStyle,
   loadingMoreStyle,
   pageTitleStyle,
@@ -34,6 +33,7 @@ import {
 } from '@/features/overview/OverviewMobileUi';
 import {
   buildAvailableTags,
+  buildHierarchyItems,
   fetchAllOverviewItems,
   normalizeStatusFilter,
   normalizeTags,
@@ -42,13 +42,6 @@ import {
 } from '@/features/overview/overviewMobileData';
 
 const PAGE_SIZE = 20;
-type OverviewViewMode = 'hierarchy' | 'flat';
-
-interface FilterOption<TValue extends string> {
-  value: TValue;
-  label: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-}
 
 const TYPE_FILTERS: FilterOption<TypeFilterValue>[] = [
   { value: 'all', label: '全部', icon: 'archive-outline' },
@@ -183,6 +176,15 @@ export default function OverviewTab() {
     updateParams({ tag: nextTags.length > 0 ? nextTags : undefined });
   };
 
+  const handleClearFilters = () => {
+    updateParams({
+      type: undefined,
+      status: undefined,
+      locationId: undefined,
+      tag: undefined,
+    });
+  };
+
   if (allItemsQuery.isError || searchQuery.isError) {
     const error = allItemsQuery.error ?? searchQuery.error;
     return <Screen><StateBlock title="总览加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
@@ -216,55 +218,22 @@ export default function OverviewTab() {
         ) : null}
       </View>
 
-      <View style={filterPanelStyle}>
-        <FilterRow label="类型">
-          {TYPE_FILTERS.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={typeFilter === option.value}
-              icon={option.icon}
-              label={option.label}
-              onPress={() => handleTypeChange(option.value)}
-            />
-          ))}
-        </FilterRow>
-        <FilterRow label="状态">
-          {STATUS_FILTERS.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={statusFilter === option.value}
-              disabled={typeFilter === 'location' || typeFilter === 'container'}
-              label={option.label}
-              onPress={() => handleStatusChange(option.value)}
-            />
-          ))}
-        </FilterRow>
-        <FilterRow label="视图">
-          {VIEW_MODE_FILTERS.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={viewMode === option.value}
-              icon={option.icon}
-              label={option.label}
-              onPress={() => setViewMode(option.value)}
-            />
-          ))}
-        </FilterRow>
-        <FilterRow label="范围">
-          <FilterChip
-            active={Boolean(selectedLocation)}
-            icon="git-branch-outline"
-            label={selectedLocation?.name ?? '位置树'}
-            onPress={() => setIsLocationSheetOpen(true)}
-          />
-          <FilterChip
-            active={selectedTags.length > 0}
-            icon="pricetag-outline"
-            label={selectedTags.length > 0 ? `标签 · ${selectedTags.length}` : '标签筛选'}
-            onPress={() => setIsTagSheetOpen(true)}
-          />
-        </FilterRow>
-      </View>
+      <OverviewFilterControls
+        typeFilters={TYPE_FILTERS}
+        statusFilters={STATUS_FILTERS}
+        viewModeFilters={VIEW_MODE_FILTERS}
+        typeFilter={typeFilter}
+        statusFilter={statusFilter}
+        viewMode={viewMode}
+        selectedLocationName={selectedLocation?.name ?? null}
+        selectedTagsCount={selectedTags.length}
+        onChangeType={handleTypeChange}
+        onChangeStatus={handleStatusChange}
+        onChangeViewMode={setViewMode}
+        onClearFilters={handleClearFilters}
+        onOpenLocationFilter={() => setIsLocationSheetOpen(true)}
+        onOpenTagFilter={() => setIsTagSheetOpen(true)}
+      />
 
       <View style={resultDividerStyle} />
       <Text style={resultSummaryStyle}>共 {total} 个结果</Text>
@@ -274,7 +243,7 @@ export default function OverviewTab() {
       {viewMode === 'hierarchy' ? (
         <>
           {hierarchyItems.length === 0 && !allItemsQuery.isLoading ? <StateBlock title="暂无结果" body="换个关键词试试" /> : null}
-          <HierarchyResultGroup title={`下级收纳 ${hierarchyContainers.length}`} items={hierarchyContainers} itemMap={itemMap} />
+          <HierarchyResultGroup title={`下级位置/收纳容器 ${hierarchyContainers.length}`} items={hierarchyContainers} itemMap={itemMap} />
           <HierarchyResultGroup title={`下级物品 ${hierarchyLeafItems.length}`} items={hierarchyLeafItems} itemMap={itemMap} />
         </>
       ) : (
@@ -321,82 +290,4 @@ export default function OverviewTab() {
       />
     </Screen>
   );
-}
-
-function HierarchyResultGroup({
-  title,
-  items,
-  itemMap,
-}: {
-  title: string;
-  items: Item[];
-  itemMap: Map<string, Item>;
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={resultListStyle}>
-      <Text style={resultSummaryStyle}>{title}</Text>
-      {items.map((item) => (
-        <ResultRow key={item.id} item={item} path={buildMobileItemPath(item, itemMap)} />
-      ))}
-    </View>
-  );
-}
-
-function buildHierarchyItems({
-  items,
-  parentId,
-  query,
-  typeFilter,
-  statusFilter,
-  selectedTags,
-}: {
-  items: Item[];
-  parentId: string | null;
-  query: string;
-  typeFilter: TypeFilterValue;
-  statusFilter: ItemStatus | 'all';
-  selectedTags: string[];
-}) {
-  const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
-
-  return items.filter((item) => {
-    if ((item.parent_id ?? null) !== parentId) {
-      return false;
-    }
-
-    if (!matchesTypeFilter(item, typeFilter)) {
-      return false;
-    }
-
-    if (item.type === 'item' && statusFilter !== 'all' && item.status !== statusFilter) {
-      return false;
-    }
-
-    if (selectedTags.length > 0 && !selectedTags.every((tag) => item.tags.includes(tag))) {
-      return false;
-    }
-
-    if (!normalizedQuery) {
-      return true;
-    }
-
-    return [item.name, item.description, item.category, ...item.tags]
-      .some((value) => value.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
-  });
-}
-
-function matchesTypeFilter(item: Item, typeFilter: TypeFilterValue) {
-  if (typeFilter === 'all') {
-    return true;
-  }
-
-  if (typeFilter === 'location') {
-    return isLocationItem(item);
-  }
-
-  return item.type === typeFilter;
 }

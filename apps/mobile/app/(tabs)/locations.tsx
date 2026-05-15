@@ -11,6 +11,8 @@ import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
+import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
 import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
@@ -20,7 +22,7 @@ const PAGE_SIZE = 100;
 
 const LOCATION_STAT_ITEMS = [
   { key: 'locations', label: '位置' },
-  { key: 'containers', label: '收纳' },
+  { key: 'containers', label: '收纳容器' },
   { key: 'items', label: '物品' },
   { key: 'total', label: '总数' },
 ] as const;
@@ -96,11 +98,11 @@ export default function LocationsTab() {
 
       {locationItems.length === 0 ? (
         <SectionCard title="暂无位置" delay={70} density="compact">
-          <Text style={bodyStyle}>新建收纳时可标记为位置。</Text>
+          <Text style={bodyStyle}>新建收纳容器时可设为位置，用来表示卧室、客厅、仓库等空间。</Text>
         </SectionCard>
       ) : (
         <>
-          <SectionCard title="位置导航" subtitle={meta ? `${items.length} / ${meta.total}` : undefined} delay={70} density="compact" headerMode="compact">
+          <SectionCard title="空间位置" subtitle={meta ? `${items.length} / ${meta.total}` : undefined} delay={70} density="dense" headerMode="compact">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={locationRailStyle}>
               {locationItems.map((location) => (
                 <Pressable
@@ -116,20 +118,21 @@ export default function LocationsTab() {
 
           {selectedLocation ? (
             <>
-              <SectionCard title={selectedLocation.name} subtitle={selectedLocation.description || '当前选择的位置'} delay={120}>
-                <View style={statsGridStyle}>
-                  {LOCATION_STAT_ITEMS.map((stat) => (
-                    <View key={stat.key} style={statCardStyle}>
-                      <Text style={statValueStyle}>{selectedStats?.[stat.key] ?? 0}</Text>
-                      <Text style={captionStyle}>{stat.label}</Text>
-                    </View>
-                  ))}
-                </View>
+              <SectionCard title={selectedLocation.name} subtitle={selectedLocation.description || '当前选择的位置'} delay={120} density="dense" headerMode="compact">
+                <MetricGrid
+                  columns={4}
+                  dense
+                  items={LOCATION_STAT_ITEMS.map((stat) => ({
+                    key: stat.key,
+                    label: stat.label,
+                    value: selectedStats?.[stat.key] ?? 0,
+                  }))}
+                />
               </SectionCard>
 
-              <SectionCard title="直接内容" subtitle={`${directChildren.length} 项`} delay={170} density="compact" headerMode="compact">
+              <SectionCard title="当前位置内容" subtitle={`${directChildren.length} 项`} delay={170} density="dense" headerMode="compact">
                 {directChildren.length === 0 ? (
-                  <Text style={bodyStyle}>这个位置下还没有直接内容。</Text>
+                  <Text style={bodyStyle}>这个位置下还没有物品或收纳容器。</Text>
                 ) : (
                   directChildren.map((child) => <DirectChildRow key={child.id} item={child} />)
                 )}
@@ -151,15 +154,13 @@ export default function LocationsTab() {
 function DirectChildRow({ item }: { item: Item }) {
   return (
     <Link href={resolveMobileDetailHref(item)} asChild>
-      <Pressable style={rowStyle}>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={listTitleStyle}>{item.name}</Text>
-          <Text style={bodyStyle}>
-            {item.type === 'item' ? ITEM_TYPE_PRESENTATION.item.label : getContainerTypeLabel(item)}
-            {item.category ? ` · ${item.category}` : ''}
-          </Text>
-        </View>
-        <Text style={captionStyle}>查看详情</Text>
+      <Pressable>
+        <CompactListRow
+          title={item.name}
+          subtitle={`${item.type === 'item' ? ITEM_TYPE_PRESENTATION.item.label : getContainerTypeLabel(item)}${item.category ? ` · ${item.category}` : ''}`}
+          meta="详情"
+          chevron
+        />
       </Pressable>
     </Link>
   );
@@ -206,43 +207,6 @@ const activeChipTextStyle = {
   color: '#ffffff',
   fontSize: 13,
   fontWeight: '600' as const,
-};
-
-const statsGridStyle = {
-  flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
-  gap: 12,
-};
-
-const statCardStyle = {
-  minWidth: '47%' as const,
-  backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
-  padding: 14,
-  gap: 4,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-};
-
-const statValueStyle = {
-  fontSize: 24,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const rowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 14,
-};
-
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
 };
 
 const loadingMoreStyle = {

@@ -1,6 +1,7 @@
 import { ChevronRight, Box, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, type MouseEvent } from 'react';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
@@ -128,7 +129,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span>{childCount !== undefined ? `${childCount} 项` : (category?.name ?? '收纳')}</span>
+            <span>{childCount !== undefined ? `${childCount} 项` : (category?.name ?? INVENTORY_NODE_LABELS.container)}</span>
             {isLocationItem(item) && (
               <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
                 {getContainerTypeLabel(item)}

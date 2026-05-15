@@ -8,6 +8,8 @@ import { itemsApi } from '@/shared/api/mobileClient';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { ActionButtonRow } from '@/shared/ui/ActionButtonRow';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -35,15 +37,15 @@ export default function ContainerBrowseScreen() {
   });
 
   if (containerQuery.isLoading) {
-    return <Screen><StateBlock title="加载收纳" loading /></Screen>;
+    return <Screen><StateBlock title="加载内容" loading /></Screen>;
   }
 
   if (containerQuery.isError) {
-    return <Screen><StateBlock title="收纳加载失败" body={containerQuery.error instanceof Error ? containerQuery.error.message : '请稍后重试'} /></Screen>;
+    return <Screen><StateBlock title="内容加载失败" body={containerQuery.error instanceof Error ? containerQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   if (!container || container.type !== 'container') {
-    return <Screen><StateBlock title="未找到该收纳" body={`当前占位 ID：${id}`} /></Screen>;
+    return <Screen><StateBlock title="未找到该位置或收纳容器" body={`当前占位 ID：${id}`} /></Screen>;
   }
 
   const children = childrenQuery.data ?? [];
@@ -65,18 +67,15 @@ export default function ContainerBrowseScreen() {
         )}
       />
 
-      <View style={navRowStyle}>
-        <Pressable onPress={() => router.back()} style={secondaryButtonStyle}>
-          <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
-          <Text style={secondaryButtonTextStyle}>返回</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push(`/item/form?parentId=${container.id}&type=item`)} style={primaryButtonStyle}>
-          <Ionicons name="add" size={17} color="#ffffff" />
-          <Text style={primaryButtonTextStyle}>添加内容</Text>
-        </Pressable>
-      </View>
+      <ActionButtonRow
+        compact
+        actions={[
+          { key: 'back', label: '返回', iconName: 'arrow-back', onPress: () => router.back() },
+          { key: 'add', label: '添加内容', iconName: 'add', variant: 'primary', onPress: () => router.push(`/item/form?parentId=${container.id}&type=item`) },
+        ]}
+      />
 
-      <SectionCard title="当前路径" subtitle="短按进入，长按详情" delay={60} density="compact">
+      <SectionCard title="收纳位置" subtitle="短按进入，长按详情" delay={60} density="dense" headerMode="compact">
         <View style={pathRailStyle}>
           {pathItems.map((pathItem, index) => (
             <View key={pathItem.id} style={pathNodeStyle}>
@@ -91,14 +90,14 @@ export default function ContainerBrowseScreen() {
         </View>
       </SectionCard>
 
-      <ContentSection title={`收纳 (${containers.length})`} items={containers} emptyText={`这个${containerLabel}下暂无下级收纳。`} />
+      <ContentSection title={`位置/收纳容器 (${containers.length})`} items={containers} emptyText={`这个${containerLabel}下暂无下级位置或收纳容器。`} />
       <ContentSection title={`物品 (${leafItems.length})`} items={leafItems} emptyText={`这个${containerLabel}下暂无物品。`} />
     </Screen>
   );
 }
 function ContentSection({ title, items, emptyText }: { title: string; items: Item[]; emptyText: string }) {
   return (
-    <SectionCard title={title} delay={110} density="compact">
+    <SectionCard title={title} delay={110} density="dense" headerMode="compact">
       {items.length === 0 ? (
         <View style={emptyBoxStyle}>
           <Text style={emptyTextStyle}>{emptyText}</Text>
@@ -115,24 +114,18 @@ function ContentSection({ title, items, emptyText }: { title: string; items: Ite
 function ContentRow({ item }: { item: Item }) {
   const imageUri = resolveInventoryImageUri(item.images[0]);
   const row = (
-    <View style={contentRowStyle}>
-      <View style={thumbFrameStyle}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} />
-        ) : (
-          <Ionicons name={item.type === 'container' ? 'business-outline' : 'cube-outline'} size={20} color={palette.brand} />
-        )}
-      </View>
-      <View style={rowTextStyle}>
-        <Text numberOfLines={1} style={rowTitleStyle}>{item.name}</Text>
-        <Text numberOfLines={1} style={rowMetaStyle}>
-          {item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}
-          {item.category ? ` · ${item.category}` : ''}
-        </Text>
-      </View>
-      {item.type === 'item' ? <StatusBadge status={item.status} /> : null}
-      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-    </View>
+    <CompactListRow
+      title={item.name}
+      subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}${item.category ? ` · ${item.category}` : ''}`}
+      icon={imageUri ? <Image source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} /> : undefined}
+      iconName={imageUri ? undefined : item.type === 'container' ? 'business-outline' : 'cube-outline'}
+      right={(
+        <View style={rowRightStyle}>
+          {item.type === 'item' ? <StatusBadge status={item.status} /> : null}
+          <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
+        </View>
+      )}
+    />
   );
 
   if (item.type === 'container') {
@@ -161,48 +154,6 @@ const iconActionStyle = {
   backgroundColor: '#f1f5f9',
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-};
-
-const navRowStyle = {
-  flexDirection: 'row' as const,
-  gap: 10,
-};
-
-const secondaryButtonStyle = {
-  minHeight: 44,
-  borderRadius: 16,
-  backgroundColor: palette.surface,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 14,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 6,
-};
-
-const secondaryButtonTextStyle = {
-  color: palette.textMuted,
-  fontSize: 14,
-  fontWeight: '700' as const,
-};
-
-const primaryButtonStyle = {
-  flex: 1,
-  minHeight: 44,
-  borderRadius: 16,
-  backgroundColor: palette.brand,
-  paddingHorizontal: 14,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  gap: 6,
-  ...shadows.sm,
-};
-
-const primaryButtonTextStyle = {
-  color: '#ffffff',
-  fontSize: 14,
-  fontWeight: '800' as const,
 };
 
 const pathRailStyle = {
@@ -261,6 +212,13 @@ const thumbFrameStyle = {
 const thumbImageStyle = {
   width: '100%' as const,
   height: '100%' as const,
+  borderRadius: 12,
+};
+
+const rowRightStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
 };
 
 const rowTextStyle = {

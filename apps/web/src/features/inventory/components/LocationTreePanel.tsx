@@ -69,7 +69,7 @@ export default function LocationTreePanel({
   selectedLocationId,
   onSelectLocation,
   allLabel = '全部内容',
-  emptyLabel = '还没有标记为位置的节点',
+  emptyLabel = '还没有位置',
 }: Props) {
   const tree = useMemo(() => buildLocationTree(items), [items]);
 

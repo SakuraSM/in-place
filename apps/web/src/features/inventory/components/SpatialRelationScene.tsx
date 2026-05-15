@@ -235,7 +235,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">所在路径 · 直接下级内容</h2>
+            <h2 className="text-sm font-semibold text-slate-900">收纳位置 · 当前位置内容</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">
@@ -254,7 +254,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <Layers3 size={12} />
               空间视图
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">所在路径</h2>
+            <h2 className="text-sm font-semibold text-slate-900">收纳位置</h2>
           </div>
         </div>
       )}

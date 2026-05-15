@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, X, Package, ChevronRight, Box, Archive, MapPin, FolderTree, Tags, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { INVENTORY_NODE_LABELS, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import type { ItemStatus, ItemType } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
@@ -29,9 +30,9 @@ const STATUS_FILTERS: { value: ItemStatus | 'all'; label: string }[] = [
 
 const TYPE_FILTERS: { value: TypeFilterValue; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: '全部', icon: Archive },
-  { value: 'location', label: '位置', icon: MapPin },
-  { value: 'container', label: '收纳', icon: Box },
-  { value: 'item', label: '物品', icon: Package },
+  { value: 'location', label: INVENTORY_NODE_LABELS.location, icon: MapPin },
+  { value: 'container', label: ITEM_TYPE_PRESENTATION.container.label, icon: Box },
+  { value: 'item', label: ITEM_TYPE_PRESENTATION.item.label, icon: Package },
 ];
 
 const VALID_TYPE_VALUES = TYPE_FILTERS.map((f) => f.value);
@@ -445,7 +446,7 @@ export default function SearchPage() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索收纳、位置、物品名称、描述或标签..."
+              placeholder="搜索位置、收纳容器、物品名称、描述或标签..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             {query && (
@@ -530,7 +531,7 @@ export default function SearchPage() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索收纳、位置、物品名称、描述或标签..."
+              placeholder="搜索位置、收纳容器、物品名称、描述或标签..."
               autoFocus
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
@@ -807,7 +808,7 @@ export default function SearchPage() {
             >
               <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200" />
               <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-4 pt-2">
-                <h2 className="font-semibold text-slate-900">位置树筛选</h2>
+                <h2 className="font-semibold text-slate-900">按位置筛选</h2>
                 <button
                   type="button"
                   onClick={() => setShowLocationSheet(false)}

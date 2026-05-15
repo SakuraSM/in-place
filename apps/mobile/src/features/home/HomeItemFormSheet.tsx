@@ -200,7 +200,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
   const categories = categoriesQuery.data ?? [];
   const isBusy = mutation.isPending || uploadingImage;
-  const title = `新增${draft.type === 'container' ? (draft.isLocation ? '位置' : '收纳') : '物品'}`;
+  const title = `新增${draft.type === 'container' ? (draft.isLocation ? '位置' : '收纳容器') : '物品'}`;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
@@ -231,14 +231,14 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
             </View>
 
             {draft.type === 'container' ? (
-              <Field label="标记为位置">
+              <Field label="空间属性">
                 <Pressable
                   onPress={() => updateDraft('isLocation', !draft.isLocation)}
                   style={[switchRowStyle, draft.isLocation ? switchRowActiveStyle : null]}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={switchTitleStyle}>作为位置使用</Text>
-                    <Text style={switchDescriptionStyle}>作为空间节点</Text>
+                    <Text style={switchTitleStyle}>这是一个位置</Text>
+                    <Text style={switchDescriptionStyle}>适合卧室、客厅、仓库等固定区域</Text>
                   </View>
                   <View style={[switchTrackStyle, draft.isLocation ? switchTrackActiveStyle : null]}>
                     <View style={[switchThumbStyle, draft.isLocation ? switchThumbActiveStyle : null]} />
@@ -251,7 +251,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
               <TextInput
                 value={draft.name}
                 onChangeText={(value) => updateDraft('name', value)}
-                placeholder={draft.type === 'container' ? (draft.isLocation ? '卧室、客厅' : '收纳箱、抽屉') : '蓝色羽绒服'}
+                placeholder={draft.type === 'container' ? (draft.isLocation ? '卧室、客厅、仓库' : '收纳箱、抽屉、柜子') : '蓝色羽绒服'}
                 style={inputStyle}
               />
             </Field>
@@ -319,7 +319,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
               </>
             ) : null}
 
-            <Field label="放置位置">
+            <Field label="收纳位置">
               <LocationSelectField
                 userId={user?.id}
                 selectedParentId={draft.parentId}
@@ -525,8 +525,8 @@ const closeButtonStyle = {
 };
 
 const formContentStyle = {
-  padding: 18,
-  gap: 16,
+  padding: 14,
+  gap: 12,
 };
 
 const segmentedStyle = {
@@ -540,7 +540,7 @@ const segmentedStyle = {
 const segmentButtonStyle = {
   flex: 1,
   borderRadius: 12,
-  paddingVertical: 10,
+  paddingVertical: 8,
   alignItems: 'center' as const,
 };
 
@@ -562,7 +562,7 @@ const activeSegmentTextStyle = {
 };
 
 const fieldStyle = {
-  gap: 8,
+  gap: 6,
 };
 
 const fieldLabelStyle = {
@@ -572,25 +572,25 @@ const fieldLabelStyle = {
 };
 
 const inputStyle = {
-  minHeight: 48,
-  borderRadius: 15,
+  minHeight: 44,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  paddingVertical: 12,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
   fontSize: 15,
   color: palette.text,
 };
 
 const inputButtonStyle = {
-  minHeight: 48,
-  borderRadius: 15,
+  minHeight: 44,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  paddingVertical: 13,
+  paddingHorizontal: 12,
+  paddingVertical: 11,
   justifyContent: 'center' as const,
 };
 
@@ -617,7 +617,7 @@ const dateClearTextStyle = {
 };
 
 const multilineInputStyle = {
-  minHeight: 84,
+  minHeight: 72,
   textAlignVertical: 'top' as const,
 };
 
@@ -632,8 +632,8 @@ const chipStyle = {
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 12,
-  paddingVertical: 8,
+  paddingHorizontal: 10,
+  paddingVertical: 7,
 };
 
 const activeChipStyle = {
@@ -654,13 +654,13 @@ const activeChipTextStyle = {
 };
 
 const switchRowStyle = {
-  minHeight: 64,
-  borderRadius: 16,
+  minHeight: 56,
+  borderRadius: 14,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  paddingVertical: 12,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 12,
@@ -708,7 +708,7 @@ const switchThumbActiveStyle = {
 
 const fieldGridStyle = {
   flexDirection: 'row' as const,
-  gap: 12,
+  gap: 8,
 };
 
 const secondaryButtonStyle = {
@@ -762,10 +762,10 @@ const errorTextStyle = {
 
 const sheetFooterStyle = {
   flexDirection: 'row' as const,
-  gap: 12,
-  paddingHorizontal: 18,
-  paddingTop: 12,
-  paddingBottom: 18,
+  gap: 8,
+  paddingHorizontal: 14,
+  paddingTop: 10,
+  paddingBottom: 14,
   borderTopWidth: 1,
   borderTopColor: palette.borderSoft,
   backgroundColor: palette.surface,
@@ -773,11 +773,11 @@ const sheetFooterStyle = {
 
 const footerSecondaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 14,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surface,
-  paddingVertical: 14,
+  paddingVertical: 12,
   alignItems: 'center' as const,
 };
 
@@ -789,9 +789,9 @@ const footerSecondaryTextStyle = {
 
 const footerPrimaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 14,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 12,
   alignItems: 'center' as const,
 };
 

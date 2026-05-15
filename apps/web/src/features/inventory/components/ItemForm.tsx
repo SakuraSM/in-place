@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, MapPin, Tag, Plus, Loader2 } from 'lucide-react';
+import { INVENTORY_NODE_LABELS, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/database.types';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { fetchItem, uploadImage } from '../../../legacy/items';
@@ -195,8 +196,8 @@ export default function ItemForm({
   };
 
   const containerLabel = form.type === 'container'
-    ? (form.isLocation ? '位置' : '收纳')
-    : '物品';
+    ? (form.isLocation ? INVENTORY_NODE_LABELS.location : INVENTORY_NODE_LABELS.container)
+    : INVENTORY_NODE_LABELS.item;
   const normalizedTagInput = useMemo(
     () => tagInput.trim().toLocaleLowerCase('zh-CN'),
     [tagInput],
@@ -264,7 +265,7 @@ export default function ItemForm({
                       />
                     )}
                     <span className={`relative ${form.type === t ? 'text-slate-900' : 'text-slate-500'}`}>
-                      {t === 'item' ? '物品' : '收纳'}
+                      {ITEM_TYPE_PRESENTATION[t].label}
                     </span>
                   </button>
                 ))}
@@ -273,7 +274,7 @@ export default function ItemForm({
 
             {form.type === 'container' && !fixedLocation && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">标记为位置</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">空间属性</label>
                 <button
                   type="button"
                   onClick={() => update('isLocation', !form.isLocation)}
@@ -286,10 +287,10 @@ export default function ItemForm({
                 >
                   <div className="min-w-0">
                     <p className={`text-sm font-medium ${form.isLocation ? 'text-sky-700' : 'text-slate-700'}`}>
-                      作为位置使用
+                      这是一个位置
                     </p>
                     <p className={`mt-0.5 text-xs ${form.isLocation ? 'text-sky-600' : 'text-slate-400'}`}>
-                      开启后可作为空间节点承载下级内容
+                      适合卧室、客厅、仓库等固定区域
                     </p>
                   </div>
                   <span
@@ -323,7 +324,7 @@ export default function ItemForm({
                 value={form.name}
                 onChange={(e) => update('name', e.target.value)}
                 placeholder={form.type === 'container'
-                  ? (form.isLocation ? '如：卧室、客厅、阳台...' : '如：透明收纳箱、床头柜抽屉...')
+                  ? (form.isLocation ? '如：卧室、客厅、仓库...' : '如：透明收纳箱、床头柜抽屉、柜子...')
                   : '如：蓝色羽绒服...'}
                 required
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
@@ -443,7 +444,7 @@ export default function ItemForm({
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5">
                 <MapPin size={14} />
-                放置位置
+                {INVENTORY_NODE_LABELS.storageLocation}
               </label>
               <motion.button
                 type="button"
@@ -453,7 +454,7 @@ export default function ItemForm({
               >
                 {form.parent_id
                   ? `已选择上级 (${parentLabel ?? '加载中...'})`
-                  : '顶层位置'}
+                  : `未选择${INVENTORY_NODE_LABELS.storageLocation}`}
               </motion.button>
             </div>
 

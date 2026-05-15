@@ -3,15 +3,15 @@ import type { Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, tagsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
-import { palette } from '@/shared/ui/theme';
 
 interface ManageMenuItem {
   href: Href;
@@ -78,20 +78,18 @@ export default function ManageTab() {
         <BrandHeader title="管理" variant="page" />
       </Entrance>
 
-      <SectionCard title="功能" delay={60} density="compact" headerMode="compact">
+      <SectionCard title="功能" delay={60} density="dense" headerMode="compact">
         <View style={menuStyle}>
           {menuItems.map((item) => (
             <Link key={item.title} href={item.href} asChild>
-              <Pressable style={menuRowStyle}>
-                <View style={iconStyle}>
-                  <Ionicons name={item.iconName} size={21} color={palette.brandStrong} />
-                </View>
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text style={menuTitleStyle}>{item.title}</Text>
-                  <Text style={menuSubtitleStyle}>{item.subtitle}</Text>
-                </View>
-                {item.meta ? <Text style={metaStyle}>{item.meta}</Text> : null}
-                <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
+              <Pressable>
+                <CompactListRow
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  iconName={item.iconName}
+                  meta={item.meta}
+                  chevron
+                />
               </Pressable>
             </Link>
           ))}
@@ -102,44 +100,5 @@ export default function ManageTab() {
 }
 
 const menuStyle = {
-  gap: 10,
-};
-
-const menuRowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderRadius: 18,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surfaceMuted,
-  padding: 13,
-};
-
-const iconStyle = {
-  width: 40,
-  height: 40,
-  borderRadius: 14,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: '#e0f2fe',
-};
-
-const menuTitleStyle = {
-  color: palette.text,
-  fontSize: 16,
-  fontWeight: '800' as const,
-};
-
-const menuSubtitleStyle = {
-  color: palette.textSoft,
-  fontSize: 13,
-};
-
-const metaStyle = {
-  minWidth: 24,
-  textAlign: 'right' as const,
-  color: palette.textMuted,
-  fontSize: 14,
-  fontWeight: '700' as const,
+  gap: 8,
 };

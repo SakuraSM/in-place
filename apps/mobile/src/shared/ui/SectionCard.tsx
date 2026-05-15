@@ -8,7 +8,7 @@ interface SectionCardProps {
   subtitle?: string;
   children: ReactNode;
   delay?: number;
-  density?: 'comfortable' | 'compact';
+  density?: 'comfortable' | 'compact' | 'dense';
   tone?: 'default' | 'muted';
   headerMode?: 'default' | 'compact';
 }
@@ -22,23 +22,25 @@ export function SectionCard({
   tone = 'default',
   headerMode = 'default',
 }: SectionCardProps) {
-  const padding = density === 'compact' ? 14 : 16;
+  const padding = density === 'dense' ? 10 : density === 'compact' ? 14 : 16;
+  const gap = density === 'dense' ? 8 : density === 'compact' ? 10 : 12;
+  const titleSize = density === 'dense' || headerMode === 'compact' ? 16 : 21;
 
   return (
     <Entrance delay={delay} variant="card">
       <View
         style={{
           backgroundColor: tone === 'muted' ? palette.surfaceMuted : palette.surface,
-          borderRadius: 20,
+          borderRadius: density === 'dense' ? 16 : 20,
           padding,
-          gap: density === 'compact' ? 10 : 12,
+          gap,
           borderWidth: 1,
           borderColor: palette.borderSoft,
           ...shadows.sm,
         }}
       >
         <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
-          <Text style={{ fontSize: headerMode === 'compact' ? 17 : 21, fontWeight: '800', color: palette.text }}>
+          <Text style={{ fontSize: titleSize, fontWeight: '800', color: palette.text }}>
             {title}
           </Text>
           {subtitle ? (

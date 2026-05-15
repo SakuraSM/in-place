@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package, Plus } from 'lucide-react';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import EmptyState from '../../../shared/ui/EmptyState';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { createItem } from '../../../legacy/items';
@@ -105,7 +106,7 @@ export default function LocationTreePage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
                   <MapPin size={18} />
                 </div>
-                <h2 className="font-semibold text-slate-900">位置导航</h2>
+                <h2 className="font-semibold text-slate-900">空间位置</h2>
               </div>
               <LocationTreePanel
                 items={items}
@@ -169,7 +170,7 @@ export default function LocationTreePage() {
                   <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                     {[
                       { label: '下级位置', value: selectedStats?.locations ?? 0, icon: MapPin, tone: 'bg-sky-50 text-sky-500' },
-                      { label: '下级收纳', value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },
+                      { label: `下级${INVENTORY_NODE_LABELS.container}`, value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },
                       { label: '下级物品', value: selectedStats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500' },
                       { label: '内容总数', value: selectedStats?.total ?? 0, icon: FolderTree, tone: 'bg-violet-50 text-violet-500' },
                     ].map(({ label, value, icon: Icon, tone }) => (
@@ -185,7 +186,7 @@ export default function LocationTreePage() {
 
                   <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <h3 className="font-semibold text-slate-900">直接内容</h3>
+                      <h3 className="font-semibold text-slate-900">当前位置内容</h3>
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
                         {directChildren.length} 项
                       </span>
@@ -193,7 +194,7 @@ export default function LocationTreePage() {
 
                     {directChildren.length === 0 ? (
                       <div className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
-                        这个位置下还没有直接内容。
+                        这个位置下还没有物品或收纳容器。
                       </div>
                     ) : (
                       <div className="space-y-2">

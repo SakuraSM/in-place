@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Shapes, X, Check, ChevronDown, Upload, ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from '../../../legacy/categories';
 import { uploadImage } from '../../../legacy/items';
@@ -307,7 +308,7 @@ export default function CategoriesPage() {
         <div className={`${APP_PAGE_HEADER_STACK} gap-3 md:gap-4`}>
           <h1 className="text-xl font-bold text-slate-900">分类管理</h1>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit relative">
-            {([['container', '收纳分类'], ['item', '物品分类']] as [ItemType, string][]).map(([type, label]) => (
+            {([['container', `${INVENTORY_NODE_LABELS.container}分类`], ['item', `${INVENTORY_NODE_LABELS.item}分类`]] as [ItemType, string][]).map(([type, label]) => (
               <motion.button
                 key={type}
                 onClick={() => setActiveTab(type)}
@@ -345,7 +346,7 @@ export default function CategoriesPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={<Shapes size={28} className="text-slate-300" />}
-              title={`暂无${activeTab === 'container' ? '收纳' : '物品'}分类`}
+              title={`暂无${activeTab === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}分类`}
               iconMotion={{
                 animate: { rotate: [0, -8, 8, 0] },
                 transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },

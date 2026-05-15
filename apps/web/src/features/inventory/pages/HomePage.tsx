@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Package, ArrowLeft, LayoutGrid, FolderTree, Box, CheckSquare, SquarePen, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { fetchAncestors, fetchChildren, createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch, fetchItemStats } from '../../../legacy/items';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
@@ -461,7 +462,7 @@ export default function HomePage() {
                           transition={{ delay: 0.05 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          收纳 ({containers.length})
+                          {INVENTORY_NODE_LABELS.mixedContainer} ({containers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -582,7 +583,7 @@ export default function HomePage() {
                           animate={{ opacity: 1, x: 0 }}
                           className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
                         >
-                          其他收纳 ({uncategorizedContainers.length})
+                          其他{INVENTORY_NODE_LABELS.mixedContainer} ({uncategorizedContainers.length})
                         </motion.h2>
                         <motion.div
                           variants={staggerContainer}
@@ -765,7 +766,7 @@ export default function HomePage() {
       {bulkDeletePending && (
         <ConfirmDialog
           title="确认批量删除"
-          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含收纳或位置会同时删除其下内容。`}
+          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含位置或收纳容器会同时删除其下内容。`}
           confirmLabel="批量删除"
           danger
           onConfirm={handleBulkDelete}

@@ -6,7 +6,9 @@ import { Image, Pressable, Text, View } from 'react-native';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { countLocationContents, getContainerTypeLabel } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
+import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 
@@ -34,7 +36,7 @@ const HOME_INVENTORY_PREVIEW_LIMIT = 4;
 
 const STAT_ITEMS = [
   { label: '总物品', key: 'items', icon: 'cube-outline', color: '#0ea5e9', backgroundColor: '#eff9ff' },
-  { label: '收纳数', key: 'containers', icon: 'cube', color: '#14b8a6', backgroundColor: '#effdf9' },
+  { label: '位置/收纳', key: 'containers', icon: 'cube', color: '#14b8a6', backgroundColor: '#effdf9' },
   { label: '借出中', key: 'borrowed', icon: 'time-outline', color: '#f59e0b', backgroundColor: '#fff7e6' },
   { label: '总计', key: 'total', icon: 'shield-checkmark-outline', color: '#22c55e', backgroundColor: '#ecfdf3' },
 ] as const;
@@ -97,17 +99,17 @@ export function HomeDashboard({
       {!selectionMode ? (
         <>
           <DashboardSection delay={70}>
-            <View style={statsGridStyle}>
-              {STAT_ITEMS.map((item) => (
-                <Pressable key={item.key} onPress={() => router.push('/(tabs)/overview')} style={statCardStyle}>
-                  <View style={[statIconStyle, { backgroundColor: item.backgroundColor }]}>
-                    <Ionicons name={item.icon} size={17} color={item.color} />
-                  </View>
-                  <Text style={statValueStyle}>{statsLoading ? '—' : stats?.[item.key] ?? 0}</Text>
-                  <Text style={mutedTextStyle}>{item.label}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <MetricGrid
+              columns={4}
+              dense
+              items={STAT_ITEMS.map((item) => ({
+                key: item.key,
+                label: item.label,
+                value: statsLoading ? '—' : stats?.[item.key] ?? 0,
+                iconName: item.icon,
+                onPress: () => router.push('/(tabs)/overview'),
+              }))}
+            />
           </DashboardSection>
 
           <DashboardSection title="最近添加" delay={110}>
@@ -138,7 +140,7 @@ export function HomeDashboard({
       {selectionMode || viewMode === 'type' ? (
         <>
           <InventoryGroup
-            title={`收纳 (${rootContainers.length})`}
+            title={`位置/收纳容器 (${rootContainers.length})`}
             items={rootContainers}
             allItems={allItems}
             selectionMode={selectionMode}
@@ -240,19 +242,14 @@ function ModeButton({
 }
 
 function RecentItemRow({ item, path }: { item: Item; path: string }) {
-  const imageUri = resolveImageUri(item.images[0]);
   const row = (
-    <View style={rowCardStyle}>
-      <Thumb item={item} imageUri={imageUri} />
-      <View style={rowTextStyle}>
-        <Text numberOfLines={1} style={rowTitleStyle}>{item.name}</Text>
-        <Text numberOfLines={1} style={mutedTextStyle}>
-          {item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · {formatShortDateTime(item.created_at)}
-        </Text>
-        {path ? <Text numberOfLines={1} style={captionTextStyle}>{path}</Text> : null}
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-    </View>
+    <CompactListRow
+      title={item.name}
+      subtitle={`${item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · ${formatShortDateTime(item.created_at)}`}
+      caption={path || undefined}
+      iconName={item.type === 'container' ? 'cube-outline' : 'pricetag-outline'}
+      chevron
+    />
   );
 
   if (item.type === 'container') {
@@ -276,21 +273,14 @@ function RecentItemRow({ item, path }: { item: Item; path: string }) {
 
 function ActivityRow({ entry }: { entry: ActivityLog }) {
   const row = (
-    <View style={rowCardStyle}>
-      <View style={[activityIconStyle, entry.action === 'delete' ? deleteActivityIconStyle : null]}>
-        <Ionicons name={entry.action === 'delete' ? 'trash-outline' : 'create-outline'} size={19} color={entry.action === 'delete' ? '#f43f5e' : '#f59e0b'} />
-      </View>
-      <View style={rowTextStyle}>
-        <View style={activityTitleLineStyle}>
-          <Text numberOfLines={1} style={[rowTitleStyle, activityTitleStyle]}>{entry.item_name || '未命名对象'}</Text>
-          <Text style={activityPillStyle}>{ACTIVITY_ACTION_PRESENTATION[entry.action].label}</Text>
-        </View>
-        <Text numberOfLines={1} style={mutedTextStyle}>
-          {ITEM_TYPE_PRESENTATION[entry.item_type].label} · {formatShortDateTime(entry.created_at)}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-    </View>
+    <CompactListRow
+      title={entry.item_name || '未命名对象'}
+      subtitle={`${ITEM_TYPE_PRESENTATION[entry.item_type].label} · ${formatShortDateTime(entry.created_at)}`}
+      meta={ACTIVITY_ACTION_PRESENTATION[entry.action].label}
+      iconName={entry.action === 'delete' ? 'trash-outline' : 'create-outline'}
+      danger={entry.action === 'delete'}
+      chevron={Boolean(entry.item_id && entry.action !== 'delete')}
+    />
   );
 
   if (!entry.item_id || entry.action === 'delete') {
@@ -468,7 +458,7 @@ function groupRootItems({
 
   const uncategorizedContainers = rootContainers.filter((item) => !containerCategories.some((category) => category.name === item.category));
   if (uncategorizedContainers.length > 0) {
-    groups.push({ title: `其他收纳 (${uncategorizedContainers.length})`, items: uncategorizedContainers });
+    groups.push({ title: `其他位置/收纳容器 (${uncategorizedContainers.length})`, items: uncategorizedContainers });
   }
 
   for (const category of itemCategories) {
@@ -627,40 +617,6 @@ const sectionActionStyle = {
   fontWeight: '800' as const,
   color: palette.brand,
   paddingTop: 3,
-};
-
-const statsGridStyle = {
-  flexDirection: 'row' as const,
-  flexWrap: 'wrap' as const,
-  justifyContent: 'space-between' as const,
-  rowGap: 8,
-};
-
-const statCardStyle = {
-  width: '48%' as const,
-  minHeight: 96,
-  borderRadius: 18,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surfaceMuted,
-  padding: 12,
-  marginBottom: 8,
-  justifyContent: 'space-between' as const,
-};
-
-const statIconStyle = {
-  width: 32,
-  height: 32,
-  borderRadius: 13,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
-
-const statValueStyle = {
-  fontSize: 25,
-  lineHeight: 29,
-  fontWeight: '900' as const,
-  color: palette.text,
 };
 
 const mutedTextStyle = {

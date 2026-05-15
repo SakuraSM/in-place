@@ -124,7 +124,7 @@ export default function HomeDashboard({
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-slate-900">最近操作</h3>
-              <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条操作，页面主体仍聚焦收纳和物品。</p>
+              <p className="mt-1 text-xs text-slate-400">仅保留最近 3 条操作，页面主体仍聚焦位置、收纳容器和物品。</p>
             </div>
             <button
               type="button"

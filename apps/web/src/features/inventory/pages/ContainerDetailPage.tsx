@@ -79,7 +79,7 @@ export default function ContainerDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <Box size={48} className="text-slate-300 mb-3" />
-        <p className="text-slate-500">找不到该收纳或位置</p>
+        <p className="text-slate-500">找不到该位置或收纳容器</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-sky-500 text-sm">返回</button>
       </div>
     );
@@ -145,7 +145,7 @@ export default function ContainerDetailPage() {
         <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <MapPin size={14} />
-            所在路径
+            收纳位置
           </h2>
           <div className="flex items-center gap-1 flex-wrap">
             {ancestors.map((a, i) => (

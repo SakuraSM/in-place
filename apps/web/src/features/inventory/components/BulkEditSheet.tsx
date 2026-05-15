@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tag } from 'lucide-react';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Category, Item, ItemStatus } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
@@ -69,7 +70,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
     const hasStorage = items.some((item) => item.type === 'container' && !isLocationItem(item));
 
     if (hasLocation && hasStorage) {
-      return '收纳/位置';
+      return INVENTORY_NODE_LABELS.mixedContainer;
     }
 
     return getContainerTypeLabel(items[0]);
@@ -208,7 +209,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了收纳和物品，类别和状态不会一起批量修改。
+                混合选择了位置/收纳容器和物品，类别和状态不会一起批量修改。
               </div>
             )}
 
@@ -261,7 +262,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <label className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-slate-700">批量移动位置</span>
+                <span className="text-sm font-medium text-slate-700">批量调整{INVENTORY_NODE_LABELS.storageLocation}</span>
                 <input
                   type="checkbox"
                   checked={enableLocation}
@@ -276,7 +277,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                   whileHover={{ borderColor: '#38bdf8' }}
                   className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-left text-slate-500 transition-colors"
                 >
-                  {parentId ? '已选择新的上级' : '顶层位置'}
+                  {parentId ? '已选择新的上级' : `未选择${INVENTORY_NODE_LABELS.storageLocation}`}
                 </motion.button>
               )}
             </div>

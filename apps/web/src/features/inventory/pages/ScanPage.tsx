@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, Sparkles, Check, Loader2, AlertCircle, Plus, CreditCard as Edit2, Crop, Package, Box, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { fetchAiAvailability, recognizeItemFromImage } from '../../../legacy/openai';
 import { createItem, uploadImage } from '../../../legacy/items';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -509,7 +510,7 @@ export default function ScanPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold text-slate-900 text-sm">{draft.result.name}</p>
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">
-                          {(draft.result.type ?? 'item') === 'container' ? '收纳' : '物品'}
+                          {ITEM_TYPE_PRESENTATION[draft.result.type ?? 'item'].label}
                         </span>
                         <AnimatePresence>
                           {draft.saved && (

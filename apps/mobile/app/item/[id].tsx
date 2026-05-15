@@ -10,6 +10,9 @@ import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
+import { ActionButtonRow } from '@/shared/ui/ActionButtonRow';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
+import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
@@ -101,22 +104,16 @@ export default function ItemDetailScreen() {
     <Screen scroll contentInsetMode="page" chrome="muted">
       <BrandHeader variant="page" title="详情" />
 
-      <View style={actionRowStyle}>
-        <Pressable onPress={() => router.back()} style={secondaryButtonStyle}>
-          <Ionicons name="arrow-back" size={16} color={palette.textMuted} />
-          <Text style={secondaryButtonTextStyle}>返回</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push(`/item/form?id=${item.id}`)} style={secondaryButtonStyle}>
-          <Ionicons name="create-outline" size={16} color={palette.textMuted} />
-          <Text style={secondaryButtonTextStyle}>编辑</Text>
-        </Pressable>
-        {item.type === 'container' ? (
-          <Pressable onPress={() => router.push(`/item/form?parentId=${item.id}&type=item`)} style={primaryButtonStyle}>
-            <Ionicons name="add" size={17} color="#ffffff" />
-            <Text style={primaryButtonTextStyle}>添加内容</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <ActionButtonRow
+        compact
+        actions={[
+          { key: 'back', label: '返回', iconName: 'arrow-back', onPress: () => router.back() },
+          { key: 'edit', label: '编辑', iconName: 'create-outline', onPress: () => router.push(`/item/form?id=${item.id}`) },
+          ...(item.type === 'container'
+            ? [{ key: 'add', label: '添加内容', iconName: 'add' as const, variant: 'primary' as const, onPress: () => router.push(`/item/form?parentId=${item.id}&type=item`) }]
+            : []),
+        ]}
+      />
 
       {activeImageUri ? (
         <View style={heroImageCardStyle}>
@@ -124,7 +121,7 @@ export default function ItemDetailScreen() {
         </View>
       ) : null}
 
-      <SectionCard title="概览" delay={80} density="compact">
+      <SectionCard title="概览" delay={80} density="dense" headerMode="compact">
         <View style={overviewHeaderStyle}>
           <View style={overviewIconStyle}>
             <Ionicons name={item.type === 'container' ? 'cube-outline' : 'pricetag-outline'} size={24} color={palette.brandStrong} />
@@ -148,15 +145,17 @@ export default function ItemDetailScreen() {
       </SectionCard>
 
       {item.type === 'container' ? (
-        <SectionCard title={`${itemTypeLabel}信息`} delay={110} density="compact">
-          <View style={metricGridStyle}>
-            <Metric label="下级收纳" value={`${childContainers.length}`} />
-            <Metric label="下级物品" value={`${childItems.length}`} />
-          </View>
-          <View style={metricGridStyle}>
-            <Metric label="直接包含" value={`${children.length}`} />
-            <Metric label={`${itemTypeLabel}层级`} value={`${ancestors.length + 1}`} />
-          </View>
+        <SectionCard title={`${itemTypeLabel}信息`} delay={110} density="dense" headerMode="compact">
+          <MetricGrid
+            columns={4}
+            dense
+            items={[
+              { key: 'containers', label: '位置/收纳', value: childContainers.length },
+              { key: 'items', label: '下级物品', value: childItems.length },
+              { key: 'children', label: '直接包含', value: children.length },
+              { key: 'depth', label: `${itemTypeLabel}层级`, value: ancestors.length + 1 },
+            ]}
+          />
         </SectionCard>
       ) : (
         <PurchaseInfoCard item={item} />
@@ -165,7 +164,7 @@ export default function ItemDetailScreen() {
       <PathCard ancestors={ancestors} />
 
       {item.tags.length > 0 ? (
-        <SectionCard title="标签" delay={140} density="compact">
+        <SectionCard title="标签" delay={140} density="dense" headerMode="compact">
           <View style={tagWrapStyle}>
             {item.tags.map((tag) => (
               <Text key={tag} style={tagPillStyle}>{tag}</Text>
@@ -174,15 +173,19 @@ export default function ItemDetailScreen() {
         </SectionCard>
       ) : null}
 
-      <SectionCard title="时间信息" delay={160} density="compact">
-        <View style={metricGridStyle}>
-          <Metric label="创建时间" value={formatInventoryDate(item.created_at)} />
-          <Metric label="最后更新" value={formatInventoryDate(item.updated_at)} />
-        </View>
+      <SectionCard title="时间信息" delay={160} density="dense" headerMode="compact">
+        <MetricGrid
+          columns={2}
+          dense
+          items={[
+            { key: 'created', label: '创建时间', value: formatInventoryDate(item.created_at) },
+            { key: 'updated', label: '最后更新', value: formatInventoryDate(item.updated_at) },
+          ]}
+        />
       </SectionCard>
 
       {item.images.length > 1 ? (
-        <SectionCard title={`图片 ${item.images.length}`} delay={175} density="compact">
+        <SectionCard title={`图片 ${item.images.length}`} delay={175} density="dense" headerMode="compact">
           <View style={imageGridStyle}>
             {item.images.map((imageUrl) => {
               const imageUri = resolveInventoryImageUri(imageUrl);
@@ -193,14 +196,14 @@ export default function ItemDetailScreen() {
       ) : null}
 
       {item.type === 'container' && childContainers.length > 0 ? (
-        <ChildrenSection title={`下级收纳 ${childContainers.length}`} childrenItems={childContainers} delay={190} />
+        <ChildrenSection title={`下级位置/收纳容器 ${childContainers.length}`} childrenItems={childContainers} delay={190} />
       ) : null}
 
       {item.type === 'container' && childItems.length > 0 ? (
         <ChildrenSection title={`下级物品 ${childItems.length}`} childrenItems={childItems} delay={210} />
       ) : null}
 
-      <SectionCard title="危险操作" delay={230} density="compact" tone="muted">
+      <SectionCard title="危险操作" delay={230} density="dense" tone="muted" headerMode="compact">
         {deleteMutation.isError ? (
           <Text style={errorTextStyle}>
             {deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}
@@ -235,8 +238,8 @@ function ChildrenSection({
   delay: number;
 }) {
   return (
-    <SectionCard title={title} subtitle="短按进入，长按详情" delay={delay} density="compact">
-      <View style={{ gap: 10 }}>
+    <SectionCard title={title} subtitle="短按进入，长按详情" delay={delay} density="dense" headerMode="compact">
+      <View style={{ gap: 8 }}>
         {childrenItems.map((child) => <ChildRow key={child.id} child={child} />)}
       </View>
     </SectionCard>
@@ -249,8 +252,8 @@ function PurchaseInfoCard({ item }: { item: Item }) {
   }
 
   return (
-    <SectionCard title="购买信息" delay={110} density="compact">
-      <View style={{ gap: 10 }}>
+    <SectionCard title="购买信息" delay={110} density="dense" headerMode="compact">
+      <View style={{ gap: 8 }}>
         {item.price !== null ? <InfoRow icon="cash-outline" label="购买价格" value={`¥${item.price.toFixed(2)}`} /> : null}
         {item.purchase_date ? <InfoRow icon="calendar-outline" label="购买日期" value={item.purchase_date} /> : null}
         {item.warranty_date ? <InfoRow icon="shield-checkmark-outline" label="保修截止" value={item.warranty_date} /> : null}
@@ -265,7 +268,7 @@ function PathCard({ ancestors }: { ancestors: Item[] }) {
   }
 
   return (
-    <SectionCard title="收纳位置" delay={130} density="compact">
+    <SectionCard title="收纳位置" delay={130} density="dense" headerMode="compact">
       <View style={pathRailStyle}>
         {ancestors.map((ancestor, index) => (
           <View key={ancestor.id} style={pathNodeStyle}>
@@ -280,16 +283,17 @@ function PathCard({ ancestors }: { ancestors: Item[] }) {
 
 function ChildRow({ child }: { child: Item }) {
   const row = (
-    <View style={rowStyle}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text numberOfLines={1} style={listTitleStyle}>{child.name}</Text>
-        <Text numberOfLines={1} style={bodyStyle}>
-          {child.type === 'container' ? getContainerTypeLabel(child) : ITEM_TYPE_PRESENTATION.item.label}{child.category ? ` · ${child.category}` : ''}
-        </Text>
-      </View>
-      {child.type === 'item' ? <StatusBadge status={child.status} /> : <Text style={typePillStyle}>{getContainerTypeLabel(child)}</Text>}
-      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-    </View>
+    <CompactListRow
+      title={child.name}
+      subtitle={`${child.type === 'container' ? getContainerTypeLabel(child) : ITEM_TYPE_PRESENTATION.item.label}${child.category ? ` · ${child.category}` : ''}`}
+      iconName={child.type === 'container' ? 'cube-outline' : 'pricetag-outline'}
+      right={(
+        <View style={childRightStyle}>
+          {child.type === 'item' ? <StatusBadge status={child.status} /> : <Text style={typePillStyle}>{getContainerTypeLabel(child)}</Text>}
+          <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
+        </View>
+      )}
+    />
   );
 
   if (child.type === 'container') {
@@ -349,6 +353,12 @@ const summaryPillRowStyle = {
   flexDirection: 'row' as const,
   flexWrap: 'wrap' as const,
   gap: 8,
+};
+
+const childRightStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
 };
 
 const imageGridStyle = {

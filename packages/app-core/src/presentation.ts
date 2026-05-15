@@ -13,6 +13,14 @@ export interface LabelPresentation {
   tone: PresentationTone;
 }
 
+export const INVENTORY_NODE_LABELS = {
+  item: '物品',
+  location: '位置',
+  container: '收纳容器',
+  mixedContainer: '位置/收纳容器',
+  storageLocation: '收纳位置',
+} as const;
+
 export const ITEM_STATUS_PRESENTATION: Record<ItemStatus, StatusPresentation> = {
   in_stock: {
     label: '在库',
@@ -33,11 +41,11 @@ export const ITEM_STATUS_PRESENTATION: Record<ItemStatus, StatusPresentation> = 
 
 export const ITEM_TYPE_PRESENTATION: Record<ItemType, LabelPresentation> = {
   item: {
-    label: '物品',
+    label: INVENTORY_NODE_LABELS.item,
     tone: 'neutral',
   },
   container: {
-    label: '收纳',
+    label: INVENTORY_NODE_LABELS.container,
     tone: 'brand',
   },
 };

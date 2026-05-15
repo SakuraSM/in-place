@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Home, Box, Check, X } from 'lucide-react';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import { fetchChildren } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -70,7 +71,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
           <div className="mx-auto mb-2 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
           <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-slate-100">
             <div>
-              <h3 className="font-semibold text-slate-900">选择放置位置</h3>
+              <h3 className="font-semibold text-slate-900">选择{INVENTORY_NODE_LABELS.storageLocation}</h3>
               <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-hide">
                 <motion.button
                   onClick={() => handleBreadcrumbNav(-1)}
@@ -116,7 +117,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
             >
               <Home size={16} className="text-slate-400" />
               <span className="flex-1 text-left">
-                {currentParent === null ? '顶层位置' : '当前位置'}
+                {currentParent === null ? `不设置${INVENTORY_NODE_LABELS.storageLocation}` : '放在当前位置'}
               </span>
               {value === currentParent && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}>
@@ -130,7 +131,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : containers.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">暂无下级收纳或位置</p>
+              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置或收纳容器</p>
             ) : (
               containers.map((container, i) => (
                 <motion.div

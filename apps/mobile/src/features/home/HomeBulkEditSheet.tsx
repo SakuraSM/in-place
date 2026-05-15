@@ -5,6 +5,7 @@ import type { Category, Item, ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION } from '@inplace/app-core';
 import { buildChildrenMap, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { formatMobilePath } from '@/features/inventory/mobileInventoryFormat';
+import { LocationHierarchyPicker as SharedLocationHierarchyPicker } from './LocationHierarchyPicker';
 import { palette, shadows } from '@/shared/ui/theme';
 
 export interface BulkEditPayload {
@@ -87,7 +88,7 @@ export function HomeBulkEditSheet({
     const hasStorage = items.some((item) => item.type === 'container' && !isLocationItem(item));
 
     if (hasLocation && hasStorage) {
-      return '收纳/位置';
+      return '位置/收纳容器';
     }
 
     return getContainerTypeLabel(items[0]);
@@ -237,11 +238,11 @@ export function HomeBulkEditSheet({
             </ToggleSection>
 
             <ToggleSection
-              title="批量移动位置"
+              title="批量调整收纳位置"
               enabled={isLocationEnabled}
               onToggle={() => setIsLocationEnabled((current) => !current)}
             >
-              <LocationHierarchyPicker
+              <SharedLocationHierarchyPicker
                 breadcrumbs={breadcrumbs}
                 containers={currentContainers}
                 currentParentId={currentParentId}
@@ -331,72 +332,6 @@ function ToggleSection({
         </View>
       </Pressable>
       {enabled ? <View style={{ paddingTop: 12 }}>{children as never}</View> : null}
-    </View>
-  );
-}
-
-function LocationHierarchyPicker({
-  breadcrumbs,
-  containers,
-  currentParentId,
-  selectedParentId,
-  selectedParentPath,
-  onSelect,
-  onDrillDown,
-  onNavigate,
-}: {
-  breadcrumbs: Item[];
-  containers: Item[];
-  currentParentId: string | null;
-  selectedParentId: string | null;
-  selectedParentPath: string;
-  onSelect: (parentId: string | null) => void;
-  onDrillDown: (container: Item) => void;
-  onNavigate: (index: number) => void;
-}) {
-  return (
-    <View style={locationPickerStyle}>
-      <View style={selectedLocationSummaryStyle}>
-        <Ionicons name="location-outline" size={16} color={palette.brand} />
-        <Text numberOfLines={1} style={selectedLocationTextStyle}>{selectedParentPath}</Text>
-      </View>
-      {breadcrumbs.length > 0 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
-          <Pressable onPress={() => onNavigate(-1)} style={breadcrumbIconChipStyle}>
-            <Ionicons name="home-outline" size={13} color={palette.brand} />
-          </Pressable>
-          {breadcrumbs.map((breadcrumb, index) => (
-            <Pressable key={breadcrumb.id} onPress={() => onNavigate(index)} style={breadcrumbChipStyle}>
-              {index > 0 ? <Ionicons name="chevron-forward" size={12} color={palette.textSoft} /> : null}
-              <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      ) : null}
-
-      <Pressable onPress={() => onSelect(currentParentId)} style={[locationRowStyle, selectedParentId === currentParentId ? selectedLocationRowStyle : null]}>
-        <Ionicons name="home-outline" size={16} color={palette.textSoft} />
-        <Text style={locationRowTextStyle}>{currentParentId ? '选当前位置' : '不设置位置'}</Text>
-        {selectedParentId === currentParentId ? <Ionicons name="checkmark" size={16} color={palette.brand} /> : null}
-      </Pressable>
-
-      {containers.length === 0 ? (
-        <Text style={emptyHintStyle}>暂无下级收纳或位置。</Text>
-      ) : (
-        containers.map((container) => (
-          <View key={container.id} style={locationRowGroupStyle}>
-            <Pressable onPress={() => onSelect(container.id)} style={[locationRowStyle, selectedParentId === container.id ? selectedLocationRowStyle : null, locationRowMainStyle]}>
-              <Ionicons name="cube-outline" size={16} color={palette.textSoft} />
-              <Text numberOfLines={1} style={locationRowTextStyle}>{container.name}</Text>
-              <Text style={locationTypePillStyle}>{getContainerTypeLabel(container)}</Text>
-              {selectedParentId === container.id ? <Ionicons name="checkmark" size={16} color={palette.brand} /> : null}
-            </Pressable>
-            <Pressable onPress={() => onDrillDown(container)} style={drillButtonStyle}>
-              <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-            </Pressable>
-          </View>
-        ))
-      )}
     </View>
   );
 }
@@ -655,111 +590,4 @@ const saveButtonTextStyle = {
 
 const disabledStyle = {
   opacity: 0.55,
-};
-
-const locationPickerStyle = {
-  gap: 10,
-};
-
-const selectedLocationSummaryStyle = {
-  minHeight: 42,
-  borderRadius: 14,
-  borderWidth: 1,
-  borderColor: '#bae6fd',
-  backgroundColor: '#f0f9ff',
-  paddingHorizontal: 12,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const selectedLocationTextStyle = {
-  flex: 1,
-  fontSize: 13,
-  fontWeight: '700' as const,
-  color: palette.brandStrong,
-};
-
-const breadcrumbRailStyle = {
-  flexDirection: 'row' as const,
-  gap: 8,
-  paddingRight: 4,
-};
-
-const breadcrumbChipStyle = {
-  minHeight: 30,
-  borderRadius: 999,
-  backgroundColor: palette.surface,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 10,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 4,
-};
-
-const breadcrumbIconChipStyle = {
-  ...breadcrumbChipStyle,
-  width: 32,
-  justifyContent: 'center' as const,
-};
-
-const breadcrumbChipTextStyle = {
-  maxWidth: 120,
-  fontSize: 12,
-  fontWeight: '700' as const,
-  color: palette.textMuted,
-};
-
-const locationRowGroupStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const locationRowStyle = {
-  minHeight: 44,
-  borderRadius: 14,
-  borderWidth: 1,
-  borderColor: 'transparent',
-  backgroundColor: palette.surface,
-  paddingHorizontal: 12,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const locationRowMainStyle = {
-  flex: 1,
-};
-
-const selectedLocationRowStyle = {
-  borderColor: '#bae6fd',
-  backgroundColor: '#f0f9ff',
-};
-
-const locationRowTextStyle = {
-  flex: 1,
-  fontSize: 13,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const locationTypePillStyle = {
-  borderRadius: 999,
-  backgroundColor: palette.brandTint,
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  fontSize: 11,
-  fontWeight: '800' as const,
-  color: palette.brandStrong,
-};
-
-const drillButtonStyle = {
-  width: 42,
-  height: 42,
-  borderRadius: 14,
-  backgroundColor: palette.surface,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
 };

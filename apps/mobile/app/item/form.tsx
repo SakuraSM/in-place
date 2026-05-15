@@ -249,7 +249,7 @@ export default function ItemFormScreen() {
       <BrandHeader
         variant="page"
         title={isEditing ? '编辑物品' : '新建物品'}
-        subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳' : '物品'}`}
+        subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳容器' : '物品'}`}
       />
 
       <SectionCard
@@ -431,7 +431,7 @@ export default function ItemFormScreen() {
           </View>
         </Field>
 
-        <Field label="放置位置">
+        <Field label="收纳位置">
           <LocationSelectField
             userId={user?.id}
             selectedParentId={draft.parentId}
@@ -524,27 +524,27 @@ function formatDateInput(value: Date) {
 
 const inputStyle = {
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingHorizontal: 16,
-  paddingVertical: 14,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
   fontSize: 15,
   color: palette.text,
 };
 
 const dateGridStyle = {
   flexDirection: 'row' as const,
-  gap: 10,
+  gap: 8,
 };
 
 const dateButtonStyle = {
-  borderRadius: 16,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  paddingVertical: 14,
+  paddingHorizontal: 12,
+  paddingVertical: 11,
 };
 
 const dateButtonTextStyle = {
@@ -576,11 +576,11 @@ const segmentedStyle = {
 
 const segmentButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
-  paddingVertical: 12,
+  paddingVertical: 10,
   alignItems: 'center' as const,
 };
 
@@ -610,8 +610,8 @@ const chipStyle = {
   backgroundColor: palette.surfaceMuted,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingHorizontal: 12,
-  paddingVertical: 8,
+  paddingHorizontal: 10,
+  paddingVertical: 7,
 };
 
 const activeChipStyle = {
@@ -633,11 +633,11 @@ const activeChipTextStyle = {
 
 const secondaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 14,
   backgroundColor: palette.surface,
   borderWidth: 1,
   borderColor: palette.border,
-  paddingVertical: 14,
+  paddingVertical: 12,
   alignItems: 'center' as const,
 };
 
@@ -649,9 +649,9 @@ const secondaryButtonTextStyle = {
 
 const primaryButtonStyle = {
   flex: 1,
-  borderRadius: 16,
+  borderRadius: 14,
   backgroundColor: palette.brand,
-  paddingVertical: 14,
+  paddingVertical: 12,
   alignItems: 'center' as const,
 };
 

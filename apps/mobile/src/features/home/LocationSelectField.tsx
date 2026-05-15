@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
-import { getContainerTypeLabel } from '@/shared/lib/location';
 import { formatMobileLocationPath } from '@/features/inventory/mobileInventoryFormat';
+import { LocationHierarchyPicker } from './LocationHierarchyPicker';
 import { palette, shadows } from '@/shared/ui/theme';
 
 interface LocationSelectFieldProps {
@@ -51,7 +51,7 @@ export function LocationSelectField({
     }
   }, [isOpen]);
 
-  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? '加载位置...' : '未选择收纳位置';
+  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? '加载收纳位置...' : '未选择收纳位置';
   const containers = currentContainersQuery.data ?? [];
 
   const handleSelect = (parentId: string | null) => {
@@ -85,75 +85,27 @@ export function LocationSelectField({
           <View style={sheetStyle}>
             <View style={dragHandleStyle} />
             <View style={sheetHeaderStyle}>
-              <Text style={sheetTitleStyle}>选择位置</Text>
+              <Text style={sheetTitleStyle}>选择收纳位置</Text>
               <Pressable onPress={() => setIsOpen(false)} style={closeButtonStyle}>
                 <Ionicons name="close" size={18} color={palette.textMuted} />
               </Pressable>
             </View>
 
-            <View style={selectedSummaryStyle}>
-              <Ionicons name="location-outline" size={16} color={palette.brand} />
-              <Text numberOfLines={1} style={selectedSummaryTextStyle}>{selectedLabel}</Text>
-            </View>
-
-            {breadcrumbs.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
-                <Pressable onPress={() => handleNavigate(-1)} style={breadcrumbIconChipStyle}>
-                  <Ionicons name="home-outline" size={13} color={palette.brand} />
-                </Pressable>
-                {breadcrumbs.map((breadcrumb, index) => (
-                  <Pressable key={breadcrumb.id} onPress={() => handleNavigate(index)} style={breadcrumbChipStyle}>
-                    {index > 0 ? <Ionicons name="chevron-forward" size={12} color={palette.textSoft} /> : null}
-                    <Text numberOfLines={1} style={breadcrumbChipTextStyle}>{breadcrumb.name}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : null}
-
-            <ScrollView contentContainerStyle={sheetContentStyle}>
-              <Pressable
-                onPress={() => handleSelect(currentParentId)}
-                style={[locationRowStyle, selectedParentId === currentParentId ? selectedLocationRowStyle : null]}
-              >
-                <Ionicons name="home-outline" size={17} color={palette.textSoft} />
-                <Text style={locationRowTextStyle}>{currentParentId ? '选当前位置' : '不设置位置'}</Text>
-                {selectedParentId === currentParentId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
-              </Pressable>
-
-              {currentContainersQuery.isLoading ? (
-                <View style={loadingStyle}>
-                  <ActivityIndicator />
-                </View>
-              ) : containers.length === 0 ? (
-                <Text style={emptyHintStyle}>暂无下级收纳或位置</Text>
-              ) : (
-                containers.map((container) => (
-                  <View key={container.id} style={locationRowGroupStyle}>
-                    <Pressable
-                      onPress={() => handleSelect(container.id)}
-                      style={[
-                        locationRowStyle,
-                        selectedParentId === container.id ? selectedLocationRowStyle : null,
-                        locationRowMainStyle,
-                      ]}
-                    >
-                      <Ionicons name="cube-outline" size={17} color={palette.textSoft} />
-                      <Text numberOfLines={1} style={locationRowTextStyle}>{container.name}</Text>
-                      <Text style={locationTypePillStyle}>{getContainerTypeLabel(container)}</Text>
-                      {selectedParentId === container.id ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
-                    </Pressable>
-                    <Pressable
-                      onPress={() => {
-                        setBreadcrumbs((current) => [...current, container]);
-                        setCurrentParentId(container.id);
-                      }}
-                      style={drillButtonStyle}
-                    >
-                      <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
-                    </Pressable>
-                  </View>
-                ))
-              )}
+            <ScrollView contentContainerStyle={sheetContentStyle} keyboardShouldPersistTaps="handled">
+              <LocationHierarchyPicker
+                breadcrumbs={breadcrumbs}
+                containers={containers}
+                currentParentId={currentParentId}
+                selectedParentId={selectedParentId}
+                selectedParentPath={selectedLabel}
+                isLoading={currentContainersQuery.isLoading}
+                onSelect={handleSelect}
+                onNavigate={handleNavigate}
+                onDrillDown={(container) => {
+                  setBreadcrumbs((current) => [...current, container]);
+                  setCurrentParentId(container.id);
+                }}
+              />
             </ScrollView>
           </View>
         </View>
@@ -242,120 +194,8 @@ const closeButtonStyle = {
   backgroundColor: palette.surfaceMuted,
 };
 
-const selectedSummaryStyle = {
-  marginHorizontal: 20,
-  marginBottom: 10,
-  borderRadius: 16,
-  backgroundColor: '#f0f9ff',
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const selectedSummaryTextStyle = {
-  flex: 1,
-  minWidth: 0,
-  color: palette.brandStrong,
-  fontSize: 14,
-  fontWeight: '800' as const,
-};
-
-const breadcrumbRailStyle = {
-  paddingHorizontal: 20,
-  paddingBottom: 10,
-  gap: 8,
-};
-
-const breadcrumbChipStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 4,
-  borderRadius: 999,
-  backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 10,
-  paddingVertical: 7,
-};
-
-const breadcrumbIconChipStyle = {
-  ...breadcrumbChipStyle,
-  width: 32,
-  justifyContent: 'center' as const,
-};
-
-const breadcrumbChipTextStyle = {
-  color: palette.textMuted,
-  fontSize: 13,
-  fontWeight: '700' as const,
-};
-
 const sheetContentStyle = {
   paddingHorizontal: 20,
   paddingBottom: 28,
   gap: 10,
-};
-
-const locationRowGroupStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'stretch' as const,
-  gap: 8,
-};
-
-const locationRowStyle = {
-  minHeight: 54,
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: 'transparent',
-  backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 9,
-};
-
-const locationRowMainStyle = {
-  flex: 1,
-  minWidth: 0,
-};
-
-const selectedLocationRowStyle = {
-  backgroundColor: '#f0f9ff',
-  borderColor: '#bae6fd',
-};
-
-const locationRowTextStyle = {
-  flex: 1,
-  minWidth: 0,
-  color: palette.text,
-  fontSize: 15,
-  fontWeight: '800' as const,
-};
-
-const locationTypePillStyle = {
-  borderRadius: 999,
-  backgroundColor: '#e0f2fe',
-  color: palette.brandStrong,
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  fontSize: 12,
-  fontWeight: '800' as const,
-};
-
-const drillButtonStyle = {
-  width: 46,
-  borderRadius: 16,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: palette.surfaceMuted,
-};
-
-const loadingStyle = {
-  paddingVertical: 16,
-};
-
-const emptyHintStyle = {
-  color: palette.textSoft,
-  fontSize: 14,
-  paddingVertical: 10,
 };

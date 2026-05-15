@@ -12,15 +12,6 @@ import { buildMobileItemPath, resolveInventoryImageUri } from '@/features/invent
 const LOCATION_TREE_INDENT_WIDTH = 18;
 const LOCATION_TREE_MAX_DEPTH = 5;
 
-export function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View style={filterRowStyle}>
-      <Text style={filterRowLabelStyle}>{label}</Text>
-      <View style={filterChipsStyle}>{children as never}</View>
-    </View>
-  );
-}
-
 export function FilterChip({
   active,
   disabled,
@@ -89,7 +80,7 @@ export function LocationFilterSheet({
   const treeRows = buildLocationTreeRows(locations, itemMap);
 
   return (
-    <BottomSheet visible={visible} title="位置树筛选" onClose={onClose}>
+    <BottomSheet visible={visible} title="按位置筛选" onClose={onClose}>
       <Pressable onPress={() => onSelect(null)} style={[sheetOptionStyle, !selectedLocationId ? sheetOptionActiveStyle : null]}>
         <Text style={sheetOptionTextStyle}>全部位置</Text>
         {!selectedLocationId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
@@ -192,7 +183,7 @@ export function TagFilterSheet({
   );
 }
 
-function BottomSheet({ visible, title, children, onClose }: { visible: boolean; title: string; children: React.ReactNode; onClose: () => void }) {
+export function BottomSheet({ visible, title, children, onClose }: { visible: boolean; title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={sheetRootStyle}>
@@ -212,21 +203,21 @@ function BottomSheet({ visible, title, children, onClose }: { visible: boolean; 
   );
 }
 
-export const screenContentStyle = { paddingHorizontal: 18, gap: 10 };
+export const screenContentStyle = { paddingHorizontal: 16, gap: 8 };
 export const pageTitleStyle = { fontSize: 28, lineHeight: 34, fontWeight: '900' as const, color: palette.text, paddingTop: 2 };
 export const searchBoxStyle = {
-  minHeight: 50,
-  borderRadius: 18,
+  minHeight: 44,
+  borderRadius: 15,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surface,
-  paddingHorizontal: 14,
+  paddingHorizontal: 12,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 10,
   ...shadows.sm,
 };
-export const searchInputStyle = { flex: 1, minHeight: 44, fontSize: 15, color: palette.text };
+export const searchInputStyle = { flex: 1, minHeight: 40, fontSize: 15, color: palette.text };
 export const clearButtonStyle = {
   width: 28,
   height: 28,
@@ -235,10 +226,9 @@ export const clearButtonStyle = {
   justifyContent: 'center' as const,
   backgroundColor: palette.surfaceMuted,
 };
-export const filterPanelStyle = { gap: 7, paddingTop: 2 };
 export const resultDividerStyle = { height: 1, marginHorizontal: -18, backgroundColor: palette.borderSoft };
-export const resultSummaryStyle = { fontSize: 16, color: palette.textSoft, paddingTop: 8 };
-export const resultListStyle = { gap: 12 };
+export const resultSummaryStyle = { fontSize: 14, color: palette.textSoft, paddingTop: 6 };
+export const resultListStyle = { gap: 8 };
 export const loadedMetaStyle = { textAlign: 'center' as const, fontSize: 13, color: palette.textSoft };
 export const loadingMoreStyle = {
   flexDirection: 'row' as const,
@@ -248,9 +238,6 @@ export const loadingMoreStyle = {
   paddingBottom: 8,
 };
 
-const filterRowStyle = { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 };
-const filterRowLabelStyle = { width: 32, paddingTop: 7, fontSize: 12, fontWeight: '800' as const, color: palette.textSoft };
-const filterChipsStyle = { flex: 1, flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 6 };
 const chipStyle = {
   minHeight: 30,
   maxWidth: '100%' as const,
@@ -266,28 +253,28 @@ const disabledChipStyle = { opacity: 0.42 };
 const chipTextStyle = { fontSize: 12, fontWeight: '800' as const, color: palette.textMuted };
 const activeChipTextStyle = { fontSize: 12, fontWeight: '900' as const, color: '#ffffff' };
 const resultRowStyle = {
-  minHeight: 88,
-  borderRadius: 22,
+  minHeight: 70,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
-  padding: 14,
+  padding: 10,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  gap: 12,
+  gap: 10,
   ...shadows.sm,
 };
 const resultThumbStyle = {
-  width: 58,
-  height: 58,
-  borderRadius: 16,
+  width: 46,
+  height: 46,
+  borderRadius: 13,
   backgroundColor: palette.surfaceMuted,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   overflow: 'hidden' as const,
 };
 const resultThumbImageStyle = { width: '100%' as const, height: '100%' as const };
-const resultTextStyle = { flex: 1, minWidth: 0, gap: 4 };
+const resultTextStyle = { flex: 1, minWidth: 0, gap: 3 };
 const resultTitleLineStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 };
 const resultTitleStyle = { flex: 1, fontSize: 16, fontWeight: '900' as const, color: palette.text };
 const resultCategoryStyle = { fontSize: 13, color: palette.textMuted };
@@ -324,7 +311,7 @@ const sheetHeaderStyle = {
   alignItems: 'center' as const,
   justifyContent: 'space-between' as const,
   paddingHorizontal: 18,
-  paddingVertical: 14,
+  paddingVertical: 12,
   borderBottomWidth: 1,
   borderBottomColor: palette.borderSoft,
 };
@@ -337,19 +324,19 @@ const sheetCloseStyle = {
   justifyContent: 'center' as const,
   backgroundColor: palette.surfaceMuted,
 };
-const sheetContentStyle = { padding: 16, gap: 10 };
+const sheetContentStyle = { padding: 14, gap: 8 };
 const sheetOptionStyle = {
-  minHeight: 54,
-  borderRadius: 16,
+  minHeight: 46,
+  borderRadius: 13,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 14,
+  paddingHorizontal: 12,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'space-between' as const,
   gap: 10,
 };
 const sheetOptionActiveStyle = { backgroundColor: '#f0f9ff', borderWidth: 1, borderColor: '#bae6fd' };
-const sheetOptionTextStyle = { flex: 1, fontSize: 15, fontWeight: '800' as const, color: palette.text };
+const sheetOptionTextStyle = { flex: 1, fontSize: 14, fontWeight: '800' as const, color: palette.text };
 const sheetOptionMetaStyle = { marginTop: 2, fontSize: 12, color: palette.textSoft };
 const sheetOptionCountStyle = {
   borderRadius: 999,
@@ -361,8 +348,8 @@ const sheetOptionCountStyle = {
   color: palette.textMuted,
 };
 const sheetSearchStyle = {
-  minHeight: 48,
-  borderRadius: 16,
+  minHeight: 44,
+  borderRadius: 13,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
@@ -371,5 +358,5 @@ const sheetSearchStyle = {
   alignItems: 'center' as const,
   gap: 8,
 };
-const sheetSearchInputStyle = { flex: 1, minHeight: 46, fontSize: 14, color: palette.text };
+const sheetSearchInputStyle = { flex: 1, minHeight: 40, fontSize: 14, color: palette.text };
 const emptySheetTextStyle = { paddingVertical: 24, textAlign: 'center' as const, color: palette.textSoft };

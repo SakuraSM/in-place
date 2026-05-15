@@ -10,6 +10,8 @@ import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
+import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { palette } from '@/shared/ui/theme';
@@ -74,18 +76,19 @@ export default function ActivityTab() {
         <BrandHeader variant="page" title="记录" />
       </Entrance>
 
-      <SectionCard title="概览" subtitle={meta ? `${logs.length} / ${meta.total}` : undefined} delay={70} density="compact" headerMode="compact">
-        <View style={statsGridStyle}>
-          {(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => (
-            <View key={action} style={statCardStyle}>
-              <Text style={statValueStyle}>{summary[action]}</Text>
-              <Text style={bodyStyle}>{ACTIVITY_ACTION_PRESENTATION[action].label}</Text>
-            </View>
-          ))}
-        </View>
+      <SectionCard title="概览" subtitle={meta ? `${logs.length} / ${meta.total}` : undefined} delay={70} density="dense" headerMode="compact">
+        <MetricGrid
+          columns={4}
+          dense
+          items={(Object.keys(ACTIVITY_ACTION_PRESENTATION) as ActivityAction[]).map((action) => ({
+            key: action,
+            label: ACTIVITY_ACTION_PRESENTATION[action].label,
+            value: summary[action],
+          }))}
+        />
       </SectionCard>
 
-      <SectionCard title="最近操作" delay={140} density="compact" headerMode="compact">
+      <SectionCard title="最近操作" delay={140} density="dense" headerMode="compact">
         {logs.length === 0 ? (
           <Text style={bodyStyle}>暂无记录</Text>
         ) : (
@@ -108,23 +111,18 @@ export default function ActivityTab() {
 
 function ActivityRow({ entry }: { entry: ActivityLog }) {
   const content = (
-    <View style={rowStyle}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text style={listTitleStyle}>{entry.item_name || '未命名对象'}</Text>
-        <Text style={bodyStyle}>
-          {ACTIVITY_ACTION_PRESENTATION[entry.action].label} · {ITEM_TYPE_PRESENTATION[entry.item_type].label}
-        </Text>
-        <Text style={captionStyle}>
-          {new Date(entry.created_at).toLocaleString('zh-CN', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </Text>
-      </View>
-      <Text style={captionStyle}>{entry.item_id ? '查看' : '—'}</Text>
-    </View>
+    <CompactListRow
+      title={entry.item_name || '未命名对象'}
+      subtitle={`${ACTIVITY_ACTION_PRESENTATION[entry.action].label} · ${ITEM_TYPE_PRESENTATION[entry.item_type].label}`}
+      caption={new Date(entry.created_at).toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })}
+      meta={entry.item_id ? '查看' : '—'}
+      chevron={Boolean(entry.item_id)}
+    />
   );
 
   if (!entry.item_id) {
@@ -147,43 +145,6 @@ const bodyStyle = {
 const captionStyle = {
   fontSize: 13,
   color: palette.textSoft,
-};
-
-const statsGridStyle = {
-  flexDirection: 'row' as const,
-  gap: 8,
-};
-
-const statCardStyle = {
-  flex: 1,
-  backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
-  padding: 12,
-  gap: 4,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-};
-
-const statValueStyle = {
-  fontSize: 22,
-  fontWeight: '700' as const,
-  color: palette.text,
-};
-
-const rowStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-  borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  paddingTop: 12,
-  minHeight: 68,
-};
-
-const listTitleStyle = {
-  fontSize: 16,
-  fontWeight: '700' as const,
-  color: palette.text,
 };
 
 const loadingMoreStyle = {

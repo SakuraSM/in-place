@@ -1,4 +1,5 @@
 import type { Item } from '../../../legacy/database.types';
+import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 
 export const LOCATION_TAG_KEY = 'location_tag';
 
@@ -25,5 +26,5 @@ export function updateLocationMetadata(metadata: Record<string, unknown> | undef
 }
 
 export function getContainerTypeLabel(item: InventoryNode | null | undefined) {
-  return isLocationItem(item) ? '位置' : '收纳';
+  return isLocationItem(item) ? INVENTORY_NODE_LABELS.location : INVENTORY_NODE_LABELS.container;
 }
