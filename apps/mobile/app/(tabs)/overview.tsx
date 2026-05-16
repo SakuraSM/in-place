@@ -9,7 +9,6 @@ import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-c
 import { useAuth } from '@/providers/AuthProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
-import { isLocationItem } from '@/shared/lib/location';
 import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
@@ -117,7 +116,7 @@ export default function OverviewTab() {
     const normalizedTagQuery = tagQuery.trim().toLocaleLowerCase('zh-CN');
     return availableTags.filter((tag) => tag.name.toLocaleLowerCase('zh-CN').includes(normalizedTagQuery));
   }, [availableTags, tagQuery]);
-  const locations = useMemo(() => allItems.filter(isLocationItem), [allItems]);
+  const locationTreeNodes = useMemo(() => allItems.filter((item) => item.type === 'container'), [allItems]);
   const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
   const pages = searchQuery.data?.pages ?? [];
   const flatItems = pages.flatMap((page) => page.data);
@@ -272,7 +271,7 @@ export default function OverviewTab() {
 
       <LocationFilterSheet
         visible={isLocationSheetOpen}
-        locations={locations}
+        locationNodes={locationTreeNodes}
         itemMap={itemMap}
         selectedLocationId={selectedLocationId}
         onClose={() => setIsLocationSheetOpen(false)}

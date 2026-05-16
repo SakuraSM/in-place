@@ -64,38 +64,46 @@ export function ResultRow({ item, path }: { item: Item; path: string }) {
 
 export function LocationFilterSheet({
   visible,
-  locations,
+  locationNodes,
   itemMap,
   selectedLocationId,
   onClose,
   onSelect,
 }: {
   visible: boolean;
-  locations: Item[];
+  locationNodes: Item[];
   itemMap: Map<string, Item>;
   selectedLocationId: string | null;
   onClose: () => void;
   onSelect: (locationId: string | null) => void;
 }) {
-  const treeRows = buildLocationTreeRows(locations, itemMap);
+  const treeRows = buildLocationTreeRows(locationNodes, itemMap);
 
   return (
     <BottomSheet visible={visible} title="按位置筛选" onClose={onClose}>
       <Pressable onPress={() => onSelect(null)} style={[sheetOptionStyle, !selectedLocationId ? sheetOptionActiveStyle : null]}>
-        <Text style={sheetOptionTextStyle}>全部位置</Text>
+        <Text style={sheetOptionTextStyle}>全部位置/收纳容器</Text>
         {!selectedLocationId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
       </Pressable>
       {treeRows.map((row) => {
-        const active = selectedLocationId === row.location.id;
+        const active = selectedLocationId === row.node.id;
         const indent = Math.min(row.depth, LOCATION_TREE_MAX_DEPTH) * LOCATION_TREE_INDENT_WIDTH;
         return (
           <Pressable
-            key={row.location.id}
-            onPress={() => onSelect(row.location.id)}
+            key={row.node.id}
+            onPress={() => onSelect(row.node.id)}
             style={[sheetOptionStyle, active ? sheetOptionActiveStyle : null, { paddingLeft: 14 + indent }]}
           >
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text numberOfLines={1} style={sheetOptionTextStyle}>{row.location.name}</Text>
+              <View style={treeOptionTitleLineStyle}>
+                <Ionicons
+                  name={isLocationItem(row.node) ? 'location-outline' : 'cube-outline'}
+                  size={14}
+                  color={palette.textSoft}
+                />
+                <Text numberOfLines={1} style={sheetOptionTextStyle}>{row.node.name}</Text>
+                <Text style={treeOptionTypePillStyle}>{getContainerTypeLabel(row.node)}</Text>
+              </View>
               {row.path ? <Text numberOfLines={1} style={sheetOptionMetaStyle}>{row.path}</Text> : null}
             </View>
             {active ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
@@ -106,14 +114,14 @@ export function LocationFilterSheet({
   );
 }
 
-function buildLocationTreeRows(locations: Item[], itemMap: Map<string, Item>) {
-  const locationMap = new Map(locations.map((location) => [location.id, location]));
+function buildLocationTreeRows(locationNodes: Item[], itemMap: Map<string, Item>) {
+  const locationNodeMap = new Map(locationNodes.map((locationNode) => [locationNode.id, locationNode]));
   const childrenMap = new Map<string | null, Item[]>();
 
-  for (const location of locations) {
-    const parentId = location.parent_id && locationMap.has(location.parent_id) ? location.parent_id : null;
+  for (const locationNode of locationNodes) {
+    const parentId = locationNode.parent_id && locationNodeMap.has(locationNode.parent_id) ? locationNode.parent_id : null;
     const siblings = childrenMap.get(parentId) ?? [];
-    siblings.push(location);
+    siblings.push(locationNode);
     childrenMap.set(parentId, siblings);
   }
 
@@ -121,18 +129,18 @@ function buildLocationTreeRows(locations: Item[], itemMap: Map<string, Item>) {
     siblings.sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'));
   }
 
-  const rows: { location: Item; depth: number; path: string }[] = [];
+  const rows: { node: Item; depth: number; path: string }[] = [];
   const visited = new Set<string>();
 
   const appendRows = (parentId: string | null, depth: number) => {
-    for (const location of childrenMap.get(parentId) ?? []) {
-      if (visited.has(location.id)) {
+    for (const locationNode of childrenMap.get(parentId) ?? []) {
+      if (visited.has(locationNode.id)) {
         continue;
       }
 
-      visited.add(location.id);
-      rows.push({ location, depth, path: buildMobileItemPath(location, itemMap) });
-      appendRows(location.id, depth + 1);
+      visited.add(locationNode.id);
+      rows.push({ node: locationNode, depth, path: buildMobileItemPath(locationNode, itemMap) });
+      appendRows(locationNode.id, depth + 1);
     }
   };
 
@@ -338,6 +346,22 @@ const sheetOptionStyle = {
 const sheetOptionActiveStyle = { backgroundColor: '#f0f9ff', borderWidth: 1, borderColor: '#bae6fd' };
 const sheetOptionTextStyle = { flex: 1, fontSize: 14, fontWeight: '800' as const, color: palette.text };
 const sheetOptionMetaStyle = { marginTop: 2, fontSize: 12, color: palette.textSoft };
+const treeOptionTitleLineStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
+};
+const treeOptionTypePillStyle = {
+  flexShrink: 0,
+  overflow: 'hidden' as const,
+  borderRadius: 999,
+  backgroundColor: '#e0f2fe',
+  paddingHorizontal: 7,
+  paddingVertical: 3,
+  color: palette.brandStrong,
+  fontSize: 11,
+  fontWeight: '800' as const,
+};
 const sheetOptionCountStyle = {
   borderRadius: 999,
   backgroundColor: '#e2e8f0',
