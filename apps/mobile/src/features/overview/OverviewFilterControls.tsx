@@ -63,19 +63,18 @@ export function OverviewFilterControls({
   );
 
   const handleOpenLocationFilter = () => {
-    setIsFilterSheetOpen(false);
     onOpenLocationFilter();
   };
 
   const handleOpenTagFilter = () => {
-    setIsFilterSheetOpen(false);
     onOpenTagFilter();
   };
 
   return (
     <>
       <View style={filterPanelStyle}>
-        <View style={filterToolbarStyle}>
+        <View style={filterGroupStyle}>
+          <Text style={filterGroupLabelStyle}>展示方式</Text>
           <View style={viewSegmentStyle}>
             {viewModeFilters.map((option) => {
               const isActive = viewMode === option.value;
@@ -93,28 +92,33 @@ export function OverviewFilterControls({
               );
             })}
           </View>
-          <Pressable accessibilityRole="button" onPress={() => setIsFilterSheetOpen(true)} style={filterButtonStyle}>
-            <Ionicons name="options-outline" size={15} color="#ffffff" />
-            <Text style={filterButtonTextStyle}>筛选</Text>
-            {activeFilterLabels.length > 0 ? (
-              <View style={filterButtonBadgeStyle}>
-                <Text style={filterButtonBadgeTextStyle}>{activeFilterLabels.length}</Text>
-              </View>
-            ) : null}
-          </Pressable>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={quickFilterRailStyle}>
-          {typeFilters.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={typeFilter === option.value}
-              icon={option.icon}
-              label={option.label}
-              onPress={() => onChangeType(option.value)}
-            />
-          ))}
-        </ScrollView>
+        <View style={filterGroupStyle}>
+          <Text style={filterGroupLabelStyle}>对象类型</Text>
+          <View style={typeFilterRowStyle}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={quickFilterRailStyle} style={typeFilterScrollStyle}>
+              {typeFilters.map((option) => (
+                <FilterChip
+                  key={option.value}
+                  active={typeFilter === option.value}
+                  icon={option.icon}
+                  label={option.label}
+                  onPress={() => onChangeType(option.value)}
+                />
+              ))}
+            </ScrollView>
+            <Pressable accessibilityRole="button" onPress={() => setIsFilterSheetOpen(true)} style={filterButtonStyle}>
+              <Ionicons name="options-outline" size={15} color="#ffffff" />
+              <Text style={filterButtonTextStyle}>更多</Text>
+              {activeFilterLabels.length > 0 ? (
+                <View style={filterButtonBadgeStyle}>
+                  <Text style={filterButtonBadgeTextStyle}>{activeFilterLabels.length}</Text>
+                </View>
+              ) : null}
+            </Pressable>
+          </View>
+        </View>
 
         {activeFilterLabels.length > 0 ? (
           <View style={activeFilterRailStyle}>
@@ -135,23 +139,11 @@ export function OverviewFilterControls({
         {activeFilterLabels.length > 0 ? (
           <Pressable accessibilityRole="button" onPress={onClearFilters} style={sheetClearButtonStyle}>
             <Ionicons name="refresh-outline" size={16} color={palette.textMuted} />
-            <Text style={sheetClearButtonTextStyle}>清除当前筛选</Text>
+            <Text style={sheetClearButtonTextStyle}>清除筛选</Text>
           </Pressable>
         ) : null}
 
-        <FilterSection title="类型" helper="常用条件保留在页面上，这里也可以完整切换。">
-          {typeFilters.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={typeFilter === option.value}
-              icon={option.icon}
-              label={option.label}
-              onPress={() => onChangeType(option.value)}
-            />
-          ))}
-        </FilterSection>
-
-        <FilterSection title="状态" helper={isStatusDisabled ? '位置和收纳容器不参与物品状态筛选。' : undefined}>
+        <FilterSection title="状态" helper={isStatusDisabled ? '位置/收纳不参与物品状态筛选。' : undefined}>
           {statusFilters.map((option) => (
             <FilterChip
               key={option.value}
@@ -159,18 +151,6 @@ export function OverviewFilterControls({
               disabled={isStatusDisabled}
               label={option.label}
               onPress={() => onChangeStatus(option.value)}
-            />
-          ))}
-        </FilterSection>
-
-        <FilterSection title="展示方式">
-          {viewModeFilters.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={viewMode === option.value}
-              icon={option.icon}
-              label={option.label}
-              onPress={() => onChangeViewMode(option.value)}
             />
           ))}
         </FilterSection>
@@ -266,15 +246,28 @@ const filterPanelStyle = {
   ...shadows.sm,
 };
 
-const filterToolbarStyle = {
+const filterGroupStyle = {
+  gap: 6,
+};
+
+const filterGroupLabelStyle = {
+  fontSize: 12,
+  fontWeight: '900' as const,
+  color: palette.textSoft,
+};
+
+const typeFilterRowStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  justifyContent: 'space-between' as const,
-  gap: 10,
+  gap: 8,
+};
+
+const typeFilterScrollStyle = {
+  flex: 1,
+  minWidth: 0,
 };
 
 const viewSegmentStyle = {
-  flex: 1,
   minHeight: 34,
   borderRadius: 12,
   backgroundColor: palette.surfaceMuted,
@@ -363,9 +356,9 @@ const activeFilterLabelStyle = {
 const activeFilterPillStyle = {
   minHeight: 28,
   borderRadius: 999,
-  backgroundColor: '#f0f9ff',
+  backgroundColor: palette.brandTint,
   borderWidth: 1,
-  borderColor: '#bae6fd',
+  borderColor: '#99f6e4',
   paddingHorizontal: 9,
   justifyContent: 'center' as const,
 };

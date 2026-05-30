@@ -209,7 +209,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了位置/收纳容器和物品，类别和状态不会一起批量修改。
+                混合选择了位置/收纳和物品，类别和状态不会一起批量修改。
               </div>
             )}
 

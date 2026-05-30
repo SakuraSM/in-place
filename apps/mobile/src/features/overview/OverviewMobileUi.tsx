@@ -1,16 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
-import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
+import { itemsApi } from '@/shared/api/mobileClient';
+import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
+import { LocationHierarchyPicker } from '@/features/home/LocationHierarchyPicker';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
-import { buildMobileItemPath, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
-
-const LOCATION_TREE_INDENT_WIDTH = 18;
-const LOCATION_TREE_MAX_DEPTH = 5;
+import { formatMobileLocationPath, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 
 export function FilterChip({
   active,
@@ -33,15 +35,46 @@ export function FilterChip({
   );
 }
 
-export function ResultRow({ item, path }: { item: Item; path: string }) {
+interface ResultRowProps {
+  item: Item;
+  path: string;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelected?: (itemId: string) => void;
+}
+
+export function ResultRow({ item, path, selectionMode = false, selected = false, onToggleSelected }: ResultRowProps) {
   const imageUri = resolveInventoryImageUri(item.images[0]);
+  const handlePress = () => {
+    if (selectionMode) {
+      onToggleSelected?.(item.id);
+      return;
+    }
+
+    router.push(item.type === 'container' ? resolveMobileContainerBrowseHref(item) : resolveMobileDetailHref(item));
+  };
+
+  const handleLongPress = () => {
+    if (!selectionMode && item.type === 'container') {
+      router.push(resolveMobileDetailHref(item));
+    }
+  };
+
   return (
-    <Pressable onPress={() => router.push(resolveMobileDetailHref(item))} style={resultRowStyle}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={selectionMode ? `${selected ? '取消选择' : '选择'}${item.name}` : `查看${item.name}`}
+      accessibilityState={selectionMode ? { selected } : undefined}
+      delayLongPress={500}
+      onLongPress={handleLongPress}
+      onPress={handlePress}
+      style={[resultRowStyle, selected ? resultRowSelectedStyle : null]}
+    >
       <View style={resultThumbStyle}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} resizeMode="cover" style={resultThumbImageStyle} />
         ) : (
-          <Ionicons name={item.type === 'item' ? 'cube-outline' : isLocationItem(item) ? 'location-outline' : 'archive-outline'} size={22} color={palette.textSoft} />
+          <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="md" />
         )}
       </View>
       <View style={resultTextStyle}>
@@ -57,95 +90,96 @@ export function ResultRow({ item, path }: { item: Item; path: string }) {
           </View>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={palette.textSoft} />
+      {selectionMode ? (
+        <View style={[selectionDotStyle, selected ? selectionDotActiveStyle : null]}>
+          {selected ? <Ionicons name="checkmark" size={14} color="#ffffff" /> : null}
+        </View>
+      ) : (
+        <Ionicons name="chevron-forward" size={20} color={palette.textSoft} />
+      )}
     </Pressable>
   );
 }
 
 export function LocationFilterSheet({
   visible,
-  locationNodes,
-  itemMap,
+  userId,
   selectedLocationId,
   onClose,
   onSelect,
 }: {
   visible: boolean;
-  locationNodes: Item[];
-  itemMap: Map<string, Item>;
+  userId?: string;
   selectedLocationId: string | null;
   onClose: () => void;
   onSelect: (locationId: string | null) => void;
 }) {
-  const treeRows = buildLocationTreeRows(locationNodes, itemMap);
+  const [currentParentId, setCurrentParentId] = useState<string | null>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
+
+  const selectedPathQuery = useQuery({
+    queryKey: ['mobile', 'overview-location-filter-path', selectedLocationId],
+    enabled: visible && Boolean(selectedLocationId),
+    queryFn: async () => {
+      const ancestors = await itemsApi.fetchAncestors(selectedLocationId!);
+      return formatMobileLocationPath(ancestors);
+    },
+  });
+
+  const currentContainersQuery = useQuery({
+    queryKey: ['mobile', 'overview-location-filter-children', userId, currentParentId],
+    enabled: visible && Boolean(userId),
+    queryFn: async () => {
+      const children = await itemsApi.fetchChildren(currentParentId, userId!);
+      return children.filter((item) => item.type === 'container');
+    },
+  });
+
+  useEffect(() => {
+    if (!visible) {
+      setCurrentParentId(null);
+      setBreadcrumbs([]);
+    }
+  }, [visible]);
+
+  const selectedParentPath = selectedLocationId
+    ? selectedPathQuery.data ?? '加载位置...'
+    : '全部位置/收纳';
+
+  const handleNavigate = (index: number) => {
+    if (index < 0) {
+      setBreadcrumbs([]);
+      setCurrentParentId(null);
+      return;
+    }
+
+    const target = breadcrumbs[index];
+    setBreadcrumbs((current) => current.slice(0, index + 1));
+    setCurrentParentId(target.id);
+  };
 
   return (
     <BottomSheet visible={visible} title="按位置筛选" onClose={onClose}>
-      <Pressable onPress={() => onSelect(null)} style={[sheetOptionStyle, !selectedLocationId ? sheetOptionActiveStyle : null]}>
-        <Text style={sheetOptionTextStyle}>全部位置/收纳容器</Text>
-        {!selectedLocationId ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
-      </Pressable>
-      {treeRows.map((row) => {
-        const active = selectedLocationId === row.node.id;
-        const indent = Math.min(row.depth, LOCATION_TREE_MAX_DEPTH) * LOCATION_TREE_INDENT_WIDTH;
-        return (
-          <Pressable
-            key={row.node.id}
-            onPress={() => onSelect(row.node.id)}
-            style={[sheetOptionStyle, active ? sheetOptionActiveStyle : null, { paddingLeft: 14 + indent }]}
-          >
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={treeOptionTitleLineStyle}>
-                <Ionicons
-                  name={isLocationItem(row.node) ? 'location-outline' : 'cube-outline'}
-                  size={14}
-                  color={palette.textSoft}
-                />
-                <Text numberOfLines={1} style={sheetOptionTextStyle}>{row.node.name}</Text>
-                <Text style={treeOptionTypePillStyle}>{getContainerTypeLabel(row.node)}</Text>
-              </View>
-              {row.path ? <Text numberOfLines={1} style={sheetOptionMetaStyle}>{row.path}</Text> : null}
-            </View>
-            {active ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
-          </Pressable>
-        );
-      })}
+      <LocationHierarchyPicker
+        breadcrumbs={breadcrumbs}
+        containers={currentContainersQuery.data ?? []}
+        currentParentId={currentParentId}
+        selectedParentId={selectedLocationId}
+        selectedParentPath={selectedParentPath}
+        isLoading={currentContainersQuery.isLoading}
+        emptyText="暂无下级位置/收纳"
+        showSelectedSummary={false}
+        rootSelectLabel="全部位置/收纳"
+        currentSelectLabel="筛选此位置"
+        onSelect={onSelect}
+        onNavigate={handleNavigate}
+        onDrillDown={(container) => {
+          setBreadcrumbs((current) => [...current, container]);
+          setCurrentParentId(container.id);
+        }}
+      />
     </BottomSheet>
   );
-}
-
-function buildLocationTreeRows(locationNodes: Item[], itemMap: Map<string, Item>) {
-  const locationNodeMap = new Map(locationNodes.map((locationNode) => [locationNode.id, locationNode]));
-  const childrenMap = new Map<string | null, Item[]>();
-
-  for (const locationNode of locationNodes) {
-    const parentId = locationNode.parent_id && locationNodeMap.has(locationNode.parent_id) ? locationNode.parent_id : null;
-    const siblings = childrenMap.get(parentId) ?? [];
-    siblings.push(locationNode);
-    childrenMap.set(parentId, siblings);
-  }
-
-  for (const siblings of childrenMap.values()) {
-    siblings.sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'));
-  }
-
-  const rows: { node: Item; depth: number; path: string }[] = [];
-  const visited = new Set<string>();
-
-  const appendRows = (parentId: string | null, depth: number) => {
-    for (const locationNode of childrenMap.get(parentId) ?? []) {
-      if (visited.has(locationNode.id)) {
-        continue;
-      }
-
-      visited.add(locationNode.id);
-      rows.push({ node: locationNode, depth, path: buildMobileItemPath(locationNode, itemMap) });
-      appendRows(locationNode.id, depth + 1);
-    }
-  };
-
-  appendRows(null, 0);
-  return rows;
 }
 
 export function TagFilterSheet({
@@ -213,6 +247,32 @@ export function BottomSheet({ visible, title, children, onClose }: { visible: bo
 
 export const screenContentStyle = { paddingHorizontal: 16, gap: 8 };
 export const pageTitleStyle = { fontSize: 28, lineHeight: 34, fontWeight: '900' as const, color: palette.text, paddingTop: 2 };
+export const pageTitleRowStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'space-between' as const,
+  gap: 12,
+};
+export const selectionToggleStyle = {
+  height: 38,
+  borderRadius: 14,
+  paddingHorizontal: 12,
+  backgroundColor: palette.canvasStrong,
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
+};
+export const selectionToggleActiveStyle = {
+  backgroundColor: palette.brand,
+};
+export const selectionToggleTextStyle = {
+  fontSize: 13,
+  fontWeight: '800' as const,
+  color: palette.textMuted,
+};
+export const selectionToggleActiveTextStyle = {
+  color: '#ffffff',
+};
 export const searchBoxStyle = {
   minHeight: 44,
   borderRadius: 15,
@@ -250,7 +310,7 @@ const chipStyle = {
   minHeight: 30,
   maxWidth: '100%' as const,
   borderRadius: 999,
-  backgroundColor: '#eef2f7',
+  backgroundColor: palette.canvasStrong,
   paddingHorizontal: 9,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
@@ -272,10 +332,14 @@ const resultRowStyle = {
   gap: 10,
   ...shadows.sm,
 };
+const resultRowSelectedStyle = {
+  borderColor: palette.brand,
+  backgroundColor: palette.brandTint,
+};
 const resultThumbStyle = {
   width: 46,
   height: 46,
-  borderRadius: 13,
+  borderRadius: 16,
   backgroundColor: palette.surfaceMuted,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -297,6 +361,20 @@ const containerPillStyle = {
   fontWeight: '800' as const,
   color: palette.brandStrong,
 };
+const selectionDotStyle = {
+  width: 24,
+  height: 24,
+  borderRadius: 999,
+  borderWidth: 1,
+  borderColor: palette.border,
+  backgroundColor: palette.surface,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+const selectionDotActiveStyle = {
+  borderColor: palette.brand,
+  backgroundColor: palette.brand,
+};
 const sheetRootStyle = { flex: 1, justifyContent: 'flex-end' as const };
 const sheetBackdropStyle = {
   position: 'absolute' as const,
@@ -307,7 +385,7 @@ const sheetBackdropStyle = {
   backgroundColor: 'rgba(15, 23, 42, 0.28)',
 };
 const sheetStyle = {
-  maxHeight: '76%' as const,
+  maxHeight: '82%' as const,
   borderTopLeftRadius: 28,
   borderTopRightRadius: 28,
   backgroundColor: palette.surface,
@@ -318,12 +396,13 @@ const sheetHeaderStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'space-between' as const,
-  paddingHorizontal: 18,
-  paddingVertical: 12,
+  paddingHorizontal: 20,
+  paddingTop: 10,
+  paddingBottom: 14,
   borderBottomWidth: 1,
   borderBottomColor: palette.borderSoft,
 };
-const sheetTitleStyle = { fontSize: 18, fontWeight: '900' as const, color: palette.text };
+const sheetTitleStyle = { fontSize: 21, lineHeight: 27, fontWeight: '900' as const, color: palette.text };
 const sheetCloseStyle = {
   width: 34,
   height: 34,
@@ -332,7 +411,7 @@ const sheetCloseStyle = {
   justifyContent: 'center' as const,
   backgroundColor: palette.surfaceMuted,
 };
-const sheetContentStyle = { padding: 14, gap: 8 };
+const sheetContentStyle = { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28, gap: 10 };
 const sheetOptionStyle = {
   minHeight: 46,
   borderRadius: 13,
@@ -343,28 +422,11 @@ const sheetOptionStyle = {
   justifyContent: 'space-between' as const,
   gap: 10,
 };
-const sheetOptionActiveStyle = { backgroundColor: '#f0f9ff', borderWidth: 1, borderColor: '#bae6fd' };
+const sheetOptionActiveStyle = { backgroundColor: palette.brandTint, borderWidth: 1, borderColor: '#99f6e4' };
 const sheetOptionTextStyle = { flex: 1, fontSize: 14, fontWeight: '800' as const, color: palette.text };
-const sheetOptionMetaStyle = { marginTop: 2, fontSize: 12, color: palette.textSoft };
-const treeOptionTitleLineStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 6,
-};
-const treeOptionTypePillStyle = {
-  flexShrink: 0,
-  overflow: 'hidden' as const,
-  borderRadius: 999,
-  backgroundColor: '#e0f2fe',
-  paddingHorizontal: 7,
-  paddingVertical: 3,
-  color: palette.brandStrong,
-  fontSize: 11,
-  fontWeight: '800' as const,
-};
 const sheetOptionCountStyle = {
   borderRadius: 999,
-  backgroundColor: '#e2e8f0',
+  backgroundColor: palette.canvasStrong,
   paddingHorizontal: 8,
   paddingVertical: 3,
   fontSize: 12,

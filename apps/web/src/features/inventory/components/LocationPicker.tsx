@@ -131,7 +131,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : containers.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置或收纳容器</p>
+              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置或收纳</p>
             ) : (
               containers.map((container, i) => (
                 <motion.div

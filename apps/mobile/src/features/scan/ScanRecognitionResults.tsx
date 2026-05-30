@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'reac
 import type { AIRecognitionResult } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import type { NormalizedCropBox } from './scanImageCrop';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { palette } from '@/shared/ui/theme';
 
 export interface DraftRecognition {
@@ -114,7 +115,7 @@ function DraftRecognitionCard({
           {draft.imageUri ? (
             <Image source={{ uri: draft.imageUri }} style={thumbImageStyle} />
           ) : (
-            <Ionicons name={draft.result.type === 'container' ? 'cube-outline' : 'pricetag-outline'} size={28} color={palette.textSoft} />
+            <InventoryIcon type={draft.result.type ?? 'item'} size="lg" />
           )}
         </View>
 
@@ -125,7 +126,7 @@ function DraftRecognitionCard({
               <Text style={typeBadgeTextStyle}>{typeLabel}</Text>
             </View>
           </View>
-          <Text numberOfLines={2} style={descriptionStyle}>{draft.result.description || '暂无描述'}</Text>
+          <Text numberOfLines={2} style={descriptionStyle}>{draft.result.description || '暂无说明'}</Text>
           <View style={chipRowStyle}>
             {draft.result.category ? <InfoChip label={draft.result.category} tone="neutral" /> : null}
             {draft.result.brand ? <InfoChip label={draft.result.brand} tone="neutral" /> : null}
@@ -247,7 +248,7 @@ const cardStyle = {
 };
 
 const activeCardStyle = {
-  borderColor: '#7dd3fc',
+  borderColor: '#99f6e4',
   backgroundColor: palette.brandTint,
 };
 
@@ -329,7 +330,7 @@ const chipStyle = {
 };
 
 const brandChipStyle = {
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
 };
 
 const chipTextStyle = {
@@ -339,7 +340,7 @@ const chipTextStyle = {
 };
 
 const brandChipTextStyle = {
-  color: '#0284c7',
+  color: palette.brandStrong,
 };
 
 const rightRailStyle = {
@@ -363,7 +364,7 @@ const checkActiveStyle = {
 };
 
 const stateTextStyle = {
-  color: '#0369a1',
+  color: palette.brandStrong,
   fontSize: 11,
   fontWeight: '700' as const,
 };

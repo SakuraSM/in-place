@@ -766,7 +766,7 @@ export default function HomePage() {
       {bulkDeletePending && (
         <ConfirmDialog
           title="确认批量删除"
-          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含位置或收纳容器会同时删除其下内容。`}
+          message={`确定要删除选中的 ${selectedIds.length} 项吗？此操作不可撤销，若包含位置或收纳会同时删除其下内容。`}
           confirmLabel="批量删除"
           danger
           onConfirm={handleBulkDelete}

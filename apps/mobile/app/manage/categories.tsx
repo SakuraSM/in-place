@@ -184,9 +184,9 @@ const chipStyle = {
   paddingHorizontal: 12,
   paddingVertical: 7,
 };
-const activeChipStyle = { backgroundColor: '#e0f2fe', borderColor: '#7dd3fc' };
+const activeChipStyle = { backgroundColor: palette.brandTint, borderColor: '#99f6e4' };
 const chipTextStyle = { color: palette.textMuted, fontSize: 13, fontWeight: '600' as const };
-const activeChipTextStyle = { color: '#0369a1', fontSize: 13, fontWeight: '700' as const };
+const activeChipTextStyle = { color: palette.brandStrong, fontSize: 13, fontWeight: '700' as const };
 const inputStyle = {
   backgroundColor: palette.surfaceMuted,
   borderRadius: 14,

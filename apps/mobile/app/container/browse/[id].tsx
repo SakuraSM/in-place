@@ -6,10 +6,11 @@ import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
-import { getContainerTypeLabel } from '@/shared/lib/location';
+import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ActionButtonRow } from '@/shared/ui/ActionButtonRow';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -45,7 +46,7 @@ export default function ContainerBrowseScreen() {
   }
 
   if (!container || container.type !== 'container') {
-    return <Screen><StateBlock title="未找到该位置或收纳容器" body={`当前占位 ID：${id}`} /></Screen>;
+    return <Screen><StateBlock title="未找到该位置或收纳" body="该内容不存在或已删除" /></Screen>;
   }
 
   const children = childrenQuery.data ?? [];
@@ -61,8 +62,13 @@ export default function ContainerBrowseScreen() {
         title={container.name}
         subtitle={`${containerLabel}内容 · ${children.length} 项`}
         accessory={(
-          <Pressable onPress={() => router.push(resolveMobileDetailHref(container))} style={iconActionStyle}>
-            <Ionicons name="document-text-outline" size={18} color={palette.textMuted} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="查看详情"
+            onPress={() => router.push(resolveMobileDetailHref(container))}
+            style={iconActionStyle}
+          >
+            <Ionicons name="information-circle-outline" size={20} color={palette.textMuted} />
           </Pressable>
         )}
       />
@@ -75,7 +81,7 @@ export default function ContainerBrowseScreen() {
         ]}
       />
 
-      <SectionCard title="收纳位置" subtitle="短按进入，长按详情" delay={60} density="dense" headerMode="compact">
+      <SectionCard title="收纳位置" delay={60} density="dense" headerMode="compact">
         <View style={pathRailStyle}>
           {pathItems.map((pathItem, index) => (
             <View key={pathItem.id} style={pathNodeStyle}>
@@ -90,35 +96,37 @@ export default function ContainerBrowseScreen() {
         </View>
       </SectionCard>
 
-      <ContentSection title={`位置/收纳容器 (${containers.length})`} items={containers} emptyText={`这个${containerLabel}下暂无下级位置或收纳容器。`} />
-      <ContentSection title={`物品 (${leafItems.length})`} items={leafItems} emptyText={`这个${containerLabel}下暂无物品。`} />
+      <ContentSection title={`位置/收纳 (${containers.length})`} items={containers} />
+      <ContentSection title={`物品 (${leafItems.length})`} items={leafItems} />
     </Screen>
   );
 }
-function ContentSection({ title, items, emptyText }: { title: string; items: Item[]; emptyText: string }) {
+
+function ContentSection({ title, items }: { title: string; items: Item[] }) {
+  if (items.length === 0) {
+    return null;
+  }
+
   return (
     <SectionCard title={title} delay={110} density="dense" headerMode="compact">
-      {items.length === 0 ? (
-        <View style={emptyBoxStyle}>
-          <Text style={emptyTextStyle}>{emptyText}</Text>
-        </View>
-      ) : (
-        <View style={contentListStyle}>
-          {items.map((item) => <ContentRow key={item.id} item={item} />)}
-        </View>
-      )}
+      <View style={contentListStyle}>
+        {items.map((item) => <ContentRow key={item.id} item={item} />)}
+      </View>
     </SectionCard>
   );
 }
 
 function ContentRow({ item }: { item: Item }) {
   const imageUri = resolveInventoryImageUri(item.images[0]);
+  const icon = imageUri
+    ? <Image source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} />
+    : <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="sm" />;
   const row = (
     <CompactListRow
       title={item.name}
       subtitle={`${item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label}${item.category ? ` · ${item.category}` : ''}`}
-      icon={imageUri ? <Image source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} /> : undefined}
-      iconName={imageUri ? undefined : item.type === 'container' ? 'business-outline' : 'cube-outline'}
+      icon={icon}
+      iconFramed={Boolean(imageUri)}
       right={(
         <View style={rowRightStyle}>
           {item.type === 'item' ? <StatusBadge status={item.status} /> : null}
@@ -151,7 +159,7 @@ const iconActionStyle = {
   width: 40,
   height: 40,
   borderRadius: 14,
-  backgroundColor: '#f1f5f9',
+  backgroundColor: palette.canvasStrong,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
@@ -203,7 +211,7 @@ const thumbFrameStyle = {
   width: 48,
   height: 48,
   borderRadius: 16,
-  backgroundColor: '#eef9fd',
+  backgroundColor: palette.canvasStrong,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   overflow: 'hidden' as const,
@@ -236,22 +244,5 @@ const rowTitleStyle = {
 const rowMetaStyle = {
   fontSize: 13,
   lineHeight: 18,
-  color: palette.textSoft,
-};
-
-const emptyBoxStyle = {
-  borderRadius: 18,
-  borderWidth: 1,
-  borderStyle: 'dashed' as const,
-  borderColor: palette.border,
-  backgroundColor: palette.surfaceMuted,
-  paddingVertical: 22,
-  paddingHorizontal: 14,
-};
-
-const emptyTextStyle = {
-  textAlign: 'center' as const,
-  fontSize: 14,
-  lineHeight: 20,
   color: palette.textSoft,
 };

@@ -4,7 +4,7 @@
     "description": "家庭物品管理系统",
     "slug": "in-place",
     "scheme": "inplace",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "runtimeVersion": {
@@ -26,14 +26,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.inplace.mobile",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.inplace.mobile",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES"

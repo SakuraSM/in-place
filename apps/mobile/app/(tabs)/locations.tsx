@@ -14,6 +14,7 @@ import { SectionCard } from '@/shared/ui/SectionCard';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { StateBlock } from '@/shared/ui/StateBlock';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { palette } from '@/shared/ui/theme';
 import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { buildChildrenMap, countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
@@ -22,7 +23,7 @@ const PAGE_SIZE = 100;
 
 const LOCATION_STAT_ITEMS = [
   { key: 'locations', label: '位置' },
-  { key: 'containers', label: '收纳容器' },
+  { key: 'containers', label: '收纳' },
   { key: 'items', label: '物品' },
   { key: 'total', label: '总数' },
 ] as const;
@@ -98,7 +99,7 @@ export default function LocationsTab() {
 
       {locationItems.length === 0 ? (
         <SectionCard title="暂无位置" delay={70} density="compact">
-          <Text style={bodyStyle}>新建收纳容器时可设为位置，用来表示卧室、客厅、仓库等空间。</Text>
+          <Text style={bodyStyle}>新建收纳时可设为位置，用来表示卧室、客厅、仓库等空间。</Text>
         </SectionCard>
       ) : (
         <>
@@ -118,7 +119,7 @@ export default function LocationsTab() {
 
           {selectedLocation ? (
             <>
-              <SectionCard title={selectedLocation.name} subtitle={selectedLocation.description || '当前选择的位置'} delay={120} density="dense" headerMode="compact">
+              <SectionCard title={selectedLocation.name} subtitle={selectedLocation.description || '已选择的位置'} delay={120} density="dense" headerMode="compact">
                 <MetricGrid
                   columns={4}
                   dense
@@ -130,9 +131,9 @@ export default function LocationsTab() {
                 />
               </SectionCard>
 
-              <SectionCard title="当前位置内容" subtitle={`${directChildren.length} 项`} delay={170} density="dense" headerMode="compact">
+              <SectionCard title="位置内容" subtitle={`${directChildren.length} 项`} delay={170} density="dense" headerMode="compact">
                 {directChildren.length === 0 ? (
-                  <Text style={bodyStyle}>这个位置下还没有物品或收纳容器。</Text>
+                  <Text style={bodyStyle}>这个位置下还没有物品或收纳。</Text>
                 ) : (
                   directChildren.map((child) => <DirectChildRow key={child.id} item={child} />)
                 )}
@@ -158,6 +159,8 @@ function DirectChildRow({ item }: { item: Item }) {
         <CompactListRow
           title={item.name}
           subtitle={`${item.type === 'item' ? ITEM_TYPE_PRESENTATION.item.label : getContainerTypeLabel(item)}${item.category ? ` · ${item.category}` : ''}`}
+          icon={<InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="sm" />}
+          iconFramed={false}
           meta="详情"
           chevron
         />

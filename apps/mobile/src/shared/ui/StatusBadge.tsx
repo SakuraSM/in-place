@@ -37,7 +37,7 @@ const STATUS_TONE_STYLES: Record<PresentationTone, StatusToneStyle> = {
   },
   brand: {
     backgroundColor: palette.brandTint,
-    borderColor: '#bae6fd',
+    borderColor: '#99f6e4',
     textColor: palette.brandStrong,
     dotColor: palette.brand,
   },

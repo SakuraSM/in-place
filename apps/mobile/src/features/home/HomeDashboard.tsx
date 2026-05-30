@@ -4,10 +4,11 @@ import type { ActivityLog, Category, Item, ItemStats } from '@inplace/domain';
 import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { Image, Pressable, Text, View } from 'react-native';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
-import { countLocationContents, getContainerTypeLabel } from '@/shared/lib/location';
+import { countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
+import { InventoryIcon, InventoryThumbFallback } from '@/shared/ui/InventoryIcon';
 import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
@@ -35,10 +36,10 @@ const RECENT_SECTION_LIMIT = 3;
 const HOME_INVENTORY_PREVIEW_LIMIT = 4;
 
 const STAT_ITEMS = [
-  { label: '总物品', key: 'items', icon: 'cube-outline', color: '#0ea5e9', backgroundColor: '#eff9ff' },
-  { label: '位置/收纳', key: 'containers', icon: 'cube', color: '#14b8a6', backgroundColor: '#effdf9' },
-  { label: '借出中', key: 'borrowed', icon: 'time-outline', color: '#f59e0b', backgroundColor: '#fff7e6' },
-  { label: '总计', key: 'total', icon: 'shield-checkmark-outline', color: '#22c55e', backgroundColor: '#ecfdf3' },
+  { label: '总物品', key: 'items', icon: 'cube' },
+  { label: '位置/收纳', key: 'containers', icon: 'file-tray-stacked' },
+  { label: '借出中', key: 'borrowed', icon: 'time-outline' },
+  { label: '总计', key: 'total', icon: 'shield-checkmark-outline' },
 ] as const;
 
 export function HomeDashboard({
@@ -100,7 +101,7 @@ export function HomeDashboard({
         <>
           <DashboardSection delay={70}>
             <MetricGrid
-              columns={4}
+              columns={2}
               dense
               items={STAT_ITEMS.map((item) => ({
                 key: item.key,
@@ -140,7 +141,7 @@ export function HomeDashboard({
       {selectionMode || viewMode === 'type' ? (
         <>
           <InventoryGroup
-            title={`位置/收纳容器 (${rootContainers.length})`}
+            title={`位置/收纳 (${rootContainers.length})`}
             items={rootContainers}
             allItems={allItems}
             selectionMode={selectionMode}
@@ -247,7 +248,8 @@ function RecentItemRow({ item, path }: { item: Item; path: string }) {
       title={item.name}
       subtitle={`${item.type === 'item' ? '物品' : getContainerTypeLabel(item)} · ${formatShortDateTime(item.created_at)}`}
       caption={path || undefined}
-      iconName={item.type === 'container' ? 'cube-outline' : 'pricetag-outline'}
+      icon={<InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="sm" />}
+      iconFramed={false}
       chevron
     />
   );
@@ -371,7 +373,12 @@ function InventoryTile({
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={tileImageStyle} resizeMode="cover" />
         ) : (
-          <Ionicons name={item.type === 'container' ? 'business-outline' : 'cube-outline'} size={28} color={palette.brand} />
+          <InventoryThumbFallback
+            type={item.type}
+            isLocation={isLocationItem(item)}
+            size="xl"
+            style={tileFallbackIconStyle}
+          />
         )}
       </View>
       <Text numberOfLines={1} style={tileTitleStyle}>{item.name}</Text>
@@ -422,9 +429,7 @@ function Thumb({ item, imageUri }: { item: Item; imageUri: string | null }) {
   }
 
   return (
-    <View style={thumbFallbackStyle}>
-      <Ionicons name={item.type === 'item' ? 'cube-outline' : 'cube'} size={18} color={item.type === 'item' ? '#f59e0b' : '#0ea5e9'} />
-    </View>
+    <InventoryThumbFallback type={item.type} isLocation={isLocationItem(item)} size="md" />
   );
 }
 
@@ -458,7 +463,7 @@ function groupRootItems({
 
   const uncategorizedContainers = rootContainers.filter((item) => !containerCategories.some((category) => category.name === item.category));
   if (uncategorizedContainers.length > 0) {
-    groups.push({ title: `其他位置/收纳容器 (${uncategorizedContainers.length})`, items: uncategorizedContainers });
+    groups.push({ title: `其他位置/收纳 (${uncategorizedContainers.length})`, items: uncategorizedContainers });
   }
 
   for (const category of itemCategories) {
@@ -508,7 +513,7 @@ const headerActionStyle = {
   height: 40,
   borderRadius: 14,
   paddingHorizontal: 12,
-  backgroundColor: '#f1f5f9',
+  backgroundColor: palette.canvasStrong,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 6,
@@ -532,7 +537,7 @@ const viewToggleStyle = {
   height: 40,
   borderRadius: 14,
   padding: 4,
-  backgroundColor: '#f1f5f9',
+  backgroundColor: palette.canvasStrong,
   flexDirection: 'row' as const,
   gap: 2,
 };
@@ -566,8 +571,8 @@ const modeButtonActiveTextStyle = {
 const selectionNoticeStyle = {
   borderRadius: 18,
   borderWidth: 1,
-  borderColor: '#bae6fd',
-  backgroundColor: '#e0f2fe',
+  borderColor: '#99f6e4',
+  backgroundColor: palette.brandTint,
   padding: 12,
   gap: 2,
 };
@@ -667,7 +672,7 @@ const thumbFallbackStyle = {
   width: 46,
   height: 46,
   borderRadius: 16,
-  backgroundColor: '#f0f9ff',
+  backgroundColor: palette.brandTint,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
@@ -775,16 +780,22 @@ const tileStyle = {
 
 const tileSelectedStyle = {
   borderColor: palette.brand,
-  backgroundColor: '#f0f9ff',
+  backgroundColor: palette.brandTint,
 };
 
 const tilePreviewStyle = {
   height: 142,
   borderRadius: 20,
-  backgroundColor: '#eef9fd',
+  backgroundColor: palette.canvasStrong,
   overflow: 'hidden' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
+};
+
+const tileFallbackIconStyle = {
+  width: '100%' as const,
+  height: '100%' as const,
+  borderRadius: 20,
 };
 
 const tileImageStyle = {
@@ -811,7 +822,7 @@ const tileMetaTextStyle = {
 
 const tileTypePillStyle = {
   borderRadius: 999,
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
   paddingHorizontal: 8,
   paddingVertical: 3,
   fontSize: 12,

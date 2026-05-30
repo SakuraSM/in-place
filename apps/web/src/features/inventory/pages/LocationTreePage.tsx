@@ -194,7 +194,7 @@ export default function LocationTreePage() {
 
                     {directChildren.length === 0 ? (
                       <div className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
-                        这个位置下还没有物品或收纳容器。
+                        这个位置下还没有物品或收纳。
                       </div>
                     ) : (
                       <div className="space-y-2">

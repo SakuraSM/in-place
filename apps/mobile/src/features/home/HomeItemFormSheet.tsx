@@ -200,7 +200,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
   const categories = categoriesQuery.data ?? [];
   const isBusy = mutation.isPending || uploadingImage;
-  const title = `新增${draft.type === 'container' ? (draft.isLocation ? '位置' : '收纳容器') : '物品'}`;
+  const title = `新增${draft.type === 'container' ? (draft.isLocation ? '位置' : '收纳') : '物品'}`;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
@@ -329,13 +329,13 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
 
             <Field label="标签">
               {availableTags.length > 0 ? (
-                <View style={chipWrapStyle}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tagRailStyle}>
                   {availableTags.slice(0, 12).map((tag) => (
                     <Pressable key={tag} onPress={() => updateDraft('tags', mergeTagInput(draft.tags, tag))} style={chipStyle}>
                       <Text style={chipTextStyle}>{tag}</Text>
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               ) : null}
               <TextInput
                 value={draft.tags}
@@ -362,7 +362,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
                     ))}
                   </ScrollView>
                 ) : (
-                  <Text style={emptyHintStyle}>当前还没有图片。</Text>
+                  <Text style={emptyHintStyle}>暂无图片</Text>
                 )}
               </View>
             </Field>
@@ -627,6 +627,11 @@ const chipWrapStyle = {
   gap: 8,
 };
 
+const tagRailStyle = {
+  gap: 8,
+  paddingRight: 6,
+};
+
 const chipStyle = {
   borderRadius: 999,
   borderWidth: 1,
@@ -637,7 +642,7 @@ const chipStyle = {
 };
 
 const activeChipStyle = {
-  borderColor: '#7dd3fc',
+  borderColor: '#99f6e4',
   backgroundColor: palette.brandTint,
 };
 
@@ -667,8 +672,8 @@ const switchRowStyle = {
 };
 
 const switchRowActiveStyle = {
-  borderColor: '#bae6fd',
-  backgroundColor: '#f0f9ff',
+  borderColor: '#99f6e4',
+  backgroundColor: palette.brandTint,
 };
 
 const switchTitleStyle = {
