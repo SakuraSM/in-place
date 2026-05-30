@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
 import { activityApi, categoriesApi, itemsApi } from '@/shared/api/mobileClient';
+import { BulkActionBar } from '@/shared/ui/BulkActionBar';
+import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette, shadows } from '@/shared/ui/theme';
@@ -33,6 +35,7 @@ export default function HomeTab() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const rootItemsQuery = useQuery({
     queryKey: ['mobile', 'home-root-items', user?.id],
@@ -119,6 +122,14 @@ export default function HomeTab() {
     setSelectionMode(false);
   };
 
+  const handleBulkDelete = async () => {
+    await itemsApi.deleteItemsBatch(selectedIds);
+    await queryClient.invalidateQueries({ queryKey: ['mobile'] });
+    setIsBulkDeleteOpen(false);
+    setSelectedIds([]);
+    setSelectionMode(false);
+  };
+
   return (
     <View style={screenRootStyle}>
       <Screen scroll contentInsetMode="page" chrome="muted" contentStyle={{ paddingBottom: 112 }}>
@@ -150,22 +161,13 @@ export default function HomeTab() {
           <Ionicons name="add" size={FLOATING_ACTION_BUTTON_ICON_SIZE} color="#ffffff" />
         </Pressable>
       ) : null}
-      {selectionMode && selectedIds.length > 0 ? (
-        <View style={[bulkActionBarStyle, { bottom: Math.max(insets.bottom, 10) + 14 }]}>
-          <View style={bulkActionHeaderStyle}>
-            <Text style={bulkActionTitleStyle}>已选择 {selectedIds.length} 项</Text>
-          </View>
-          <View style={bulkActionGridStyle}>
-            <Pressable onPress={() => setIsBulkEditOpen(true)} style={bulkEditButtonStyle}>
-              <Ionicons name="create-outline" size={16} color="#ffffff" />
-              <Text style={bulkEditButtonTextStyle}>批量编辑</Text>
-            </Pressable>
-            <Pressable style={bulkDeleteButtonStyle}>
-              <Ionicons name="trash-outline" size={16} color={palette.danger} />
-              <Text style={bulkDeleteButtonTextStyle}>批量删除</Text>
-            </Pressable>
-          </View>
-        </View>
+      {selectionMode ? (
+        <BulkActionBar
+          selectedCount={selectedIds.length}
+          bottom={Math.max(insets.bottom, 10) + 14}
+          onEdit={() => setIsBulkEditOpen(true)}
+          onDelete={() => setIsBulkDeleteOpen(true)}
+        />
       ) : null}
       <HomeItemFormSheet visible={isAddSheetOpen} onClose={() => setIsAddSheetOpen(false)} />
       <HomeBulkEditSheet
@@ -175,6 +177,15 @@ export default function HomeTab() {
         categories={categoriesQuery.data ?? []}
         onClose={() => setIsBulkEditOpen(false)}
         onSave={handleBulkSave}
+      />
+      <ConfirmDialog
+        visible={isBulkDeleteOpen}
+        title="确认批量删除"
+        message={`删除已选择的 ${selectedIds.length} 项？下级内容也会一并删除。`}
+        confirmLabel="删除"
+        danger
+        onCancel={() => setIsBulkDeleteOpen(false)}
+        onConfirm={() => void handleBulkDelete()}
       />
     </View>
   );
@@ -249,68 +260,4 @@ const floatingButtonStyle = {
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   ...shadows.lg,
-};
-
-const bulkActionBarStyle = {
-  position: 'absolute' as const,
-  left: 16,
-  right: 16,
-  borderRadius: 24,
-  borderWidth: 1,
-  borderColor: palette.border,
-  backgroundColor: 'rgba(255, 255, 255, 0.96)',
-  padding: 12,
-  ...shadows.lg,
-};
-
-const bulkActionHeaderStyle = {
-  paddingHorizontal: 4,
-  paddingBottom: 10,
-};
-
-const bulkActionTitleStyle = {
-  fontSize: 14,
-  fontWeight: '800' as const,
-  color: palette.text,
-};
-
-const bulkActionGridStyle = {
-  flexDirection: 'row' as const,
-  gap: 10,
-};
-
-const bulkEditButtonStyle = {
-  flex: 1,
-  minHeight: 46,
-  borderRadius: 16,
-  backgroundColor: palette.brand,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  gap: 6,
-};
-
-const bulkEditButtonTextStyle = {
-  fontSize: 14,
-  fontWeight: '800' as const,
-  color: '#ffffff',
-};
-
-const bulkDeleteButtonStyle = {
-  flex: 1,
-  minHeight: 46,
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: '#fecdd3',
-  backgroundColor: '#fff1f2',
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  gap: 6,
-};
-
-const bulkDeleteButtonTextStyle = {
-  fontSize: 14,
-  fontWeight: '800' as const,
-  color: palette.danger,
 };

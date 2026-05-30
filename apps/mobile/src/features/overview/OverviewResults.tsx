@@ -7,9 +7,19 @@ interface HierarchyResultGroupProps {
   title: string;
   items: Item[];
   itemMap: Map<string, Item>;
+  selectionMode?: boolean;
+  selectedIds?: string[];
+  onToggleSelected?: (itemId: string) => void;
 }
 
-export function HierarchyResultGroup({ title, items, itemMap }: HierarchyResultGroupProps) {
+export function HierarchyResultGroup({
+  title,
+  items,
+  itemMap,
+  selectionMode = false,
+  selectedIds = [],
+  onToggleSelected,
+}: HierarchyResultGroupProps) {
   if (items.length === 0) {
     return null;
   }
@@ -18,7 +28,14 @@ export function HierarchyResultGroup({ title, items, itemMap }: HierarchyResultG
     <View style={resultListStyle}>
       <Text style={resultSummaryStyle}>{title}</Text>
       {items.map((item) => (
-        <ResultRow key={item.id} item={item} path={buildMobileItemPath(item, itemMap)} />
+        <ResultRow
+          key={item.id}
+          item={item}
+          path={buildMobileItemPath(item, itemMap)}
+          selectionMode={selectionMode}
+          selected={selectedIds.includes(item.id)}
+          onToggleSelected={onToggleSelected}
+        />
       ))}
     </View>
   );

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,6 +21,12 @@ import { LocationSelectField } from '@/features/home/LocationSelectField';
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TYPE_OPTIONS: ItemType[] = ['item', 'container'];
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const FORM_HEADER_BACK_HIT_SLOP = {
+  top: 8,
+  right: 8,
+  bottom: 8,
+  left: 8,
+} as const;
 
 interface FormState {
   type: ItemType;
@@ -244,12 +251,23 @@ export default function ItemFormScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <Stack.Screen options={{ title: isEditing ? '编辑物品' : '新建物品', headerShown: true }} />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <BrandHeader
         variant="page"
         title={isEditing ? '编辑物品' : '新建物品'}
-        subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳容器' : '物品'}`}
+        subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳' : '物品'}`}
+        leading={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="返回"
+            hitSlop={FORM_HEADER_BACK_HIT_SLOP}
+            onPress={() => router.back()}
+            style={headerBackButtonStyle}
+          >
+            <Ionicons name="arrow-back" size={24} color={palette.text} />
+          </Pressable>
+        }
       />
 
       <SectionCard
@@ -426,7 +444,7 @@ export default function ItemFormScreen() {
                 ))}
               </ScrollView>
             ) : (
-              <Text style={emptyHintStyle}>当前还没有图片。</Text>
+              <Text style={emptyHintStyle}>暂无图片</Text>
             )}
           </View>
         </Field>
@@ -533,6 +551,17 @@ const inputStyle = {
   color: palette.text,
 };
 
+const headerBackButtonStyle = {
+  width: 34,
+  height: 34,
+  borderRadius: 12,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  backgroundColor: palette.surface,
+  borderWidth: 1,
+  borderColor: palette.borderSoft,
+};
+
 const dateGridStyle = {
   flexDirection: 'row' as const,
   gap: 8,
@@ -616,7 +645,7 @@ const chipStyle = {
 
 const activeChipStyle = {
   backgroundColor: palette.brandTint,
-  borderColor: '#7dd3fc',
+  borderColor: '#99f6e4',
 };
 
 const chipTextStyle = {

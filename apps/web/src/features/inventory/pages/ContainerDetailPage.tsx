@@ -79,7 +79,7 @@ export default function ContainerDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <Box size={48} className="text-slate-300 mb-3" />
-        <p className="text-slate-500">找不到该位置或收纳容器</p>
+        <p className="text-slate-500">找不到该位置或收纳</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-sky-500 text-sm">返回</button>
       </div>
     );

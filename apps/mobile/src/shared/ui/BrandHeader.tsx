@@ -5,6 +5,7 @@ import { palette, shadows } from './theme';
 interface BrandHeaderProps {
   title: string;
   subtitle?: string;
+  leading?: ReactNode;
   accessory?: ReactNode;
   compact?: boolean;
   variant?: 'hero' | 'page';
@@ -14,6 +15,7 @@ interface BrandHeaderProps {
 export function BrandHeader({
   title,
   subtitle,
+  leading,
   accessory,
   compact = false,
   variant,
@@ -34,6 +36,7 @@ export function BrandHeader({
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: align === 'center' ? 'center' : 'flex-start', gap: 12, flex: 1 }}>
+        {leading ? <View>{leading as never}</View> : null}
         <View
           style={{
             width: logoSize,

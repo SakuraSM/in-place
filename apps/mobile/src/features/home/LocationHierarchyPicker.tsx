@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
-import { getContainerTypeLabel } from '@/shared/lib/location';
+import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { palette } from '@/shared/ui/theme';
 
 interface LocationHierarchyPickerProps {
@@ -12,6 +13,9 @@ interface LocationHierarchyPickerProps {
   selectedParentPath: string;
   isLoading?: boolean;
   emptyText?: string;
+  showSelectedSummary?: boolean;
+  rootSelectLabel?: string;
+  currentSelectLabel?: string;
   onSelect: (parentId: string | null) => void;
   onDrillDown: (container: Item) => void;
   onNavigate: (index: number) => void;
@@ -25,16 +29,21 @@ export function LocationHierarchyPicker({
   selectedParentPath,
   isLoading = false,
   emptyText = '暂无下级位置或收纳',
+  showSelectedSummary = true,
+  rootSelectLabel = '不设置收纳位置',
+  currentSelectLabel = '放在这里',
   onSelect,
   onDrillDown,
   onNavigate,
 }: LocationHierarchyPickerProps) {
   return (
     <View style={pickerStyle}>
-      <View style={selectedSummaryStyle}>
-        <Ionicons name="location-outline" size={15} color={palette.brand} />
-        <Text numberOfLines={1} style={selectedTextStyle}>{selectedParentPath}</Text>
-      </View>
+      {showSelectedSummary ? (
+        <View style={selectedSummaryStyle}>
+          <Ionicons name="location-outline" size={15} color={palette.brand} />
+          <Text numberOfLines={1} style={selectedTextStyle}>{selectedParentPath}</Text>
+        </View>
+      ) : null}
 
       {breadcrumbs.length > 0 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={breadcrumbRailStyle}>
@@ -55,7 +64,7 @@ export function LocationHierarchyPicker({
         style={[locationRowStyle, selectedParentId === currentParentId ? selectedRowStyle : null]}
       >
         <Ionicons name="home-outline" size={16} color={palette.textSoft} />
-        <Text style={locationTextStyle}>{currentParentId ? '放在当前位置' : '不设置收纳位置'}</Text>
+        <Text style={locationTextStyle}>{currentParentId ? currentSelectLabel : rootSelectLabel}</Text>
         {selectedParentId === currentParentId ? <Ionicons name="checkmark" size={17} color={palette.brand} /> : null}
       </Pressable>
 
@@ -76,7 +85,7 @@ export function LocationHierarchyPicker({
                 selectedParentId === container.id ? selectedRowStyle : null,
               ]}
             >
-              <Ionicons name="cube-outline" size={16} color={palette.textSoft} />
+              <InventoryIcon type={container.type} isLocation={isLocationItem(container)} size="sm" />
               <Text numberOfLines={1} style={locationTextStyle}>{container.name}</Text>
               <Text style={typePillStyle}>{getContainerTypeLabel(container)}</Text>
               {selectedParentId === container.id ? <Ionicons name="checkmark" size={17} color={palette.brand} /> : null}
@@ -92,14 +101,14 @@ export function LocationHierarchyPicker({
 }
 
 const pickerStyle = {
-  gap: 8,
+  gap: 10,
 };
 
 const selectedSummaryStyle = {
   borderRadius: 14,
   borderWidth: 1,
-  borderColor: '#bae6fd',
-  backgroundColor: '#f0f9ff',
+  borderColor: '#99f6e4',
+  backgroundColor: palette.brandTint,
   paddingHorizontal: 10,
   paddingVertical: 9,
   flexDirection: 'row' as const,
@@ -126,7 +135,7 @@ const breadcrumbHomeStyle = {
   borderRadius: 999,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
 };
 
 const breadcrumbChipStyle = {
@@ -149,28 +158,29 @@ const breadcrumbTextStyle = {
 };
 
 const locationRowStyle = {
-  minHeight: 44,
-  borderRadius: 13,
+  minHeight: 52,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 10,
-  paddingVertical: 8,
+  paddingHorizontal: 12,
+  paddingVertical: 9,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 8,
 };
 
 const selectedRowStyle = {
-  borderColor: '#bae6fd',
-  backgroundColor: '#eff6ff',
+  borderColor: '#99f6e4',
+  backgroundColor: palette.brandTint,
 };
 
 const locationTextStyle = {
   flex: 1,
   minWidth: 0,
   color: palette.text,
-  fontSize: 14,
+  fontSize: 15,
+  lineHeight: 20,
   fontWeight: '800' as const,
 };
 
@@ -201,7 +211,7 @@ const typePillStyle = {
   flexShrink: 0,
   overflow: 'hidden' as const,
   borderRadius: 999,
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
   paddingHorizontal: 7,
   paddingVertical: 3,
   color: palette.brandStrong,
@@ -210,9 +220,9 @@ const typePillStyle = {
 };
 
 const drillButtonStyle = {
-  width: 38,
-  height: 44,
-  borderRadius: 13,
+  width: 44,
+  height: 52,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surfaceMuted,

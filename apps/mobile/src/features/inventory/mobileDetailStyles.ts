@@ -171,7 +171,7 @@ export const infoIconStyle = {
   width: 36,
   height: 36,
   borderRadius: 12,
-  backgroundColor: '#f0f9ff',
+  backgroundColor: palette.brandTint,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
@@ -221,7 +221,7 @@ export const tagPillStyle = {
 
 export const typePillStyle = {
   borderRadius: 999,
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
   paddingHorizontal: 9,
   paddingVertical: 5,
   fontSize: 12,

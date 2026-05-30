@@ -88,7 +88,7 @@ export function HomeBulkEditSheet({
     const hasStorage = items.some((item) => item.type === 'container' && !isLocationItem(item));
 
     if (hasLocation && hasStorage) {
-      return '位置/收纳容器';
+      return '位置/收纳';
     }
 
     return getContainerTypeLabel(items[0]);
@@ -180,7 +180,7 @@ export function HomeBulkEditSheet({
             {itemType ? (
               <Field label="类别">
                 {availableCategories.length === 0 ? (
-                  <Text style={emptyHintStyle}>当前没有可选类别。</Text>
+                  <Text style={emptyHintStyle}>暂无可选类别</Text>
                 ) : (
                   <View style={chipWrapStyle}>
                     {availableCategories.map((categoryItem) => {
@@ -456,7 +456,7 @@ const chipStyle = {
 const activeChipStyle = {
   borderRadius: 999,
   borderWidth: 1,
-  borderColor: '#7dd3fc',
+  borderColor: '#99f6e4',
   backgroundColor: palette.brandTint,
   paddingHorizontal: 12,
   paddingVertical: 8,

@@ -96,7 +96,7 @@ export default function ActivityTab() {
         )}
         {activityQuery.isFetchingNextPage ? (
           <View style={loadingMoreStyle}>
-            <ActivityIndicator color="#0ea5e9" />
+            <ActivityIndicator color={palette.brandStrong} />
             <Text style={captionStyle}>加载更多...</Text>
           </View>
         ) : meta ? (

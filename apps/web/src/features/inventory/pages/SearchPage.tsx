@@ -446,7 +446,7 @@ export default function SearchPage() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索位置、收纳容器、物品名称、描述或标签..."
+              placeholder="搜索位置、收纳、物品名称、描述或标签..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             {query && (
@@ -531,7 +531,7 @@ export default function SearchPage() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索位置、收纳容器、物品名称、描述或标签..."
+              placeholder="搜索位置、收纳、物品名称、描述或标签..."
               autoFocus
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
             />

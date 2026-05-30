@@ -12,6 +12,7 @@ interface CompactListRowProps {
   meta?: string;
   icon?: ReactElement;
   iconName?: IconName;
+  iconFramed?: boolean;
   right?: ReactElement;
   onPress?: () => void;
   danger?: boolean;
@@ -28,6 +29,7 @@ export function CompactListRow({
   meta,
   icon,
   iconName,
+  iconFramed = true,
   right,
   onPress,
   danger = false,
@@ -48,9 +50,13 @@ export function CompactListRow({
       ]}
     >
       {icon || iconName ? (
-        <View style={[iconBoxStyle, danger ? dangerIconBoxStyle : null]}>
-          {icon ?? <Ionicons name={iconName!} size={19} color={danger ? palette.danger : palette.brandStrong} />}
-        </View>
+        icon && !iconFramed ? (
+          icon
+        ) : (
+          <View style={[iconBoxStyle, danger ? dangerIconBoxStyle : null]}>
+            {icon ?? <Ionicons name={iconName!} size={19} color={danger ? palette.danger : palette.brandStrong} />}
+          </View>
+        )
       ) : null}
       <View style={textBlockStyle}>
         <View style={titleLineStyle}>
@@ -105,8 +111,8 @@ const rowStyle = {
 };
 
 const selectedRowStyle = {
-  borderColor: '#bae6fd',
-  backgroundColor: '#eff6ff',
+  borderColor: '#99f6e4',
+  backgroundColor: palette.brandTint,
 };
 
 const dangerRowStyle = {
@@ -129,7 +135,7 @@ const iconBoxStyle = {
   borderRadius: 12,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  backgroundColor: '#e0f2fe',
+  backgroundColor: palette.brandTint,
 };
 
 const dangerIconBoxStyle = {

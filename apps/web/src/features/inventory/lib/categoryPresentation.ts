@@ -119,7 +119,7 @@ export const ICON_OPTIONS = [
   { key: 'LampDesk', label: '桌面用品' },
   { key: 'Lightbulb', label: '照明' },
   { key: 'MonitorSmartphone', label: '电子设备' },
-  { key: 'ShoppingBag', label: '购物收纳容器' },
+  { key: 'ShoppingBag', label: '购物收纳' },
   { key: 'Sparkles', label: '美妆清洁' },
   { key: 'Gift', label: '礼物纪念' },
   { key: 'Sofa', label: '客厅家具' },
@@ -139,7 +139,7 @@ export const ICON_OPTIONS = [
   { key: 'SprayCan', label: '清洁喷雾' },
   { key: 'Baby', label: '母婴' },
   { key: 'FerrisWheel', label: '娱乐活动' },
-  { key: 'BadgeHelp', label: '杂项收纳容器' },
+  { key: 'BadgeHelp', label: '杂项收纳' },
   { key: 'CircleEllipsis', label: '其他' },
 ] as const;
 

@@ -16,8 +16,8 @@ export interface LabelPresentation {
 export const INVENTORY_NODE_LABELS = {
   item: '物品',
   location: '位置',
-  container: '收纳容器',
-  mixedContainer: '位置/收纳容器',
+  container: '收纳',
+  mixedContainer: '位置/收纳',
   storageLocation: '收纳位置',
 } as const;
 

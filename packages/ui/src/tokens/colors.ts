@@ -1,5 +1,4 @@
 // Design system color palette — canonical source of truth for Web and Mobile.
-// Hex values correspond to Tailwind default palette for consistency.
 
 export const colors = {
   // Neutrals
@@ -55,18 +54,18 @@ export const colors = {
 
 // Semantic aliases — use these in component code for clarity
 export const semantic = {
-  canvas: colors.slate[50],
-  canvasStrong: colors.slate[100],
+  canvas: '#f7fbf8',
+  canvasStrong: '#eef7f1',
   surface: colors.white,
-  surfaceMuted: colors.slate[50],
-  border: '#dbe4ee',
-  borderSoft: colors.slate[100],
-  text: colors.slate[900],
-  textMuted: colors.slate[600],
-  textSoft: colors.slate[500],
-  brand: colors.sky[500],
-  brandStrong: colors.sky[600],
-  brandTint: colors.sky[100],
+  surfaceMuted: '#fafcf9',
+  border: '#dde9e2',
+  borderSoft: '#edf4ef',
+  text: '#172033',
+  textMuted: '#5f6f66',
+  textSoft: '#7b8a82',
+  brand: '#2dd4bf',
+  brandStrong: '#0d9488',
+  brandTint: '#ddfbf0',
   danger: colors.red[600],
   dangerTint: colors.red[100],
   success: colors.emerald[500],

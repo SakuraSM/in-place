@@ -189,9 +189,9 @@ const chipStyle = {
   paddingHorizontal: 12,
   paddingVertical: 7,
 };
-const activeChipStyle = { backgroundColor: '#e0f2fe', borderColor: '#7dd3fc' };
+const activeChipStyle = { backgroundColor: palette.brandTint, borderColor: '#99f6e4' };
 const chipTextStyle = { color: palette.textMuted, fontSize: 13, fontWeight: '600' as const };
-const activeChipTextStyle = { color: '#0369a1', fontSize: 13, fontWeight: '700' as const };
+const activeChipTextStyle = { color: palette.brandStrong, fontSize: 13, fontWeight: '700' as const };
 const actionRowStyle = { flexDirection: 'row' as const, gap: 12 };
 const secondaryButtonStyle = { flex: 1, borderRadius: 16, backgroundColor: palette.canvasStrong, paddingVertical: 13, alignItems: 'center' as const };
 const secondaryButtonTextStyle = { color: palette.text, fontSize: 15, fontWeight: '700' as const };
