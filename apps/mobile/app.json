@@ -4,7 +4,7 @@
     "description": "家庭物品管理系统",
     "slug": "in-place",
     "scheme": "inplace",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "runtimeVersion": {
