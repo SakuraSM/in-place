@@ -237,7 +237,7 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
               type="button"
               disabled={!crop}
               onClick={() => crop && onConfirm(crop)}
-              className="py-3 rounded-2xl bg-sky-500 disabled:bg-sky-300 text-white font-medium text-sm hover:bg-sky-600 transition-colors flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong py-3 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
             >
               <Crop size={15} />
               使用此区域

@@ -76,11 +76,12 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
   return (
     <motion.div
       variants={staggerItem}
-      className="relative"
+      className="group relative"
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
     >
       <motion.button
+        type="button"
         onClick={selectionMode ? (onSelect ?? onClick) : onClick}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -95,8 +96,11 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         animate={{ y: hovered ? -3 : 0, boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.04)' }}
         whileTap={{ scale: 0.96 }}
         transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-        className={`w-full bg-white rounded-2xl p-4 border shadow-sm text-left cursor-pointer ${
-          selected ? 'border-sky-300 ring-2 ring-sky-100' : 'border-slate-100'
+        role={selectionMode ? 'checkbox' : undefined}
+        aria-checked={selectionMode ? selected : undefined}
+        aria-label={selectionMode ? `${selected ? '取消选择' : '选择'}${item.name}` : `打开${item.name}`}
+        className={`w-full cursor-pointer rounded-2xl border bg-surface p-4 text-left shadow-sm ${
+          selected ? 'border-brand ring-2 ring-brand/20' : 'border-borderSoft'
         }`}
       >
         <div className="relative aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3">
@@ -121,17 +125,17 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
           )}
 
           {selectionMode && (
-            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center shadow-sm">
-              {selected && <Check size={14} className="text-sky-500" />}
+            <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-white/95 shadow-sm">
+              {selected && <Check size={14} className="text-brandStrong" />}
             </div>
           )}
         </div>
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-slate-600">
             <span>{childCount !== undefined ? `${childCount} 项` : (category?.name ?? INVENTORY_NODE_LABELS.container)}</span>
             {isLocationItem(item) && (
-              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
                 {getContainerTypeLabel(item)}
               </span>
             )}
@@ -145,12 +149,13 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
       </motion.button>
       {!selectionMode && (
         <motion.button
+          type="button"
           onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); onLongPress(); }}
-          animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.8 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.15 }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-white/90 backdrop-blur-sm border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-white z-10"
+          aria-label={`打开${item.name}的更多操作`}
+          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white/95 text-slate-500 opacity-100 shadow-sm backdrop-blur-sm transition-[opacity,color,background-color] hover:bg-brandTint hover:text-brandStrong focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
           title="更多操作"
         >
           <MoreHorizontal size={14} />

@@ -203,7 +203,7 @@ export default function ModernDatePicker({
                     }}
                     className={`flex h-10 items-center justify-center rounded-xl text-sm transition-colors ${
                       isSelected
-                        ? 'bg-sky-500 font-semibold text-white shadow-sm shadow-sky-200'
+                        ? 'bg-brandStrong font-semibold text-white shadow-sm shadow-brand/20'
                         : inCurrentMonth
                           ? 'text-slate-700 hover:bg-slate-100'
                           : 'text-slate-300 hover:bg-slate-50'

@@ -1,8 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
-import { pageTransition } from '../../shared/lib/animations';
 import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'inplace:sidebar-collapsed';
@@ -22,25 +20,26 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [sidebarCollapsed]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="flex min-h-screen bg-canvas">
+      <a className="skip-link" href="#main-content">
+        跳到主要内容
+      </a>
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((current) => !current)}
       />
-      <motion.div
-        className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden bg-slate-50 pb-20 md:h-screen md:pb-0 ${
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden bg-canvas pb-20 md:h-screen md:pb-0 ${
           sidebarCollapsed ? 'md:ml-24' : 'md:ml-64 lg:ml-72'
         }`}
-        variants={pageTransition}
-        initial="initial"
-        animate="animate"
-        exit="exit"
       >
         {children}
-        <div className="px-4 pb-24 pt-3 md:hidden">
+        <footer className="px-4 pb-24 pt-3 md:hidden">
           <BrandVersionFooter compact className="justify-center" />
-        </div>
-      </motion.div>
+        </footer>
+      </main>
       <BottomNav />
     </div>
   );

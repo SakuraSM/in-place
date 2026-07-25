@@ -1,58 +1,57 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import ResponsiveDialog from './ResponsiveDialog';
 
-interface Props {
+interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   danger?: boolean;
+  isConfirming?: boolean;
 }
 
-export default function ConfirmDialog({ title, message, confirmLabel = '确认', onConfirm, onCancel, danger = false }: Props) {
+export default function ConfirmDialog({
+  title,
+  message,
+  confirmLabel = '确认',
+  onConfirm,
+  onCancel,
+  danger = false,
+  isConfirming = false,
+}: ConfirmDialogProps) {
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-        <motion.div
-          className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onCancel}
-        />
-        <motion.div
-          className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
-          initial={{ opacity: 0, scale: 0.88, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 8 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-        >
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed">{message}</p>
-          <div className="flex gap-3">
-            <motion.button
-              onClick={onCancel}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors"
-            >
-              取消
-            </motion.button>
-            <motion.button
-              onClick={onConfirm}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors ${
-                danger
-                  ? 'bg-rose-500 text-white hover:bg-rose-600'
-                  : 'bg-sky-500 text-white hover:bg-sky-600'
-              }`}
-            >
-              {confirmLabel}
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+    <ResponsiveDialog
+      title={title}
+      description={message}
+      onClose={onCancel}
+      size="sm"
+      showCloseButton={false}
+      shouldCloseOnBackdrop={!isConfirming}
+      shouldCloseOnEscape={!isConfirming}
+      footer={(
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isConfirming}
+            className="rounded-2xl bg-surfaceMuted py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-borderSoft disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isConfirming}
+            className={`rounded-2xl py-3 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+              danger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brandStrong hover:bg-teal-700'
+            }`}
+          >
+            {isConfirming ? '处理中…' : confirmLabel}
+          </button>
+        </div>
+      )}
+    >
+      <div className="sr-only">{message}</div>
+    </ResponsiveDialog>
   );
 }

@@ -20,7 +20,7 @@ export function SectionPanel({
           {icon ? <span className="text-sky-500">{icon}</span> : null}
           <p className="text-sm font-semibold text-slate-800">{title}</p>
         </div>
-        {description ? <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p> : null}
+        {description ? <p className="mt-1 text-xs leading-5 text-slate-600">{description}</p> : null}
       </div>
       <div className="space-y-4 px-5 py-4 md:px-6 md:py-5">{children}</div>
     </div>
@@ -51,7 +51,7 @@ export function QuickLinkCard({
             <p className="font-semibold text-slate-900">{title}</p>
             <ChevronRight size={14} className="text-slate-300 transition-transform group-hover:translate-x-0.5" />
           </div>
-          <p className="mt-1 text-sm leading-6 text-slate-400">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
         </div>
       </div>
     </Link>

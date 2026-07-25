@@ -13,6 +13,7 @@ interface BrandLockupProps {
   rightSlot?: ReactNode;
   animated?: boolean;
   className?: string;
+  titleAs?: 'h1' | 'span';
 }
 
 const SIZE_MAP = {
@@ -58,6 +59,7 @@ export default function BrandLockup({
   rightSlot,
   animated = false,
   className = '',
+  titleAs = 'span',
 }: BrandLockupProps) {
   const styles = SIZE_MAP[size];
   const LogoWrapper = animated ? motion.div : 'div';
@@ -65,6 +67,7 @@ export default function BrandLockup({
     logoVariant === 'full'
       ? '/branding/inplace-logo-full.png'
       : '/branding/inplace-logo-mark.png';
+  const Title = titleAs;
 
   return (
     <div className={`flex items-center justify-between ${className}`}>
@@ -87,7 +90,12 @@ export default function BrandLockup({
 
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className={`truncate font-bold leading-none text-slate-900 ${styles.title}`}>{title}</h1>
+            <Title
+              data-brand-title
+              className={`truncate font-bold leading-none text-slate-900 ${styles.title}`}
+            >
+              {title}
+            </Title>
             {showTagline && tagline && (
               <span className="hidden rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 lg:inline-flex">
                 {tagline}

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { fetchAiAvailability, recognizeItemFromImage } from '../../../legacy/openai';
 import { createItem, uploadImage } from '../../../legacy/items';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import type { AIRecognitionResult } from '../../../legacy/database.types';
 import ItemForm from '../components/ItemForm';
 import type { Item } from '../../../legacy/database.types';
@@ -286,7 +286,7 @@ export default function ScanPage() {
       <div className={APP_PAGE_HEADER}>
         <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">AI 扫描</h1>
-          <p className="text-slate-400 text-xs mt-0.5">拍照或选图自动识别物品并录入</p>
+          <p className="mt-0.5 text-xs text-slate-600">拍照或选图自动识别物品并录入</p>
         </div>
       </div>
 
@@ -300,18 +300,15 @@ export default function ScanPage() {
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px] 2xl:grid-cols-[minmax(0,1.2fr)_400px] xl:items-start">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            <div
               className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm xl:sticky xl:top-28"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">识别图片</p>
-                  <p className="mt-1 text-xs text-slate-400">支持直接拍照，也支持从相册选取已有图片</p>
+                  <p className="mt-1 text-xs text-slate-600">支持直接拍照，也支持从相册选取已有图片</p>
                 </div>
-                <span className="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-sky-600">
+                <span className="rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-sky-700">
                   多目标识别
                 </span>
               </div>
@@ -341,12 +338,9 @@ export default function ScanPage() {
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 280, damping: 24, delay: 0.04 }}
+            <div
               className="space-y-4 xl:sticky xl:top-28"
             >
               <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -362,7 +356,7 @@ export default function ScanPage() {
                     type="button"
                     disabled={analyzing}
                     onClick={() => openPicker('camera')}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Camera size={16} />
                     拍照扫描
@@ -393,11 +387,11 @@ export default function ScanPage() {
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    <p className="text-xs text-slate-400">识别结果</p>
+                    <p className="text-xs text-slate-600">识别结果</p>
                     <p className="mt-2 text-2xl font-semibold text-slate-900">{resultCount}</p>
                   </div>
                   <div className="rounded-2xl bg-sky-50 px-4 py-3">
-                    <p className="text-xs text-sky-500">待保存</p>
+                    <p className="text-xs text-brandStrong">待保存</p>
                     <p className="mt-2 text-2xl font-semibold text-sky-600">{selectedCount}</p>
                   </div>
                 </div>
@@ -420,39 +414,31 @@ export default function ScanPage() {
                   </li>
                 </ul>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
 
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+        {error ? (
+            <div
+              role="alert"
               className="flex items-center gap-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl p-4 text-sm overflow-hidden"
             >
               <AlertCircle size={16} className="shrink-0" />
               <span>{error}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+        ) : null}
 
         {drafts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+          <div
             className="mt-6 space-y-3"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-slate-900">识别结果</h2>
-              <span className="text-xs text-slate-400">{drafts.length} 个物品</span>
+              <span className="text-xs text-slate-600">{drafts.length} 个物品</span>
             </div>
 
             <motion.div
               variants={staggerContainer}
-              initial="initial"
               animate="animate"
               className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3"
             >
@@ -531,7 +517,7 @@ export default function ScanPage() {
                           <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{draft.result.brand}</span>
                         )}
                         {draft.result.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className="text-[10px] bg-sky-50 text-sky-600 px-2 py-0.5 rounded-full">{tag}</span>
+                          <span key={tag} className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] text-sky-700">{tag}</span>
                         ))}
                       </div>
                     </div>
@@ -563,18 +549,14 @@ export default function ScanPage() {
               ))}
             </motion.div>
 
-            <AnimatePresence>
-              {selectedCount > 0 && (
+            {selectedCount > 0 ? (
                 <motion.button
                   onClick={handleSaveSelected}
                   disabled={saving}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                  className="w-full py-4 bg-sky-500 disabled:bg-sky-300 text-white font-semibold rounded-2xl text-sm shadow-sm shadow-sky-200 flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 disabled:opacity-50"
                 >
                   {saving ? (
                     <><Loader2 size={16} className="animate-spin" />保存中...</>
@@ -582,9 +564,8 @@ export default function ScanPage() {
                     <><Plus size={16} />保存选中 ({selectedCount} 个)</>
                   )}
                 </motion.button>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            ) : null}
+          </div>
         )}
       </div>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Bot, KeyRound, Link as LinkIcon, RotateCcw, Save, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { fetchAiSettings, resetAiSettings, updateAiSettings, type AiSettings } from '../../../legacy/ai-settings';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
@@ -17,6 +17,9 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
 };
 
 export default function AiSettingsPage() {
+  const apiKeyId = 'ai-api-key';
+  const baseUrlId = 'ai-base-url';
+  const modelId = 'ai-model';
   const { user } = useAuth();
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI_SETTINGS);
   const [aiApiKey, setAiApiKey] = useState('');
@@ -89,7 +92,7 @@ export default function AiSettingsPage() {
     <div className="min-h-screen bg-slate-50">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
+          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
             <ArrowLeft size={15} />
             返回我的
           </Link>
@@ -99,7 +102,6 @@ export default function AiSettingsPage() {
 
       <motion.div
         variants={staggerContainer}
-        initial="initial"
         animate="animate"
         className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
       >
@@ -131,12 +133,14 @@ export default function AiSettingsPage() {
         <motion.div variants={staggerItem}>
           <SectionPanel icon={<Bot size={16} />} title="配置项">
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <label htmlFor={apiKeyId} className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
                 <KeyRound size={13} />
                 API Key
               </label>
               <input
+                id={apiKeyId}
                 type="password"
+                autoComplete="off"
                 value={aiApiKey}
                 onChange={(event) => setAiApiKey(event.target.value)}
                 placeholder={aiSettings.hasStoredApiKey ? '留空则保持当前服务端密钥' : '输入后会加密保存到服务端'}
@@ -146,11 +150,12 @@ export default function AiSettingsPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                <label htmlFor={baseUrlId} className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
                   <LinkIcon size={13} />
                   Base URL
                 </label>
                 <input
+                  id={baseUrlId}
                   type="text"
                   value={aiSettings.baseUrl}
                   onChange={(event) => setAiSettings((current) => ({ ...current, baseUrl: event.target.value }))}
@@ -160,11 +165,12 @@ export default function AiSettingsPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                <label htmlFor={modelId} className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
                   <Bot size={13} />
                   模型
                 </label>
                 <input
+                  id={modelId}
                   type="text"
                   value={aiSettings.model}
                   onChange={(event) => setAiSettings((current) => ({ ...current, model: event.target.value }))}
@@ -178,7 +184,7 @@ export default function AiSettingsPage() {
               <button
                 onClick={() => void handleAiSave()}
                 disabled={aiSaving || aiLoading}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save size={15} />
                 {aiSaving ? '保存中...' : '保存配置'}
@@ -186,14 +192,14 @@ export default function AiSettingsPage() {
               <button
                 onClick={() => void handleAiReset()}
                 disabled={aiSaving || aiLoading}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-100 px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-100 px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RotateCcw size={15} />
                 恢复默认
               </button>
             </div>
-            {aiSaved ? <p className="text-sm text-emerald-500">已保存</p> : null}
-            {aiError ? <p className="text-sm text-rose-500">{aiError}</p> : null}
+            {aiSaved ? <p role="status" className="text-sm text-emerald-600">已保存</p> : null}
+            {aiError ? <p role="alert" className="text-sm text-rose-600">{aiError}</p> : null}
           </SectionPanel>
         </motion.div>
       </motion.div>

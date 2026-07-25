@@ -64,7 +64,7 @@ export const semantic = {
   textMuted: '#5f6f66',
   textSoft: '#7b8a82',
   brand: '#2dd4bf',
-  brandStrong: '#0d9488',
+  brandStrong: '#0f766e',
   brandTint: '#ddfbf0',
   danger: colors.red[600],
   dangerTint: colors.red[100],

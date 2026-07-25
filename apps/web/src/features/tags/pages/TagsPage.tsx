@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, StickyNote, Pencil, Trash2, X } from 'lucide-react';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { motion } from 'framer-motion';
+import { Plus, StickyNote, Pencil, Trash2 } from 'lucide-react';
+import { useAuth } from '../../../app/providers/auth-context';
 import type { Database, TagEntity } from '../../../legacy/database.types';
 import { createTag, deleteTag, fetchTagsPage, updateTag } from '../../../legacy/tags';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
@@ -9,6 +9,7 @@ import EmptyState from '../../../shared/ui/EmptyState';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
+import ResponsiveDialog from '../../../shared/ui/ResponsiveDialog';
 
 const TAG_COLORS = [
   { key: 'sky', bg: 'bg-sky-50', ring: 'ring-sky-200', text: 'text-sky-700' },
@@ -34,6 +35,9 @@ function TagEditor({
   onSave: (tag: TagEntity) => void;
   onClose: () => void;
 }) {
+  const formId = 'tag-editor-form';
+  const nameId = 'tag-name';
+  const descriptionId = 'tag-description';
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [color, setColor] = useState(initial?.color ?? 'sky');
@@ -70,57 +74,47 @@ function TagEditor({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
-      <motion.div
-        className="absolute inset-0 bg-black/25 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      />
-      <motion.div
-        className="relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
-        initial={{ y: 24, opacity: 0, scale: 0.98 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 24, opacity: 0, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
-        <div className="mb-5 flex items-center justify-between px-5 pt-5">
-          <h3 className="font-semibold text-slate-900">{initial ? '编辑标签' : '新增标签'}</h3>
-          <motion.button
-            onClick={onClose}
-            whileHover={{ scale: 1.08, rotate: 90 }}
-            whileTap={{ scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500"
-          >
-            <X size={16} />
-          </motion.button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
+    <ResponsiveDialog
+      title={initial ? '编辑标签' : '新增标签'}
+      description="用标签补充物品的用途、状态或整理优先级。"
+      onClose={onClose}
+      closeLabel="关闭标签表单"
+      size="sm"
+      footer={(
+        <button
+          type="submit"
+          form={formId}
+          disabled={saving || !name.trim()}
+          className="w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? '保存中...' : '保存标签'}
+        </button>
+      )}
+    >
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5 px-5 py-5 md:px-6">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">标签名称</label>
+            <label htmlFor={nameId} className="mb-1 block text-xs font-medium text-slate-600">标签名称</label>
             <input
+              id={nameId}
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="例如：常用、易碎、待整理"
               maxLength={80}
               required
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+              autoFocus
+              className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">标签说明</label>
+            <label htmlFor={descriptionId} className="mb-1 block text-xs font-medium text-slate-600">标签说明</label>
             <textarea
+              id={descriptionId}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="可选，描述这个标签的使用场景..."
               rows={4}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full rounded-2xl border border-border bg-surfaceMuted px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
           </div>
 
@@ -132,26 +126,17 @@ function TagEditor({
                   key={option.key}
                   type="button"
                   onClick={() => setColor(option.key)}
+                  aria-label={`选择${option.key}颜色`}
+                  aria-pressed={color === option.key}
                   className={`h-8 w-8 rounded-full ${option.bg} ring-2 transition-transform ${color === option.key ? `${option.ring} scale-110` : 'ring-transparent'}`}
                 />
               ))}
             </div>
           </div>
 
-          {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-500">{error}</p> : null}
-          </div>
-          <div className="border-t border-slate-100 bg-white px-5 py-4">
-            <button
-              type="submit"
-              disabled={saving || !name.trim()}
-              className="w-full rounded-2xl bg-sky-500 py-3.5 text-sm font-semibold text-white transition-all hover:bg-sky-600 disabled:bg-sky-300"
-            >
-              {saving ? '保存中...' : '保存标签'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+          {error ? <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{error}</p> : null}
+      </form>
+    </ResponsiveDialog>
   );
 }
 
@@ -253,7 +238,7 @@ export default function TagsPage() {
   }, [isMobile, loadNextPage]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:h-full md:min-h-0">
+    <div className="flex min-h-screen flex-col bg-canvas md:h-full md:min-h-0">
       <div className={APP_PAGE_HEADER}>
         <div className={APP_PAGE_HEADER_STACK}>
           <h1 className="text-xl font-bold text-slate-900">标签管理</h1>
@@ -274,7 +259,7 @@ export default function TagsPage() {
           />
         ) : (
           <div className="flex min-h-full flex-1 flex-col">
-            <p className="mb-4 text-xs text-slate-400">
+            <p className="mb-4 text-xs text-slate-600">
               共 {paginationMeta?.total ?? tags.length} 个标签
             </p>
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 2xl:grid-cols-3">
@@ -285,7 +270,7 @@ export default function TagsPage() {
                 <motion.div
                   key={tag.id}
                   layout
-                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md"
+                  className="rounded-2xl border border-border bg-surface px-4 py-3 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -297,7 +282,7 @@ export default function TagsPage() {
                         <p className="mt-0.5 truncate text-xs text-slate-500">
                           {tag.description || '暂无说明'}
                         </p>
-                        <p className="mt-2 text-[11px] text-slate-400 md:hidden">
+                        <p className="mt-2 text-[11px] text-slate-600 md:hidden">
                           更新于{' '}
                           {new Date(tag.updated_at).toLocaleString('zh-CN', {
                             month: '2-digit',
@@ -310,7 +295,7 @@ export default function TagsPage() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                      <p className="hidden text-xs text-slate-400 md:block">
+                      <p className="hidden text-xs text-slate-600 md:block">
                         {new Date(tag.updated_at).toLocaleString('zh-CN', {
                           month: '2-digit',
                           day: '2-digit',
@@ -330,7 +315,7 @@ export default function TagsPage() {
                       </button>
                       <button
                         onClick={() => setDeleteTarget(tag)}
-                        className="inline-flex h-8 items-center gap-1 rounded-xl bg-rose-50 px-2.5 text-xs font-medium text-rose-500 ring-1 ring-rose-100 transition-colors hover:bg-rose-100 whitespace-nowrap"
+                        className="inline-flex h-8 items-center gap-1 rounded-xl bg-rose-50 px-2.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200 transition-colors hover:bg-rose-100 whitespace-nowrap"
                       >
                         <Trash2 size={13} />
                         删除
@@ -345,7 +330,7 @@ export default function TagsPage() {
         )}
 
         {isMobile && paginationMeta ? (
-          <div className="pt-5 text-center text-xs text-slate-400">
+          <div className="pt-5 text-center text-xs text-slate-600">
             {loading && page > 1
               ? '正在加载更多标签...'
               : paginationMeta.hasNextPage
@@ -373,42 +358,42 @@ export default function TagsPage() {
       </div>
 
       <motion.button
+        type="button"
         onClick={() => {
           setEditingTag(null);
           setShowEditor(true);
         }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
-        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg shadow-sky-200 md:bottom-28 md:right-8"
+        aria-label="新增标签"
+        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 md:bottom-28 md:right-8"
       >
         <Plus size={24} />
       </motion.button>
 
-      <AnimatePresence>
-        {showEditor && user ? (
-          <TagEditor
-            initial={editingTag}
-            userId={user.id}
-            onSave={(tag) => {
-              const existed = tags.some((item) => item.id === tag.id);
-              if (!existed && page !== 1) {
-                setPage(1);
-              } else {
-                if (isMobile && page === 1) {
-                  setTags((current) => [tag, ...current.filter((item) => item.id !== tag.id)]);
-                }
-                setReloadKey((current) => current + 1);
+      {showEditor && user ? (
+        <TagEditor
+          initial={editingTag}
+          userId={user.id}
+          onSave={(tag) => {
+            const existed = tags.some((item) => item.id === tag.id);
+            if (!existed && page !== 1) {
+              setPage(1);
+            } else {
+              if (isMobile && page === 1) {
+                setTags((current) => [tag, ...current.filter((item) => item.id !== tag.id)]);
               }
-              setShowEditor(false);
-              setEditingTag(null);
-            }}
-            onClose={() => {
-              setShowEditor(false);
-              setEditingTag(null);
-            }}
-          />
-        ) : null}
-      </AnimatePresence>
+              setReloadKey((current) => current + 1);
+            }
+            setShowEditor(false);
+            setEditingTag(null);
+          }}
+          onClose={() => {
+            setShowEditor(false);
+            setEditingTag(null);
+          }}
+        />
+      ) : null}
 
       {deleteTarget ? (
         <ConfirmDialog

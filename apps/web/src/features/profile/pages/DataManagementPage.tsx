@@ -113,7 +113,7 @@ export default function DataManagementPage() {
     <div className="min-h-screen bg-slate-50">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
+          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
             <ArrowLeft size={15} />
             返回我的
           </Link>
@@ -123,7 +123,6 @@ export default function DataManagementPage() {
 
       <motion.div
         variants={staggerContainer}
-        initial="initial"
         animate="animate"
         className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
       >
@@ -156,7 +155,7 @@ export default function DataManagementPage() {
                   <button
                     onClick={() => void handleExport('json')}
                     disabled={exportingFormat !== null}
-                    className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                    className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Download size={15} />
                     {exportingFormat === 'json' ? '导出中...' : '导出 JSON'}

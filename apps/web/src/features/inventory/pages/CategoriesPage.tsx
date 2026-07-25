@@ -1,8 +1,8 @@
-import { useRef, useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Shapes, X, Check, ChevronDown, Upload, ImageIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useRef, useState, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Shapes, Check, ChevronDown, Upload, ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from '../../../legacy/categories';
 import { uploadImage } from '../../../legacy/items';
 import type { Category, ItemType } from '../../../legacy/database.types';
@@ -11,6 +11,7 @@ import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import { CategoryIcon, COLOR_OPTIONS, ICON_OPTIONS, getCategoryIconLabel, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import EmptyState from '../../../shared/ui/EmptyState';
+import ResponsiveDialog from '../../../shared/ui/ResponsiveDialog';
 
 interface CategoryFormProps {
   initial?: Partial<Category>;
@@ -21,6 +22,8 @@ interface CategoryFormProps {
 }
 
 function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFormProps) {
+  const formId = 'category-editor-form';
+  const nameId = 'category-name';
   const [name, setName] = useState(initial?.name ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? 'FolderTree');
   const [color, setColor] = useState(initial?.color ?? 'sky');
@@ -73,36 +76,24 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
-      <motion.div
-        className="absolute inset-0 bg-black/25 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      />
-      <motion.div
-        className="relative flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
-        initial={{ y: 24, opacity: 0, scale: 0.98 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 24, opacity: 0, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
-        <div className="mb-5 flex items-center justify-between px-5 pt-5">
-          <h3 className="font-semibold text-slate-900">{initial?.id ? '编辑类别' : '新增类别'}</h3>
-          <motion.button
-            onClick={onClose}
-            whileHover={{ scale: 1.08, rotate: 90 }}
-            whileTap={{ scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"
-          >
-            <X size={16} />
-          </motion.button>
-        </div>
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
+    <ResponsiveDialog
+      title={initial?.id ? '编辑分类' : '新增分类'}
+      description={`为${itemType === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}设置易识别的名称、颜色和图标。`}
+      onClose={onClose}
+      closeLabel="关闭分类表单"
+      size="sm"
+      footer={(
+        <button
+          type="submit"
+          form={formId}
+          disabled={saving || !name.trim()}
+          className="w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? '保存中...' : '保存分类'}
+        </button>
+      )}
+    >
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5 px-5 py-5 md:px-6">
           <div className="flex items-center gap-4">
             <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${colorCls.bg} ${isCustomCategoryImageIcon(icon) ? '' : colorCls.text}`}>
               <CategoryIcon
@@ -114,14 +105,16 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-slate-500 mb-1">名称</label>
+              <label htmlFor={nameId} className="block text-xs font-medium text-slate-600 mb-1">名称</label>
               <input
+                id={nameId}
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="分类名称..."
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
+                autoFocus
+                className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
               />
             </div>
           </div>
@@ -134,6 +127,8 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
                   key={c.key}
                   type="button"
                   onClick={() => setColor(c.key)}
+                  aria-label={`选择${c.key}颜色`}
+                  aria-pressed={color === c.key}
                   className={`w-8 h-8 rounded-full ${c.bg} ${c.text} flex items-center justify-center transition-all ${color === c.key ? `ring-2 ring-offset-2 ${c.ring} scale-110` : 'hover:scale-105'}`}
                 >
                   {color === c.key && <Check size={14} />}
@@ -156,7 +151,7 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
                 type="button"
                 onClick={() => iconInputRef.current?.click()}
                 disabled={uploadingIcon}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:border-sky-400 disabled:cursor-not-allowed disabled:text-slate-400"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-slate-700 transition-colors hover:border-brand disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 <Upload size={14} />
                 {uploadingIcon ? '上传中...' : '上传自定义图片'}
@@ -175,7 +170,8 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
             <button
               type="button"
               onClick={() => setShowIconPicker(!showIconPicker)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 hover:border-sky-400 transition-colors w-full"
+              aria-expanded={showIconPicker}
+              className="flex w-full items-center gap-2 rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-700 transition-colors hover:border-brand"
             >
               <div className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg ${isCustomCategoryImageIcon(icon) ? 'bg-white ring-1 ring-slate-200' : `${colorCls.bg} ${colorCls.text}`}`}>
                 <CategoryIcon
@@ -197,6 +193,8 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
                       key={key}
                       type="button"
                       title={label}
+                      aria-label={`选择${label}图标`}
+                      aria-pressed={icon === key}
                       onClick={() => { setIcon(key); setShowIconPicker(false); }}
                       className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all ${icon === key ? `${colorCls.bg} ${colorCls.text}` : 'text-slate-500 hover:bg-slate-200'}`}
                     >
@@ -209,21 +207,10 @@ function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFo
           </div>
 
           {error && (
-            <p className="text-sm text-rose-500 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
+            <p role="alert" className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
           )}
-          </div>
-          <div className="border-t border-slate-100 bg-white px-5 py-4">
-            <button
-              type="submit"
-              disabled={saving || !name.trim()}
-              className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm"
-            >
-              {saving ? '保存中...' : '保存'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+      </form>
+    </ResponsiveDialog>
   );
 }
 
@@ -242,13 +229,17 @@ function CategoryItem({ cat, onEdit, onDelete }: { cat: Category; onEdit: () => 
       </div>
       <span className="flex-1 font-medium text-slate-800 text-sm">{cat.name}</span>
       <button
+        type="button"
         onClick={onEdit}
+        aria-label={`编辑分类：${cat.name}`}
         className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-sky-500 hover:bg-sky-50 transition-colors"
       >
         <Pencil size={15} />
       </button>
       <button
+        type="button"
         onClick={onDelete}
+        aria-label={`删除分类：${cat.name}`}
         className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
       >
         <Trash2 size={15} />
@@ -266,7 +257,7 @@ export default function CategoriesPage() {
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -275,9 +266,11 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const filtered = categories.filter((c) => c.item_type === activeTab);
 
@@ -303,7 +296,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-canvas">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_STACK} gap-3 md:gap-4`}>
           <h1 className="text-xl font-bold text-slate-900">分类管理</h1>
@@ -311,18 +304,20 @@ export default function CategoriesPage() {
             {([['container', `${INVENTORY_NODE_LABELS.container}分类`], ['item', `${INVENTORY_NODE_LABELS.item}分类`]] as [ItemType, string][]).map(([type, label]) => (
               <motion.button
                 key={type}
+                type="button"
                 onClick={() => setActiveTab(type)}
+                aria-pressed={activeTab === type}
                 whileTap={{ scale: 0.94 }}
                 className="relative px-4 py-1.5 rounded-lg text-sm font-medium z-10"
               >
                 {activeTab === type && (
                   <motion.div
                     layoutId="categories-tab-pill"
-                    className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                    className="absolute inset-0 bg-surface rounded-lg shadow-sm"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
-                <span className={`relative z-10 transition-colors ${activeTab === type ? 'text-slate-900' : 'text-slate-500'}`}>
+                <span className={`relative z-10 transition-colors ${activeTab === type ? 'text-slate-900' : 'text-slate-600'}`}>
                   {label}
                 </span>
               </motion.button>
@@ -332,72 +327,56 @@ export default function CategoriesPage() {
       </div>
 
       <div className={`${APP_PAGE_CONTENT} space-y-2.5`}>
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-12 text-slate-400 text-sm"
-            >
-              加载中...
-            </motion.div>
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={<Shapes size={28} className="text-slate-300" />}
-              title={`暂无${activeTab === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}分类`}
-              iconMotion={{
-                animate: { rotate: [0, -8, 8, 0] },
-                transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
-              }}
-            />
-          ) : (
-            <motion.div
-              key={activeTab}
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-              exit={{ opacity: 0 }}
-              className="space-y-2.5"
-            >
-              {filtered.map((cat) => (
-                <motion.div key={cat.id} variants={staggerItem}>
-                  <CategoryItem
-                    cat={cat}
-                    onEdit={() => { setEditTarget(cat); setShowForm(true); }}
-                    onDelete={() => setDeleteTarget(cat)}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {loading ? (
+          <div className="py-12 text-center text-sm text-slate-400" role="status">
+            加载中...
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={<Shapes size={28} className="text-slate-300" />}
+            title={`暂无${activeTab === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}分类`}
+          />
+        ) : (
+          <motion.div
+            key={activeTab}
+            variants={staggerContainer}
+            animate="animate"
+            className="space-y-2.5"
+          >
+            {filtered.map((cat) => (
+              <motion.div key={cat.id} variants={staggerItem}>
+                <CategoryItem
+                  cat={cat}
+                  onEdit={() => { setEditTarget(cat); setShowForm(true); }}
+                  onDelete={() => setDeleteTarget(cat)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       <motion.button
+        type="button"
         onClick={() => { setEditTarget(null); setShowForm(true); }}
+        aria-label={`新增${activeTab === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}分类`}
         whileHover={{ scale: 1.08, boxShadow: '0 12px 32px rgba(14,165,233,0.35)' }}
         whileTap={{ scale: 0.92, rotate: 45 }}
         transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 bg-sky-500 text-white rounded-full shadow-lg shadow-sky-200 flex items-center justify-center z-30"
+        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 md:bottom-8 md:right-8"
       >
         <Plus size={24} />
       </motion.button>
 
-      <AnimatePresence>
-        {showForm && user ? (
-          <CategoryForm
-            initial={editTarget ?? undefined}
-            itemType={activeTab}
-            userId={user.id}
-            onSave={handleSave}
-            onClose={() => { setShowForm(false); setEditTarget(null); }}
-          />
-        ) : null}
-      </AnimatePresence>
+      {showForm && user ? (
+        <CategoryForm
+          initial={editTarget ?? undefined}
+          itemType={activeTab}
+          userId={user.id}
+          onSave={handleSave}
+          onClose={() => { setShowForm(false); setEditTarget(null); }}
+        />
+      ) : null}
 
       {deleteTarget && (
         <ConfirmDialog

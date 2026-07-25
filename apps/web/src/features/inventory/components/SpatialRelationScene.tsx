@@ -162,7 +162,7 @@ function ChildCard({
       {(item.category || item.tags.length > 0) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {item.category && (
-            <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+            <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700">
               <ImageIcon size={11} />
               <span className="max-w-[100px] truncate">{item.category}</span>
             </span>
@@ -218,10 +218,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
   const isContainer = currentItem.type === 'container';
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 26, delay: 0.06 }}
+    <section
       className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.18),transparent_32%),linear-gradient(180deg,#f8fbff_0%,#f2f7ff_42%,#f8fafc_100%)] p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]"
     >
       {isContainer ? (
@@ -231,17 +228,17 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
           className="flex w-full items-center justify-between gap-3 text-left"
         >
           <div className="min-w-0">
-            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
               <Layers3 size={12} />
               空间视图
             </div>
             <h2 className="text-sm font-semibold text-slate-900">收纳位置 · 当前位置内容</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm">
+            <span className="rounded-full bg-white/85 px-2.5 py-1 text-[11px] text-slate-700 shadow-sm">
               {children.length} 项下级内容
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700">
               {isExpanded ? '收起' : '展开'}
               <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
             </span>
@@ -250,7 +247,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
       ) : (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
               <Layers3 size={12} />
               空间视图
             </div>
@@ -275,7 +272,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-900">直接下级内容</p>
               </div>
-              <span className="ml-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] text-slate-500">
+              <span className="ml-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] text-slate-700">
                 <span className="whitespace-nowrap">{showChildrenPanel ? '收起' : '展开'}</span>
                 <ChevronDown
                   size={14}
@@ -314,6 +311,6 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
         ) : null}
       </div>
       ) : null}
-    </motion.section>
+    </section>
   );
 }
