@@ -5,6 +5,8 @@ import type { Category, Item } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import ContainerCard from './ContainerCard';
 import ItemCard from './ItemCard';
+import { getItemCategoryScope } from '../lib/categoryScope';
+import EntityBadge from './EntityBadge';
 
 export type HomeViewMode = 'type' | 'category';
 
@@ -50,7 +52,7 @@ function InventoryGrid({
     >
       {items.map((item) => {
         const category = categories.find(
-          (candidate) => candidate.name === item.category && candidate.item_type === item.type,
+          (candidate) => candidate.name === item.category && candidate.scope === getItemCategoryScope(item),
         );
         const isSelected = selectedIds.has(item.id);
 
@@ -103,15 +105,25 @@ export default function HomeInventorySections({
     if (viewMode === 'type') {
       return [
         {
-          key: 'containers',
-          label: INVENTORY_NODE_LABELS.mixedContainer,
+          key: 'locations',
+          label: INVENTORY_NODE_LABELS.location,
+          kind: 'location' as const,
           icon: null,
-          items: items.filter((item) => item.type === 'container'),
+          items: items.filter((item) => getItemCategoryScope(item) === 'location'),
+          categories,
+        },
+        {
+          key: 'containers',
+          label: INVENTORY_NODE_LABELS.container,
+          kind: 'container' as const,
+          icon: null,
+          items: items.filter((item) => getItemCategoryScope(item) === 'container'),
           categories,
         },
         {
           key: 'items',
           label: INVENTORY_NODE_LABELS.item,
+          kind: 'item' as const,
           icon: null,
           items: items.filter((item) => item.type === 'item'),
           categories,
@@ -122,22 +134,22 @@ export default function HomeInventorySections({
     const categoryGroups = categories.map((category) => ({
       key: category.id,
       label: category.name,
+      kind: category.scope,
       icon: category,
       items: items.filter(
-        (item) => item.type === category.item_type && item.category === category.name,
+        (item) => getItemCategoryScope(item) === category.scope && item.category === category.name,
       ),
       categories: [category],
     }));
-    const uncategorizedGroups = (['container', 'item'] as const).map((itemType) => {
-      const typeCategories = categories.filter((category) => category.item_type === itemType);
+    const uncategorizedGroups = (['location', 'container', 'item'] as const).map((scope) => {
+      const typeCategories = categories.filter((category) => category.scope === scope);
       return {
-        key: `uncategorized-${itemType}`,
-        label: itemType === 'container'
-          ? `其他${INVENTORY_NODE_LABELS.mixedContainer}`
-          : '其他物品',
+        key: `uncategorized-${scope}`,
+        label: scope === 'location' ? '其他位置' : scope === 'container' ? '其他收纳' : '其他物品',
+        kind: scope,
         icon: null,
         items: items.filter(
-          (item) => item.type === itemType
+          (item) => getItemCategoryScope(item) === scope
             && !typeCategories.some((category) => category.name === item.category),
         ),
         categories: typeCategories,
@@ -157,6 +169,7 @@ export default function HomeInventorySections({
           return (
             <section key={group.key} aria-labelledby={`inventory-group-${group.key}`}>
               <div className="mb-3 flex items-center gap-2">
+                <EntityBadge kind={group.kind} compact />
                 {group.icon && colorClasses ? (
                   <span className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg ${colorClasses.bg}`}>
                     <CategoryIcon

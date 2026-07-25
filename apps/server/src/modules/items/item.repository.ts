@@ -245,12 +245,45 @@ export async function importInventoryForUser(userId: string, snapshot: ImportInv
     await tx.delete(categories).where(eq(categories.userId, userId));
     await tx.delete(tagRegistry).where(eq(tagRegistry.userId, userId));
 
-    if (snapshot.categories.length > 0) {
+    const importedCategories = snapshot.categories.flatMap((category) => {
+      if (category.scope) {
+        return [{ ...category, resolvedScope: category.scope }];
+      }
+      if (category.item_type === 'item') {
+        return [{ ...category, resolvedScope: 'item' as const }];
+      }
+
+      const matchingContainers = snapshot.items.filter(
+        (item) => item.type === 'container' && item.category === category.name,
+      );
+      const usedByLocation = matchingContainers.some(
+        (item) => item.metadata?.location_tag === true,
+      );
+      const usedByStorage = matchingContainers.some(
+        (item) => item.metadata?.location_tag !== true,
+      );
+
+      if (usedByLocation && usedByStorage) {
+        return [
+          { ...category, resolvedScope: 'container' as const },
+          { ...category, id: randomUUID(), preset_key: null, resolvedScope: 'location' as const },
+        ];
+      }
+
+      return [{
+        ...category,
+        resolvedScope: usedByLocation ? 'location' as const : 'container' as const,
+      }];
+    });
+
+    if (importedCategories.length > 0) {
       await tx.insert(categories).values(
-        snapshot.categories.map((category) => ({
+        importedCategories.map((category) => ({
           id: randomUUID(),
           userId,
           itemType: category.item_type,
+          scope: category.resolvedScope,
+          presetKey: category.preset_key ?? null,
           name: category.name,
           icon: category.icon,
           color: category.color,
@@ -318,7 +351,7 @@ export async function importInventoryForUser(userId: string, snapshot: ImportInv
     }
 
     return {
-      categories: snapshot.categories.length,
+      categories: importedCategories.length,
       tags: snapshot.tags.length,
       items: snapshot.items.length,
     };

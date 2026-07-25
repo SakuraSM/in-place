@@ -63,9 +63,12 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
   const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(null);
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'home-form-categories', user?.id, draft.type],
+    queryKey: ['mobile', 'home-form-categories', user?.id, draft.type, draft.isLocation],
     enabled: visible && Boolean(user),
-    queryFn: () => categoriesApi.fetchCategories(user!.id, draft.type),
+    queryFn: () => categoriesApi.fetchCategories(
+      user!.id,
+      draft.type === 'item' ? 'item' : draft.isLocation ? 'location' : 'container',
+    ),
   });
 
   const tagsQuery = useQuery({

@@ -133,6 +133,7 @@ export default function HomePageHeader({
                     key={value}
                     type="button"
                     onClick={() => onViewModeChange(value)}
+                    aria-label={label}
                     aria-pressed={viewMode === value}
                     className={`relative flex h-8 items-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition-colors ${
                       viewMode === value

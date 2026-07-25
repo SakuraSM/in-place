@@ -9,11 +9,25 @@ import {
 import {
   createCategoryForUser,
   deleteCategoryForUser,
+  applyCategoryPresetsForUser,
+  getCategoryPresetSummary,
   listCategoriesForUser,
   updateCategoryForUser,
 } from './category.repository.js';
 
 export const categoryRoutes: FastifyPluginAsync = async (app) => {
+  app.get('/presets', { preHandler: app.authenticate }, async (request, reply) => {
+    const currentUser = requireCurrentUser(request, reply);
+    if (!currentUser) return;
+    return reply.send(await getCategoryPresetSummary(currentUser.id));
+  });
+
+  app.post('/presets/apply', { preHandler: app.authenticate }, async (request, reply) => {
+    const currentUser = requireCurrentUser(request, reply);
+    if (!currentUser) return;
+    return reply.send(await applyCategoryPresetsForUser(currentUser.id));
+  });
+
   app.get('/', { preHandler: app.authenticate }, async (request, reply) => {
     const currentUser = requireCurrentUser(request, reply);
     if (!currentUser) {

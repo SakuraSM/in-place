@@ -10,8 +10,9 @@ import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
-import { getContainerTypeLabel } from '../lib/locationTag';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { buildInventoryImageUrl } from '../lib/itemImage';
+import EntityBadge from '../components/EntityBadge';
 
 export default function ContainerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -109,16 +110,13 @@ export default function ContainerDetailPage() {
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <p className="text-xs font-medium text-brandStrong mb-1">{containerLabel}详情</p>
+            <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact className="mb-2" />
             <h1 className="text-xl font-bold text-slate-900 leading-tight">{container.name}</h1>
           </div>
-          <span className="inline-flex items-center rounded-full px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium">
-            {containerLabel}
-          </span>
         </div>
         {container.category && (
-          <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium mb-3">
-            {container.category}
+          <span className="mb-3 inline-block rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">
+            类别 · {container.category}
           </span>
         )}
         {container.description && (

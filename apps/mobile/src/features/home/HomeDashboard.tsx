@@ -450,18 +450,24 @@ function groupRootItems({
   rootLeafItems: Item[];
   categories: Category[];
 }) {
-  const containerCategories = categories.filter((category) => category.item_type === 'container');
-  const itemCategories = categories.filter((category) => category.item_type === 'item');
+  const containerCategories = categories.filter((category) => category.scope !== 'item');
+  const itemCategories = categories.filter((category) => category.scope === 'item');
   const groups: { title: string; items: Item[] }[] = [];
 
   for (const category of containerCategories) {
-    const items = rootContainers.filter((item) => item.category === category.name);
+    const items = rootContainers.filter((item) => (
+      item.category === category.name
+      && (isLocationItem(item) ? 'location' : 'container') === category.scope
+    ));
     if (items.length > 0) {
       groups.push({ title: `${category.name} (${items.length})`, items });
     }
   }
 
-  const uncategorizedContainers = rootContainers.filter((item) => !containerCategories.some((category) => category.name === item.category));
+  const uncategorizedContainers = rootContainers.filter((item) => !containerCategories.some((category) => (
+    category.name === item.category
+    && category.scope === (isLocationItem(item) ? 'location' : 'container')
+  )));
   if (uncategorizedContainers.length > 0) {
     groups.push({ title: `其他位置/收纳 (${uncategorizedContainers.length})`, items: uncategorizedContainers });
   }

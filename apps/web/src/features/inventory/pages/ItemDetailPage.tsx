@@ -12,6 +12,7 @@ import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { buildInventoryImageUrl } from '../lib/itemImage';
+import EntityBadge from '../components/EntityBadge';
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -97,12 +98,15 @@ export default function ItemDetailPage() {
 
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
         <div className="flex items-start justify-between gap-3 mb-3">
-          <h1 className="text-xl font-bold text-slate-900 leading-tight">{item.name}</h1>
+          <div>
+            <EntityBadge kind="item" compact className="mb-2" />
+            <h1 className="text-xl font-bold text-slate-900 leading-tight">{item.name}</h1>
+          </div>
           <StatusBadge status={item.status} />
         </div>
         {item.category && (
-          <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium mb-3">
-            {item.category}
+          <span className="mb-3 inline-block rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">
+            类别 · {item.category}
           </span>
         )}
         {item.description && (

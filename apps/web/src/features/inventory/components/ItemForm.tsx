@@ -9,6 +9,7 @@ import { fetchCategories } from '../../../legacy/categories';
 import { fetchTags } from '../../../legacy/tags';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
+import { getFormCategoryScope } from '../lib/categoryScope';
 import { buildInventoryImageUrl } from '../lib/itemImage';
 import LocationPicker from './LocationPicker';
 import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
@@ -89,11 +90,12 @@ export default function ItemForm({
     onClose,
     shouldCloseOnEscape: !showLocationPicker && !saving,
   });
+  const categoryScope = getFormCategoryScope(form.type, form.isLocation);
 
   useEffect(() => {
     if (!user) return;
-    fetchCategories(user.id, form.type).then(setCustomCategories);
-  }, [user, form.type]);
+    fetchCategories(user.id, categoryScope).then(setCustomCategories);
+  }, [user, categoryScope]);
 
   useEffect(() => {
     if (!user) return;
@@ -270,7 +272,12 @@ export default function ItemForm({
                   <button
                     key={t}
                     type="button"
-                    onClick={() => update('type', t)}
+                    onClick={() => setForm((current) => ({
+                      ...current,
+                      type: t,
+                      isLocation: t === 'container' ? current.isLocation : false,
+                      category: '',
+                    }))}
                     className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors relative z-10"
                   >
                     {form.type === t && (
@@ -293,7 +300,11 @@ export default function ItemForm({
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">空间属性</label>
                 <button
                   type="button"
-                  onClick={() => update('isLocation', !form.isLocation)}
+                  onClick={() => setForm((current) => ({
+                    ...current,
+                    isLocation: !current.isLocation,
+                    category: '',
+                  }))}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
                     form.isLocation
                       ? 'border-sky-200 bg-sky-50'

@@ -5,6 +5,7 @@ import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Category, Item, ItemStatus } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+import { getItemCategoryScope } from '../lib/categoryScope';
 import LocationPicker from './LocationPicker';
 import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
 
@@ -55,13 +56,19 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
     return items.every((item) => item.type === firstType) ? firstType : null;
   }, [items]);
 
+  const categoryScope = useMemo(() => {
+    if (items.length === 0) return null;
+    const firstScope = getItemCategoryScope(items[0]);
+    return items.every((item) => getItemCategoryScope(item) === firstScope) ? firstScope : null;
+  }, [items]);
+
   const availableCategories = useMemo(() => {
-    if (!itemType) {
+    if (!categoryScope) {
       return [];
     }
 
-    return categories.filter((categoryItem) => categoryItem.item_type === itemType);
-  }, [categories, itemType]);
+    return categories.filter((categoryItem) => categoryItem.scope === categoryScope);
+  }, [categories, categoryScope]);
 
   const selectedTypeLabel = useMemo(() => {
     if (itemType === 'item') {
@@ -182,7 +189,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-            {itemType ? (
+            {categoryScope ? (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">类别</label>
                 {availableCategories.length === 0 ? (
@@ -223,7 +230,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了位置/收纳和物品，类别和状态不会一起批量修改。
+                混合选择了不同类型的对象，类别不会一起批量修改。
               </div>
             )}
 

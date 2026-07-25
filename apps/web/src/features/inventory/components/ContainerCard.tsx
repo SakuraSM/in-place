@@ -1,12 +1,12 @@
 import { ChevronRight, Box, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, type MouseEvent } from 'react';
-import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { staggerItem } from '../../../shared/lib/animations';
 import { buildInventoryImageUrl } from '../lib/itemImage';
+import EntityBadge from './EntityBadge';
 
 const FALLBACK_COLORS = [
   { bg: 'bg-sky-50', text: 'text-sky-500' },
@@ -129,16 +129,24 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
               {selected && <Check size={14} className="text-brandStrong" />}
             </div>
           )}
+          <div className="absolute left-2 top-2">
+            <EntityBadge kind={isLocationItem(item) ? 'location' : 'container'} compact />
+          </div>
         </div>
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <span>{childCount !== undefined ? `${childCount} 项` : (category?.name ?? INVENTORY_NODE_LABELS.container)}</span>
-            {isLocationItem(item) && (
-              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
-                {getContainerTypeLabel(item)}
-              </span>
-            )}
+        <div className="flex items-end justify-between gap-2">
+          <div className="min-w-0 space-y-1 text-xs text-slate-600">
+            {category ? (
+              <div className="flex min-w-0 items-center gap-1.5">
+                <span className={`flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded ${bgCls}`}>
+                  {iconElement}
+                </span>
+                <span className="truncate">{category.name}</span>
+              </div>
+            ) : null}
+            <span className="block text-slate-500">
+              {childCount !== undefined ? `${childCount} 项内容` : getContainerTypeLabel(item)}
+            </span>
           </div>
           {selectionMode ? (
             <span className="text-xs text-sky-500 font-medium">已选中</span>

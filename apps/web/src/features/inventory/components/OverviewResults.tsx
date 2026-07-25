@@ -4,8 +4,10 @@ import type { Item } from '../../../legacy/database.types';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { buildInventoryImageUrl } from '../lib/itemImage';
-import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+import { isLocationItem } from '../lib/locationTag';
 import PaginationControls from './PaginationControls';
+import EntityBadge from './EntityBadge';
+import { getItemCategoryScope } from '../lib/categoryScope';
 
 export interface OverviewResult {
   item: Item;
@@ -57,15 +59,12 @@ function ResultCard({ result, onOpen }: { result: OverviewResult; onOpen: () => 
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
           <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
-          {item.type === 'item' ? (
-            <StatusBadge status={item.status} />
-          ) : (
-            <span className="shrink-0 rounded-lg bg-brandTint px-2 py-0.5 text-[10px] font-bold text-brandStrong">
-              {getContainerTypeLabel(item)}
-            </span>
-          )}
+          <EntityBadge kind={getItemCategoryScope(item)} compact />
         </div>
-        {item.category ? <p className="mb-1 truncate text-xs text-slate-600">{item.category}</p> : null}
+        <div className="mb-1 flex items-center gap-2">
+          {item.category ? <p className="truncate text-xs text-violet-700">类别 · {item.category}</p> : null}
+          {item.type === 'item' ? <StatusBadge status={item.status} /> : null}
+        </div>
         <div className="flex items-center gap-1 text-xs text-slate-500">
           <Home size={11} className="shrink-0" />
           {path ? <ChevronRight size={10} /> : null}

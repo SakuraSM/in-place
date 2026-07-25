@@ -1,10 +1,13 @@
 export type ItemType = 'container' | 'item';
+export type CategoryScope = 'location' | 'container' | 'item';
 export type ItemStatus = 'in_stock' | 'borrowed' | 'worn_out';
 
 export interface Category {
   id: string;
   user_id: string;
   item_type: ItemType;
+  scope: CategoryScope;
+  preset_key: string | null;
   name: string;
   icon: string;
   color: string;

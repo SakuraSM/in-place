@@ -5,7 +5,8 @@ import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import { fetchChildren } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
 import { useAuth } from '../../../app/providers/auth-context';
-import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+import { isLocationItem } from '../lib/locationTag';
+import EntityBadge from './EntityBadge';
 import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
 
 interface Props {
@@ -169,11 +170,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                   >
                     <Box size={16} className="text-slate-400 shrink-0" />
                     <span className="flex-1 text-left truncate">{container.name}</span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      isLocationItem(container) ? 'bg-sky-100 text-sky-600' : 'bg-slate-200 text-slate-500'
-                    }`}>
-                      {getContainerTypeLabel(container)}
-                    </span>
+                    <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact />
                     {value === container.id && <Check size={15} className="text-sky-500" />}
                   </motion.button>
                   <motion.button

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import type { Category, ItemType } from '@inplace/domain';
-import { ITEM_TYPE_PRESENTATION, MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
+import type { Category, CategoryScope } from '@inplace/domain';
+import { MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -13,14 +13,14 @@ import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
 
 interface CategoryDraft {
-  item_type: ItemType;
+  scope: CategoryScope;
   name: string;
   icon: string;
   color: string;
 }
 
 const EMPTY_CATEGORY: CategoryDraft = {
-  item_type: 'item',
+  scope: 'item',
   name: '',
   icon: 'FolderTree',
   color: 'sky',
@@ -47,9 +47,9 @@ export default function ManageCategoriesScreen() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('请先登录');
-      const payload: Omit<Category, 'id' | 'created_at'> = {
+      const payload: Pick<Category, 'user_id' | 'scope' | 'name' | 'icon' | 'color'> = {
         user_id: user.id,
-        item_type: draft.item_type,
+        scope: draft.scope,
         name: draft.name.trim(),
         icon: draft.icon.trim() || 'FolderTree',
         color: draft.color.trim() || 'sky',
@@ -91,7 +91,7 @@ export default function ManageCategoriesScreen() {
     setMessage(null);
     setEditingId(category.id);
     setDraft({
-      item_type: category.item_type,
+      scope: category.scope,
       name: category.name,
       icon: category.icon,
       color: category.color,
@@ -110,9 +110,9 @@ export default function ManageCategoriesScreen() {
         {deleteMutation.isError ? <Text style={errorTextStyle}>{deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}</Text> : null}
 
         <View style={chipRowStyle}>
-          {(['item', 'container'] as ItemType[]).map((type) => (
-            <Pressable key={type} onPress={() => setDraft((current) => ({ ...current, item_type: type }))} style={[chipStyle, draft.item_type === type ? activeChipStyle : null]}>
-              <Text style={draft.item_type === type ? activeChipTextStyle : chipTextStyle}>{ITEM_TYPE_PRESENTATION[type].label}</Text>
+          {(['location', 'container', 'item'] as CategoryScope[]).map((scope) => (
+            <Pressable key={scope} onPress={() => setDraft((current) => ({ ...current, scope }))} style={[chipStyle, draft.scope === scope ? activeChipStyle : null]}>
+              <Text style={draft.scope === scope ? activeChipTextStyle : chipTextStyle}>{scope === 'location' ? '位置' : scope === 'container' ? '收纳' : '物品'}</Text>
             </Pressable>
           ))}
         </View>
@@ -142,7 +142,7 @@ export default function ManageCategoriesScreen() {
           <View key={category.id} style={rowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={rowTitleStyle}>{category.name}</Text>
-              <Text style={bodyStyle}>{ITEM_TYPE_PRESENTATION[category.item_type].label} · {getColorLabel(category.color)}</Text>
+              <Text style={bodyStyle}>{category.scope === 'location' ? '位置' : category.scope === 'container' ? '收纳' : '物品'} · {getColorLabel(category.color)}</Text>
             </View>
             <View style={miniRowStyle}>
               <Pressable onPress={() => startEdit(category)} style={miniButtonStyle}>

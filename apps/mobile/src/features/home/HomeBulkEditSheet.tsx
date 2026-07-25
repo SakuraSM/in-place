@@ -67,13 +67,21 @@ export function HomeBulkEditSheet({
     return items.every((item) => item.type === firstType) ? firstType : null;
   }, [items]);
 
+  const categoryScope = useMemo(() => {
+    if (items.length === 0) return null;
+    const firstScope = items[0].type === 'item' ? 'item' : isLocationItem(items[0]) ? 'location' : 'container';
+    return items.every((item) => (
+      (item.type === 'item' ? 'item' : isLocationItem(item) ? 'location' : 'container') === firstScope
+    )) ? firstScope : null;
+  }, [items]);
+
   const availableCategories = useMemo(() => {
-    if (!itemType) {
+    if (!categoryScope) {
       return [];
     }
 
-    return categories.filter((categoryItem) => categoryItem.item_type === itemType);
-  }, [categories, itemType]);
+    return categories.filter((categoryItem) => categoryItem.scope === categoryScope);
+  }, [categories, categoryScope]);
 
   const selectedTypeLabel = useMemo(() => {
     if (itemType === 'item') {

@@ -6,6 +6,7 @@ import type { Item, Category } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
 import { staggerItem } from '../../../shared/lib/animations';
 import { buildInventoryImageUrl } from '../lib/itemImage';
+import EntityBadge from './EntityBadge';
 
 interface Props {
   item: Item;
@@ -100,7 +101,8 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
               <Package size={32} className="text-slate-200" />
             </div>
           )}
-          <div className="absolute top-2 left-2">
+          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+            <EntityBadge kind="item" compact />
             <StatusBadge status={item.status} />
           </div>
           {selectionMode && (
@@ -127,7 +129,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
                   </span>
                 );
               })()}
-              <p className="text-xs text-slate-400 truncate">{item.category}</p>
+              <p className="text-xs text-slate-600 truncate">{item.category}</p>
             </div>
           )}
           {item.tags.length > 0 && (

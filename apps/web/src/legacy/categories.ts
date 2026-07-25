@@ -8,4 +8,6 @@ export const {
   createCategory,
   updateCategory,
   deleteCategory,
+  fetchCategoryPresets,
+  applyCategoryPresets,
 } = categoriesApi;
