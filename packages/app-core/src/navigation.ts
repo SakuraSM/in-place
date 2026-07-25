@@ -59,7 +59,7 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   },
   {
     id: 'categories',
-    label: '管理',
+    label: '分类管理',
     shortLabel: '管理',
     section: 'management',
     priority: 50,

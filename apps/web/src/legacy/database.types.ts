@@ -4,6 +4,7 @@ export type {
   AIRecognitionResult,
   BreadcrumbItem,
   Category,
+  CategoryScope,
   Database,
   Item,
   ItemStats,

@@ -1,6 +1,10 @@
-import { users } from '@inplace/db';
+import { categories, users } from '@inplace/db';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../../lib/db.js';
+import {
+  DEFAULT_CATEGORY_PRESETS,
+  itemTypeForCategoryScope,
+} from '../categories/category-presets.js';
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -28,21 +32,37 @@ export async function createUser(input: {
   passwordHash: string;
   displayName: string | null;
 }) {
-  const [user] = await getDb()
-    .insert(users)
-    .values({
-      email: normalizeEmail(input.email),
-      passwordHash: input.passwordHash,
-      displayName: input.displayName,
-    })
-    .returning({
-      id: users.id,
-      email: users.email,
-      displayName: users.displayName,
-      createdAt: users.createdAt,
-    });
+  return getDb().transaction(async (tx) => {
+    const [user] = await tx
+      .insert(users)
+      .values({
+        email: normalizeEmail(input.email),
+        passwordHash: input.passwordHash,
+        displayName: input.displayName,
+      })
+      .returning({
+        id: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        createdAt: users.createdAt,
+      });
 
-  return user ?? null;
+    if (!user) {
+      return null;
+    }
+
+    await tx.insert(categories).values(DEFAULT_CATEGORY_PRESETS.map((preset) => ({
+      userId: user.id,
+      itemType: itemTypeForCategoryScope(preset.scope),
+      scope: preset.scope,
+      presetKey: preset.key,
+      name: preset.name,
+      icon: preset.icon,
+      color: preset.color,
+    })));
+
+    return user;
+  });
 }
 
 export async function updateUserProfile(userId: string, input: {

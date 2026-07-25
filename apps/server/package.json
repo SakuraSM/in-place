@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "vitest": "^4.1.10",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

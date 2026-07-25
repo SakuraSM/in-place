@@ -34,6 +34,8 @@ interface ExportCategoryRecord {
   id: string;
   user_id: string;
   item_type: 'container' | 'item';
+  scope: 'location' | 'container' | 'item';
+  preset_key: string | null;
   name: string;
   icon: string;
   color: string;
@@ -73,7 +75,7 @@ interface ExportItemRecord {
 }
 
 interface ExportSnapshot {
-  version: '1' | '2';
+  version: '1' | '2' | '3';
   exported_at: string;
   user: {
     id: string;
@@ -148,6 +150,8 @@ function toExportCategories(rows: Awaited<ReturnType<typeof exportInventoryForUs
     id: row.id,
     user_id: row.userId,
     item_type: row.itemType,
+    scope: row.scope,
+    preset_key: row.presetKey,
     name: row.name,
     icon: row.icon,
     color: row.color,
@@ -365,7 +369,7 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
     }
 
     const payload: ExportSnapshot = {
-      version: '2',
+      version: '3',
       exported_at: exportedAt,
       user: {
         id: currentUser.id,

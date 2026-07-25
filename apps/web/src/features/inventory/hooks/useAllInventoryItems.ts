@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { searchItems } from '../../../legacy/items';
 
 export function useAllInventoryItems(enabled = true) {

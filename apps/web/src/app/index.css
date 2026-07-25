@@ -13,6 +13,22 @@
   * {
     -webkit-tap-highlight-color: transparent;
   }
+
+  body {
+    min-width: 320px;
+    background: #f7fbf8;
+    color: #172033;
+  }
+
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 3px solid rgba(13, 148, 136, 0.42);
+    outline-offset: 3px;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
@@ -26,6 +42,26 @@
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    transform: translateY(-180%);
+    border-radius: 0.875rem;
+    background: #0f766e;
+    padding: 0.75rem 1rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+    transition: transform 160ms ease-out;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
   }
 }
 
@@ -57,4 +93,19 @@
 
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.filter-chip {
+  @apply inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-full border border-brand/20 bg-brandTint px-3 text-sm font-semibold text-brandStrong transition-colors hover:border-brand/40;
 }

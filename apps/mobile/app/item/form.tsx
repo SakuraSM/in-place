@@ -78,11 +78,14 @@ export default function ItemFormScreen() {
   });
 
   const effectiveType: ItemType = isEditing ? itemQuery.data?.type ?? 'item' : type === 'container' ? 'container' : 'item';
+  const effectiveCategoryScope = effectiveType === 'item'
+    ? 'item'
+    : itemQuery.data?.metadata?.location_tag === true ? 'location' : 'container';
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'form-categories', user?.id, effectiveType],
+    queryKey: ['mobile', 'form-categories', user?.id, effectiveCategoryScope],
     enabled: Boolean(user),
-    queryFn: () => categoriesApi.fetchCategories(user!.id, effectiveType),
+    queryFn: () => categoriesApi.fetchCategories(user!.id, effectiveCategoryScope),
   });
 
   const initialForm = useMemo<FormState>(() => ({

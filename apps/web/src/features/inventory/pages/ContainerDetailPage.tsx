@@ -10,8 +10,9 @@ import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
-import { getContainerTypeLabel } from '../lib/locationTag';
+import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { buildInventoryImageUrl } from '../lib/itemImage';
+import EntityBadge from '../components/EntityBadge';
 
 export default function ContainerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,18 +70,18 @@ export default function ContainerDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-brandStrong border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!container) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center">
         <Box size={48} className="text-slate-300 mb-3" />
         <p className="text-slate-500">找不到该位置或收纳</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-sky-500 text-sm">返回</button>
+        <button onClick={() => navigate(-1)} className="mt-4 text-brandStrong text-sm font-semibold">返回</button>
       </div>
     );
   }
@@ -90,7 +91,6 @@ export default function ContainerDetailPage() {
   const infoCards = (
     <motion.div
       variants={staggerContainer}
-      initial="initial"
       animate="animate"
       className="space-y-4"
     >
@@ -110,16 +110,13 @@ export default function ContainerDetailPage() {
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <p className="text-xs font-medium text-sky-500 mb-1">{containerLabel}详情</p>
+            <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact className="mb-2" />
             <h1 className="text-xl font-bold text-slate-900 leading-tight">{container.name}</h1>
           </div>
-          <span className="inline-flex items-center rounded-full px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium">
-            {containerLabel}
-          </span>
         </div>
         {container.category && (
-          <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium mb-3">
-            {container.category}
+          <span className="mb-3 inline-block rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">
+            类别 · {container.category}
           </span>
         )}
         {container.description && (
@@ -131,11 +128,11 @@ export default function ContainerDetailPage() {
         <h2 className="text-sm font-semibold text-slate-700 mb-3">{containerLabel}信息</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-slate-50 px-4 py-3">
-            <p className="text-xs text-slate-400">直接包含</p>
+            <p className="text-xs text-slate-600">直接包含</p>
             <p className="mt-1 text-lg font-semibold text-slate-900">{children.length}</p>
           </div>
           <div className="rounded-xl bg-slate-50 px-4 py-3">
-            <p className="text-xs text-slate-400">{containerLabel}层级</p>
+            <p className="text-xs text-slate-600">{containerLabel}层级</p>
             <p className="mt-1 text-lg font-semibold text-slate-900">{ancestors.length + 1}</p>
           </div>
         </div>
@@ -169,7 +166,7 @@ export default function ContainerDetailPage() {
               <motion.span
                 key={tag}
                 whileHover={{ scale: 1.06 }}
-                className="px-3 py-1.5 bg-sky-50 text-sky-600 rounded-full text-xs font-medium cursor-default"
+                className="px-3 py-1.5 bg-brandTint text-brandStrong rounded-full text-xs font-medium cursor-default"
               >
                 {tag}
               </motion.span>
@@ -179,7 +176,7 @@ export default function ContainerDetailPage() {
       )}
 
       <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-        <div className="grid grid-cols-2 gap-3 text-xs text-slate-400">
+        <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
           <div>
             <p className="mb-0.5">创建时间</p>
             <p className="text-slate-600 font-medium">{new Date(container.created_at).toLocaleDateString('zh-CN')}</p>
@@ -194,27 +191,33 @@ export default function ContainerDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-canvas">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_ROW} justify-between`}>
           <button
+            type="button"
             onClick={() => navigate(-1)}
+            aria-label="返回上一级"
             className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-2">
             <motion.button
+              type="button"
               onClick={() => setShowEdit(true)}
+              aria-label={`编辑${containerLabel}：${container.name}`}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-500 transition-colors text-sm font-medium"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surfaceMuted text-slate-600 hover:bg-brandTint hover:text-brandStrong transition-colors text-sm font-medium"
             >
               <SquarePen size={15} />
               <span className="hidden md:inline">编辑</span>
             </motion.button>
             <motion.button
+              type="button"
               onClick={() => setShowDelete(true)}
+              aria-label={`删除${containerLabel}：${container.name}`}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-500 transition-colors text-sm font-medium"
@@ -246,7 +249,7 @@ export default function ContainerDetailPage() {
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.94 }}
                       className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 bg-white transition-all ${
-                        i === activeImageIdx ? 'border-sky-500' : 'border-transparent opacity-60 hover:opacity-100'
+                        i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
                       <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
@@ -279,7 +282,7 @@ export default function ContainerDetailPage() {
                     key={i}
                     onClick={() => setActiveImageIdx(i)}
                     className={`w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 ${
-                      i === activeImageIdx ? 'border-sky-500' : 'border-transparent opacity-60'
+                      i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60'
                     }`}
                   >
                     <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="w-full h-full object-cover" />

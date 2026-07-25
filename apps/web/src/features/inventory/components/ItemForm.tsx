@@ -1,17 +1,19 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useId, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, MapPin, Tag, Plus, Loader2 } from 'lucide-react';
 import { INVENTORY_NODE_LABELS, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/database.types';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { fetchItem, uploadImage } from '../../../legacy/items';
 import { fetchCategories } from '../../../legacy/categories';
 import { fetchTags } from '../../../legacy/tags';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
+import { getFormCategoryScope } from '../lib/categoryScope';
 import { buildInventoryImageUrl } from '../lib/itemImage';
 import LocationPicker from './LocationPicker';
 import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
+import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
 
 interface FormData {
   type: ItemType;
@@ -81,11 +83,19 @@ export default function ItemForm({
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [parentLabel, setParentLabel] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const titleId = useId();
+  const nameId = useId();
+  const descriptionId = useId();
+  const dialogRef = useDialogFocus({
+    onClose,
+    shouldCloseOnEscape: !showLocationPicker && !saving,
+  });
+  const categoryScope = getFormCategoryScope(form.type, form.isLocation);
 
   useEffect(() => {
     if (!user) return;
-    fetchCategories(user.id, form.type).then(setCustomCategories);
-  }, [user, form.type]);
+    fetchCategories(user.id, categoryScope).then(setCustomCategories);
+  }, [user, categoryScope]);
 
   useEffect(() => {
     if (!user) return;
@@ -225,6 +235,11 @@ export default function ItemForm({
           onClick={onClose}
         />
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden bg-white shadow-2xl rounded-t-3xl md:max-h-[88vh] md:max-w-3xl md:rounded-3xl"
           initial={{ y: 24, opacity: 0, scale: 0.98 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -232,11 +247,14 @@ export default function ItemForm({
         >
           <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
-            <h2 className="font-semibold text-slate-900 text-lg">
+            <h2 id={titleId} className="font-semibold text-slate-900 text-lg">
               {initial?.id ? '编辑' : '新增'}{containerLabel}
             </h2>
             <motion.button
+              type="button"
               onClick={onClose}
+              aria-label={`关闭${containerLabel}表单`}
+              disabled={saving}
               whileHover={{ scale: 1.08, rotate: 90 }}
               whileTap={{ scale: 0.92 }}
               transition={{ type: 'spring', stiffness: 400, damping: 18 }}
@@ -254,7 +272,12 @@ export default function ItemForm({
                   <button
                     key={t}
                     type="button"
-                    onClick={() => update('type', t)}
+                    onClick={() => setForm((current) => ({
+                      ...current,
+                      type: t,
+                      isLocation: t === 'container' ? current.isLocation : false,
+                      category: '',
+                    }))}
                     className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors relative z-10"
                   >
                     {form.type === t && (
@@ -277,7 +300,11 @@ export default function ItemForm({
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">空间属性</label>
                 <button
                   type="button"
-                  onClick={() => update('isLocation', !form.isLocation)}
+                  onClick={() => setForm((current) => ({
+                    ...current,
+                    isLocation: !current.isLocation,
+                    category: '',
+                  }))}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
                     form.isLocation
                       ? 'border-sky-200 bg-sky-50'
@@ -318,8 +345,10 @@ export default function ItemForm({
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">名称 *</label>
+              <label htmlFor={nameId} className="block text-sm font-medium text-slate-700 mb-1.5">名称 *</label>
               <input
+                id={nameId}
+                name="name"
                 type="text"
                 value={form.name}
                 onChange={(e) => update('name', e.target.value)}
@@ -327,25 +356,27 @@ export default function ItemForm({
                   ? (form.isLocation ? '如：卧室、客厅、仓库...' : '如：透明收纳箱、床头柜抽屉、柜子...')
                   : '如：蓝色羽绒服...'}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+                className="w-full rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">描述</label>
+              <label htmlFor={descriptionId} className="block text-sm font-medium text-slate-700 mb-1.5">描述</label>
               <textarea
+                id={descriptionId}
+                name="description"
                 value={form.description}
                 onChange={(e) => update('description', e.target.value)}
                 placeholder="添加备注或描述..."
                 rows={2}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm resize-none"
+                className="w-full resize-none rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">类别</label>
               {customCategories.length === 0 ? (
-                <p className="text-xs text-slate-400 py-2">暂无自定义类别，请前往「类别管理」添加</p>
+                <p className="text-xs text-slate-400 py-2">暂无自定义分类，请前往「分类管理」添加</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {customCategories.map((cat) => {
@@ -395,9 +426,9 @@ export default function ItemForm({
                         whileTap={{ scale: 0.96 }}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                           form.status === value
-                            ? value === 'in_stock' ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
-                              : value === 'borrowed' ? 'bg-amber-500 text-white shadow-sm shadow-amber-200'
-                              : 'bg-rose-500 text-white shadow-sm shadow-rose-200'
+                            ? value === 'in_stock' ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-200'
+                              : value === 'borrowed' ? 'bg-amber-700 text-white shadow-sm shadow-amber-200'
+                              : 'bg-rose-700 text-white shadow-sm shadow-rose-200'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
@@ -483,7 +514,7 @@ export default function ItemForm({
                             whileTap={{ scale: 0.96 }}
                             className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                               form.tags.includes(tag)
-                                ? 'bg-sky-500 text-white'
+                                ? 'bg-brandStrong text-white'
                                 : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'
                             }`}
                           >
@@ -511,6 +542,7 @@ export default function ItemForm({
                 <motion.button
                   type="button"
                   onClick={addTag}
+                  aria-label="添加标签"
                   whileHover={{ scale: 1.08, backgroundColor: '#e0f2fe' }}
                   whileTap={{ scale: 0.92 }}
                   className="w-10 h-10 flex items-center justify-center rounded-xl bg-sky-50 text-sky-500 transition-colors"
@@ -542,7 +574,12 @@ export default function ItemForm({
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-50 text-sky-600 rounded-full text-xs font-medium"
                       >
                         {tag}
-                        <button type="button" onClick={() => removeTag(tag)} className="hover:text-sky-800">
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          aria-label={`移除标签：${tag}`}
+                          className="hover:text-sky-800"
+                        >
                           <X size={11} />
                         </button>
                       </motion.span>
@@ -553,7 +590,7 @@ export default function ItemForm({
             </div>
 
             {submitError ? (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              <div role="alert" className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
                 {submitError}
               </div>
             ) : null}
@@ -578,6 +615,7 @@ export default function ItemForm({
                       <button
                         type="button"
                         onClick={() => removeImage(url)}
+                        aria-label={`移除图片 ${i + 1}`}
                         className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
                       >
                         <X size={10} className="text-white" />
@@ -614,7 +652,7 @@ export default function ItemForm({
                 disabled={saving || !form.name.trim()}
                 whileHover={{ scale: saving ? 1 : 1.01 }}
                 whileTap={{ scale: saving ? 1 : 0.98 }}
-                className="w-full py-4 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm shadow-sm shadow-sky-200"
+                className="w-full rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:opacity-50"
               >
                 {saving ? '保存中...' : '保存'}
               </motion.button>

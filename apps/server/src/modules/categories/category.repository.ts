@@ -1,12 +1,20 @@
-import { categories } from '@inplace/db';
-import { and, asc, eq } from 'drizzle-orm';
+import { categories, deletedCategoryPresets, items } from '@inplace/db';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import type { CreateCategoryInput, ListCategoriesQuery, UpdateCategoryInput } from './category.schemas.js';
 import { getDb } from '../../lib/db.js';
+import {
+  categoryIdentity,
+  DEFAULT_CATEGORY_PRESETS,
+  itemTypeForCategoryScope,
+} from './category-presets.js';
 
 export async function listCategoriesForUser(userId: string, query: ListCategoriesQuery) {
   const filters = [eq(categories.userId, userId)];
   if (query.itemType) {
     filters.push(eq(categories.itemType, query.itemType));
+  }
+  if (query.scope) {
+    filters.push(eq(categories.scope, query.scope));
   }
 
   return getDb()
@@ -21,7 +29,8 @@ export async function createCategoryForUser(userId: string, input: CreateCategor
     .insert(categories)
     .values({
       userId,
-      itemType: input.itemType,
+      itemType: itemTypeForCategoryScope(input.scope),
+      scope: input.scope,
       name: input.name,
       icon: input.icon,
       color: input.color,
@@ -32,26 +41,122 @@ export async function createCategoryForUser(userId: string, input: CreateCategor
 }
 
 export async function updateCategoryForUser(userId: string, categoryId: string, input: UpdateCategoryInput) {
-  const [category] = await getDb()
-    .update(categories)
-    .set(input)
-    .where(and(
-      eq(categories.id, categoryId),
-      eq(categories.userId, userId),
-    ))
-    .returning();
+  return getDb().transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .limit(1);
 
-  return category ?? null;
+    if (!existing) {
+      return null;
+    }
+
+    const [category] = await tx
+      .update(categories)
+      .set(input)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .returning();
+
+    if (input.name && input.name !== existing.name) {
+      const scopeFilter = existing.scope === 'item'
+        ? eq(items.type, 'item')
+        : existing.scope === 'location'
+          ? and(eq(items.type, 'container'), sql`${items.metadata} ->> 'location_tag' = 'true'`)
+          : and(eq(items.type, 'container'), sql`coalesce(${items.metadata} ->> 'location_tag', 'false') <> 'true'`);
+
+      await tx
+        .update(items)
+        .set({ category: input.name })
+        .where(and(
+          eq(items.userId, userId),
+          eq(items.category, existing.name),
+          scopeFilter,
+        ));
+    }
+
+    return category ?? null;
+  });
 }
 
 export async function deleteCategoryForUser(userId: string, categoryId: string) {
-  const [category] = await getDb()
-    .delete(categories)
-    .where(and(
-      eq(categories.id, categoryId),
-      eq(categories.userId, userId),
-    ))
-    .returning({ id: categories.id });
+  return getDb().transaction(async (tx) => {
+    const [category] = await tx
+      .delete(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .returning({ id: categories.id, presetKey: categories.presetKey });
 
-  return category ?? null;
+    if (category?.presetKey) {
+      await tx
+        .insert(deletedCategoryPresets)
+        .values({ userId, presetKey: category.presetKey })
+        .onConflictDoNothing();
+    }
+
+    return category ?? null;
+  });
+}
+
+export async function getCategoryPresetSummary(userId: string) {
+  const [existing, dismissed] = await Promise.all([
+    listCategoriesForUser(userId, {}),
+    getDb().select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.userId, userId)),
+  ]);
+  const identities = new Set(existing.map((category) => categoryIdentity(category.scope, category.name)));
+  const presetKeys = new Set(existing.map((category) => category.presetKey).filter(Boolean));
+  const dismissedKeys = new Set(dismissed.map((entry) => entry.presetKey));
+  const missingCount = DEFAULT_CATEGORY_PRESETS.filter((preset) => (
+    !dismissedKeys.has(preset.key)
+    && !presetKeys.has(preset.key)
+    && !identities.has(categoryIdentity(preset.scope, preset.name))
+  )).length;
+
+  return {
+    total: DEFAULT_CATEGORY_PRESETS.length,
+    missingCount,
+    dismissedCount: dismissedKeys.size,
+  };
+}
+
+export async function applyCategoryPresetsForUser(userId: string) {
+  return getDb().transaction(async (tx) => {
+    const [existing, dismissed] = await Promise.all([
+      tx.select().from(categories).where(eq(categories.userId, userId)),
+      tx.select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.userId, userId)),
+    ]);
+    const identities = new Set(existing.map((category) => categoryIdentity(category.scope, category.name)));
+    const presetKeys = new Set(existing.map((category) => category.presetKey).filter(Boolean));
+    const dismissedKeys = new Set(dismissed.map((entry) => entry.presetKey));
+    const missing = DEFAULT_CATEGORY_PRESETS.filter((preset) => (
+      !dismissedKeys.has(preset.key)
+      && !presetKeys.has(preset.key)
+      && !identities.has(categoryIdentity(preset.scope, preset.name))
+    ));
+
+    const added = missing.length === 0 ? [] : await tx
+      .insert(categories)
+      .values(missing.map((preset) => ({
+        userId,
+        itemType: itemTypeForCategoryScope(preset.scope),
+        scope: preset.scope,
+        presetKey: preset.key,
+        name: preset.name,
+        icon: preset.icon,
+        color: preset.color,
+      })))
+      .onConflictDoNothing()
+      .returning();
+
+    const data = await tx
+      .select()
+      .from(categories)
+      .where(eq(categories.userId, userId))
+      .orderBy(asc(categories.scope), asc(categories.name));
+
+    return {
+      addedCount: added.length,
+      skippedCount: DEFAULT_CATEGORY_PRESETS.length - added.length,
+      data,
+    };
+  });
 }

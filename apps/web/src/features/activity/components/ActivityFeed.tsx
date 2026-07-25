@@ -6,7 +6,7 @@ import type { ActivityAction, ActivityLog } from '../../../legacy/database.types
 const ACTION_LABELS: Record<ActivityAction, { label: string; tone: string; icon: ElementType }> = {
   manual_create: {
     label: '手动录入',
-    tone: 'bg-sky-50 text-sky-600',
+    tone: 'bg-sky-50 text-sky-700',
     icon: PencilLine,
   },
   ai_scan_create: {
@@ -16,12 +16,12 @@ const ACTION_LABELS: Record<ActivityAction, { label: string; tone: string; icon:
   },
   update: {
     label: '修改信息',
-    tone: 'bg-amber-50 text-amber-600',
+    tone: 'bg-amber-50 text-amber-800',
     icon: PencilLine,
   },
   delete: {
     label: '删除记录',
-    tone: 'bg-rose-50 text-rose-600',
+    tone: 'bg-rose-50 text-rose-700',
     icon: Trash2,
   },
 };
@@ -92,7 +92,7 @@ interface Props {
 export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyMessage = '还没有操作记录' }: Props) {
   if (logs.length === 0) {
     return (
-      <div className={`rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400 ${compact ? 'px-4 py-8' : 'px-5 py-12'}`}>
+      <div className={`rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-600 ${compact ? 'px-4 py-8' : 'px-5 py-12'}`}>
         {emptyMessage}
       </div>
     );
@@ -119,7 +119,7 @@ export default function ActivityFeed({ logs, compact = false, onOpenItem, emptyM
                   {actionConfig.label}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-slate-600">
                 {itemTypeLabel} · {formatTimeLabel(entry.created_at)}
               </p>
               {changedSummary && (

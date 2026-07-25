@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, LockKeyhole, LogOut, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
@@ -10,6 +10,8 @@ import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function SecurityPage() {
+  const currentPasswordId = 'current-password';
+  const newPasswordId = 'new-password';
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
@@ -50,7 +52,7 @@ export default function SecurityPage() {
     <div className="min-h-screen bg-slate-50">
       <div className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
+          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
             <ArrowLeft size={15} />
             返回我的
           </Link>
@@ -60,7 +62,6 @@ export default function SecurityPage() {
 
       <motion.div
         variants={staggerContainer}
-        initial="initial"
         animate="animate"
         className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
       >
@@ -82,9 +83,11 @@ export default function SecurityPage() {
           <motion.div variants={staggerItem}>
             <SectionPanel icon={<LockKeyhole size={16} />} title="修改密码">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">当前密码</label>
+                <label htmlFor={currentPasswordId} className="mb-1.5 block text-xs font-medium text-slate-500">当前密码</label>
                 <input
+                  id={currentPasswordId}
                   type="password"
+                  autoComplete="current-password"
                   value={currentPassword}
                   onChange={(event) => {
                     setPasswordMessage(null);
@@ -96,9 +99,11 @@ export default function SecurityPage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">新密码</label>
+                <label htmlFor={newPasswordId} className="mb-1.5 block text-xs font-medium text-slate-500">新密码</label>
                 <input
+                  id={newPasswordId}
                   type="password"
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={(event) => {
                     setPasswordMessage(null);
@@ -113,13 +118,13 @@ export default function SecurityPage() {
                 <button
                   onClick={() => void handlePasswordSave()}
                   disabled={passwordSaving || !passwordValid}
-                  className="inline-flex h-10 items-center rounded-xl bg-sky-500 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                  className="inline-flex h-10 items-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {passwordSaving ? '保存中...' : '修改密码'}
                 </button>
               </div>
-              {passwordMessage ? <p className="text-sm text-emerald-500">{passwordMessage}</p> : null}
-              {passwordError ? <p className="text-sm text-rose-500">{passwordError}</p> : null}
+              {passwordMessage ? <p role="status" className="text-sm text-emerald-600">{passwordMessage}</p> : null}
+              {passwordError ? <p role="alert" className="text-sm text-rose-600">{passwordError}</p> : null}
             </SectionPanel>
           </motion.div>
 
@@ -134,7 +139,7 @@ export default function SecurityPage() {
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                  className="inline-flex h-11 items-center gap-3 rounded-2xl bg-rose-500 px-4 text-sm font-medium text-white transition-colors hover:bg-rose-600"
+                  className="inline-flex h-11 items-center gap-3 rounded-2xl bg-rose-700 px-4 text-sm font-medium text-white transition-colors hover:bg-rose-800"
                 >
                   <LogOut size={18} />
                   退出登录

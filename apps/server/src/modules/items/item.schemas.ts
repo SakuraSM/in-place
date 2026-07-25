@@ -51,6 +51,8 @@ export const exportItemsQuerySchema = z.object({
 const importCategorySchema = z.object({
   id: z.string().uuid(),
   item_type: itemTypeSchema,
+  scope: z.enum(['location', 'container', 'item']).optional(),
+  preset_key: z.string().trim().min(1).max(120).nullable().optional(),
   name: z.string().trim().min(1).max(120),
   icon: z.string().trim().min(1).max(80),
   color: z.string().trim().min(1).max(40),
@@ -86,7 +88,7 @@ const importItemSchema = z.object({
 });
 
 export const importInventorySchema = z.object({
-  version: z.union([z.literal('1'), z.literal('2')]),
+  version: z.union([z.literal('1'), z.literal('2'), z.literal('3')]),
   exported_at: z.string().datetime(),
   categories: z.array(importCategorySchema),
   tags: z.array(importTagSchema),

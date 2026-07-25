@@ -1,255 +1,78 @@
-import { useRef, useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Shapes, X, Check, ChevronDown, Upload, ImageIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
-import { useAuth } from '../../../app/providers/AuthContext';
-import { fetchCategories, createCategory, updateCategory, deleteCategory } from '../../../legacy/categories';
-import { uploadImage } from '../../../legacy/items';
-import type { Category, ItemType } from '../../../legacy/database.types';
+import { useCallback, useEffect, useState } from 'react';
+import { Box, MapPin, Package, Pencil, Plus, Shapes, Sparkles, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { Category, CategoryScope } from '../../../legacy/database.types';
+import {
+  applyCategoryPresets,
+  deleteCategory,
+  fetchCategories,
+  fetchCategoryPresets,
+} from '../../../legacy/categories';
+import { useAuth } from '../../../app/providers/auth-context';
+import { useToast } from '../../../shared/ui/toast';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
+import EmptyState from '../../../shared/ui/EmptyState';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
-import { CategoryIcon, COLOR_OPTIONS, ICON_OPTIONS, getCategoryIconLabel, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
-import EmptyState from '../../../shared/ui/EmptyState';
+import CategoryEditorDialog from '../components/CategoryEditorDialog';
+import EntityBadge from '../components/EntityBadge';
+import {
+  CategoryIcon,
+  getColorClasses,
+  isCustomCategoryImageIcon,
+} from '../lib/categoryPresentation';
 
-interface CategoryFormProps {
-  initial?: Partial<Category>;
-  itemType: ItemType;
-  userId: string;
-  onSave: (cat: Category) => void;
-  onClose: () => void;
-}
+const SCOPE_PRESENTATION = {
+  location: { label: '位置分类', description: '用于公寓、房间、楼层等固定空间', icon: MapPin, tone: 'text-sky-700' },
+  container: { label: '收纳分类', description: '用于柜子、抽屉、收纳箱等容器', icon: Box, tone: 'text-teal-700' },
+  item: { label: '物品分类', description: '用于数码、服饰、书籍等具体物品', icon: Package, tone: 'text-amber-800' },
+} satisfies Record<CategoryScope, {
+  label: string;
+  description: string;
+  icon: typeof MapPin;
+  tone: string;
+}>;
 
-function CategoryForm({ initial, itemType, userId, onSave, onClose }: CategoryFormProps) {
-  const [name, setName] = useState(initial?.name ?? '');
-  const [icon, setIcon] = useState(initial?.icon ?? 'FolderTree');
-  const [color, setColor] = useState(initial?.color ?? 'sky');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showIconPicker, setShowIconPicker] = useState(false);
-  const [uploadingIcon, setUploadingIcon] = useState(false);
-  const iconInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setSaving(true);
-    setError(null);
-    try {
-      if (initial?.id) {
-        const updated = await updateCategory(initial.id, { name: name.trim(), icon, color });
-        onSave(updated);
-      } else {
-        const created = await createCategory({ user_id: userId, item_type: itemType, name: name.trim(), icon, color });
-        onSave(created);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '保存失败，请重试');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const colorCls = getColorClasses(color);
-
-  const handleIconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setUploadingIcon(true);
-    setError(null);
-    try {
-      const uploadedUrl = await uploadImage(file, userId);
-      setIcon(uploadedUrl);
-      setShowIconPicker(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '图标上传失败，请重试');
-    } finally {
-      setUploadingIcon(false);
-      event.target.value = '';
-    }
-  };
-
+function CategoryListItem({
+  category,
+  onEdit,
+  onDelete,
+}: {
+  category: Category;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const colorClasses = getColorClasses(category.color);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
-      <motion.div
-        className="absolute inset-0 bg-black/25 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      />
-      <motion.div
-        className="relative flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
-        initial={{ y: 24, opacity: 0, scale: 0.98 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 24, opacity: 0, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-      >
-        <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-slate-200 md:hidden" />
-        <div className="mb-5 flex items-center justify-between px-5 pt-5">
-          <h3 className="font-semibold text-slate-900">{initial?.id ? '编辑类别' : '新增类别'}</h3>
-          <motion.button
-            onClick={onClose}
-            whileHover={{ scale: 1.08, rotate: 90 }}
-            whileTap={{ scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"
-          >
-            <X size={16} />
-          </motion.button>
-        </div>
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
-          <div className="flex items-center gap-4">
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${colorCls.bg} ${isCustomCategoryImageIcon(icon) ? '' : colorCls.text}`}>
-              <CategoryIcon
-                icon={icon}
-                fallback={Shapes}
-                size={26}
-                className={colorCls.text}
-                imageClassName="h-full w-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-slate-500 mb-1">名称</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="分类名称..."
-                required
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-2">颜色</label>
-            <div className="flex gap-2 flex-wrap">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c.key}
-                  type="button"
-                  onClick={() => setColor(c.key)}
-                  className={`w-8 h-8 rounded-full ${c.bg} ${c.text} flex items-center justify-center transition-all ${color === c.key ? `ring-2 ring-offset-2 ${c.ring} scale-110` : 'hover:scale-105'}`}
-                >
-                  {color === c.key && <Check size={14} />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-2">分类图标</label>
-            <div className="mb-2 flex items-center gap-2">
-              <input
-                ref={iconInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(event) => void handleIconUpload(event)}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => iconInputRef.current?.click()}
-                disabled={uploadingIcon}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:border-sky-400 disabled:cursor-not-allowed disabled:text-slate-400"
-              >
-                <Upload size={14} />
-                {uploadingIcon ? '上传中...' : '上传自定义图片'}
-              </button>
-              {isCustomCategoryImageIcon(icon) ? (
-                <button
-                  type="button"
-                  onClick={() => setIcon('FolderTree')}
-                  className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200"
-                >
-                  <ImageIcon size={13} />
-                  恢复内置图标
-                </button>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowIconPicker(!showIconPicker)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 hover:border-sky-400 transition-colors w-full"
-            >
-              <div className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg ${isCustomCategoryImageIcon(icon) ? 'bg-white ring-1 ring-slate-200' : `${colorCls.bg} ${colorCls.text}`}`}>
-                <CategoryIcon
-                  icon={icon}
-                  fallback={Shapes}
-                  size={16}
-                  className={colorCls.text}
-                  imageClassName="h-full w-full object-cover"
-                />
-              </div>
-              <span className="flex-1 text-left">{getCategoryIconLabel(icon)}</span>
-              <ChevronDown size={14} className={`text-slate-400 transition-transform ${showIconPicker ? 'rotate-180' : ''}`} />
-            </button>
-            {showIconPicker && (
-              <div className="mt-2 grid max-h-56 grid-cols-5 gap-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 md:grid-cols-6">
-                {ICON_OPTIONS.map(({ key, label }) => {
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      title={label}
-                      onClick={() => { setIcon(key); setShowIconPicker(false); }}
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all ${icon === key ? `${colorCls.bg} ${colorCls.text}` : 'text-slate-500 hover:bg-slate-200'}`}
-                    >
-                      <CategoryIcon icon={key} fallback={Shapes} size={18} className={icon === key ? colorCls.text : 'text-slate-500'} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {error && (
-            <p className="text-sm text-rose-500 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
-          )}
-          </div>
-          <div className="border-t border-slate-100 bg-white px-5 py-4">
-            <button
-              type="submit"
-              disabled={saving || !name.trim()}
-              className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm"
-            >
-              {saving ? '保存中...' : '保存'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
-  );
-}
-
-function CategoryItem({ cat, onEdit, onDelete }: { cat: Category; onEdit: () => void; onDelete: () => void }) {
-  const colorCls = getColorClasses(cat.color);
-  return (
-    <div className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 hover:shadow-md transition-shadow">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl ${colorCls.bg} ${isCustomCategoryImageIcon(cat.icon) ? '' : colorCls.text}`}>
+    <div className="flex items-center gap-3 rounded-2xl border border-borderSoft bg-surface p-3.5 shadow-sm transition-shadow hover:shadow-md">
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl ${colorClasses.bg}`}>
         <CategoryIcon
-          icon={cat.icon}
+          icon={category.icon}
           fallback={Shapes}
           size={20}
-          className={colorCls.text}
+          className={colorClasses.text}
           imageClassName="h-full w-full object-cover"
         />
       </div>
-      <span className="flex-1 font-medium text-slate-800 text-sm">{cat.name}</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-slate-900">{category.name}</p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          {isCustomCategoryImageIcon(category.icon) ? '自定义图标' : category.preset_key ? '常用预设' : '自定义分类'}
+        </p>
+      </div>
       <button
+        type="button"
         onClick={onEdit}
-        className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-sky-500 hover:bg-sky-50 transition-colors"
+        aria-label={`编辑分类：${category.name}`}
+        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
       >
         <Pencil size={15} />
       </button>
       <button
+        type="button"
         onClick={onDelete}
-        className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+        aria-label={`删除分类：${category.name}`}
+        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-700"
       >
         <Trash2 size={15} />
       </button>
@@ -259,156 +82,205 @@ function CategoryItem({ cat, onEdit, onDelete }: { cat: Category; onEdit: () => 
 
 export default function CategoriesPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<ItemType>('container');
+  const { notify } = useToast();
+  const [activeScope, setActiveScope] = useState<CategoryScope>('location');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [presetSummary, setPresetSummary] = useState({ total: 21, missingCount: 0, dismissedCount: 0 });
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [applyingPresets, setApplyingPresets] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const all = await fetchCategories(user.id);
+      const [all, summary] = await Promise.all([
+        fetchCategories(user.id),
+        fetchCategoryPresets(),
+      ]);
       setCategories(all);
+      setPresetSummary(summary);
+    } catch (error) {
+      notify({
+        tone: 'error',
+        title: '分类加载失败',
+        description: error instanceof Error ? error.message : '请稍后重试。',
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify, user]);
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  const filtered = categories.filter((c) => c.item_type === activeTab);
-
-  const handleSave = (cat: Category) => {
-    setCategories((prev) => {
-      const idx = prev.findIndex((c) => c.id === cat.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = cat;
-        return next;
-      }
-      return [...prev, cat];
-    });
-    setShowForm(false);
-    setEditTarget(null);
+  const handleApplyPresets = async () => {
+    setApplyingPresets(true);
+    try {
+      const result = await applyCategoryPresets();
+      setCategories(result.data);
+      setPresetSummary((current) => ({ ...current, missingCount: 0 }));
+      notify({
+        tone: 'success',
+        title: '常用分类已补充',
+        description: result.addedCount > 0 ? `新增 ${result.addedCount} 个分类。` : '当前分类已经齐全。',
+      });
+    } catch (error) {
+      notify({ tone: 'error', title: '补充分类失败', description: error instanceof Error ? error.message : '请稍后重试。' });
+    } finally {
+      setApplyingPresets(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteCategory(deleteTarget.id);
-    setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    try {
+      await deleteCategory(deleteTarget.id);
+      notify({ tone: 'success', title: '分类已删除', description: deleteTarget.name });
+      setDeleteTarget(null);
+      await load();
+    } catch (error) {
+      notify({ tone: 'error', title: '删除分类失败', description: error instanceof Error ? error.message : '请稍后重试。' });
+    }
   };
 
+  const filteredCategories = categories.filter((category) => category.scope === activeScope);
+  const activePresentation = SCOPE_PRESENTATION[activeScope];
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={APP_PAGE_HEADER}>
+    <div className="min-h-screen bg-canvas">
+      <header className={APP_PAGE_HEADER}>
         <div className={`${APP_PAGE_HEADER_STACK} gap-3 md:gap-4`}>
           <h1 className="text-xl font-bold text-slate-900">分类管理</h1>
-          <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit relative">
-            {([['container', `${INVENTORY_NODE_LABELS.container}分类`], ['item', `${INVENTORY_NODE_LABELS.item}分类`]] as [ItemType, string][]).map(([type, label]) => (
-              <motion.button
-                key={type}
-                onClick={() => setActiveTab(type)}
-                whileTap={{ scale: 0.94 }}
-                className="relative px-4 py-1.5 rounded-lg text-sm font-medium z-10"
-              >
-                {activeTab === type && (
-                  <motion.div
-                    layoutId="categories-tab-pill"
-                    className="absolute inset-0 bg-white rounded-lg shadow-sm"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <span className={`relative z-10 transition-colors ${activeTab === type ? 'text-slate-900' : 'text-slate-500'}`}>
-                  {label}
-                </span>
-              </motion.button>
-            ))}
+          <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surfaceMuted p-1">
+            {(Object.entries(SCOPE_PRESENTATION) as [CategoryScope, typeof activePresentation][]).map(([scope, presentation]) => {
+              const Icon = presentation.icon;
+              return (
+                <button
+                  key={scope}
+                  type="button"
+                  onClick={() => setActiveScope(scope)}
+                  aria-pressed={activeScope === scope}
+                  className={`flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
+                    activeScope === scope ? 'bg-surface text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon size={14} />
+                  {presentation.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className={`${APP_PAGE_CONTENT} space-y-2.5`}>
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-12 text-slate-400 text-sm"
+      <main className={`${APP_PAGE_CONTENT} space-y-4`}>
+        <section className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm md:flex md:items-center md:justify-between md:gap-5 md:p-5">
+          <div className="flex min-w-0 gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+              <Sparkles size={20} />
+            </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-bold text-slate-900">常用分类预设</h2>
+                <EntityBadge kind="category" compact />
+              </div>
+              <p className="mt-1 text-sm leading-5 text-slate-600">
+                {presetSummary.missingCount > 0
+                  ? `还有 ${presetSummary.missingCount} 个推荐分类可补充，已有和主动移除的分类不会重复创建。`
+                  : `已配置常用分类${presetSummary.dismissedCount > 0 ? `，并保留 ${presetSummary.dismissedCount} 个主动移除记录` : ''}。`}
+              </p>
+            </div>
+          </div>
+          {presetSummary.missingCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => void handleApplyPresets()}
+              disabled={applyingPresets}
+              className="mt-4 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0 md:w-auto"
             >
-              加载中...
-            </motion.div>
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={<Shapes size={28} className="text-slate-300" />}
-              title={`暂无${activeTab === 'container' ? INVENTORY_NODE_LABELS.container : INVENTORY_NODE_LABELS.item}分类`}
-              iconMotion={{
-                animate: { rotate: [0, -8, 8, 0] },
-                transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
-              }}
-            />
-          ) : (
-            <motion.div
-              key={activeTab}
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-              exit={{ opacity: 0 }}
-              className="space-y-2.5"
-            >
-              {filtered.map((cat) => (
-                <motion.div key={cat.id} variants={staggerItem}>
-                  <CategoryItem
-                    cat={cat}
-                    onEdit={() => { setEditTarget(cat); setShowForm(true); }}
-                    onDelete={() => setDeleteTarget(cat)}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              {applyingPresets ? '补充中…' : `一键补充 ${presetSummary.missingCount} 个`}
+            </button>
+          ) : null}
+        </section>
 
-      <motion.button
-        onClick={() => { setEditTarget(null); setShowForm(true); }}
-        whileHover={{ scale: 1.08, boxShadow: '0 12px 32px rgba(14,165,233,0.35)' }}
-        whileTap={{ scale: 0.92, rotate: 45 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 bg-sky-500 text-white rounded-full shadow-lg shadow-sky-200 flex items-center justify-center z-30"
+        <section className="rounded-2xl border border-borderSoft bg-surfaceMuted px-4 py-3">
+          <div className="flex items-center gap-2">
+            <EntityBadge kind={activeScope} />
+            <p className={`text-sm font-semibold ${activePresentation.tone}`}>{activePresentation.description}</p>
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="py-12 text-center text-sm text-slate-500" role="status">加载中…</div>
+        ) : filteredCategories.length === 0 ? (
+          <EmptyState icon={<Shapes size={28} className="text-slate-400" />} title={`暂无${activePresentation.label}`} />
+        ) : (
+          <motion.div key={activeScope} variants={staggerContainer} animate="animate" className="space-y-2.5">
+            {filteredCategories.map((category) => (
+              <motion.div key={category.id} variants={staggerItem}>
+                <CategoryListItem
+                  category={category}
+                  onEdit={() => {
+                    setEditTarget(category);
+                    setShowEditor(true);
+                  }}
+                  onDelete={() => setDeleteTarget(category)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </main>
+
+      <button
+        type="button"
+        onClick={() => {
+          setEditTarget(null);
+          setShowEditor(true);
+        }}
+        aria-label={`新增${activePresentation.label}`}
+        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 transition-colors hover:bg-teal-700 md:bottom-8 md:right-8"
       >
         <Plus size={24} />
-      </motion.button>
+      </button>
 
-      <AnimatePresence>
-        {showForm && user ? (
-          <CategoryForm
-            initial={editTarget ?? undefined}
-            itemType={activeTab}
-            userId={user.id}
-            onSave={handleSave}
-            onClose={() => { setShowForm(false); setEditTarget(null); }}
-          />
-        ) : null}
-      </AnimatePresence>
+      {showEditor && user ? (
+        <CategoryEditorDialog
+          initial={editTarget ?? undefined}
+          scope={activeScope}
+          scopeLabel={activePresentation.label}
+          userId={user.id}
+          onSave={(saved) => {
+            setCategories((current) => {
+              const index = current.findIndex((category) => category.id === saved.id);
+              if (index < 0) return [...current, saved];
+              return current.map((category) => category.id === saved.id ? saved : category);
+            });
+            setShowEditor(false);
+            setEditTarget(null);
+            notify({ tone: 'success', title: editTarget ? '分类已更新' : '分类已创建', description: saved.name });
+          }}
+          onClose={() => {
+            setShowEditor(false);
+            setEditTarget(null);
+          }}
+        />
+      ) : null}
 
-      {deleteTarget && (
+      {deleteTarget ? (
         <ConfirmDialog
           title="删除类别"
-          message={`确定要删除「${deleteTarget.name}」类别吗？已使用该类别的物品不会受影响。`}
+          message={`确定要删除「${deleteTarget.name}」类别吗？已使用该类别的库存记录不会受影响。`}
           confirmLabel="删除"
           danger
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
-      )}
+      ) : null}
     </div>
   );
 }

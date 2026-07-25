@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tag } from 'lucide-react';
 import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Category, Item, ItemStatus } from '../../../legacy/database.types';
 import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
+import { getItemCategoryScope } from '../lib/categoryScope';
 import LocationPicker from './LocationPicker';
+import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
 
 interface BulkEditPayload {
   category?: string;
@@ -39,6 +41,11 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
   const [parentId, setParentId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const titleId = useId();
+  const dialogRef = useDialogFocus({
+    onClose,
+    shouldCloseOnEscape: !showLocationPicker && !saving,
+  });
 
   const itemType = useMemo(() => {
     if (items.length === 0) {
@@ -49,13 +56,19 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
     return items.every((item) => item.type === firstType) ? firstType : null;
   }, [items]);
 
+  const categoryScope = useMemo(() => {
+    if (items.length === 0) return null;
+    const firstScope = getItemCategoryScope(items[0]);
+    return items.every((item) => getItemCategoryScope(item) === firstScope) ? firstScope : null;
+  }, [items]);
+
   const availableCategories = useMemo(() => {
-    if (!itemType) {
+    if (!categoryScope) {
       return [];
     }
 
-    return categories.filter((categoryItem) => categoryItem.item_type === itemType);
-  }, [categories, itemType]);
+    return categories.filter((categoryItem) => categoryItem.scope === categoryScope);
+  }, [categories, categoryScope]);
 
   const selectedTypeLabel = useMemo(() => {
     if (itemType === 'item') {
@@ -144,6 +157,11 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
           onClick={onClose}
         />
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden bg-white rounded-t-3xl shadow-2xl"
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -152,11 +170,14 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
           <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <div>
-              <h2 className="font-semibold text-slate-900 text-lg">批量编辑</h2>
+              <h2 id={titleId} className="font-semibold text-slate-900 text-lg">批量编辑</h2>
               <p className="text-xs text-slate-400 mt-1">已选择 {items.length} 个{selectedTypeLabel}</p>
             </div>
             <motion.button
+              type="button"
               onClick={onClose}
+              aria-label="关闭批量编辑"
+              disabled={saving}
               whileHover={{ scale: 1.08, rotate: 90 }}
               whileTap={{ scale: 0.92 }}
               transition={{ type: 'spring', stiffness: 400, damping: 18 }}
@@ -168,7 +189,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-            {itemType ? (
+            {categoryScope ? (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">类别</label>
                 {availableCategories.length === 0 ? (
@@ -209,7 +230,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                混合选择了位置/收纳和物品，类别和状态不会一起批量修改。
+                混合选择了不同类型的对象，类别不会一起批量修改。
               </div>
             )}
 
@@ -226,9 +247,9 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                       whileTap={{ scale: 0.96 }}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                         status === value
-                          ? value === 'in_stock' ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200'
-                            : value === 'borrowed' ? 'bg-amber-500 text-white shadow-sm shadow-amber-200'
-                            : 'bg-rose-500 text-white shadow-sm shadow-rose-200'
+                          ? value === 'in_stock' ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-200'
+                            : value === 'borrowed' ? 'bg-amber-700 text-white shadow-sm shadow-amber-200'
+                            : 'bg-rose-700 text-white shadow-sm shadow-rose-200'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
@@ -342,7 +363,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                 disabled={saving}
                 whileHover={{ scale: saving ? 1 : 1.01 }}
                 whileTap={{ scale: saving ? 1 : 0.98 }}
-                className="w-full py-4 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-semibold rounded-2xl transition-all text-sm shadow-sm shadow-sky-200"
+                className="w-full rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:opacity-50"
               >
                 {saving ? '保存中...' : '批量保存'}
               </motion.button>

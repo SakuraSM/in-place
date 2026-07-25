@@ -53,7 +53,7 @@ export default function PaginationControls({
   const pageItems = buildPageItems(page, totalPages);
 
   return (
-    <div className={`mt-6 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between ${className ?? ''}`}>
+    <div className={`mt-6 flex flex-col gap-3 rounded-2xl border border-borderSoft bg-surface p-4 shadow-sm md:flex-row md:items-center md:justify-between ${className ?? ''}`}>
       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
         <span>共 {total} 项</span>
         <span className="hidden md:inline text-slate-300">|</span>
@@ -62,7 +62,7 @@ export default function PaginationControls({
           <select
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            className="rounded-lg border border-border bg-surfaceMuted px-2.5 py-1.5 text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
           >
             {PAGE_SIZE_OPTIONS.map((value) => (
               <option key={value} value={value}>
@@ -79,7 +79,7 @@ export default function PaginationControls({
         <button
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-surface px-3 text-sm text-slate-600 transition-colors hover:bg-brandTint disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft size={16} />
           上一页
@@ -102,8 +102,8 @@ export default function PaginationControls({
                 onClick={() => onPageChange(item)}
                 className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm transition-colors ${
                   isActive
-                    ? 'bg-sky-500 text-white shadow-sm shadow-sky-200'
-                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    ? 'bg-brandStrong text-white shadow-sm shadow-teal-100'
+                    : 'border border-border bg-surface text-slate-600 hover:bg-brandTint'
                 }`}
               >
                 {item}
@@ -115,11 +115,12 @@ export default function PaginationControls({
         <div className="flex items-center gap-2">
           <input
             type="number"
+            aria-label="跳转到页码"
             min={1}
             max={totalPages}
             value={jumpPage}
             onChange={(event) => setJumpPage(event.target.value)}
-            className="h-10 w-16 rounded-xl border border-slate-200 bg-slate-50 px-3 text-center text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            className="h-10 w-16 rounded-xl border border-border bg-surfaceMuted px-3 text-center text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
           <button
             onClick={() => {
@@ -129,7 +130,7 @@ export default function PaginationControls({
               }
               onPageChange(Math.min(totalPages, Math.max(1, nextPage)));
             }}
-            className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 transition-colors hover:bg-slate-50"
+            className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3 text-sm text-slate-600 transition-colors hover:bg-brandTint"
           >
             跳转
           </button>
@@ -138,7 +139,7 @@ export default function PaginationControls({
         <button
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-surface px-3 text-sm text-slate-600 transition-colors hover:bg-brandTint disabled:cursor-not-allowed disabled:opacity-40"
         >
           下一页
           <ChevronRight size={16} />

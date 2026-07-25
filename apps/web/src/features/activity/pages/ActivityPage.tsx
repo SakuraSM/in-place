@@ -3,7 +3,7 @@ import { Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { ActivityLog } from '../../../legacy/database.types';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import EmptyState from '../../../shared/ui/EmptyState';
 import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
 import PaginationControls from '../../inventory/components/PaginationControls';
@@ -85,7 +85,7 @@ export default function ActivityPage() {
                 <Clock3 size={18} />
               </div>
               <p className="text-2xl font-bold text-slate-900">{value}</p>
-              <p className="mt-1 text-xs text-slate-400">{label}</p>
+              <p className="mt-1 text-xs text-slate-600">{label}</p>
             </div>
           ))}
         </div>

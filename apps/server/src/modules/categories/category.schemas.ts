@@ -1,20 +1,21 @@
 import { z } from 'zod';
 
 export const categoryItemTypeSchema = z.enum(['container', 'item']);
+export const categoryScopeSchema = z.enum(['location', 'container', 'item']);
 
 export const listCategoriesQuerySchema = z.object({
   itemType: categoryItemTypeSchema.optional(),
+  scope: categoryScopeSchema.optional(),
 });
 
 export const createCategorySchema = z.object({
-  itemType: categoryItemTypeSchema.default('item'),
+  scope: categoryScopeSchema,
   name: z.string().trim().min(1).max(120),
   icon: z.string().trim().min(1).max(255).default('FolderTree'),
   color: z.string().trim().min(1).max(40).default('slate'),
 });
 
 export const updateCategorySchema = z.object({
-  itemType: categoryItemTypeSchema.optional(),
   name: z.string().trim().min(1).max(120).optional(),
   icon: z.string().trim().min(1).max(255).optional(),
   color: z.string().trim().min(1).max(40).optional(),

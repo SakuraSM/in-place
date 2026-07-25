@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LogOut, Box, User, NotebookPen, Mail, Settings2, Shield, Sparkles, HardDriveDownload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../app/providers/AuthContext';
+import { useAuth } from '../../../app/providers/auth-context';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
@@ -13,6 +13,7 @@ import { QuickLinkCard, SectionPanel } from '../components/ProfileUi';
 import InventoryStatsGrid from '../../../shared/ui/InventoryStatsGrid';
 
 export default function ProfilePage() {
+  const displayNameId = 'profile-display-name';
   const { user, signOut, setCurrentUser } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<ItemStats>({ total: 0, containers: 0, items: 0, borrowed: 0 });
@@ -27,12 +28,7 @@ export default function ProfilePage() {
     setDisplayName(user?.displayName ?? '');
   }, [user?.displayName]);
 
-  useEffect(() => {
-    if (!user) return;
-    void refreshStats();
-  }, [user]);
-
-  const refreshStats = async () => {
+  const refreshStats = useCallback(async () => {
     if (!user) {
       return;
     }
@@ -43,7 +39,12 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    void refreshStats();
+  }, [refreshStats, user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -90,12 +91,11 @@ export default function ProfilePage() {
 
       <motion.div
         variants={staggerContainer}
-        initial="initial"
         animate="animate"
         className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}
       >
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <div className="min-w-0 space-y-4 xl:sticky xl:top-28 xl:self-start">
             <motion.div
               variants={staggerItem}
               className="overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm"
@@ -112,26 +112,26 @@ export default function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-xl font-bold text-slate-900">{resolvedDisplayName}</p>
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
                         账号正常
                       </span>
                     </div>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-slate-400">
-                      <Mail size={14} />
-                      <span className="truncate">{user?.email}</span>
+                    <div className="mt-2 flex min-w-0 items-center gap-2 text-sm text-slate-600">
+                      <Mail size={14} className="shrink-0" />
+                      <span className="min-w-0 truncate">{user?.email}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">个人资料</span>
-                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-600">数据备份</span>
-                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600">AI 配置</span>
+                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">数据备份</span>
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">AI 配置</span>
                 </div>
               </div>
             </motion.div>
 
-            <motion.div variants={staggerItem}>
+            <motion.div variants={staggerItem} className="min-w-0">
               <InventoryStatsGrid stats={stats} loading={loading} onNavigate={handleNavigateOverview} />
             </motion.div>
 
@@ -179,7 +179,7 @@ export default function ProfilePage() {
             </motion.div>
           </div>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <motion.div variants={staggerItem}>
               <SectionPanel
                 icon={<Settings2 size={16} />}
@@ -187,8 +187,9 @@ export default function ProfilePage() {
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-end">
                   <div className="min-w-0 flex-1">
-                    <label className="mb-1.5 block text-xs font-medium text-slate-500">昵称</label>
+                    <label htmlFor={displayNameId} className="mb-1.5 block text-xs font-medium text-slate-500">昵称</label>
                     <input
+                      id={displayNameId}
                       type="text"
                       value={displayName}
                       onChange={(event) => {
@@ -197,19 +198,20 @@ export default function ProfilePage() {
                         setDisplayName(event.target.value);
                       }}
                       placeholder="输入昵称"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      autoComplete="nickname"
+                      className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
                     />
                   </div>
                   <button
                     onClick={() => void handleProfileSave()}
                     disabled={profileSaving || !profileChanged}
-                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-sky-500 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-sky-300"
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {profileSaving ? '保存中...' : '保存昵称'}
                   </button>
                 </div>
-                {profileMessage ? <p className="text-sm text-emerald-500">{profileMessage}</p> : null}
-                {profileError ? <p className="text-sm text-rose-500">{profileError}</p> : null}
+                {profileMessage ? <p role="status" className="text-sm text-emerald-600">{profileMessage}</p> : null}
+                {profileError ? <p role="alert" className="text-sm text-rose-600">{profileError}</p> : null}
               </SectionPanel>
             </motion.div>
 
@@ -224,7 +226,7 @@ export default function ProfilePage() {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    className="inline-flex h-11 items-center gap-3 rounded-2xl bg-rose-500 px-4 text-sm font-medium text-white transition-colors hover:bg-rose-600"
+                    className="inline-flex h-11 items-center gap-3 rounded-2xl bg-rose-700 px-4 text-sm font-medium text-white transition-colors hover:bg-rose-800"
                   >
                     <LogOut size={18} />
                     退出登录

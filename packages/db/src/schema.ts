@@ -1,6 +1,7 @@
 import { type AnyPgColumn, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const itemTypeEnum = pgEnum('item_type', ['container', 'item']);
+export const categoryScopeEnum = pgEnum('category_scope', ['location', 'container', 'item']);
 export const itemStatusEnum = pgEnum('item_status', ['in_stock', 'borrowed', 'worn_out']);
 export const activityActionEnum = pgEnum('activity_action', ['manual_create', 'ai_scan_create', 'update', 'delete']);
 
@@ -17,6 +18,8 @@ export const categories = pgTable('categories', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   itemType: itemTypeEnum('item_type').notNull().default('item'),
+  scope: categoryScopeEnum('scope').notNull().default('item'),
+  presetKey: varchar('preset_key', { length: 120 }),
   name: varchar('name', { length: 120 }).notNull(),
   icon: varchar('icon', { length: 255 }).notNull().default('FolderTree'),
   color: varchar('color', { length: 40 }).notNull().default('slate'),
@@ -24,6 +27,17 @@ export const categories = pgTable('categories', {
 }, (table) => ({
   userIdx: index('categories_user_id_idx').on(table.userId),
   userTypeIdx: index('categories_user_type_idx').on(table.userId, table.itemType),
+  userScopeIdx: index('categories_user_scope_idx').on(table.userId, table.scope),
+  userPresetIdx: uniqueIndex('categories_user_preset_idx').on(table.userId, table.presetKey),
+}));
+
+export const deletedCategoryPresets = pgTable('deleted_category_presets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  presetKey: varchar('preset_key', { length: 120 }).notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userPresetIdx: uniqueIndex('deleted_category_presets_user_preset_idx').on(table.userId, table.presetKey),
 }));
 
 export const items = pgTable('items', {
@@ -93,12 +107,14 @@ export const activityLogs = pgTable('activity_logs', {
 
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
+export type DeletedCategoryPreset = typeof deletedCategoryPresets.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type TagRecord = typeof tagRegistry.$inferSelect;
 export type UserAiSetting = typeof userAiSettings.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type NewCategory = typeof categories.$inferInsert;
+export type NewDeletedCategoryPreset = typeof deletedCategoryPresets.$inferInsert;
 export type NewItem = typeof items.$inferInsert;
 export type NewTagRecord = typeof tagRegistry.$inferInsert;
 export type NewUserAiSetting = typeof userAiSettings.$inferInsert;

@@ -10,13 +10,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({ icon, title, description, iconMotion }: EmptyStateProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      className="flex flex-col items-center justify-center py-16 text-center"
-    >
+    <div className="flex flex-col items-center justify-center py-16 text-center">
       <motion.div
         className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100"
         {...(iconMotion ?? {})}
@@ -27,6 +21,6 @@ export default function EmptyState({ icon, title, description, iconMotion }: Emp
       {description ? (
         <p className="text-sm text-slate-400">{description}</p>
       ) : null}
-    </motion.div>
+    </div>
   );
 }

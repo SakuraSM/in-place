@@ -23,8 +23,8 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-100 safe-bottom">
-      <div className="flex items-center max-w-lg mx-auto px-1">
+    <nav aria-label="移动端主导航" className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl md:hidden">
+      <div className="mx-auto flex max-w-lg items-center px-1">
         {tabs.map(({ to, icon: Icon, shortLabel }) => {
           const isActive = to === '/'
             ? location.pathname === '/'
@@ -34,7 +34,8 @@ export default function BottomNav() {
               key={to}
               to={to}
               end={to === '/'}
-              className="flex-1 flex flex-col items-center gap-0.5 py-2.5"
+              aria-current={isActive ? 'page' : undefined}
+              className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 py-2"
             >
               <motion.div
                 whileTap={{ scale: 0.85, rotate: isActive ? 0 : -5 }}
@@ -45,17 +46,17 @@ export default function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="bottom-nav-pill"
-                      className="absolute inset-0 bg-sky-100 rounded-full"
+                      className="absolute inset-0 rounded-full bg-brandTint"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
                   <Icon
                     size={20}
                     strokeWidth={isActive ? 2.5 : 2}
-                    className={`relative transition-colors duration-150 ${isActive ? 'text-sky-600' : 'text-slate-400'}`}
+                    className={`relative transition-colors duration-150 ${isActive ? 'text-brandStrong' : 'text-slate-500'}`}
                   />
                 </div>
-                <span className={`text-[10px] transition-colors duration-150 ${isActive ? 'font-semibold text-sky-600' : 'font-medium text-slate-400'}`}>
+                <span className={`text-[10px] transition-colors duration-150 ${isActive ? 'font-bold text-brandStrong' : 'font-medium text-slate-500'}`}>
                   {shortLabel}
                 </span>
               </motion.div>
