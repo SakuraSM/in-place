@@ -30,6 +30,7 @@ const targets = [
   'packages/api-client/package.json',
   'packages/db/package.json',
   'packages/domain/package.json',
+  'packages/ui/package.json',
 ];
 
 const textTargets = [
