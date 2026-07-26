@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
@@ -17,6 +17,7 @@ import { StateBlock } from '@/shared/ui/StateBlock';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
 
 export default function ContainerBrowseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -119,7 +120,7 @@ function ContentSection({ title, items }: { title: string; items: Item[] }) {
 function ContentRow({ item }: { item: Item }) {
   const imageUri = resolveInventoryImageUri(item.images[0]);
   const icon = imageUri
-    ? <Image source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} />
+    ? <InventoryImage url={item.images[0]} resizeMode="cover" style={thumbImageStyle} />
     : <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="sm" />;
   const row = (
     <CompactListRow

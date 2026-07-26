@@ -64,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    try {
+      await apiRequest('/v1/auth/logout', { method: 'POST' });
+    } catch {
+      // 本地凭证仍需清除，避免网络异常导致用户无法退出。
+    }
     await setStoredAuthToken(null);
     setSession(null);
     setUser(null);

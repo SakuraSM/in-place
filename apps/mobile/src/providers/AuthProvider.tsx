@@ -83,6 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user);
       },
       async signOut() {
+        try {
+          await mobileApiClient.request('/v1/auth/logout', { method: 'POST' });
+        } catch {
+          // 即使服务不可达，也应清除设备上的登录凭证。
+        }
         await secureTokenStorage.set(null);
         setSession(null);
         setUser(null);

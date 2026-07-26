@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
@@ -13,6 +13,7 @@ import { LocationHierarchyPicker } from '@/features/home/LocationHierarchyPicker
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
 import { formatMobileLocationPath, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
 
 export function FilterChip({
   active,
@@ -72,7 +73,7 @@ export function ResultRow({ item, path, selectionMode = false, selected = false,
     >
       <View style={resultThumbStyle}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} resizeMode="cover" style={resultThumbImageStyle} />
+          <InventoryImage url={item.images[0]} resizeMode="cover" style={resultThumbImageStyle} />
         ) : (
           <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="md" />
         )}

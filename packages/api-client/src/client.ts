@@ -33,6 +33,7 @@ export function createApiClient(config: ApiClientConfig) {
 
     const response = await fetch(buildUrl(path), {
       ...options,
+      credentials: options.credentials ?? 'include',
       headers,
     });
 

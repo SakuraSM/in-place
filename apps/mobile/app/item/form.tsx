@@ -4,7 +4,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Item, ItemCreateInput, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
@@ -15,7 +15,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
-import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { LocationSelectField } from '@/features/home/LocationSelectField';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
@@ -443,7 +443,7 @@ export default function ItemFormScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                 {draft.images.map((imageUrl) => (
                   <View key={imageUrl} style={imageCardStyle}>
-                    <Image source={{ uri: resolveInventoryImageUri(imageUrl) ?? imageUrl }} style={imageStyle} />
+                    <InventoryImage url={imageUrl} style={imageStyle} />
                     <Pressable onPress={() => removeImage(imageUrl)} style={imageRemoveButtonStyle}>
                       <Text style={imageRemoveTextStyle}>删除</Text>
                     </Pressable>

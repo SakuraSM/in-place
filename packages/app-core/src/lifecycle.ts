@@ -78,6 +78,10 @@ export function createLifecycleApi(request: AppCoreRequest) {
       await request(`/v1/items/${itemId}/attachments`, { method: 'POST', body: JSON.stringify(input) });
     },
 
+    async deleteAttachment(attachmentId: string) {
+      await request(`/v1/attachments/${attachmentId}`, { method: 'DELETE' });
+    },
+
     async listMaintenance(itemId: string): Promise<MaintenanceRecord[]> {
       const response = await request<{ data: Array<{
         id: string; householdId: string; itemId: string; title: string; notes: string;

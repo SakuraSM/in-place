@@ -3,6 +3,37 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { users } from '@inplace/db';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../lib/db.js';
+import type { AppEnv } from '../env.js';
+
+export const AUTH_COOKIE_NAME = 'inplace_access_token';
+const AUTH_COOKIE_PATH = '/api';
+
+function shouldUseSecureCookie(request: FastifyRequest, env?: Pick<AppEnv, 'NODE_ENV'>) {
+  return env?.NODE_ENV === 'production' || request.protocol === 'https';
+}
+
+export function setAuthCookie(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  token: string,
+  env?: Pick<AppEnv, 'NODE_ENV'>,
+) {
+  reply.setCookie(AUTH_COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: shouldUseSecureCookie(request, env),
+    path: AUTH_COOKIE_PATH,
+  });
+}
+
+export function clearAuthCookie(request: FastifyRequest, reply: FastifyReply, env?: Pick<AppEnv, 'NODE_ENV'>) {
+  reply.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: shouldUseSecureCookie(request, env),
+    path: AUTH_COOKIE_PATH,
+  });
+}
 
 type AuthenticatedUser = {
   id: string;
@@ -33,7 +64,7 @@ declare module 'fastify' {
   }
 }
 
-export async function authPlugin(app: FastifyInstance) {
+export async function authPlugin(app: FastifyInstance, env?: Pick<AppEnv, 'NODE_ENV'>) {
   app.decorateRequest('currentUser', null);
 
   app.decorate(
@@ -69,6 +100,14 @@ export async function authPlugin(app: FastifyInstance) {
       }
 
       request.currentUser = user;
+
+      const authorization = request.headers.authorization;
+      const bearerToken = authorization?.startsWith('Bearer ')
+        ? authorization.slice('Bearer '.length).trim()
+        : null;
+      if (bearerToken && !request.cookies[AUTH_COOKIE_NAME]) {
+        setAuthCookie(request, reply, bearerToken, env);
+      }
     },
   );
 }

@@ -1,5 +1,14 @@
 import { createApiClient } from '@inplace/api-client';
-import { createActivityApi, createAiApi, createCategoriesApi, createCodesApi, createHouseholdsApi, createItemsApi, createTagsApi } from '@inplace/app-core';
+import {
+  createActivityApi,
+  createAiApi,
+  createCategoriesApi,
+  createCodesApi,
+  createHouseholdsApi,
+  createItemsApi,
+  createLifecycleApi,
+  createTagsApi,
+} from '@inplace/app-core';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { secureServerConfigStorage } from '@/platform/config/secureServerConfigStorage';
@@ -107,6 +116,7 @@ export const aiApi = createAiApi(mobileApiClient.request);
 export const activityApi = createActivityApi(mobileApiClient.request);
 export const codesApi = createCodesApi(mobileApiClient.request);
 export const householdsApi = createHouseholdsApi(mobileApiClient.request);
+export const lifecycleApi = createLifecycleApi(mobileApiClient.request);
 
 type ImageUploadAsset = {
   uri: string;
@@ -174,6 +184,16 @@ export async function uploadImageFromUri(params: ImageUploadAsset) {
   });
 
   return data.url;
+}
+
+export async function uploadAttachmentFromUri(params: ImageUploadAsset) {
+  const formData = new FormData();
+  await appendImageAsset(formData, 'file', params, 'attachment.bin');
+
+  return mobileApiClient.request<{ url: string; name: string; mimeType: string }>('/v1/uploads/attachments', {
+    method: 'POST',
+    body: formData,
+  });
 }
 
 export async function recognizeItemsFromUri(params: ImageUploadAsset) {

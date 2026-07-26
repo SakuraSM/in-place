@@ -76,6 +76,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
   await app.register(fastifyStatic, {
     root: uploadRoot,
     serve: false,
+    cacheControl: false,
   });
 
   // 用单一路由同时承接原图和缩略图请求：无缩放参数时直接 sendFile，
@@ -83,6 +84,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
   app.route({
     method: ['GET', 'HEAD'],
     url: '/api/uploads/*',
+    preHandler: app.authenticate,
     async handler(request, reply) {
       const query = (request.query ?? {}) as Record<string, unknown>;
       const params = request.params as { '*'?: string };
@@ -103,6 +105,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       }
 
       if (!hasResizeQuery(query)) {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -118,6 +121,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
 
       const sourceMime = resolveImageMimeType(sourcePath);
       if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -130,6 +134,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       };
 
       if (!resizeOptions.width && !resizeOptions.height && !resizeOptions.format && !resizeOptions.quality) {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -146,7 +151,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
         reply
           .header('Content-Type', resized.mimeType)
           .header('Content-Length', resized.size)
-          .header('Cache-Control', 'public, max-age=31536000, immutable');
+          .header('Cache-Control', 'private, no-store');
         return reply.send(createReadStream(resized.absolutePath));
       } catch (error) {
         request.log.error({ err: error, path: normalized }, 'image resize failed');

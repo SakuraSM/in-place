@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActivityLog, Category, Item, ItemStats } from '@inplace/domain';
 import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
@@ -12,6 +12,7 @@ import { InventoryIcon, InventoryThumbFallback } from '@/shared/ui/InventoryIcon
 import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
 
 type ViewMode = 'type' | 'category';
 
@@ -371,7 +372,7 @@ function InventoryTile({
     <View style={[tileStyle, selected ? tileSelectedStyle : null]}>
       <View style={tilePreviewStyle}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={tileImageStyle} resizeMode="cover" />
+          <InventoryImage url={item.images[0]} style={tileImageStyle} resizeMode="cover" />
         ) : (
           <InventoryThumbFallback
             type={item.type}
@@ -425,7 +426,7 @@ function InventoryTile({
 
 function Thumb({ item, imageUri }: { item: Item; imageUri: string | null }) {
   if (imageUri) {
-    return <Image source={{ uri: imageUri }} style={thumbStyle} resizeMode="cover" />;
+    return <InventoryImage url={item.images[0]} style={thumbStyle} resizeMode="cover" />;
   }
 
   return (
