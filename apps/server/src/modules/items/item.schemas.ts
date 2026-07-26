@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const itemTypeSchema = z.enum(['container', 'item']);
 export const itemStatusSchema = z.enum(['in_stock', 'borrowed', 'worn_out']);
+export const trackingModeSchema = z.enum(['unique', 'quantity', 'consumable']);
 
 const nullableDateSchema = z.union([z.string(), z.date()]).nullable().optional().transform((value) => {
   if (value === undefined || value === null || value === '') {
@@ -75,7 +76,10 @@ const importItemSchema = z.object({
   name: z.string().trim().min(1).max(160),
   description: z.string().max(10000),
   category: z.string().trim().max(120),
-  quantity: z.coerce.number().int().positive(),
+  quantity: z.coerce.number().int().min(0),
+  tracking_mode: trackingModeSchema.optional().default('unique'),
+  minimum_quantity: z.coerce.number().int().min(0).nullable().optional().default(null),
+  expiry_date: z.string().date().nullable().optional().default(null),
   price: z.union([z.string(), z.number()]).nullable(),
   purchase_date: z.string().datetime().nullable(),
   warranty_date: z.string().datetime().nullable(),
@@ -88,7 +92,7 @@ const importItemSchema = z.object({
 });
 
 export const importInventorySchema = z.object({
-  version: z.union([z.literal('1'), z.literal('2'), z.literal('3')]),
+  version: z.union([z.literal('1'), z.literal('2'), z.literal('3'), z.literal('4')]),
   exported_at: z.string().datetime(),
   categories: z.array(importCategorySchema),
   tags: z.array(importTagSchema),
@@ -98,6 +102,16 @@ export const importInventorySchema = z.object({
     mime_type: z.string().min(1),
     data_base64: z.string().min(1),
   })).optional(),
+  household: z.record(z.string(), z.unknown()).optional(),
+  codes: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  stocktakes: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  stocktake_entries: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  loans: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  reminders: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  attachments: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  maintenance_records: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  inventory_batches: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  activity: z.array(z.record(z.string(), z.unknown())).optional().default([]),
 });
 
 export const createItemSchema = z.object({
@@ -107,7 +121,10 @@ export const createItemSchema = z.object({
   description: z.string().max(10000).optional().default(''),
   category: z.string().trim().max(120).optional().default(''),
   price: z.union([z.string(), z.number()]).nullable().optional(),
-  quantity: z.coerce.number().int().positive().optional().default(1),
+  quantity: z.coerce.number().int().min(0).optional().default(1),
+  trackingMode: trackingModeSchema.optional().default('unique'),
+  minimumQuantity: z.coerce.number().int().min(0).nullable().optional().default(null),
+  expiryDate: z.string().date().nullable().optional().default(null),
   purchaseDate: nullableDateSchema,
   warrantyDate: nullableDateSchema,
   status: itemStatusSchema.optional().default('in_stock'),
@@ -123,7 +140,10 @@ export const updateItemSchema = z.object({
   description: z.string().max(10000).optional(),
   category: z.string().trim().max(120).optional(),
   price: z.union([z.string(), z.number()]).nullable().optional(),
-  quantity: z.coerce.number().int().positive().optional(),
+  quantity: z.coerce.number().int().min(0).optional(),
+  trackingMode: trackingModeSchema.optional(),
+  minimumQuantity: z.coerce.number().int().min(0).nullable().optional(),
+  expiryDate: z.string().date().nullable().optional(),
   purchaseDate: nullableDateSchema,
   warrantyDate: nullableDateSchema,
   status: itemStatusSchema.optional(),
@@ -136,6 +156,13 @@ export const updateItemSchema = z.object({
 
 export const itemIdParamsSchema = z.object({
   id: z.string().uuid(),
+});
+
+export const mergeItemsSchema = z.object({
+  primaryItemId: z.string().uuid(),
+  duplicateItemIds: z.array(z.string().uuid()).min(1).max(50),
+}).refine((value) => !value.duplicateItemIds.includes(value.primaryItemId), {
+  message: '主物品不能同时作为重复项',
 });
 
 export type ListItemsQuery = z.infer<typeof listItemsQuerySchema>;

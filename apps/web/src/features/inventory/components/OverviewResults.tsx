@@ -96,7 +96,7 @@ export default function OverviewResults({
 }: OverviewResultsProps) {
   if (isInitialLoading) {
     return (
-      <div role="status" className="flex min-h-64 items-center justify-center text-sm text-slate-600">
+      <div role="status" className="flex min-h-64 flex-1 items-center justify-center text-sm text-slate-600">
         <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-brandStrong border-t-transparent" />
         正在加载库存…
       </div>
@@ -105,7 +105,7 @@ export default function OverviewResults({
 
   if (isError) {
     return (
-      <div role="alert" className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-rose-100 bg-rose-50 p-8 text-center">
+      <div role="alert" className="flex min-h-64 flex-1 flex-col items-center justify-center rounded-3xl border border-rose-100 bg-rose-50 p-8 text-center">
         <p className="font-bold text-rose-800">总览加载失败</p>
         <p className="mt-2 text-sm text-rose-700">请检查网络连接后重试，当前筛选条件会保留。</p>
         <button
@@ -122,7 +122,7 @@ export default function OverviewResults({
 
   if (total === 0) {
     return (
-      <div className="flex min-h-64 flex-col items-center justify-center py-12 text-center">
+      <div className="flex min-h-64 flex-1 flex-col items-center justify-center py-12 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surfaceMuted">
           <Package size={28} className="text-slate-400" />
         </div>
@@ -133,7 +133,7 @@ export default function OverviewResults({
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-slate-600">
           共 <strong className="text-slate-900">{total}</strong> 个结果
@@ -144,7 +144,7 @@ export default function OverviewResults({
       <motion.div
         variants={staggerContainer}
         animate="animate"
-        className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"
+        className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3"
       >
         {results.map((result) => (
           <ResultCard
@@ -156,7 +156,7 @@ export default function OverviewResults({
       </motion.div>
 
       {!isMobile ? (
-        <div className="mt-auto pt-8 lg:sticky lg:bottom-6">
+        <div className="mt-auto pt-8">
           <PaginationControls
             page={page}
             pageSize={pageSize}

@@ -11,6 +11,10 @@ import { healthRoutes } from './routes/health.js';
 import { itemRoutes } from './modules/items/item.routes.js';
 import { tagRoutes } from './modules/tags/tag.routes.js';
 import { uploadRoutes } from './routes/uploads.js';
+import { householdRoutes } from './modules/households/household.routes.js';
+import { codeRoutes } from './modules/codes/code.routes.js';
+import { stocktakeRoutes } from './modules/stocktakes/stocktake.routes.js';
+import { lifecycleRoutes } from './modules/lifecycle/lifecycle.routes.js';
 import { getAllowedCorsOrigins, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
 
@@ -61,7 +65,11 @@ export async function createApp(env: AppEnv) {
   await app.register(activityRoutes, { prefix: '/api/v1/activity' });
   await app.register(authRoutes, { prefix: '/api/v1/auth' });
   await app.register(categoryRoutes, { prefix: '/api/v1/categories' });
+  await app.register(codeRoutes, { prefix: '/api/v1/codes' });
+  await app.register(householdRoutes, { prefix: '/api/v1/households' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });
+  await app.register(lifecycleRoutes, { prefix: '/api/v1' });
+  await app.register(stocktakeRoutes, { prefix: '/api/v1/stocktakes' });
   await app.register(tagRoutes, { prefix: '/api/v1/tags' });
   await app.register(uploadRoutes, { env });
   await app.register(healthRoutes, { prefix: '/api/v1/health' });

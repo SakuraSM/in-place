@@ -1,12 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { requireCurrentUser } from '../../lib/authenticated-request.js';
+import { requireHouseholdAccess } from '../../lib/household-access.js';
 import { listActivityLogsQuerySchema } from './activity.schemas.js';
-import { listActivityLogsForUser } from './activity.repository.js';
+import { listActivityLogsForHousehold } from './activity.repository.js';
 
 export const activityRoutes: FastifyPluginAsync = async (app) => {
   app.get('/', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply });
+    if (!access) {
       return;
     }
 
@@ -18,6 +18,6 @@ export const activityRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    return reply.send(await listActivityLogsForUser(currentUser.id, query.data));
+    return reply.send(await listActivityLogsForHousehold(access.householdId, query.data));
   });
 };

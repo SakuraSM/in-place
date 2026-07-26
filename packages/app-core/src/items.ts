@@ -1,10 +1,11 @@
 import { ApiError } from '@inplace/api-client';
-import type { Item, ItemStats, PaginatedResult, PaginationMeta } from '@inplace/domain';
+import type { Item, ItemCreateInput, ItemStats, PaginatedResult, PaginationMeta } from '@inplace/domain';
 import type { AppCoreRequest } from './shared';
 
-type ServerItem = {
+export type ServerItem = {
   id: string;
   userId: string;
+  householdId: string;
   parentId: string | null;
   type: Item['type'];
   name: string;
@@ -12,6 +13,9 @@ type ServerItem = {
   category: string;
   price: string | number | null;
   quantity: number;
+  trackingMode: Item['tracking_mode'];
+  minimumQuantity: number | null;
+  expiryDate: string | null;
   purchaseDate: string | null;
   warrantyDate: string | null;
   status: Item['status'];
@@ -22,16 +26,21 @@ type ServerItem = {
   updatedAt: string;
 };
 
-function mapItem(item: ServerItem): Item {
+export function mapServerItem(item: ServerItem): Item {
   return {
     id: item.id,
     user_id: item.userId,
+    household_id: item.householdId,
     parent_id: item.parentId,
     type: item.type,
     name: item.name,
     description: item.description,
     category: item.category,
     price: item.price === null ? null : Number(item.price),
+    quantity: item.quantity,
+    tracking_mode: item.trackingMode,
+    minimum_quantity: item.minimumQuantity,
+    expiry_date: item.expiryDate,
     purchase_date: item.purchaseDate,
     warranty_date: item.warrantyDate,
     status: item.status,
@@ -51,6 +60,10 @@ function toServerPayload(data: Partial<Item>) {
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.category !== undefined ? { category: data.category } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
+    ...(data.quantity !== undefined ? { quantity: data.quantity } : {}),
+    ...(data.tracking_mode !== undefined ? { trackingMode: data.tracking_mode } : {}),
+    ...(data.minimum_quantity !== undefined ? { minimumQuantity: data.minimum_quantity } : {}),
+    ...(data.expiry_date !== undefined ? { expiryDate: data.expiry_date } : {}),
     ...(data.purchase_date !== undefined ? { purchaseDate: data.purchase_date } : {}),
     ...(data.warranty_date !== undefined ? { warrantyDate: data.warranty_date } : {}),
     ...(data.status !== undefined ? { status: data.status } : {}),
@@ -228,7 +241,7 @@ export function createItemsApi(request: AppCoreRequest) {
     }
 
     const response = await request<{ data: ServerItem[]; meta?: Partial<PaginationMeta> }>(`/v1/items?${searchParams.toString()}`);
-    const items = response.data.map(mapItem);
+    const items = response.data.map(mapServerItem);
     return {
       data: items,
       meta: normalizePaginationMeta(response.meta, items.length),
@@ -243,7 +256,7 @@ export function createItemsApi(request: AppCoreRequest) {
   async function fetchItem(id: string): Promise<Item | null> {
     try {
       const response = await request<{ data: ServerItem }>(`/v1/items/${id}`);
-      return mapItem(response.data);
+      return mapServerItem(response.data);
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
         return null;
@@ -269,12 +282,12 @@ export function createItemsApi(request: AppCoreRequest) {
     return ancestors;
   }
 
-  async function createItem(data: Omit<Item, 'id' | 'created_at' | 'updated_at'>): Promise<Item> {
+  async function createItem(data: ItemCreateInput): Promise<Item> {
     const response = await request<{ data: ServerItem }>('/v1/items', {
       method: 'POST',
       body: JSON.stringify(toServerPayload(data)),
     });
-    return mapItem(response.data);
+    return mapServerItem(response.data);
   }
 
   async function updateItem(id: string, data: Partial<Item>): Promise<Item> {
@@ -282,7 +295,7 @@ export function createItemsApi(request: AppCoreRequest) {
       method: 'PATCH',
       body: JSON.stringify(toServerPayload(data)),
     });
-    return mapItem(response.data);
+    return mapServerItem(response.data);
   }
 
   async function deleteItem(id: string): Promise<void> {
@@ -344,7 +357,7 @@ export function createItemsApi(request: AppCoreRequest) {
 
     const suffix = searchParams.toString();
     const response = await request<{ data: ServerItem[]; meta?: Partial<PaginationMeta> }>(`/v1/items${suffix ? `?${suffix}` : ''}`);
-    const items = response.data.map(mapItem);
+    const items = response.data.map(mapServerItem);
     return {
       data: items,
       meta: normalizePaginationMeta(response.meta, items.length),

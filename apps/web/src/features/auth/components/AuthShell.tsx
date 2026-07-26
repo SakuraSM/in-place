@@ -22,8 +22,8 @@ export default function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <main className="min-h-screen bg-canvas px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)] lg:gap-6 lg:p-6">
-      <section className="relative hidden min-h-[calc(100vh-48px)] overflow-hidden rounded-[32px] bg-slate-900 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
+    <main className="app-page-gutter min-h-dvh bg-canvas py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)] lg:gap-6">
+      <section className="relative hidden min-h-[calc(100dvh-48px)] overflow-hidden rounded-[32px] bg-slate-900 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
         <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand/20 blur-3xl" />
         <div className="absolute -bottom-24 left-16 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
         <BrandLockup
@@ -57,7 +57,7 @@ export default function AuthShell({
         <p className="relative text-xs text-slate-500">整理有序，生活松弛。</p>
       </section>
 
-      <section className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-md flex-col justify-center lg:max-w-none lg:px-10 xl:px-16">
+      <section className="mx-auto flex min-h-[calc(100dvh-48px)] w-full max-w-md flex-col justify-center lg:max-w-none lg:px-10 xl:px-16">
         <BrandLockup
           size="sm"
           logoVariant="mark"

@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { Bot, ChevronRight, PencilLine, Trash2 } from 'lucide-react';
+import { Bot, ChevronRight, PencilLine, Trash2, Move, Hash, QrCode, ClipboardCheck, Handshake, RotateCcw } from 'lucide-react';
 import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { ActivityAction, ActivityLog } from '../../../legacy/database.types';
 
@@ -24,6 +24,13 @@ const ACTION_LABELS: Record<ActivityAction, { label: string; tone: string; icon:
     tone: 'bg-rose-50 text-rose-700',
     icon: Trash2,
   },
+  move: { label: '归位移动', tone: 'bg-teal-50 text-teal-700', icon: Move },
+  quantity_adjust: { label: '数量校正', tone: 'bg-amber-50 text-amber-800', icon: Hash },
+  code_bind: { label: '绑定标签', tone: 'bg-sky-50 text-sky-700', icon: QrCode },
+  stocktake_start: { label: '开始盘点', tone: 'bg-violet-50 text-violet-700', icon: ClipboardCheck },
+  stocktake_complete: { label: '完成盘点', tone: 'bg-emerald-50 text-emerald-700', icon: ClipboardCheck },
+  loan_checkout: { label: '借出', tone: 'bg-amber-50 text-amber-800', icon: Handshake },
+  loan_return: { label: '归还', tone: 'bg-emerald-50 text-emerald-700', icon: RotateCcw },
 };
 
 const CHANGED_FIELD_LABELS: Record<string, string> = {

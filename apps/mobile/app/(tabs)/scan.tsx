@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
-import type { AIRecognitionResult, Item } from '@inplace/domain';
+import type { AIRecognitionResult, ItemCreateInput } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
@@ -122,7 +123,7 @@ export default function ScanTab() {
             })
             : null;
 
-          const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
+          const payload: ItemCreateInput = {
             user_id: user.id,
             parent_id: null,
             type: draft.result.type ?? 'item',
@@ -131,6 +132,10 @@ export default function ScanTab() {
             category: draft.result.category,
             status: 'in_stock',
             price: draft.result.price ?? null,
+            quantity: 1,
+            tracking_mode: 'unique',
+            minimum_quantity: null,
+            expiry_date: null,
             purchase_date: null,
             warranty_date: null,
             images: uploadedImageUrl ? [uploadedImageUrl] : [],
@@ -311,7 +316,14 @@ export default function ScanTab() {
   }
 
   if (!aiStatusQuery.data) {
-    return <Screen><StateBlock title="AI 未启用" body="先配置 AI" /></Screen>;
+    return (
+      <Screen>
+        <StateBlock title="AI 未启用" body="仍可直接使用二维码归位。" />
+        <Pressable onPress={() => router.push('/scan-code' as Href)} style={primaryButtonStyle}>
+          <Text style={primaryButtonTextStyle}>扫描二维码归位</Text>
+        </Pressable>
+      </Screen>
+    );
   }
 
   return (
@@ -319,6 +331,10 @@ export default function ScanTab() {
       <Entrance variant="page">
         <BrandHeader title="扫描" subtitle="拍照或选图识别" variant="page" />
       </Entrance>
+
+      <Pressable onPress={() => router.push('/scan-code' as Href)} style={primaryButtonStyle}>
+        <Text style={primaryButtonTextStyle}>扫描二维码归位</Text>
+      </Pressable>
 
       <SectionCard title="图片" delay={70} density="compact" headerMode="compact">
         <View style={{ flexDirection: 'row', gap: 10 }}>

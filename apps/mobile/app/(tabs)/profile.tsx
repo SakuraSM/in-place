@@ -51,6 +51,12 @@ export default function ProfileTab() {
       iconName: 'person-outline',
     },
     {
+      href: '/profile/household' as Href,
+      title: '家庭空间',
+      subtitle: '切换个人或共享家庭库存',
+      iconName: 'people-outline',
+    },
+    {
       href: '/profile/ai',
       title: 'AI 配置',
       subtitle: `${aiSettings?.enabled ? '已启用' : '未启用'} · ${aiSettings?.source === 'user' ? '账号配置' : '系统默认'}`,

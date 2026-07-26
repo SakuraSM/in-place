@@ -24,6 +24,7 @@ interface Props {
   item: Item;
   childCount?: number;
   category?: Category;
+  shouldShowCategory?: boolean;
   onClick: () => void;
   onLongPress: () => void;
   selectionMode?: boolean;
@@ -31,7 +32,17 @@ interface Props {
   onSelect?: () => void;
 }
 
-export default function ContainerCard({ item, childCount, category, onClick, onLongPress, selectionMode = false, selected = false, onSelect }: Props) {
+export default function ContainerCard({
+  item,
+  childCount,
+  category,
+  shouldShowCategory = true,
+  onClick,
+  onLongPress,
+  selectionMode = false,
+  selected = false,
+  onSelect,
+}: Props) {
   const [hovered, setHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,11 +110,11 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         role={selectionMode ? 'checkbox' : undefined}
         aria-checked={selectionMode ? selected : undefined}
         aria-label={selectionMode ? `${selected ? '取消选择' : '选择'}${item.name}` : `打开${item.name}`}
-        className={`w-full cursor-pointer rounded-2xl border bg-surface p-4 text-left shadow-sm ${
+        className={`w-full cursor-pointer rounded-2xl border bg-surface p-3 text-left shadow-sm ${
           selected ? 'border-brand ring-2 ring-brand/20' : 'border-borderSoft'
         }`}
       >
-        <div className="relative aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3">
+        <div className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-slate-50 lg:aspect-[4/3]">
           {item.images.length > 0 ? (
             <motion.img
               src={buildInventoryImageUrl(item.images[0], 'card')}
@@ -136,7 +147,7 @@ export default function ContainerCard({ item, childCount, category, onClick, onL
         <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-end justify-between gap-2">
           <div className="min-w-0 space-y-1 text-xs text-slate-600">
-            {category ? (
+            {category && shouldShowCategory ? (
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className={`flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded ${bgCls}`}>
                   {iconElement}

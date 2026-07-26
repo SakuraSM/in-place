@@ -1,4 +1,5 @@
-import { ArrowRight, Box, Package } from 'lucide-react';
+import { ArrowRight, Bell, Box, ClipboardCheck, Package, QrCode } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { ActivityLog, Item, ItemStats } from '../../../legacy/database.types';
 import { getContainerTypeLabel } from '../lib/locationTag';
 import ActivityFeed from '../../activity/components/ActivityFeed';
@@ -38,10 +39,11 @@ export default function HomeDashboard({
   onNavigateOverview,
 }: Props) {
   return (
-    <div className="mb-5 min-w-0 space-y-3 overflow-x-hidden md:mb-6">
+    <div className="mb-5 min-w-0 shrink-0 space-y-3 overflow-x-hidden md:mb-6">
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] xl:items-stretch">
         <section
-          className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:p-5 xl:flex xl:h-full xl:flex-col"
+          aria-label="库存统计"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:p-5 xl:flex xl:flex-col"
         >
           <InventoryStatsGrid
             stats={stats}
@@ -52,12 +54,13 @@ export default function HomeDashboard({
           />
         </section>
 
-          <section
-          className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:h-full xl:flex-col"
+        <section
+          aria-labelledby="recent-items-heading"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-slate-900">最近添加</h3>
+              <h3 id="recent-items-heading" className="text-base font-semibold text-slate-900">最近添加</h3>
               <p className="mt-1 text-xs text-slate-600">仅保留最近 3 条，快速回到刚录入的内容。</p>
             </div>
           </div>
@@ -108,12 +111,13 @@ export default function HomeDashboard({
           )}
         </section>
 
-          <section
-            className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:h-full xl:flex-col"
-          >
+        <section
+          aria-labelledby="recent-activity-heading"
+          className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:flex-col"
+        >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-slate-900">最近操作</h3>
+              <h3 id="recent-activity-heading" className="text-base font-semibold text-slate-900">最近操作</h3>
               <p className="mt-1 text-xs text-slate-600">仅保留最近 3 条操作，页面主体仍聚焦位置、收纳和物品。</p>
             </div>
             <button
@@ -134,6 +138,21 @@ export default function HomeDashboard({
           </div>
         </section>
       </div>
+      <section className="grid gap-3 rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm sm:grid-cols-3">
+        {[
+          { to: '/stocktakes', icon: ClipboardCheck, title: '待盘点位置', description: '发起或继续家庭盘点' },
+          { to: '/scan/codes', icon: QrCode, title: '扫码归位', description: '扫描位置后连续归位' },
+          { to: '/reminders', icon: Bell, title: '提醒中心', description: '查看保修、借还和维护' },
+        ].map(({ to, icon: Icon, title, description }) => (
+          <Link key={to} to={to} className="flex items-center gap-3 rounded-2xl bg-surfaceMuted p-3 transition hover:bg-brandTint">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface text-brandStrong shadow-sm"><Icon size={18} /></span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-900">{title}</span>
+              <span className="mt-0.5 block text-xs text-slate-500">{description}</span>
+            </span>
+          </Link>
+        ))}
+      </section>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { AppCoreRequest } from './shared';
 type ServerCategory = {
   id: string;
   userId: string;
+  householdId: string;
   itemType: ItemType;
   scope: CategoryScope;
   presetKey: string | null;
@@ -17,6 +18,7 @@ function mapCategory(category: ServerCategory): Category {
   return {
     id: category.id,
     user_id: category.userId,
+    household_id: category.householdId,
     item_type: category.itemType,
     scope: category.scope,
     preset_key: category.presetKey,

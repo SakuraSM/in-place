@@ -7,12 +7,14 @@ import { searchItemsPage } from '../../../legacy/items';
 import { useDebouncedValue } from '../../../shared/hooks/useDebouncedValue';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 import ResponsiveDialog from '../../../shared/ui/ResponsiveDialog';
-import { APP_PAGE_CONTENT } from '../../../shared/ui/pageHeader';
+import { PageContent, PageShell } from '../../../shared/ui/PageLayout';
 import OverviewFilters from '../components/OverviewFilters';
 import OverviewResults from '../components/OverviewResults';
 import OverviewActiveFilters from '../components/OverviewActiveFilters';
+import SavedOverviewSearches from '../components/SavedOverviewSearches';
 import {
-  OverviewMobileHeader,
+  OverviewPageHeader,
+  OverviewMobileControls,
   OverviewSearchField,
 } from '../components/OverviewSearchHeader';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
@@ -222,74 +224,79 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas md:flex-row">
-      <OverviewMobileHeader
-        query={queryInput}
-        activeFilterCount={activeFilterCount}
-        onQueryChange={setQueryInput}
-        onOpenFilters={() => setShowMobileFilters(true)}
-      />
+    <PageShell>
+      <OverviewPageHeader />
 
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-borderSoft bg-surface md:block lg:w-80">
-        <div className="sticky top-0 z-10 border-b border-borderSoft bg-surface px-6 pb-5 pt-6">
-          <h1 className="text-xl font-bold text-slate-900">总览</h1>
-          <p className="mb-4 mt-1 text-sm text-slate-600">跨位置查找并筛选全部库存。</p>
-          <OverviewSearchField value={queryInput} onChange={setQueryInput} autoFocus />
-        </div>
-        <div className="px-6 py-5">{filterControls}</div>
-      </aside>
+      <PageContent width="wide" className="flex min-h-0 min-w-0 flex-1 items-stretch gap-6">
+        <aside className="sticky top-28 hidden w-72 shrink-0 rounded-3xl border border-borderSoft bg-surface xl:block">
+          <div className="border-b border-borderSoft px-5 py-5">
+            <OverviewSearchField value={queryInput} onChange={setQueryInput} autoFocus />
+          </div>
+          <div className="px-5 py-5">{filterControls}</div>
+        </aside>
 
-      <div data-scroll-root className={`min-w-0 flex-1 overflow-y-auto ${APP_PAGE_CONTENT}`}>
-        {activeFilterCount > 0 ? (
-          <OverviewActiveFilters
-            filters={filters}
-            selectedLocation={selectedLocation}
-            onQueryClear={() => setQueryInput('')}
-            onTypeChange={handleTypeChange}
-            onStatusChange={handleStatusChange}
-            onLocationClear={() => handleLocationChange(null)}
-            onTagToggle={handleTagToggle}
-            onClearAll={() => {
-              setQueryInput('');
-              updateFilters({
-                q: '',
-                type: 'all',
-                status: 'all',
-                locationId: null,
-                tags: [],
-              });
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
+          <OverviewMobileControls
+            query={queryInput}
+            activeFilterCount={activeFilterCount}
+            onQueryChange={setQueryInput}
+            onOpenFilters={() => setShowMobileFilters(true)}
+          />
+          <SavedOverviewSearches
+            query={searchParams.toString()}
+            suggestedLabel={filters.q || selectedLocation?.name || `筛选 ${activeFilterCount} 项`}
+          />
+          {activeFilterCount > 0 ? (
+            <OverviewActiveFilters
+              filters={filters}
+              selectedLocation={selectedLocation}
+              onQueryClear={() => setQueryInput('')}
+              onTypeChange={handleTypeChange}
+              onStatusChange={handleStatusChange}
+              onLocationClear={() => handleLocationChange(null)}
+              onTagToggle={handleTagToggle}
+              onClearAll={() => {
+                setQueryInput('');
+                updateFilters({
+                  q: '',
+                  type: 'all',
+                  status: 'all',
+                  locationId: null,
+                  tags: [],
+                });
+              }}
+            />
+          ) : null}
+
+          <OverviewResults
+            results={displayedResults}
+            total={pagination.total}
+            page={filters.page}
+            pageSize={filters.pageSize}
+            totalPages={pagination.totalPages}
+            hasNextPage={pagination.hasNextPage}
+            isMobile={isMobile}
+            isInitialLoading={isInventoryLoading || (isSearchLoading && !searchResponse)}
+            isFetching={isFetching}
+            isError={isError}
+            emptyDescription={selectedLocation
+              ? `试试其他关键词，或切换位置「${selectedLocation.name}」。`
+              : '试试其他关键词或调整筛选条件。'}
+            onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
+            onRetry={() => void refetch()}
+            onPageChange={(page) => updateFilters({ page }, { replace: false, resetPage: false })}
+            onPageSizeChange={(pageSize) => updateFilters({ pageSize })}
+            onLoadMore={() => {
+              if (!isFetching && pagination.hasNextPage) {
+                updateFilters(
+                  { page: filters.page + 1 },
+                  { replace: false, resetPage: false },
+                );
+              }
             }}
           />
-        ) : null}
-
-        <OverviewResults
-          results={displayedResults}
-          total={pagination.total}
-          page={filters.page}
-          pageSize={filters.pageSize}
-          totalPages={pagination.totalPages}
-          hasNextPage={pagination.hasNextPage}
-          isMobile={isMobile}
-          isInitialLoading={isInventoryLoading || (isSearchLoading && !searchResponse)}
-          isFetching={isFetching}
-          isError={isError}
-          emptyDescription={selectedLocation
-            ? `试试其他关键词，或切换位置「${selectedLocation.name}」。`
-            : '试试其他关键词或调整筛选条件。'}
-          onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
-          onRetry={() => void refetch()}
-          onPageChange={(page) => updateFilters({ page }, { replace: false, resetPage: false })}
-          onPageSizeChange={(pageSize) => updateFilters({ pageSize })}
-          onLoadMore={() => {
-            if (!isFetching && pagination.hasNextPage) {
-              updateFilters(
-                { page: filters.page + 1 },
-                { replace: false, resetPage: false },
-              );
-            }
-          }}
-        />
-      </div>
+        </div>
+      </PageContent>
 
       {showMobileFilters ? (
         <ResponsiveDialog
@@ -309,6 +316,6 @@ export default function SearchPage() {
           </div>
         </ResponsiveDialog>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { fetchAiSettings, resetAiSettings, updateAiSettings, type AiSettings } from '../../../legacy/ai-settings';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import { SectionPanel } from '../components/ProfileUi';
 
 const DEFAULT_AI_SETTINGS: AiSettings = {
@@ -89,23 +89,21 @@ export default function AiSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={APP_PAGE_HEADER}>
-        <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
+    <PageShell>
+      <PageHeader
+        width="narrow"
+        title="AI 配置"
+        backLink={<Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
             <ArrowLeft size={15} />
             返回我的
-          </Link>
-          <h1 className="mt-2 text-xl font-bold text-slate-900">AI 配置</h1>
-        </div>
-      </div>
-
-      <motion.div
-        variants={staggerContainer}
-        animate="animate"
-        className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
-      >
-        <motion.div variants={staggerItem} className="mb-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm">
+          </Link>}
+      />
+      <PageContent width="narrow">
+        <motion.div
+          variants={staggerContainer}
+          animate="animate"
+        >
+        <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.16),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#fffaf0_100%)] px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-amber-100 text-amber-600">
@@ -202,7 +200,8 @@ export default function AiSettingsPage() {
             {aiError ? <p role="alert" className="text-sm text-rose-600">{aiError}</p> : null}
           </SectionPanel>
         </motion.div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </PageContent>
+    </PageShell>
   );
 }

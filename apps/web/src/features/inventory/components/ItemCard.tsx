@@ -11,6 +11,7 @@ import EntityBadge from './EntityBadge';
 interface Props {
   item: Item;
   category?: Category;
+  shouldShowCategory?: boolean;
   onClick: () => void;
   onLongPress: () => void;
   selectionMode?: boolean;
@@ -18,7 +19,16 @@ interface Props {
   onSelect?: () => void;
 }
 
-export default function ItemCard({ item, category, onClick, onLongPress, selectionMode = false, selected = false, onSelect }: Props) {
+export default function ItemCard({
+  item,
+  category,
+  shouldShowCategory = true,
+  onClick,
+  onLongPress,
+  selectionMode = false,
+  selected = false,
+  onSelect,
+}: Props) {
   const [hovered, setHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +76,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
           selected ? 'border-brand ring-2 ring-brand/20' : 'border-borderSoft'
         }`}
       >
-        <div className="relative aspect-square bg-slate-50 overflow-hidden">
+        <div className="relative aspect-square overflow-hidden bg-slate-50 lg:aspect-[4/3]">
           {item.images.length > 0 ? (
               <motion.img
               src={buildInventoryImageUrl(item.images[0], 'card')}
@@ -113,7 +123,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
         </div>
         <div className="p-3">
           <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-0.5">{item.name}</p>
-          {item.category && (
+          {item.category && shouldShowCategory ? (
             <div className="flex items-center gap-1">
               {category && (() => {
                 const colorCls = getColorClasses(category.color);
@@ -131,7 +141,7 @@ export default function ItemCard({ item, category, onClick, onLongPress, selecti
               })()}
               <p className="text-xs text-slate-600 truncate">{item.category}</p>
             </div>
-          )}
+          ) : null}
           {item.tags.length > 0 && (
             <div className="flex gap-1 mt-2 flex-wrap">
               {item.tags.slice(0, 2).map((tag) => (

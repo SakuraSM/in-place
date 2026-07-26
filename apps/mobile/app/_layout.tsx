@@ -31,6 +31,8 @@ export default function RootLayout() {
             <Stack.Screen name="profile/data" />
             <Stack.Screen name="profile/edit" />
             <Stack.Screen name="profile/about" />
+            <Stack.Screen name="profile/household" />
+            <Stack.Screen name="scan-code" />
             <Stack.Screen name="manage/categories" />
             <Stack.Screen name="manage/tags" />
           </Stack>

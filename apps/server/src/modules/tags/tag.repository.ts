@@ -23,20 +23,20 @@ function dedupeTagNames(names: string[]) {
   return unique;
 }
 
-async function findTagByName(userId: string, name: string) {
+async function findTagByName(householdId: string, name: string) {
   const allTags = await getDb()
     .select()
     .from(tagRegistry)
-    .where(eq(tagRegistry.userId, userId));
+    .where(eq(tagRegistry.householdId, householdId));
 
   return allTags.find((tag) => sameTagName(tag.name, name)) ?? null;
 }
 
-export async function listTagsForUser(userId: string, query: ListTagsQuery = {}) {
+export async function listTagsForHousehold(householdId: string, query: ListTagsQuery = {}) {
   const page = query.page ?? 1;
   const pageSize = query.pageSize ?? 24;
   const usePagination = query.page !== undefined || query.pageSize !== undefined;
-  const where = eq(tagRegistry.userId, userId);
+  const where = eq(tagRegistry.householdId, householdId);
 
   const [totalRow] = await getDb()
     .select({ value: count() })
@@ -72,13 +72,16 @@ export async function listTagsForUser(userId: string, query: ListTagsQuery = {})
   };
 }
 
-export async function ensureTagsForUser(userId: string, names: string[]) {
+export async function ensureTagsForHousehold(context: {
+  userId: string;
+  householdId: string;
+}, names: string[]) {
   const normalizedNames = dedupeTagNames(names);
   if (normalizedNames.length === 0) {
     return;
   }
 
-  const existing = (await listTagsForUser(userId)).data;
+  const existing = (await listTagsForHousehold(context.householdId)).data;
   const missing = normalizedNames.filter((name) => !existing.some((tag) => sameTagName(tag.name, name)));
 
   if (missing.length === 0) {
@@ -87,7 +90,8 @@ export async function ensureTagsForUser(userId: string, names: string[]) {
 
   await getDb().insert(tagRegistry).values(
     missing.map((name) => ({
-      userId,
+      userId: context.userId,
+      householdId: context.householdId,
       name,
       description: '',
       color: 'sky',
@@ -95,8 +99,11 @@ export async function ensureTagsForUser(userId: string, names: string[]) {
   );
 }
 
-export async function createTagForUser(userId: string, input: CreateTagInput) {
-  const existing = await findTagByName(userId, input.name);
+export async function createTagForHousehold(context: {
+  userId: string;
+  householdId: string;
+}, input: CreateTagInput) {
+  const existing = await findTagByName(context.householdId, input.name);
   if (existing) {
     throw new Error('标签名称已存在');
   }
@@ -104,7 +111,8 @@ export async function createTagForUser(userId: string, input: CreateTagInput) {
   const [tag] = await getDb()
     .insert(tagRegistry)
     .values({
-      userId,
+      userId: context.userId,
+      householdId: context.householdId,
       name: normalizeTagName(input.name),
       description: input.description,
       color: input.color,
@@ -114,14 +122,14 @@ export async function createTagForUser(userId: string, input: CreateTagInput) {
   return tag ?? null;
 }
 
-export async function updateTagForUser(userId: string, tagId: string, input: UpdateTagInput) {
+export async function updateTagForHousehold(householdId: string, tagId: string, input: UpdateTagInput) {
   const db = getDb();
 
   return db.transaction(async (tx) => {
     const [currentTag] = await tx
       .select()
       .from(tagRegistry)
-      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.userId, userId)))
+      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.householdId, householdId)))
       .limit(1);
 
     if (!currentTag) {
@@ -134,7 +142,7 @@ export async function updateTagForUser(userId: string, tagId: string, input: Upd
       const allTags = await tx
         .select()
         .from(tagRegistry)
-        .where(eq(tagRegistry.userId, userId));
+        .where(eq(tagRegistry.householdId, householdId));
 
       const existing = allTags.find((tag) => sameTagName(tag.name, nextName));
       if (existing && existing.id !== tagId) {
@@ -146,7 +154,7 @@ export async function updateTagForUser(userId: string, tagId: string, input: Upd
       const userItems = await tx
         .select({ id: items.id, tags: items.tags })
         .from(items)
-        .where(eq(items.userId, userId));
+        .where(eq(items.householdId, householdId));
 
       for (const item of userItems) {
         const nextTags = dedupeTagNames(item.tags.map((tag) => (sameTagName(tag, currentTag.name) ? nextName : tag)));
@@ -173,21 +181,21 @@ export async function updateTagForUser(userId: string, tagId: string, input: Upd
         ...(input.color !== undefined ? { color: input.color } : {}),
         updatedAt: new Date(),
       })
-      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.userId, userId)))
+      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.householdId, householdId)))
       .returning();
 
     return updated ?? null;
   });
 }
 
-export async function deleteTagForUser(userId: string, tagId: string) {
+export async function deleteTagForHousehold(householdId: string, tagId: string) {
   const db = getDb();
 
   return db.transaction(async (tx) => {
     const [currentTag] = await tx
       .select()
       .from(tagRegistry)
-      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.userId, userId)))
+      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.householdId, householdId)))
       .limit(1);
 
     if (!currentTag) {
@@ -197,7 +205,7 @@ export async function deleteTagForUser(userId: string, tagId: string) {
     const userItems = await tx
       .select({ id: items.id, tags: items.tags })
       .from(items)
-      .where(eq(items.userId, userId));
+      .where(eq(items.householdId, householdId));
 
     for (const item of userItems) {
       const nextTags = item.tags.filter((tag) => !sameTagName(tag, currentTag.name));
@@ -214,7 +222,7 @@ export async function deleteTagForUser(userId: string, tagId: string) {
 
     const [deleted] = await tx
       .delete(tagRegistry)
-      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.userId, userId)))
+      .where(and(eq(tagRegistry.id, tagId), eq(tagRegistry.householdId, householdId)))
       .returning({ id: tagRegistry.id });
 
     return deleted ?? null;

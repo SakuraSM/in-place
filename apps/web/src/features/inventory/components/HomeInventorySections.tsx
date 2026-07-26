@@ -27,6 +27,7 @@ interface InventoryGridProps {
   items: Item[];
   categories: Category[];
   childCounts: Record<string, number>;
+  shouldShowCategory: boolean;
   isSelectionMode: boolean;
   selectedIds: ReadonlySet<string>;
   onOpenContainer: (item: Item) => void;
@@ -39,6 +40,7 @@ function InventoryGrid({
   items,
   categories,
   childCounts,
+  shouldShowCategory,
   isSelectionMode,
   selectedIds,
   onOpenContainer,
@@ -48,7 +50,7 @@ function InventoryGrid({
 }: InventoryGridProps) {
   return (
     <div
-      className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-8"
     >
       {items.map((item) => {
         const category = categories.find(
@@ -63,6 +65,7 @@ function InventoryGrid({
               item={item}
               childCount={childCounts[item.id]}
               category={category}
+              shouldShowCategory={shouldShowCategory}
               onClick={() => onOpenContainer(item)}
               onLongPress={() => onOpenContext(item)}
               selectionMode={isSelectionMode}
@@ -77,6 +80,7 @@ function InventoryGrid({
             key={item.id}
             item={item}
             category={category}
+            shouldShowCategory={shouldShowCategory}
             onClick={() => onOpenItem(item)}
             onLongPress={() => onOpenContext(item)}
             selectionMode={isSelectionMode}
@@ -192,6 +196,7 @@ export default function HomeInventorySections({
                 items={group.items}
                 categories={categories}
                 childCounts={childCounts}
+                shouldShowCategory={viewMode !== 'category'}
                 isSelectionMode={isSelectionMode}
                 selectedIds={selectedIds}
                 onOpenContainer={onOpenContainer}

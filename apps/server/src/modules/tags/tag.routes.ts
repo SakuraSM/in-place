@@ -1,12 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { requireCurrentUser } from '../../lib/authenticated-request.js';
-import { createTagForUser, deleteTagForUser, listTagsForUser, updateTagForUser } from './tag.repository.js';
+import { requireHouseholdAccess } from '../../lib/household-access.js';
+import { createTagForHousehold, deleteTagForHousehold, listTagsForHousehold, updateTagForHousehold } from './tag.repository.js';
 import { createTagSchema, listTagsQuerySchema, tagIdParamsSchema, updateTagSchema } from './tag.schemas.js';
 
 export const tagRoutes: FastifyPluginAsync = async (app) => {
   app.get('/', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply });
+    if (!access) {
       return;
     }
 
@@ -18,12 +18,12 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    return reply.send(await listTagsForUser(currentUser.id, query.data));
+    return reply.send(await listTagsForHousehold(access.householdId, query.data));
   });
 
   app.post('/', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -37,7 +37,7 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       return reply.code(201).send({
-        data: await createTagForUser(currentUser.id, parsed.data),
+        data: await createTagForHousehold(access, parsed.data),
       });
     } catch (error) {
       return reply.code(409).send({
@@ -48,8 +48,8 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch('/:id', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -70,7 +70,7 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
     }
 
     try {
-      const updated = await updateTagForUser(currentUser.id, params.data.id, parsed.data);
+      const updated = await updateTagForHousehold(access.householdId, params.data.id, parsed.data);
       if (!updated) {
         return reply.code(404).send({
           error: 'TAG_NOT_FOUND',
@@ -88,8 +88,8 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete('/:id', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -101,7 +101,7 @@ export const tagRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const deleted = await deleteTagForUser(currentUser.id, params.data.id);
+    const deleted = await deleteTagForHousehold(access.householdId, params.data.id);
     if (!deleted) {
       return reply.code(404).send({
         error: 'TAG_NOT_FOUND',

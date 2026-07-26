@@ -67,6 +67,13 @@ export const ACTIVITY_ACTION_PRESENTATION: Record<ActivityAction, LabelPresentat
     label: '删除',
     tone: 'danger',
   },
+  move: { label: '归位移动', tone: 'brand' },
+  quantity_adjust: { label: '数量校正', tone: 'warning' },
+  code_bind: { label: '绑定标签', tone: 'brand' },
+  stocktake_start: { label: '开始盘点', tone: 'brand' },
+  stocktake_complete: { label: '完成盘点', tone: 'success' },
+  loan_checkout: { label: '借出', tone: 'warning' },
+  loan_return: { label: '归还', tone: 'success' },
 };
 
 export interface ColorOptionPresentation {

@@ -18,6 +18,13 @@
           "photosPermission": "允许归位读取照片，用于上传物品图片和 AI 识别。",
           "cameraPermission": "允许归位使用相机，用于拍照识别和上传物品图片。"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "允许归位使用相机扫描家庭收纳二维码。",
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "experiments": {

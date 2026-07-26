@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus, type LucideIcon } from 'lucide-react';
+import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus, QrCode, ClipboardCheck, Bell, Users, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
   getDesktopPrimaryNavigationItems,
@@ -10,15 +10,24 @@ import BrandLockup from '../../shared/ui/BrandLockup';
 import { buildHomeCreateRoute } from '../../features/inventory/lib/homeRoute';
 import { APP_PAGE_HEADER_TOP_ZONE } from '../../shared/ui/pageHeader';
 import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
+import HouseholdSwitcher from './HouseholdSwitcher';
+import {
+  isNavigationPathActive,
+  type NavigationMatchMode,
+} from './navigationMatch';
 
-const WEB_NAVIGATION_ADAPTER: Record<AppNavigationItemId, { to: string; icon: LucideIcon }> = {
+const WEB_NAVIGATION_ADAPTER: Record<AppNavigationItemId, {
+  to: string;
+  icon: LucideIcon;
+  matchMode?: NavigationMatchMode;
+}> = {
   home: { to: '/', icon: Home },
   overview: { to: '/overview', icon: Search },
   locations: { to: '/locations', icon: MapPinned },
   activity: { to: '/activity', icon: Clock3 },
   categories: { to: '/categories', icon: Shapes },
   tags: { to: '/tags', icon: StickyNote },
-  scan: { to: '/scan', icon: Camera },
+  scan: { to: '/scan', icon: Camera, matchMode: 'exact' },
   profile: { to: '/profile', icon: User },
 };
 
@@ -63,8 +72,8 @@ export default function Sidebar({
   return (
     <aside
       aria-label="主导航"
-      className={`fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-borderSoft bg-surface transition-[width,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] md:flex ${
-        collapsed ? 'w-24' : 'w-64 lg:w-72'
+      className={`fixed left-0 top-0 z-40 hidden h-dvh flex-col border-r border-borderSoft bg-surface transition-[width,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:flex ${
+        collapsed ? 'w-24' : 'w-64 xl:w-72'
       }`}
     >
       <div className={`border-b border-borderSoft transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3' : 'px-5'}`}>
@@ -100,6 +109,9 @@ export default function Sidebar({
       </div>
 
       <div className={`transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-3 py-3' : 'px-5 py-3'}`}>
+        <div className="mb-2">
+          <HouseholdSwitcher compact={collapsed} />
+        </div>
         {collapsed ? (
           <div className="space-y-2">
             <Link
@@ -143,15 +155,17 @@ export default function Sidebar({
               </p>
             ) : null}
             <div className="space-y-1">
-              {sectionItems.map(({ to, icon: Icon, label }) => {
-                const isActive = to === '/'
-                  ? location.pathname === '/'
-                  : location.pathname.startsWith(to);
+              {sectionItems.map(({ to, icon: Icon, label, matchMode }) => {
+                const isActive = isNavigationPathActive({
+                  pathname: location.pathname,
+                  targetPath: to,
+                  mode: matchMode,
+                });
                 return (
                   <NavLink
                     key={to}
                     to={to}
-                    end={to === '/'}
+                    end={to === '/' || matchMode === 'exact'}
                     aria-current={isActive ? 'page' : undefined}
                     title={collapsed ? label : undefined}
                     className={`relative flex items-center overflow-hidden rounded-xl text-sm font-medium transition-[padding,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -202,6 +216,36 @@ export default function Sidebar({
             </div>
           </div>
         ))}
+        <div>
+          {!collapsed ? (
+            <p className="mb-1 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">家庭管家</p>
+          ) : null}
+          <div className="space-y-1">
+            {[
+              { to: '/scan/codes', label: '扫码归位', icon: QrCode },
+              { to: '/stocktakes', label: '家庭盘点', icon: ClipboardCheck },
+              { to: '/reminders', label: '提醒中心', icon: Bell },
+              { to: '/household', label: '家庭成员', icon: Users },
+            ].map(({ to, label, icon: Icon }) => {
+              const isActive = isNavigationPathActive({
+                pathname: location.pathname,
+                targetPath: to,
+              });
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  title={collapsed ? label : undefined}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center rounded-xl py-3 text-sm font-medium transition-colors ${collapsed ? 'justify-center px-0' : 'gap-3 px-4'} ${isActive ? 'bg-brandTint text-brandStrong' : 'text-slate-600 hover:bg-surfaceMuted hover:text-slate-900'}`}
+                >
+                  <Icon size={18} />
+                  {!collapsed ? <span>{label}</span> : null}
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
       </nav>
 
       <div className={`border-t border-borderSoft transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2 py-4' : 'px-5 py-5'}`}>

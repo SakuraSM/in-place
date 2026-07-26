@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import type { Item, ItemStatus, ItemType } from '@inplace/domain';
+import type { Item, ItemCreateInput, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
@@ -119,7 +119,7 @@ export default function ItemFormScreen() {
         throw new Error('请先登录');
       }
 
-      const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
+      const payload: ItemCreateInput = {
         user_id: user.id,
         parent_id: draft.parentId,
         type: draft.type,
@@ -128,6 +128,10 @@ export default function ItemFormScreen() {
         category: draft.category.trim(),
         status: draft.status,
         price: draft.price.trim() ? Number(draft.price.trim()) : null,
+        quantity: itemQuery.data?.quantity ?? 1,
+        tracking_mode: itemQuery.data?.tracking_mode ?? 'unique',
+        minimum_quantity: itemQuery.data?.minimum_quantity ?? null,
+        expiry_date: itemQuery.data?.expiry_date ?? null,
         purchase_date: draft.purchaseDate.trim() || null,
         warranty_date: draft.warrantyDate.trim() || null,
         images: draft.images,

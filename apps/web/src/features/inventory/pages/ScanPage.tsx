@@ -7,9 +7,9 @@ import { createItem, uploadImage } from '../../../legacy/items';
 import { useAuth } from '../../../app/providers/auth-context';
 import type { AIRecognitionResult } from '../../../legacy/database.types';
 import ItemForm from '../components/ItemForm';
-import type { Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import CropImageSheet from '../components/CropImageSheet';
 import { createObjectUrl, cropImageFromFile, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox } from '../lib/imageCrop';
 
@@ -192,6 +192,10 @@ export default function ScanPage() {
             category: draft.result.category,
             status: 'in_stock',
             price: draft.result.price ?? null,
+            quantity: 1,
+            tracking_mode: 'unique',
+            minimum_quantity: null,
+            expiry_date: null,
             purchase_date: null,
             warranty_date: null,
             images: [],
@@ -209,7 +213,7 @@ export default function ScanPage() {
     }
   };
 
-  const handleEditSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleEditSave = async (data: ItemCreateInput) => {
     if (!editingDraft || !user) return;
     await saveDraftWithImage(drafts[editingDraft.idx], data, { includeDraftImageByDefault: false });
     setDrafts((prev) =>
@@ -252,7 +256,7 @@ export default function ScanPage() {
 
   const saveDraftWithImage = async (
     draft: DraftItem,
-    data: Omit<Item, 'id' | 'created_at' | 'updated_at'>,
+    data: ItemCreateInput,
     options: { includeDraftImageByDefault: boolean },
   ) => {
     const uploadedImages = data.images.filter((image) => !image.startsWith('blob:'));
@@ -282,15 +286,14 @@ export default function ScanPage() {
   const blobSourceImageUrl = sourceImageUrl?.startsWith('blob:') ? sourceImageUrl : null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={APP_PAGE_HEADER}>
-        <div className={APP_PAGE_HEADER_STACK}>
-          <h1 className="text-xl font-bold text-slate-900">AI 扫描</h1>
-          <p className="mt-0.5 text-xs text-slate-600">拍照或选图自动识别物品并录入</p>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        width="wide"
+        title="AI 扫描"
+        description="拍照或选图自动识别物品并录入"
+      />
 
-      <div className={`mx-auto w-full max-w-[1480px] ${APP_PAGE_CONTENT}`}>
+      <PageContent width="wide">
         {aiEnabled === false ? (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -567,7 +570,7 @@ export default function ScanPage() {
             ) : null}
           </div>
         )}
-      </div>
+      </PageContent>
 
       <input
         ref={cameraFileRef}
@@ -611,6 +614,6 @@ export default function ScanPage() {
           onClose={() => setCroppingDraftIndex(null)}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

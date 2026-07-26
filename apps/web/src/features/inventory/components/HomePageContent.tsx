@@ -5,13 +5,15 @@ import type {
   Item,
   ItemStats,
 } from '../../../legacy/database.types';
-import { APP_PAGE_CONTENT } from '../../../shared/ui/pageHeader';
+import { PageContent } from '../../../shared/ui/PageLayout';
 import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import HomeDashboard from './HomeDashboard';
+import HomeInventoryToolbar from './HomeInventoryToolbar';
 import HomeInventorySections, { type HomeViewMode } from './HomeInventorySections';
 
 interface HomePageContentProps {
   showDashboard: boolean;
+  breadcrumbs: Item[];
   stats: ItemStats | null;
   recentItems: Item[];
   recentItemPaths: Record<string, string>;
@@ -24,6 +26,10 @@ interface HomePageContentProps {
   viewMode: HomeViewMode;
   selectionMode: boolean;
   selectedIds: Set<string>;
+  isAllSelected: boolean;
+  onNavigateBreadcrumb: (itemId: string | null) => void;
+  onToggleSelectAll: () => void;
+  onViewModeChange: (viewMode: HomeViewMode) => void;
   onOpenActivity: () => void;
   onOpenItem: (item: Item) => void;
   onOpenActivityItem: (entry: ActivityLog) => void;
@@ -35,6 +41,7 @@ interface HomePageContentProps {
 
 export default function HomePageContent({
   showDashboard,
+  breadcrumbs,
   stats,
   recentItems,
   recentItemPaths,
@@ -47,6 +54,10 @@ export default function HomePageContent({
   viewMode,
   selectionMode,
   selectedIds,
+  isAllSelected,
+  onNavigateBreadcrumb,
+  onToggleSelectAll,
+  onViewModeChange,
   onOpenActivity,
   onOpenItem,
   onOpenActivityItem,
@@ -58,8 +69,20 @@ export default function HomePageContent({
   const isEmpty = items.length === 0;
 
   return (
-    <div data-scroll-root className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-      <div className={`flex min-h-full min-w-0 flex-1 flex-col md:min-h-full ${APP_PAGE_CONTENT}`}>
+    <PageContent width="wide" className="flex min-w-0 flex-col">
+        <HomeInventoryToolbar
+          breadcrumbs={breadcrumbs}
+          isEmpty={isEmpty}
+          isSelectionMode={selectionMode}
+          selectedCount={selectedIds.size}
+          totalCount={items.length}
+          isAllSelected={isAllSelected}
+          viewMode={viewMode}
+          onNavigateBreadcrumb={onNavigateBreadcrumb}
+          onToggleSelectAll={onToggleSelectAll}
+          onViewModeChange={onViewModeChange}
+        />
+
         {showDashboard ? (
           <HomeDashboard
             stats={stats}
@@ -92,6 +115,9 @@ export default function HomePageContent({
         ) : (
           <div
             key={viewMode}
+            id="home-inventory-panel"
+            role="tabpanel"
+            aria-label={viewMode === 'type' ? '按类型分组的库存' : '按分类分组的库存'}
             className="flex min-h-full flex-1 flex-col"
           >
             <HomeInventorySections
@@ -108,7 +134,6 @@ export default function HomePageContent({
             />
           </div>
         )}
-      </div>
-    </div>
+    </PageContent>
   );
 }
