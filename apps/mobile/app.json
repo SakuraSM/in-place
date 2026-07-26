@@ -22,7 +22,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "允许归位使用相机扫描家庭收纳二维码。",
+          "cameraPermission": "允许归位使用相机扫描 InPlace 标签，用于查看、绑定或归位库存。",
           "recordAudioAndroid": false
         }
       ]

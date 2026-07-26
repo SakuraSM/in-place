@@ -318,9 +318,14 @@ export default function ScanTab() {
   if (!aiStatusQuery.data) {
     return (
       <Screen>
-        <StateBlock title="AI 未启用" body="仍可直接使用二维码归位。" />
-        <Pressable onPress={() => router.push('/scan-code' as Href)} style={primaryButtonStyle}>
-          <Text style={primaryButtonTextStyle}>扫描二维码归位</Text>
+        <StateBlock title="拍照录入暂不可用" body="仍可扫描 InPlace 标签整理已有库存。" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="扫标签归位"
+          onPress={() => router.push('/scan-code' as Href)}
+          style={primaryButtonStyle}
+        >
+          <Text style={primaryButtonTextStyle}>扫标签归位</Text>
         </Pressable>
       </Screen>
     );
@@ -329,17 +334,30 @@ export default function ScanTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="扫描" subtitle="拍照或选图识别" variant="page" />
+        <BrandHeader title="拍照录入" subtitle="识别照片，确认后新建库存" variant="page" />
       </Entrance>
 
-      <Pressable onPress={() => router.push('/scan-code' as Href)} style={primaryButtonStyle}>
-        <Text style={primaryButtonTextStyle}>扫描二维码归位</Text>
-      </Pressable>
+      <SectionCard
+        title="已有 InPlace 标签？"
+        subtitle="无需识别照片，直接查看、绑定或归位已有库存"
+        delay={40}
+        density="compact"
+        headerMode="compact"
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="扫标签归位"
+          onPress={() => router.push('/scan-code' as Href)}
+          style={labelReturnButtonStyle}
+        >
+          <Text style={labelReturnButtonTextStyle}>扫标签归位</Text>
+        </Pressable>
+      </SectionCard>
 
-      <SectionCard title="图片" delay={70} density="compact" headerMode="compact">
+      <SectionCard title="拍照或选图" delay={70} density="compact" headerMode="compact">
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
+            <Text style={secondaryButtonTextStyle}>拍照识别</Text>
           </Pressable>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
@@ -420,6 +438,21 @@ const secondaryButtonTextStyle = {
   color: palette.text,
   fontSize: 15,
   fontWeight: '600' as const,
+};
+
+const labelReturnButtonStyle = {
+  borderRadius: 15,
+  borderWidth: 1,
+  borderColor: palette.brand,
+  backgroundColor: palette.surface,
+  paddingVertical: 13,
+  alignItems: 'center' as const,
+};
+
+const labelReturnButtonTextStyle = {
+  color: palette.brandStrong,
+  fontSize: 15,
+  fontWeight: '700' as const,
 };
 
 const primaryButtonStyle = {

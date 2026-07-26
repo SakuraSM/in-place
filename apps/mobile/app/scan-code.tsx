@@ -98,7 +98,7 @@ export default function CodeScanScreen() {
 
   return (
     <View style={styles.screen}>
-      <Stack.Screen options={{ title: '扫码归位', headerShown: true }} />
+      <Stack.Screen options={{ title: '扫标签归位', headerShown: true }} />
       <CameraView
         style={styles.camera}
         facing="back"
@@ -106,7 +106,7 @@ export default function CodeScanScreen() {
         onBarcodeScanned={busy ? undefined : (result: BarcodeScanningResult) => void handleBarcode(result)}
       />
       <View style={styles.panel}>
-        <Text style={styles.title}>{destination ? `归位到 ${destination.name}` : '扫描“归位”标签'}</Text>
+        <Text style={styles.title}>{destination ? `归位到 ${destination.name}` : '扫描 InPlace 标签'}</Text>
         <Text style={styles.description}>{message}</Text>
         {destination ? <Text style={styles.count}>本次已归位 {movedIds.size} 件</Text> : null}
         <Pressable onPress={() => { setDestination(null); setMovedIds(new Set()); setMessage('已重置扫描目标'); }} style={styles.secondaryButton}>

@@ -77,8 +77,8 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   },
   {
     id: 'scan',
-    label: 'AI 扫描',
-    shortLabel: '扫描',
+    label: '拍照录入',
+    shortLabel: '拍照',
     section: 'operations',
     priority: 70,
     isDesktopPrimary: true,

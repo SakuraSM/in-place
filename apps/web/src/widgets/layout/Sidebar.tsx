@@ -222,7 +222,7 @@ export default function Sidebar({
           ) : null}
           <div className="space-y-1">
             {[
-              { to: '/scan/codes', label: '扫码归位', icon: QrCode },
+              { to: '/scan/codes', label: '扫标签归位', icon: QrCode },
               { to: '/stocktakes', label: '家庭盘点', icon: ClipboardCheck },
               { to: '/reminders', label: '提醒中心', icon: Bell },
               { to: '/household', label: '家庭成员', icon: Users },

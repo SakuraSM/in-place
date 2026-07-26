@@ -15,8 +15,9 @@ export default function CodeScanPage() {
     <PageShell>
       <PageHeader
         width="narrow"
-        eyebrow="扫码归位"
-        title="扫描“归位”标签"
+        eyebrow="扫标签归位"
+        title="扫描 InPlace 标签"
+        description="查看、绑定已有库存，或选择位置后连续归位"
       />
       <PageContent width="narrow">
         <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm md:p-7">
@@ -25,9 +26,9 @@ export default function CodeScanPage() {
               <QrCode size={22} />
             </span>
             <div>
-              <h2 className="font-bold text-slate-900">物品、收纳和位置都能扫</h2>
+              <h2 className="font-bold text-slate-900">整理已有库存</h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                扫物品进入详情；扫位置后可连续扫描多个物品并批量归位。
+                扫物品标签进入详情；扫位置标签后可连续扫描多个物品并批量归位。
               </p>
             </div>
           </div>

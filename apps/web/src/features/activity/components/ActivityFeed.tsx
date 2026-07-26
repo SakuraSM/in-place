@@ -10,7 +10,7 @@ const ACTION_LABELS: Record<ActivityAction, { label: string; tone: string; icon:
     icon: PencilLine,
   },
   ai_scan_create: {
-    label: 'AI 扫描录入',
+    label: '拍照录入',
     tone: 'bg-violet-50 text-violet-600',
     icon: Bot,
   },

@@ -38,7 +38,7 @@ const HOME_INVENTORY_PREVIEW_LIMIT = 4;
 
 const QUICK_ACTIONS = [
   { label: '新增', href: '/item/form', icon: 'add-circle-outline' },
-  { label: '扫码归位', href: '/scan-code', icon: 'scan-outline' },
+  { label: '扫标签归位', href: '/scan-code', icon: 'qr-code-outline' },
   { label: '盘点', href: '/operations/stocktakes', icon: 'clipboard-outline' },
   { label: '提醒', href: '/operations/reminders', icon: 'notifications-outline' },
 ] as const;

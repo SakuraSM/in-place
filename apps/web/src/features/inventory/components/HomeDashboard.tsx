@@ -141,7 +141,7 @@ export default function HomeDashboard({
       <section className="grid gap-3 rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm sm:grid-cols-3">
         {[
           { to: '/stocktakes', icon: ClipboardCheck, title: '待盘点位置', description: '发起或继续家庭盘点' },
-          { to: '/scan/codes', icon: QrCode, title: '扫码归位', description: '扫描位置后连续归位' },
+          { to: '/scan/codes', icon: QrCode, title: '扫标签归位', description: '扫描 InPlace 标签整理已有库存' },
           { to: '/reminders', icon: Bell, title: '提醒中心', description: '查看保修、借还和维护' },
         ].map(({ to, icon: Icon, title, description }) => (
           <Link key={to} to={to} className="flex items-center gap-3 rounded-2xl bg-surfaceMuted p-3 transition hover:bg-brandTint">
