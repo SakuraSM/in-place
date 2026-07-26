@@ -1,28 +1,35 @@
 import { useCallback, useState } from 'react';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { router, Stack } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
+import { parseInventoryCode } from '@inplace/app-core';
 import { codesApi, itemsApi } from '@/shared/api/mobileClient';
+import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { CompactListRow } from '@/shared/ui/CompactListRow';
+import { InventoryIcon } from '@/shared/ui/InventoryIcon';
+import { useNotify } from '@/shared/ui/ToastProvider';
 import { palette } from '@/shared/ui/theme';
 
-function parseCode(value: string) {
-  const match = value.trim().match(/(?:^|\/)s\/([A-Za-z0-9_-]{20,64})(?:[/?#]|$)/);
-  const code = match?.[1] ?? value.trim();
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
-  return /^[A-Za-z0-9_-]{20,64}$/.test(code) && !isUuid ? code : null;
-}
-
 export default function CodeScanScreen() {
+  const queryClient = useQueryClient();
+  const notify = useNotify();
   const [permission, requestPermission] = useCameraPermissions();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('扫描物品进入详情；扫描位置后继续扫描物品即可归位。');
   const [destination, setDestination] = useState<Item | null>(null);
   const [movedIds, setMovedIds] = useState<Set<string>>(() => new Set());
+  const [unboundCode, setUnboundCode] = useState<string | null>(null);
+  const bindableItemsQuery = useQuery({
+    queryKey: ['mobile', 'code-bind-items'],
+    enabled: Boolean(unboundCode),
+    queryFn: fetchBindableItems,
+  });
 
   const handleBarcode = useCallback(async (result: BarcodeScanningResult) => {
     if (busy) return;
-    const code = parseCode(result.data);
+    const code = parseInventoryCode(result.data);
     if (!code) {
       setMessage('这不是有效的“归位”标签');
       return;
@@ -32,7 +39,8 @@ export default function CodeScanScreen() {
       const resolved = await codesApi.resolveCode(code);
       const scannedItem = resolved.item;
       if (!scannedItem) {
-        setMessage('这是未绑定标签，请先在 Web 端选择对象完成绑定。');
+        setUnboundCode(code);
+        setMessage('这是未绑定标签，请选择要绑定的位置、收纳或物品。');
         return;
       }
 
@@ -64,6 +72,19 @@ export default function CodeScanScreen() {
     }
   }, [busy, destination, movedIds]);
 
+  const handleBind = async (item: Item) => {
+    if (!unboundCode) return;
+    try {
+      await codesApi.bindCode(unboundCode, item.id);
+      setUnboundCode(null);
+      setMessage(`标签已绑定到 ${item.name}`);
+      notify({ tone: 'success', title: '标签绑定成功', description: item.name });
+      await queryClient.invalidateQueries({ queryKey: ['mobile'] });
+    } catch (error) {
+      notify({ tone: 'error', title: '标签绑定失败', description: error instanceof Error ? error.message : '请稍后重试' });
+    }
+  };
+
   if (!permission) return <View style={styles.center}><Text>正在检查相机权限…</Text></View>;
   if (!permission.granted) {
     return (
@@ -92,8 +113,36 @@ export default function CodeScanScreen() {
           <Text style={styles.secondaryButtonText}>重置目标</Text>
         </Pressable>
       </View>
+      <BottomSheet visible={Boolean(unboundCode)} title="绑定未使用标签" onClose={() => setUnboundCode(null)}>
+        <Text style={styles.description}>选择一个对象。绑定后再次扫描即可查看或归位。</Text>
+        {bindableItemsQuery.isLoading ? <Text style={styles.description}>正在加载库存…</Text> : null}
+        {bindableItemsQuery.data?.map((item) => (
+          <Pressable key={item.id} onPress={() => void handleBind(item)}>
+            <CompactListRow
+              title={item.name}
+              subtitle={item.type === 'item' ? '物品' : '位置 / 收纳'}
+              icon={<InventoryIcon type={item.type} size="sm" />}
+              iconFramed={false}
+              chevron
+            />
+          </Pressable>
+        ))}
+      </BottomSheet>
     </View>
   );
+}
+
+async function fetchBindableItems() {
+  const collectedItems: Item[] = [];
+  let page = 1;
+  let hasNextPage = true;
+  while (hasNextPage && page <= 20) {
+    const result = await itemsApi.searchItemsPage('', '', { page, pageSize: 100 });
+    collectedItems.push(...result.data);
+    hasNextPage = result.meta.hasNextPage;
+    page += 1;
+  }
+  return collectedItems;
 }
 
 const styles = StyleSheet.create({

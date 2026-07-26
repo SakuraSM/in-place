@@ -7,6 +7,7 @@ import {
   createHouseholdsApi,
   createItemsApi,
   createLifecycleApi,
+  createStocktakesApi,
   createTagsApi,
 } from '@inplace/app-core';
 import { Platform } from 'react-native';
@@ -117,6 +118,7 @@ export const activityApi = createActivityApi(mobileApiClient.request);
 export const codesApi = createCodesApi(mobileApiClient.request);
 export const householdsApi = createHouseholdsApi(mobileApiClient.request);
 export const lifecycleApi = createLifecycleApi(mobileApiClient.request);
+export const stocktakesApi = createStocktakesApi(mobileApiClient.request);
 
 type ImageUploadAsset = {
   uri: string;

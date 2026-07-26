@@ -51,6 +51,36 @@ export default function ManageTab() {
       iconName: 'location-outline',
     },
     {
+      href: '/operations/stocktakes' as Href,
+      title: '盘点',
+      subtitle: '按位置核对库存差异',
+      iconName: 'clipboard-outline',
+    },
+    {
+      href: '/operations/reminders' as Href,
+      title: '提醒',
+      subtitle: '保修、借用、维护与盘点',
+      iconName: 'notifications-outline',
+    },
+    {
+      href: '/operations/reports' as Href,
+      title: '库存报告',
+      subtitle: '价值、补货、到期与清单',
+      iconName: 'bar-chart-outline',
+    },
+    {
+      href: '/operations/duplicates' as Href,
+      title: '重复项',
+      subtitle: '识别并合并重复库存',
+      iconName: 'copy-outline',
+    },
+    {
+      href: '/operations/labels' as Href,
+      title: '标签打印',
+      subtitle: 'A4 与 50×30mm 二维码',
+      iconName: 'print-outline',
+    },
+    {
       href: '/(tabs)/activity',
       title: '记录',
       subtitle: '录入与修改日志',
@@ -75,12 +105,29 @@ export default function ManageTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="管理" variant="page" />
+        <BrandHeader title="工具中心" variant="page" />
       </Entrance>
 
-      <SectionCard title="功能" delay={60} density="dense" headerMode="compact">
+      <SectionCard title="库存工具" subtitle="盘点、提醒、报告与标签" delay={60} density="dense" headerMode="compact">
         <View style={menuStyle}>
-          {menuItems.map((item) => (
+          {menuItems.slice(1, 6).map((item) => (
+            <Link key={item.title} href={item.href} asChild>
+              <Pressable>
+                <CompactListRow
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  iconName={item.iconName}
+                  meta={item.meta}
+                  chevron
+                />
+              </Pressable>
+            </Link>
+          ))}
+        </View>
+      </SectionCard>
+      <SectionCard title="基础管理" subtitle="位置、记录、分类与标签" delay={100} density="dense" headerMode="compact">
+        <View style={menuStyle}>
+          {[menuItems[0], ...menuItems.slice(6)].map((item) => (
             <Link key={item.title} href={item.href} asChild>
               <Pressable>
                 <CompactListRow

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';

@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link, router, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActivityLog, Category, Item, ItemStats } from '@inplace/domain';
 import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
@@ -35,6 +35,13 @@ interface HomeDashboardProps {
 
 const RECENT_SECTION_LIMIT = 3;
 const HOME_INVENTORY_PREVIEW_LIMIT = 4;
+
+const QUICK_ACTIONS = [
+  { label: '新增', href: '/item/form', icon: 'add-circle-outline' },
+  { label: '扫码归位', href: '/scan-code', icon: 'scan-outline' },
+  { label: '盘点', href: '/operations/stocktakes', icon: 'clipboard-outline' },
+  { label: '提醒', href: '/operations/reminders', icon: 'notifications-outline' },
+] as const;
 
 const STAT_ITEMS = [
   { label: '总物品', key: 'items', icon: 'cube' },
@@ -90,6 +97,21 @@ export function HomeDashboard({
           )}
         />
       </Entrance>
+
+      {!selectionMode ? (
+        <View accessibilityLabel="快捷操作" style={quickActionsStyle}>
+          {QUICK_ACTIONS.map((action) => (
+            <Link key={action.label} href={action.href as Href} asChild>
+              <Pressable accessibilityRole="button" style={quickActionStyle}>
+                <View style={quickActionIconStyle}>
+                  <Ionicons name={action.icon} size={20} color={palette.brandStrong} />
+                </View>
+                <Text style={quickActionTextStyle}>{action.label}</Text>
+              </Pressable>
+            </Link>
+          ))}
+        </View>
+      ) : null}
 
       {selectionMode ? (
         <View style={selectionNoticeStyle}>
@@ -424,16 +446,6 @@ function InventoryTile({
   );
 }
 
-function Thumb({ item, imageUri }: { item: Item; imageUri: string | null }) {
-  if (imageUri) {
-    return <InventoryImage url={item.images[0]} style={thumbStyle} resizeMode="cover" />;
-  }
-
-  return (
-    <InventoryThumbFallback type={item.type} isLocation={isLocationItem(item)} size="md" />
-  );
-}
-
 function EmptyBlock({ text }: { text: string }) {
   return (
     <View style={emptyBlockStyle}>
@@ -631,92 +643,6 @@ const sectionActionStyle = {
   paddingTop: 3,
 };
 
-const mutedTextStyle = {
-  fontSize: 13,
-  lineHeight: 18,
-  color: palette.textSoft,
-};
-
-const captionTextStyle = {
-  fontSize: 12,
-  lineHeight: 16,
-  color: palette.textSoft,
-};
-
-const rowCardStyle = {
-  minHeight: 68,
-  borderRadius: 20,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
-  paddingVertical: 10,
-  paddingHorizontal: 12,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 12,
-};
-
-const rowTextStyle = {
-  flex: 1,
-  minWidth: 0,
-  gap: 3,
-};
-
-const rowTitleStyle = {
-  fontSize: 16,
-  fontWeight: '800' as const,
-  color: palette.text,
-};
-
-const thumbStyle = {
-  width: 46,
-  height: 46,
-  borderRadius: 16,
-  backgroundColor: palette.surfaceMuted,
-};
-
-const thumbFallbackStyle = {
-  width: 46,
-  height: 46,
-  borderRadius: 16,
-  backgroundColor: palette.brandTint,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
-
-const activityIconStyle = {
-  width: 46,
-  height: 46,
-  borderRadius: 16,
-  backgroundColor: '#fff7e6',
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
-
-const deleteActivityIconStyle = {
-  backgroundColor: '#fff1f2',
-};
-
-const activityTitleLineStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 8,
-};
-
-const activityTitleStyle = {
-  flexShrink: 1,
-};
-
-const activityPillStyle = {
-  borderRadius: 999,
-  backgroundColor: '#fff7e6',
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  fontSize: 11,
-  fontWeight: '800' as const,
-  color: '#d97706',
-};
-
 const emptyBlockStyle = {
   borderRadius: 20,
   borderWidth: 1,
@@ -851,4 +777,38 @@ const selectedBadgeStyle = {
   backgroundColor: palette.brand,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
+};
+
+const quickActionsStyle = {
+  flexDirection: 'row' as const,
+  gap: 8,
+};
+
+const quickActionStyle = {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 72,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: palette.borderSoft,
+  backgroundColor: palette.surface,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: 6,
+  ...shadows.sm,
+};
+
+const quickActionIconStyle = {
+  width: 34,
+  height: 34,
+  borderRadius: 12,
+  backgroundColor: palette.brandTint,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+
+const quickActionTextStyle = {
+  fontSize: 12,
+  fontWeight: '800' as const,
+  color: palette.textMuted,
 };

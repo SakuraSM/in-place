@@ -1,12 +1,4 @@
-const OPAQUE_CODE_PATTERN = /^[A-Za-z0-9_-]{20,64}$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function parseInventoryCode(value: string) {
-  const trimmed = value.trim();
-  const pathMatch = trimmed.match(/(?:^|\/)s\/([A-Za-z0-9_-]{20,64})(?:[/?#]|$)/);
-  const candidate = pathMatch?.[1] ?? trimmed;
-  return OPAQUE_CODE_PATTERN.test(candidate) && !UUID_PATTERN.test(candidate) ? candidate : null;
-}
+export { parseInventoryCode } from '@inplace/app-core';
 
 export function buildInventoryCodeUrl(code: string) {
   return `${window.location.origin}/s/${code}`;

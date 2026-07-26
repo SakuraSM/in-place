@@ -154,7 +154,7 @@ export default function ScanTab() {
 
       return createdItems;
     },
-    onSuccess: async (_, __, ___) => {
+    onSuccess: async () => {
       setDrafts((current) => current.map((draft) => (draft.selected ? { ...draft, saved: true } : draft)));
       setMessage('选中结果已保存');
       await queryClient.invalidateQueries({ queryKey: ['mobile'] });

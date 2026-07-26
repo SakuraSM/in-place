@@ -4,6 +4,7 @@ export * from './categories';
 export * from './codes';
 export * from './households';
 export * from './items';
+export * from './inventory-operations';
 export * from './lifecycle';
 export * from './navigation';
 export * from './presentation';

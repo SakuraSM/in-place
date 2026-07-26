@@ -48,6 +48,7 @@ import {
   normalizeTypeFilter,
   type TypeFilterValue,
 } from '@/features/overview/overviewMobileData';
+import { SavedSearchesCard } from '@/features/overview/SavedSearchesCard';
 
 const PAGE_SIZE = 20;
 
@@ -76,7 +77,14 @@ const VALID_STATUS_VALUES = new Set(STATUS_FILTERS.map((option) => option.value)
 export default function OverviewTab() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ q?: string; type?: TypeFilterValue; status?: ItemStatus | 'all'; locationId?: string; tag?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    q?: string;
+    type?: TypeFilterValue;
+    status?: ItemStatus | 'all';
+    locationId?: string;
+    tag?: string | string[];
+    view?: OverviewViewMode;
+  }>();
   const [query, setQuery] = useState(params.q ?? '');
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
@@ -85,12 +93,16 @@ export default function OverviewTab() {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
-  const [viewMode, setViewMode] = useState<OverviewViewMode>('hierarchy');
+  const [viewMode, setViewMode] = useState<OverviewViewMode>(params.view === 'flat' ? 'flat' : 'hierarchy');
   const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
     setQuery(params.q ?? '');
   }, [params.q]);
+
+  useEffect(() => {
+    setViewMode(params.view === 'flat' ? 'flat' : 'hierarchy');
+  }, [params.view]);
 
   const typeFilter = normalizeTypeFilter(params.type, VALID_TYPE_VALUES);
   const statusFilter = normalizeStatusFilter(params.status, VALID_STATUS_VALUES);
@@ -130,7 +142,7 @@ export default function OverviewTab() {
     getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
   });
 
-  const allItems = allItemsQuery.data ?? [];
+  const allItems = useMemo(() => allItemsQuery.data ?? [], [allItemsQuery.data]);
   const itemMap = useMemo(() => new Map(allItems.map((item) => [item.id, item])), [allItems]);
   const availableTags = useMemo(() => buildAvailableTags(allItems), [allItems]);
   const filteredAvailableTags = useMemo(() => {
@@ -211,6 +223,11 @@ export default function OverviewTab() {
       locationId: undefined,
       tag: undefined,
     });
+  };
+
+  const handleViewModeChange = (value: OverviewViewMode) => {
+    setViewMode(value);
+    updateParams({ view: value === 'hierarchy' ? undefined : value });
   };
 
   const handleToggleSelectionMode = () => {
@@ -311,10 +328,31 @@ export default function OverviewTab() {
         selectedTagsCount={selectedTags.length}
         onChangeType={handleTypeChange}
         onChangeStatus={handleStatusChange}
-        onChangeViewMode={setViewMode}
+        onChangeViewMode={handleViewModeChange}
         onClearFilters={handleClearFilters}
         onOpenLocationFilter={() => setIsLocationSheetOpen(true)}
         onOpenTagFilter={() => setIsTagSheetOpen(true)}
+      />
+      <SavedSearchesCard
+        filters={{
+          q: query.trim(),
+          type: typeFilter,
+          status: statusFilter,
+          locationId: selectedLocationId,
+          tags: selectedTags,
+          view: viewMode,
+        }}
+        onApply={(filters) => {
+          setQuery(filters.q);
+          updateParams({
+            q: filters.q || undefined,
+            type: filters.type === 'all' ? undefined : filters.type,
+            status: filters.status === 'all' ? undefined : filters.status,
+            locationId: filters.locationId ?? undefined,
+            tag: filters.tags.length > 0 ? filters.tags : undefined,
+            view: filters.view === 'hierarchy' ? undefined : filters.view,
+          });
+        }}
       />
 
       <View style={resultDividerStyle} />

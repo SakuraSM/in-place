@@ -15,7 +15,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
-import { palette, shadows } from '@/shared/ui/theme';
+import { palette } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
 
@@ -196,28 +196,6 @@ const contentListStyle = {
   gap: 10,
 };
 
-const contentRowStyle = {
-  minHeight: 70,
-  borderRadius: 18,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
-  padding: 10,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: 10,
-};
-
-const thumbFrameStyle = {
-  width: 48,
-  height: 48,
-  borderRadius: 16,
-  backgroundColor: palette.canvasStrong,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  overflow: 'hidden' as const,
-};
-
 const thumbImageStyle = {
   width: '100%' as const,
   height: '100%' as const,
@@ -228,22 +206,4 @@ const rowRightStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 6,
-};
-
-const rowTextStyle = {
-  flex: 1,
-  minWidth: 0,
-  gap: 3,
-};
-
-const rowTitleStyle = {
-  fontSize: 16,
-  fontWeight: '800' as const,
-  color: palette.text,
-};
-
-const rowMetaStyle = {
-  fontSize: 13,
-  lineHeight: 18,
-  color: palette.textSoft,
 };

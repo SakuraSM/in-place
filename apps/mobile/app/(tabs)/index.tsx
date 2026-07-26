@@ -74,7 +74,7 @@ export default function HomeTab() {
     queryFn: () => categoriesApi.fetchCategories(user!.id),
   });
 
-  const allItems = allItemsQuery.data ?? [];
+  const allItems = useMemo(() => allItemsQuery.data ?? [], [allItemsQuery.data]);
   const recentItems = useMemo(
     () => [...allItems]
       .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())

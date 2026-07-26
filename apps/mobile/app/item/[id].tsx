@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
-import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { BulkActionBar } from '@/shared/ui/BulkActionBar';
@@ -24,9 +24,9 @@ import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBul
 import { formatInventoryDate, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { MobileAttachmentsCard } from '@/features/inventory/MobileAttachmentsCard';
+import { MobileLifecycleCard } from '@/features/inventory/MobileLifecycleCard';
 import { fetchAllOverviewItems } from '@/features/overview/overviewMobileData';
 import {
-  actionRowStyle,
   bodyStyle,
   categoryPillStyle,
   dangerButtonStyle,
@@ -238,6 +238,7 @@ export default function ItemDetailScreen() {
       ) : null}
 
       {item.type === 'item' ? <MobileAttachmentsCard itemId={item.id} /> : null}
+      {item.type === 'item' ? <MobileLifecycleCard item={item} /> : null}
 
       {item.images.length > 1 ? (
         <SectionCard title={`图片 ${item.images.length}`} delay={175} density="dense" headerMode="compact">
