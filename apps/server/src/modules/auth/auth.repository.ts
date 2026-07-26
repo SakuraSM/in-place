@@ -1,4 +1,4 @@
-import { categories, users } from '@inplace/db';
+import { categories, householdMembers, households, users } from '@inplace/db';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../../lib/db.js';
 import {
@@ -51,8 +51,25 @@ export async function createUser(input: {
       return null;
     }
 
+    const [household] = await tx.insert(households).values({
+      name: `${user.displayName || user.email.split('@')[0]}的家庭`,
+      isPersonal: true,
+      createdByUserId: user.id,
+    }).returning({ id: households.id });
+
+    if (!household) {
+      throw new Error('创建个人家庭空间失败');
+    }
+
+    await tx.insert(householdMembers).values({
+      householdId: household.id,
+      userId: user.id,
+      role: 'owner',
+    });
+
     await tx.insert(categories).values(DEFAULT_CATEGORY_PRESETS.map((preset) => ({
       userId: user.id,
+      householdId: household.id,
       itemType: itemTypeForCategoryScope(preset.scope),
       scope: preset.scope,
       presetKey: preset.key,

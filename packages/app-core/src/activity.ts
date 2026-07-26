@@ -4,6 +4,8 @@ import type { AppCoreRequest } from './shared';
 type ServerActivityLog = {
   id: string;
   userId: string;
+  householdId: string;
+  actorUserId: string;
   itemId: string | null;
   itemType: ActivityLog['item_type'];
   itemName: string;
@@ -16,6 +18,8 @@ function mapActivityLog(entry: ServerActivityLog): ActivityLog {
   return {
     id: entry.id,
     user_id: entry.userId,
+    household_id: entry.householdId,
+    actor_user_id: entry.actorUserId,
     item_id: entry.itemId,
     item_type: entry.itemType,
     item_name: entry.itemName,

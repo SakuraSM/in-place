@@ -3,6 +3,7 @@ import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { ToastProvider } from '@/shared/ui/ToastProvider';
 
 const STACK_TRANSITION_DURATION_MS = 220;
 
@@ -12,7 +13,8 @@ export default function RootLayout() {
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <QueryProvider>
         <AuthProvider>
-          <Stack
+          <ToastProvider>
+            <Stack
             screenOptions={{
               headerShown: false,
               animation: Platform.OS === 'android' ? 'ios_from_right' : 'simple_push',
@@ -31,9 +33,19 @@ export default function RootLayout() {
             <Stack.Screen name="profile/data" />
             <Stack.Screen name="profile/edit" />
             <Stack.Screen name="profile/about" />
+            <Stack.Screen name="profile/household" />
+            <Stack.Screen name="scan-code" />
             <Stack.Screen name="manage/categories" />
             <Stack.Screen name="manage/tags" />
+            <Stack.Screen name="operations/stocktakes/index" />
+            <Stack.Screen name="operations/stocktakes/[id]" />
+            <Stack.Screen name="operations/reminders" />
+            <Stack.Screen name="operations/reports" />
+            <Stack.Screen name="operations/duplicates" />
+            <Stack.Screen name="operations/labels" />
+            <Stack.Screen name="household/join/[token]" />
           </Stack>
+          </ToastProvider>
         </AuthProvider>
       </QueryProvider>
     </SafeAreaProvider>

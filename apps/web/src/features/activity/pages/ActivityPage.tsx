@@ -5,7 +5,7 @@ import type { ActivityLog } from '../../../legacy/database.types';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
 import { useAuth } from '../../../app/providers/auth-context';
 import EmptyState from '../../../shared/ui/EmptyState';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import ActivityFeed from '../components/ActivityFeed';
 import { resolveItemDetailPath } from '../../inventory/lib/detailPath';
@@ -61,26 +61,29 @@ export default function ActivityPage() {
       ai_scan_create: 0,
       update: 0,
       delete: 0,
+      move: 0,
+      quantity_adjust: 0,
+      code_bind: 0,
+      stocktake_start: 0,
+      stocktake_complete: 0,
+      loan_checkout: 0,
+      loan_return: 0,
     });
   }, [logs]);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
-      <div className={APP_PAGE_HEADER}>
-        <div className={APP_PAGE_HEADER_STACK}>
-          <h1 className="text-xl font-bold text-slate-900">操作记录</h1>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader width="standard" title="操作记录" />
 
-      <div className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}>
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
+      <PageContent width="standard" className="flex flex-col">
+        <div className="mb-5 grid gap-3 md:gap-4 lg:grid-cols-4 xl:mb-6 xl:gap-5">
           {[
             { label: '手动录入', value: summary.manual_create, tone: 'bg-sky-50 text-sky-500' },
             { label: 'AI 录入', value: summary.ai_scan_create, tone: 'bg-violet-50 text-violet-500' },
-            { label: '修改', value: summary.update, tone: 'bg-amber-50 text-amber-500' },
+            { label: '库存行为', value: summary.move + summary.quantity_adjust + summary.code_bind + summary.stocktake_start + summary.stocktake_complete + summary.loan_checkout + summary.loan_return, tone: 'bg-teal-50 text-teal-600' },
             { label: '删除', value: summary.delete, tone: 'bg-rose-50 text-rose-500' },
           ].map(({ label, value, tone }) => (
-            <div key={label} className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div key={label} className="rounded-3xl border border-borderSoft bg-surface p-4 shadow-sm md:p-5">
               <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
                 <Clock3 size={18} />
               </div>
@@ -92,7 +95,7 @@ export default function ActivityPage() {
 
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
           </div>
         ) : logs.length === 0 ? (
           <EmptyState
@@ -131,7 +134,7 @@ export default function ActivityPage() {
             )}
           </>
         )}
-      </div>
-    </div>
+      </PageContent>
+    </PageShell>
   );
 }

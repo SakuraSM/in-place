@@ -2,15 +2,23 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Shapes, Camera, User, MapPinned, Clock3, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
+import {
+  isNavigationPathActive,
+  type NavigationMatchMode,
+} from './navigationMatch';
 
-const WEB_MOBILE_NAVIGATION_ADAPTER: Record<AppNavigationItemId, { to: string; icon: LucideIcon }> = {
+const WEB_MOBILE_NAVIGATION_ADAPTER: Record<AppNavigationItemId, {
+  to: string;
+  icon: LucideIcon;
+  matchMode?: NavigationMatchMode;
+}> = {
   home: { to: '/', icon: Home },
   overview: { to: '/overview', icon: Search },
   locations: { to: '/locations', icon: MapPinned },
   activity: { to: '/activity', icon: Clock3 },
   categories: { to: '/categories', icon: Shapes },
   tags: { to: '/tags', icon: Shapes },
-  scan: { to: '/scan', icon: Camera },
+  scan: { to: '/scan', icon: Camera, matchMode: 'exact' },
   profile: { to: '/profile', icon: User },
 };
 
@@ -23,17 +31,19 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav aria-label="移动端主导航" className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl md:hidden">
+    <nav aria-label="移动端主导航" className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl lg:hidden">
       <div className="mx-auto flex max-w-lg items-center px-1">
-        {tabs.map(({ to, icon: Icon, shortLabel }) => {
-          const isActive = to === '/'
-            ? location.pathname === '/'
-            : location.pathname.startsWith(to);
+        {tabs.map(({ to, icon: Icon, shortLabel, matchMode }) => {
+          const isActive = isNavigationPathActive({
+            pathname: location.pathname,
+            targetPath: to,
+            mode: matchMode,
+          });
           return (
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/' || matchMode === 'exact'}
               aria-current={isActive ? 'page' : undefined}
               className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 py-2"
             >

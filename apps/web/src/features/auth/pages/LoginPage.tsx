@@ -111,7 +111,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? '隐藏密码' : '显示密码'}
                   aria-pressed={showPassword}
-                  className="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
+                  className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>

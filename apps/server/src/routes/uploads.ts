@@ -8,6 +8,7 @@ import { requireCurrentUser } from '../lib/authenticated-request.js';
 import { resolveRequestOrigin } from '../lib/request-origin.js';
 import {
   persistImageUpload,
+  persistAttachmentUpload,
   resolveImageMimeType,
   resolveUploadRoot,
   resolveResizedImage,
@@ -75,6 +76,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
   await app.register(fastifyStatic, {
     root: uploadRoot,
     serve: false,
+    cacheControl: false,
   });
 
   // 用单一路由同时承接原图和缩略图请求：无缩放参数时直接 sendFile，
@@ -82,6 +84,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
   app.route({
     method: ['GET', 'HEAD'],
     url: '/api/uploads/*',
+    preHandler: app.authenticate,
     async handler(request, reply) {
       const query = (request.query ?? {}) as Record<string, unknown>;
       const params = request.params as { '*'?: string };
@@ -102,6 +105,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       }
 
       if (!hasResizeQuery(query)) {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -117,6 +121,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
 
       const sourceMime = resolveImageMimeType(sourcePath);
       if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -129,6 +134,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       };
 
       if (!resizeOptions.width && !resizeOptions.height && !resizeOptions.format && !resizeOptions.quality) {
+        reply.header('Cache-Control', 'private, no-store');
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -145,7 +151,7 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
         reply
           .header('Content-Type', resized.mimeType)
           .header('Content-Length', resized.size)
-          .header('Cache-Control', 'public, max-age=31536000, immutable');
+          .header('Cache-Control', 'private, no-store');
         return reply.send(createReadStream(resized.absolutePath));
       } catch (error) {
         request.log.error({ err: error, path: normalized }, 'image resize failed');
@@ -192,6 +198,32 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       return reply.code(400).send({
         error: 'UPLOAD_FAILED',
         message: error instanceof Error ? error.message : '图片上传失败',
+      });
+    }
+  });
+
+  app.post('/api/v1/uploads/attachments', { preHandler: app.authenticate }, async (request, reply) => {
+    const currentUser = requireCurrentUser(request, reply);
+    if (!currentUser) return;
+
+    try {
+      const file = await request.file();
+      if (!file) {
+        return reply.code(400).send({ error: 'FILE_REQUIRED', message: '请选择凭证文件' });
+      }
+      const uploaded = await persistAttachmentUpload(file, currentUser.id, options.env);
+      return reply.code(201).send({
+        url: new URL(uploaded.publicUrl, resolveRequestOrigin(request)).toString(),
+        name: file.filename,
+        mimeType: file.mimetype,
+      });
+    } catch (error) {
+      if (error instanceof app.multipartErrors.RequestFileTooLargeError) {
+        return reply.code(413).send({ error: 'FILE_TOO_LARGE', message: `文件不能超过 ${options.env.MAX_UPLOAD_SIZE_MB}MB` });
+      }
+      return reply.code(400).send({
+        error: 'UPLOAD_FAILED',
+        message: error instanceof Error ? error.message : '文件上传失败',
       });
     }
   });

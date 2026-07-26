@@ -63,7 +63,7 @@ export default function RegisterPage() {
 
   if (isSuccess) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-canvas px-6">
+      <main className="app-page-gutter flex min-h-dvh items-center justify-center bg-canvas py-6">
         <motion.section
           role="status"
           initial={{ opacity: 0, scale: 0.96 }}
@@ -156,7 +156,7 @@ export default function RegisterPage() {
               onClick={() => setIsPasswordVisible((current) => !current)}
               aria-label={isPasswordVisible ? '隐藏密码' : '显示密码'}
               aria-pressed={isPasswordVisible}
-              className="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
+              className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
             >
               {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>

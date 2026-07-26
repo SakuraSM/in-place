@@ -7,6 +7,7 @@ import ProtectedRoute from '../widgets/layout/ProtectedRoute';
 import AppLayout from '../widgets/layout/AppLayout';
 import ScrollToTop from '../shared/ui/ScrollToTop';
 import ToastProvider from '../shared/ui/ToastProvider';
+import { HouseholdProvider } from './providers/HouseholdProvider';
 
 const LoginPage = lazy(() => import('../features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('../features/auth/pages/RegisterPage'));
@@ -23,6 +24,16 @@ const TagsPage = lazy(() => import('../features/tags/pages/TagsPage'));
 const ContainerDetailPage = lazy(() => import('../features/inventory/pages/ContainerDetailPage'));
 const LocationTreePage = lazy(() => import('../features/inventory/pages/LocationTreePage'));
 const ActivityPage = lazy(() => import('../features/activity/pages/ActivityPage'));
+const CodeScanPage = lazy(() => import('../features/operations/pages/CodeScanPage'));
+const CodeResolvePage = lazy(() => import('../features/operations/pages/CodeResolvePage'));
+const LabelPrintPage = lazy(() => import('../features/operations/pages/LabelPrintPage'));
+const StocktakesPage = lazy(() => import('../features/operations/pages/StocktakesPage'));
+const StocktakeDetailPage = lazy(() => import('../features/operations/pages/StocktakeDetailPage'));
+const HouseholdPage = lazy(() => import('../features/operations/pages/HouseholdPage'));
+const RemindersPage = lazy(() => import('../features/operations/pages/RemindersPage'));
+const AcceptInvitePage = lazy(() => import('../features/operations/pages/AcceptInvitePage'));
+const InventoryReportPage = lazy(() => import('../features/operations/pages/InventoryReportPage'));
+const DuplicatesPage = lazy(() => import('../features/operations/pages/DuplicatesPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +47,7 @@ const queryClient = new QueryClient({
 
 function PageFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-sm font-medium text-slate-500">
+    <div className="flex min-h-dvh items-center justify-center bg-canvas px-4 text-sm font-medium text-slate-500">
       正在加载页面…
     </div>
   );
@@ -54,8 +65,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ToastProvider>
-          <MotionConfig reducedMotion="user">
+        <HouseholdProvider>
+          <ToastProvider>
+            <MotionConfig reducedMotion="user">
             <BrowserRouter>
               <ScrollToTop />
               <Suspense fallback={<PageFallback />}>
@@ -70,6 +82,16 @@ export default function App() {
                   <Route path="/activity" element={<ProtectedPage><ActivityPage /></ProtectedPage>} />
                   <Route path="/search" element={<Navigate to="/overview" replace />} />
                   <Route path="/scan" element={<ProtectedPage><ScanPage /></ProtectedPage>} />
+                  <Route path="/scan/codes" element={<ProtectedPage><CodeScanPage /></ProtectedPage>} />
+                  <Route path="/s/:code" element={<ProtectedPage><CodeResolvePage /></ProtectedPage>} />
+                  <Route path="/labels" element={<ProtectedPage><LabelPrintPage /></ProtectedPage>} />
+                  <Route path="/stocktakes" element={<ProtectedPage><StocktakesPage /></ProtectedPage>} />
+                  <Route path="/stocktakes/:id" element={<ProtectedPage><StocktakeDetailPage /></ProtectedPage>} />
+                  <Route path="/household" element={<ProtectedPage><HouseholdPage /></ProtectedPage>} />
+                  <Route path="/household/join/:token" element={<ProtectedPage><AcceptInvitePage /></ProtectedPage>} />
+                  <Route path="/reminders" element={<ProtectedPage><RemindersPage /></ProtectedPage>} />
+                  <Route path="/reports" element={<ProtectedPage><InventoryReportPage /></ProtectedPage>} />
+                  <Route path="/duplicates" element={<ProtectedPage><DuplicatesPage /></ProtectedPage>} />
                   <Route path="/profile" element={<ProtectedPage><ProfilePage /></ProtectedPage>} />
                   <Route path="/profile/ai" element={<ProtectedPage><AiSettingsPage /></ProtectedPage>} />
                   <Route path="/profile/security" element={<ProtectedPage><SecurityPage /></ProtectedPage>} />
@@ -81,8 +103,9 @@ export default function App() {
                 </Routes>
               </Suspense>
             </BrowserRouter>
-          </MotionConfig>
-        </ToastProvider>
+            </MotionConfig>
+          </ToastProvider>
+        </HouseholdProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

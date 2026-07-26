@@ -15,6 +15,16 @@ export interface UploadedImageFile {
   mimetype: string;
 }
 
+const ATTACHMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'text/plain',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
 const IMAGE_EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -201,6 +211,24 @@ export async function persistImageUpload(file: UploadedImageFile, userId: string
 
   const normalizedRelativePath = `${relativeDir.split(path.sep).join('/')}/${fileName}`;
 
+  return {
+    absolutePath: targetPath,
+    relativePath: normalizedRelativePath,
+    publicUrl: `/api/uploads/${normalizedRelativePath}`,
+  };
+}
+
+export async function persistAttachmentUpload(file: UploadedImageFile, userId: string, env: AppEnv) {
+  if (!ATTACHMENT_MIME_TYPES.has(file.mimetype)) {
+    throw new Error('仅支持 PDF、图片、文本或 Word 文档');
+  }
+
+  const { relativeDir, targetDir } = await ensureUserUploadDir(userId, env);
+  const originalExtension = path.extname(file.filename ?? '').toLowerCase().slice(0, 12);
+  const fileName = `${randomUUID()}${originalExtension || resolveExtension(file)}`;
+  const targetPath = path.join(targetDir, fileName);
+  await pipeline(file.file, createWriteStream(targetPath));
+  const normalizedRelativePath = `${relativeDir.split(path.sep).join('/')}/${fileName}`;
   return {
     absolutePath: targetPath,
     relativePath: normalizedRelativePath,

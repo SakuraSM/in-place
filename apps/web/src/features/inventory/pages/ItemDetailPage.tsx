@@ -4,15 +4,17 @@ import { ArrowLeft, SquarePen, Trash2, Tag, Calendar, DollarSign, ShieldCheck, M
 import { motion } from 'framer-motion';
 import { fetchItem, fetchAncestors, fetchChildren, updateItem, deleteItem } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
-import { APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { buildInventoryImageUrl } from '../lib/itemImage';
 import EntityBadge from '../components/EntityBadge';
+import ItemLifecyclePanel from '../../operations/components/ItemLifecyclePanel';
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +48,7 @@ export default function ItemDetailPage() {
     void load();
   }, [id, navigate]);
 
-  const handleSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSave = async (data: ItemCreateInput) => {
     if (!item) return;
     const updated = await updateItem(item.id, data);
     setItem(updated);
@@ -61,19 +63,23 @@ export default function ItemDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brandStrong border-t-transparent rounded-full animate-spin" />
-      </div>
+      <PageShell>
+        <PageContent width="wide" className="flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brandStrong border-t-transparent" />
+        </PageContent>
+      </PageShell>
     );
   }
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center">
-        <Package size={48} className="text-slate-300 mb-3" />
-        <p className="text-slate-500">找不到该物品</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-brandStrong text-sm font-semibold">返回</button>
-      </div>
+      <PageShell>
+        <PageContent width="wide" className="flex flex-col items-center justify-center">
+          <Package size={48} className="mb-3 text-slate-300" />
+          <p className="text-slate-500">找不到该物品</p>
+          <button onClick={() => navigate(-1)} className="mt-4 text-sm font-semibold text-brandStrong">返回</button>
+        </PageContent>
+      </PageShell>
     );
   }
 
@@ -100,7 +106,7 @@ export default function ItemDetailPage() {
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
             <EntityBadge kind="item" compact className="mb-2" />
-            <h1 className="text-xl font-bold text-slate-900 leading-tight">{item.name}</h1>
+            <h2 className="text-xl font-bold leading-tight text-slate-900">{item.name}</h2>
           </div>
           <StatusBadge status={item.status} />
         </div>
@@ -112,6 +118,10 @@ export default function ItemDetailPage() {
         {item.description && (
           <p className="text-slate-600 text-sm leading-relaxed">{item.description}</p>
         )}
+      </motion.div>
+
+      <motion.div variants={staggerItem}>
+        <ItemLifecyclePanel item={item} onItemChange={setItem} />
       </motion.div>
 
       {(item.price || item.purchase_date || item.warranty_date) && (
@@ -208,9 +218,13 @@ export default function ItemDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <div className={APP_PAGE_HEADER}>
-        <div className={`${APP_PAGE_HEADER_ROW} justify-between`}>
+    <PageShell>
+      <PageHeader
+        width="wide"
+        title={item.name}
+        titleSize="detail"
+        eyebrow="物品详情"
+        backLink={(
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -219,7 +233,9 @@ export default function ItemDetailPage() {
           >
             <ArrowLeft size={18} />
           </button>
-          <div className="flex items-center gap-2">
+        )}
+        actions={(
+          <>
             <motion.button
               type="button"
               onClick={() => setShowEdit(true)}
@@ -242,77 +258,77 @@ export default function ItemDetailPage() {
               <Trash2 size={15} />
               <span className="hidden md:inline">删除</span>
             </motion.button>
+          </>
+        )}
+      />
+
+      <PageContent width="wide">
+        <div className="hidden lg:grid lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] lg:gap-8 2xl:grid-cols-[minmax(360px,480px)_minmax(0,1fr)] 2xl:gap-10">
+          <div className="min-w-0 shrink-0">
+            {item.images.length > 0 ? (
+              <div className="sticky top-28">
+                <div className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:aspect-square">
+                  <img
+                    src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')}
+                    alt={item.name}
+                    className="h-full w-full object-contain object-center"
+                  />
+                </div>
+                {item.images.length > 1 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide">
+                    {item.images.map((url, i) => (
+                      <motion.button
+                        key={i}
+                        onClick={() => setActiveImageIdx(i)}
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.94 }}
+                        className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 bg-white transition-all ${
+                          i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="sticky top-28 flex aspect-[5/4] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm xl:aspect-square">
+                <Package size={64} className="text-slate-200" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            {infoCards}
           </div>
         </div>
-      </div>
 
-      <div className="mx-auto hidden w-full max-w-[1680px] md:grid md:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] md:gap-8 md:px-8 md:py-6 2xl:grid-cols-[minmax(360px,480px)_minmax(0,1fr)] 2xl:gap-10">
-        <div className="min-w-0 shrink-0">
-          {item.images.length > 0 ? (
-            <div className="sticky top-24">
-              <div className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:aspect-square">
-                <img
-                  src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')}
-                  alt={item.name}
-                  className="h-full w-full object-contain object-center"
-                />
+        <div className="space-y-4 lg:hidden">
+          {item.images.length > 0 && (
+            <div className="overflow-hidden rounded-2xl bg-white">
+              <div className="relative aspect-square overflow-hidden">
+                <img src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')} alt={item.name} className="h-full w-full object-cover" />
               </div>
               {item.images.length > 1 && (
-                <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-2 overflow-x-auto p-3">
                   {item.images.map((url, i) => (
-                    <motion.button
+                    <button
                       key={i}
                       onClick={() => setActiveImageIdx(i)}
-                      whileHover={{ scale: 1.06 }}
-                      whileTap={{ scale: 0.94 }}
-                      className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 bg-white transition-all ${
-                        i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60 hover:opacity-100'
+                      className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                        i === activeImageIdx ? 'border-brandStrong' : 'border-transparent'
                       }`}
                     >
-                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
-                    </motion.button>
+                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover" />
+                    </button>
                   ))}
                 </div>
               )}
             </div>
-          ) : (
-            <div className="sticky top-24 flex aspect-[5/4] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm xl:aspect-square">
-              <Package size={64} className="text-slate-200" />
-            </div>
           )}
-        </div>
-        <div className="flex-1 min-w-0">
           {infoCards}
         </div>
-      </div>
-
-      <div className="md:hidden">
-        {item.images.length > 0 && (
-          <div className="bg-white">
-            <div className="relative aspect-square overflow-hidden">
-              <img src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')} alt={item.name} className="w-full h-full object-cover" />
-            </div>
-            {item.images.length > 1 && (
-              <div className="flex gap-2 p-3 overflow-x-auto">
-                {item.images.map((url, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImageIdx(i)}
-                    className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
-                      i === activeImageIdx ? 'border-brandStrong' : 'border-transparent'
-                    }`}
-                  >
-                    <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        <div className="px-4 py-5">
-          {infoCards}
-        </div>
-      </div>
+      </PageContent>
 
       {showDelete && (
         <ConfirmDialog
@@ -332,6 +348,6 @@ export default function ItemDetailPage() {
           onClose={() => setShowEdit(false)}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

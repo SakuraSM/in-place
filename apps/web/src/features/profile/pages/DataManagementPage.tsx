@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function DataManagementPage() {
@@ -18,6 +18,14 @@ export default function DataManagementPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const importPreview = importPayload ? {
+    version: typeof importPayload.version === 'string' ? importPayload.version : '未知',
+    items: Array.isArray(importPayload.items) ? importPayload.items.length : 0,
+    categories: Array.isArray(importPayload.categories) ? importPayload.categories.length : 0,
+    tags: Array.isArray(importPayload.tags) ? importPayload.tags.length : 0,
+    codes: Array.isArray(importPayload.codes) ? importPayload.codes.length : 0,
+    stocktakes: Array.isArray(importPayload.stocktakes) ? importPayload.stocktakes.length : 0,
+  } : null;
 
   const handleExport = async (format: 'json' | 'csv') => {
     setExportingFormat(format);
@@ -110,23 +118,21 @@ export default function DataManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={APP_PAGE_HEADER}>
-        <div className={`${APP_PAGE_HEADER_STACK} gap-2`}>
-          <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
+    <PageShell>
+      <PageHeader
+        width="narrow"
+        title="数据管理"
+        backLink={<Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
             <ArrowLeft size={15} />
             返回我的
-          </Link>
-          <h1 className="mt-2 text-xl font-bold text-slate-900">数据管理</h1>
-        </div>
-      </div>
-
-      <motion.div
-        variants={staggerContainer}
-        animate="animate"
-        className={`mx-auto w-full max-w-5xl ${APP_PAGE_CONTENT}`}
-      >
-        <motion.div variants={staggerItem} className="mb-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm">
+          </Link>}
+      />
+      <PageContent width="narrow">
+        <motion.div
+          variants={staggerContainer}
+          animate="animate"
+        >
+        <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
           <div className="bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#f7fbff_100%)] px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-sky-100 text-sky-600">
@@ -134,8 +140,8 @@ export default function DataManagementPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-lg font-bold text-slate-900">备份与恢复</p>
-                <p className="mt-2 text-sm text-slate-500">集中管理当前账号的数据导出与 JSON 备份导入。</p>
-                <p className="mt-1 text-xs text-slate-400">导入会覆盖当前账号下的物品、分类、标签和备份附带的图片引用。</p>
+                <p className="mt-2 text-sm text-slate-500">集中管理当前家庭空间的数据导出与 JSON 备份导入。</p>
+                <p className="mt-1 text-xs text-slate-400">导入只覆盖当前家庭空间，不会自动合并其他家庭库存。</p>
               </div>
             </div>
           </div>
@@ -207,17 +213,24 @@ export default function DataManagementPage() {
                   {importFileName ? <span className="text-sm text-slate-500">{importFileName}</span> : null}
                 </div>
               </div>
+              {importPreview ? (
+                <div className="rounded-2xl bg-brandTint p-3 text-sm text-slate-700">
+                  <p className="font-bold text-brandStrong">导入预览 · 版本 {importPreview.version}</p>
+                  <p className="mt-1">物品 {importPreview.items} · 分类 {importPreview.categories} · 标签 {importPreview.tags} · 二维码 {importPreview.codes} · 盘点 {importPreview.stocktakes}</p>
+                </div>
+              ) : null}
               {importMessage ? <p className="text-sm text-emerald-500">{importMessage}</p> : null}
               {importError ? <p className="text-sm text-rose-500">{importError}</p> : null}
             </SectionPanel>
           </motion.div>
         </div>
-      </motion.div>
+        </motion.div>
+      </PageContent>
 
       {importPayload ? (
         <ConfirmDialog
           title="导入 JSON 备份"
-          message={`确定导入「${importFileName}」吗？这会覆盖当前账号下的物品、分类、标签和图片引用。`}
+          message={`确定导入「${importFileName}」吗？这会覆盖当前家庭空间的 ${importPreview?.items ?? 0} 条物品及相关记录。`}
           confirmLabel={importing ? '导入中...' : '确认导入'}
           danger
           onConfirm={handleImportConfirm}
@@ -230,6 +243,6 @@ export default function DataManagementPage() {
           }}
         />
       ) : null}
-    </div>
+    </PageShell>
   );
 }

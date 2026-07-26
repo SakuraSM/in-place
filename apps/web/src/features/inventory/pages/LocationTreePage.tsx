@@ -6,11 +6,11 @@ import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import EmptyState from '../../../shared/ui/EmptyState';
 import { useAuth } from '../../../app/providers/auth-context';
 import { createItem } from '../../../legacy/items';
-import type { Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import LocationTreePanel from '../components/LocationTreePanel';
 import ItemForm from '../components/ItemForm';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_ROW } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import {
   buildChildrenMap,
   buildItemIdMap,
@@ -61,7 +61,7 @@ export default function LocationTreePage() {
     [childrenMap, selectedLocation],
   );
 
-  const handleCreateLocation = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreateLocation = async (data: ItemCreateInput) => {
     try {
       setCreateError(null);
       const created = await createItem(data);
@@ -74,10 +74,11 @@ export default function LocationTreePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
-      <div className={APP_PAGE_HEADER}>
-        <div className={`${APP_PAGE_HEADER_ROW} justify-between gap-3`}>
-          <h1 className="text-xl font-bold text-slate-900">位置树</h1>
+    <PageShell>
+      <PageHeader
+        width="wide"
+        title="位置树"
+        actions={(
           <button
             type="button"
             onClick={() => setShowCreateForm(true)}
@@ -86,10 +87,10 @@ export default function LocationTreePage() {
             <Plus size={16} />
             新增位置
           </button>
-        </div>
-      </div>
+        )}
+      />
 
-      <div className={`flex min-h-0 w-full flex-1 flex-col md:overflow-y-auto ${APP_PAGE_CONTENT}`}>
+      <PageContent width="wide" className="flex flex-col">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
@@ -101,7 +102,7 @@ export default function LocationTreePage() {
           />
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
-            <section className="self-start rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-0 lg:max-h-[calc(100vh-132px)] lg:overflow-y-auto">
+            <section className="self-start rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-28">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
                   <MapPin size={18} />
@@ -228,7 +229,7 @@ export default function LocationTreePage() {
             </section>
           </div>
         )}
-      </div>
+      </PageContent>
       {showCreateForm && (
         <ItemForm
           defaultParentId={selectedLocationId}
@@ -242,6 +243,6 @@ export default function LocationTreePage() {
           }}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

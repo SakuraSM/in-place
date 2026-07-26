@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LogOut, Box, User, NotebookPen, Mail, Settings2, Shield, Sparkles, HardDriveDownload } from 'lucide-react';
+import { LogOut, Box, User, NotebookPen, Mail, Settings2, Shield, Sparkles, HardDriveDownload, FileBarChart2, Combine } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import { fetchItemStats } from '../../../legacy/items';
 import type { ItemStats } from '@inplace/domain';
 import { QuickLinkCard, SectionPanel } from '../components/ProfileUi';
@@ -82,19 +82,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 md:h-full md:min-h-0">
-      <div className={APP_PAGE_HEADER}>
-        <div className={APP_PAGE_HEADER_STACK}>
-          <h1 className="text-xl font-bold text-slate-900">我的</h1>
-        </div>
-      </div>
-
-      <motion.div
-        variants={staggerContainer}
-        animate="animate"
-        className={`flex w-full flex-1 flex-col overflow-y-auto ${APP_PAGE_CONTENT}`}
-      >
-        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+    <PageShell className="overflow-x-hidden">
+      <PageHeader title="我的" />
+      <PageContent width="standard">
+        <motion.div
+          variants={staggerContainer}
+          animate="animate"
+          className="grid min-w-0 gap-4 xl:grid-cols-2"
+        >
           <div className="min-w-0 space-y-4 xl:sticky xl:top-28 xl:self-start">
             <motion.div
               variants={staggerItem}
@@ -169,6 +164,20 @@ export default function ProfilePage() {
                   tone="bg-rose-50 text-rose-500"
                 />
                 <QuickLinkCard
+                  to="/duplicates"
+                  icon={<Combine size={20} />}
+                  title="重复物品"
+                  description="检测同名同类别记录并安全合并数量、图片和标签。"
+                  tone="bg-violet-50 text-violet-600"
+                />
+                <QuickLinkCard
+                  to="/reports"
+                  icon={<FileBarChart2 size={20} />}
+                  title="库存报告"
+                  description="汇总家庭价值、保修覆盖和最近盘点缺失，打印或保存 PDF。"
+                  tone="bg-emerald-50 text-emerald-600"
+                />
+                <QuickLinkCard
                   to="/profile/data"
                   icon={<HardDriveDownload size={20} />}
                   title="数据管理"
@@ -235,9 +244,8 @@ export default function ProfilePage() {
               </div>
             </motion.div>
           </div>
-        </div>
-
-      </motion.div>
+        </motion.div>
+      </PageContent>
 
       {showLogout && (
         <ConfirmDialog
@@ -249,7 +257,6 @@ export default function ProfilePage() {
           onCancel={() => setShowLogout(false)}
         />
       )}
-
-    </div>
+    </PageShell>
   );
 }

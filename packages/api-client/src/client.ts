@@ -8,6 +8,7 @@ type RequestOptions = RequestInit & {
 export interface ApiClientConfig {
   baseUrl: string;
   tokenStorage?: TokenStorage;
+  contextHeaders?: () => HeadersInit | Promise<HeadersInit>;
 }
 
 export function createApiClient(config: ApiClientConfig) {
@@ -17,7 +18,9 @@ export function createApiClient(config: ApiClientConfig) {
   }
 
   async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const headers = new Headers(options.headers);
+    const contextHeaders = await config.contextHeaders?.();
+    const headers = new Headers(contextHeaders);
+    new Headers(options.headers).forEach((value, key) => headers.set(key, value));
     const token = await config.tokenStorage?.get();
 
     if (!options.skipAuth && token) {
@@ -30,6 +33,7 @@ export function createApiClient(config: ApiClientConfig) {
 
     const response = await fetch(buildUrl(path), {
       ...options,
+      credentials: options.credentials ?? 'include',
       headers,
     });
 

@@ -4,8 +4,8 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import type { Item, ItemStatus, ItemType } from '@inplace/domain';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import type { ItemCreateInput, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
@@ -15,7 +15,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
-import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { LocationSelectField } from '@/features/home/LocationSelectField';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
@@ -119,7 +119,7 @@ export default function ItemFormScreen() {
         throw new Error('请先登录');
       }
 
-      const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
+      const payload: ItemCreateInput = {
         user_id: user.id,
         parent_id: draft.parentId,
         type: draft.type,
@@ -128,6 +128,10 @@ export default function ItemFormScreen() {
         category: draft.category.trim(),
         status: draft.status,
         price: draft.price.trim() ? Number(draft.price.trim()) : null,
+        quantity: itemQuery.data?.quantity ?? 1,
+        tracking_mode: itemQuery.data?.tracking_mode ?? 'unique',
+        minimum_quantity: itemQuery.data?.minimum_quantity ?? null,
+        expiry_date: itemQuery.data?.expiry_date ?? null,
         purchase_date: draft.purchaseDate.trim() || null,
         warranty_date: draft.warrantyDate.trim() || null,
         images: draft.images,
@@ -439,7 +443,7 @@ export default function ItemFormScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                 {draft.images.map((imageUrl) => (
                   <View key={imageUrl} style={imageCardStyle}>
-                    <Image source={{ uri: resolveInventoryImageUri(imageUrl) ?? imageUrl }} style={imageStyle} />
+                    <InventoryImage url={imageUrl} style={imageStyle} />
                     <Pressable onPress={() => removeImage(imageUrl)} style={imageRemoveButtonStyle}>
                       <Text style={imageRemoveTextStyle}>删除</Text>
                     </Pressable>

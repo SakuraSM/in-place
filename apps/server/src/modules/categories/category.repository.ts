@@ -8,8 +8,8 @@ import {
   itemTypeForCategoryScope,
 } from './category-presets.js';
 
-export async function listCategoriesForUser(userId: string, query: ListCategoriesQuery) {
-  const filters = [eq(categories.userId, userId)];
+export async function listCategoriesForHousehold(householdId: string, query: ListCategoriesQuery) {
+  const filters = [eq(categories.householdId, householdId)];
   if (query.itemType) {
     filters.push(eq(categories.itemType, query.itemType));
   }
@@ -24,11 +24,15 @@ export async function listCategoriesForUser(userId: string, query: ListCategorie
     .orderBy(asc(categories.name));
 }
 
-export async function createCategoryForUser(userId: string, input: CreateCategoryInput) {
+export async function createCategoryForHousehold(context: {
+  userId: string;
+  householdId: string;
+}, input: CreateCategoryInput) {
   const [category] = await getDb()
     .insert(categories)
     .values({
-      userId,
+      userId: context.userId,
+      householdId: context.householdId,
       itemType: itemTypeForCategoryScope(input.scope),
       scope: input.scope,
       name: input.name,
@@ -40,12 +44,12 @@ export async function createCategoryForUser(userId: string, input: CreateCategor
   return category ?? null;
 }
 
-export async function updateCategoryForUser(userId: string, categoryId: string, input: UpdateCategoryInput) {
+export async function updateCategoryForHousehold(householdId: string, categoryId: string, input: UpdateCategoryInput) {
   return getDb().transaction(async (tx) => {
     const [existing] = await tx
       .select()
       .from(categories)
-      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .where(and(eq(categories.id, categoryId), eq(categories.householdId, householdId)))
       .limit(1);
 
     if (!existing) {
@@ -55,7 +59,7 @@ export async function updateCategoryForUser(userId: string, categoryId: string, 
     const [category] = await tx
       .update(categories)
       .set(input)
-      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .where(and(eq(categories.id, categoryId), eq(categories.householdId, householdId)))
       .returning();
 
     if (input.name && input.name !== existing.name) {
@@ -69,7 +73,7 @@ export async function updateCategoryForUser(userId: string, categoryId: string, 
         .update(items)
         .set({ category: input.name })
         .where(and(
-          eq(items.userId, userId),
+          eq(items.householdId, householdId),
           eq(items.category, existing.name),
           scopeFilter,
         ));
@@ -79,17 +83,24 @@ export async function updateCategoryForUser(userId: string, categoryId: string, 
   });
 }
 
-export async function deleteCategoryForUser(userId: string, categoryId: string) {
+export async function deleteCategoryForHousehold(context: {
+  userId: string;
+  householdId: string;
+}, categoryId: string) {
   return getDb().transaction(async (tx) => {
     const [category] = await tx
       .delete(categories)
-      .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+      .where(and(eq(categories.id, categoryId), eq(categories.householdId, context.householdId)))
       .returning({ id: categories.id, presetKey: categories.presetKey });
 
     if (category?.presetKey) {
       await tx
         .insert(deletedCategoryPresets)
-        .values({ userId, presetKey: category.presetKey })
+        .values({
+          userId: context.userId,
+          householdId: context.householdId,
+          presetKey: category.presetKey,
+        })
         .onConflictDoNothing();
     }
 
@@ -97,10 +108,10 @@ export async function deleteCategoryForUser(userId: string, categoryId: string) 
   });
 }
 
-export async function getCategoryPresetSummary(userId: string) {
+export async function getCategoryPresetSummary(householdId: string) {
   const [existing, dismissed] = await Promise.all([
-    listCategoriesForUser(userId, {}),
-    getDb().select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.userId, userId)),
+    listCategoriesForHousehold(householdId, {}),
+    getDb().select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.householdId, householdId)),
   ]);
   const identities = new Set(existing.map((category) => categoryIdentity(category.scope, category.name)));
   const presetKeys = new Set(existing.map((category) => category.presetKey).filter(Boolean));
@@ -118,11 +129,14 @@ export async function getCategoryPresetSummary(userId: string) {
   };
 }
 
-export async function applyCategoryPresetsForUser(userId: string) {
+export async function applyCategoryPresetsForHousehold(context: {
+  userId: string;
+  householdId: string;
+}) {
   return getDb().transaction(async (tx) => {
     const [existing, dismissed] = await Promise.all([
-      tx.select().from(categories).where(eq(categories.userId, userId)),
-      tx.select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.userId, userId)),
+      tx.select().from(categories).where(eq(categories.householdId, context.householdId)),
+      tx.select().from(deletedCategoryPresets).where(eq(deletedCategoryPresets.householdId, context.householdId)),
     ]);
     const identities = new Set(existing.map((category) => categoryIdentity(category.scope, category.name)));
     const presetKeys = new Set(existing.map((category) => category.presetKey).filter(Boolean));
@@ -136,7 +150,8 @@ export async function applyCategoryPresetsForUser(userId: string) {
     const added = missing.length === 0 ? [] : await tx
       .insert(categories)
       .values(missing.map((preset) => ({
-        userId,
+        userId: context.userId,
+        householdId: context.householdId,
         itemType: itemTypeForCategoryScope(preset.scope),
         scope: preset.scope,
         presetKey: preset.key,
@@ -150,7 +165,7 @@ export async function applyCategoryPresetsForUser(userId: string) {
     const data = await tx
       .select()
       .from(categories)
-      .where(eq(categories.userId, userId))
+      .where(eq(categories.householdId, context.householdId))
       .orderBy(asc(categories.scope), asc(categories.name));
 
     return {

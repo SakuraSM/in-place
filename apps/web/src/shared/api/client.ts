@@ -2,6 +2,7 @@ import { ApiError, createApiClient, type TokenStorage } from '@inplace/api-clien
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
 const AUTH_TOKEN_KEY = 'inplace.auth.token';
+const HOUSEHOLD_ID_KEY = 'inplace.household.id';
 
 const browserTokenStorage: TokenStorage = {
   get() {
@@ -20,6 +21,12 @@ const browserTokenStorage: TokenStorage = {
 const apiClient = createApiClient({
   baseUrl: apiBaseUrl,
   tokenStorage: browserTokenStorage,
+  contextHeaders() {
+    const householdId = window.localStorage.getItem(HOUSEHOLD_ID_KEY);
+    const headers: Record<string, string> = {};
+    if (householdId) headers['X-InPlace-Household-ID'] = householdId;
+    return headers;
+  },
 });
 
 export { ApiError };
@@ -38,4 +45,16 @@ export async function getStoredAuthToken() {
 
 export async function setStoredAuthToken(token: string | null) {
   await browserTokenStorage.set(token);
+}
+
+export function getStoredHouseholdId() {
+  return window.localStorage.getItem(HOUSEHOLD_ID_KEY);
+}
+
+export function setStoredHouseholdId(householdId: string | null) {
+  if (householdId) {
+    window.localStorage.setItem(HOUSEHOLD_ID_KEY, householdId);
+    return;
+  }
+  window.localStorage.removeItem(HOUSEHOLD_ID_KEY);
 }

@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
-import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
+import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { BulkActionBar } from '@/shared/ui/BulkActionBar';
@@ -22,9 +22,11 @@ import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { palette } from '@/shared/ui/theme';
 import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBulkEditSheet';
 import { formatInventoryDate, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
+import { InventoryImage } from '@/features/inventory/InventoryImage';
+import { MobileAttachmentsCard } from '@/features/inventory/MobileAttachmentsCard';
+import { MobileLifecycleCard } from '@/features/inventory/MobileLifecycleCard';
 import { fetchAllOverviewItems } from '@/features/overview/overviewMobileData';
 import {
-  actionRowStyle,
   bodyStyle,
   categoryPillStyle,
   dangerButtonStyle,
@@ -182,7 +184,7 @@ export default function ItemDetailScreen() {
 
       {activeImageUri ? (
         <View style={heroImageCardStyle}>
-          <Image source={{ uri: activeImageUri }} resizeMode="cover" style={heroImageStyle} />
+          <InventoryImage url={item.images[0]} resizeMode="cover" style={heroImageStyle} />
         </View>
       ) : null}
 
@@ -235,12 +237,15 @@ export default function ItemDetailScreen() {
         </SectionCard>
       ) : null}
 
+      {item.type === 'item' ? <MobileAttachmentsCard itemId={item.id} /> : null}
+      {item.type === 'item' ? <MobileLifecycleCard item={item} /> : null}
+
       {item.images.length > 1 ? (
         <SectionCard title={`图片 ${item.images.length}`} delay={175} density="dense" headerMode="compact">
           <View style={imageGridStyle}>
             {item.images.map((imageUrl) => {
               const imageUri = resolveInventoryImageUri(imageUrl);
-              return imageUri ? <Image key={imageUrl} source={{ uri: imageUri }} resizeMode="cover" style={thumbImageStyle} /> : null;
+              return imageUri ? <InventoryImage key={imageUrl} url={imageUrl} resizeMode="cover" style={thumbImageStyle} /> : null;
             })}
           </View>
         </SectionCard>

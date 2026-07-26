@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, StickyNote, Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '../../../app/providers/auth-context';
@@ -6,7 +6,7 @@ import type { Database, TagEntity } from '../../../legacy/database.types';
 import { createTag, deleteTag, fetchTagsPage, updateTag } from '../../../legacy/tags';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import EmptyState from '../../../shared/ui/EmptyState';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import PaginationControls from '../../inventory/components/PaginationControls';
 import { useIsMobile } from '../../../shared/lib/useIsMobile';
 import ResponsiveDialog from '../../../shared/ui/ResponsiveDialog';
@@ -162,7 +162,6 @@ export default function TagsPage() {
   const [editingTag, setEditingTag] = useState<TagEntity | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TagEntity | null>(null);
-  const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   const loadTags = useCallback(async () => {
     if (!user) {
@@ -201,7 +200,7 @@ export default function TagsPage() {
       return;
     }
 
-    const scrollRoot = scrollRootRef.current;
+    const scrollRoot = document.querySelector<HTMLElement>('[data-scroll-root]');
     if (!scrollRoot) {
       return;
     }
@@ -219,37 +218,11 @@ export default function TagsPage() {
     };
   }, [isMobile, loadNextPage]);
 
-  useEffect(() => {
-    if (!isMobile) {
-      return;
-    }
-
-    const handleWindowScroll = () => {
-      const distanceFromBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-      if (distanceFromBottom < 160) {
-        loadNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleWindowScroll);
-    };
-  }, [isMobile, loadNextPage]);
-
   return (
-    <div className="flex min-h-screen flex-col bg-canvas md:h-full md:min-h-0">
-      <div className={APP_PAGE_HEADER}>
-        <div className={APP_PAGE_HEADER_STACK}>
-          <h1 className="text-xl font-bold text-slate-900">标签管理</h1>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader width="standard" title="标签管理" />
 
-      <div
-        ref={scrollRootRef}
-        data-scroll-root
-        className={`flex min-h-0 flex-1 flex-col md:overflow-y-auto ${APP_PAGE_CONTENT}`}
-      >
+      <PageContent width="standard" className="flex flex-col">
         {loading && tags.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-400">加载中...</div>
         ) : tags.length === 0 ? (
@@ -355,7 +328,7 @@ export default function TagsPage() {
             />
           </div>
         ) : null}
-      </div>
+      </PageContent>
 
       <motion.button
         type="button"
@@ -414,6 +387,6 @@ export default function TagsPage() {
           onCancel={() => setDeleteTarget(null)}
         />
       ) : null}
-    </div>
+    </PageShell>
   );
 }

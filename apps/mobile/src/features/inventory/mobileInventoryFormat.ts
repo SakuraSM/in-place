@@ -19,7 +19,7 @@ function formatMobileUploadImageUri(url: URL) {
   return url.toString();
 }
 
-export function resolveInventoryImageUri(url: string | undefined) {
+export function resolveMobileUploadUri(url: string | undefined) {
   if (!url) {
     return null;
   }
@@ -33,10 +33,10 @@ export function resolveInventoryImageUri(url: string | undefined) {
 
       const mobileApiOrigin = resolveMobileApiOrigin();
       if (!mobileApiOrigin) {
-        return formatMobileUploadImageUri(parsedUrl);
+        return parsedUrl.toString();
       }
 
-      return formatMobileUploadImageUri(new URL(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`, mobileApiOrigin));
+      return new URL(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`, mobileApiOrigin).toString();
     } catch {
       return url;
     }
@@ -48,7 +48,7 @@ export function resolveInventoryImageUri(url: string | undefined) {
       return url;
     }
 
-    return formatMobileUploadImageUri(new URL(url, mobileApiOrigin));
+    return new URL(url, mobileApiOrigin).toString();
   }
 
   if (url.startsWith('/api/')) {
@@ -57,6 +57,22 @@ export function resolveInventoryImageUri(url: string | undefined) {
   }
 
   return url;
+}
+
+export function resolveInventoryImageUri(url: string | undefined) {
+  const resolved = resolveMobileUploadUri(url);
+  if (!resolved) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(resolved);
+    return parsed.pathname.startsWith(UPLOAD_PATH_PREFIX)
+      ? formatMobileUploadImageUri(parsed)
+      : resolved;
+  } catch {
+    return resolved;
+  }
 }
 
 export function formatInventoryDate(value: string) {

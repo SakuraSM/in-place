@@ -53,7 +53,10 @@ export default function PaginationControls({
   const pageItems = buildPageItems(page, totalPages);
 
   return (
-    <div className={`mt-6 flex flex-col gap-3 rounded-2xl border border-borderSoft bg-surface p-4 shadow-sm md:flex-row md:items-center md:justify-between ${className ?? ''}`}>
+    <nav
+      aria-label="库存分页"
+      className={`mt-6 flex flex-col gap-3 rounded-2xl border border-borderSoft bg-surface p-4 shadow-sm md:flex-row md:items-center md:justify-between ${className ?? ''}`}
+    >
       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
         <span>共 {total} 项</span>
         <span className="hidden md:inline text-slate-300">|</span>
@@ -77,6 +80,7 @@ export default function PaginationControls({
 
       <div className="flex flex-wrap items-center gap-2">
         <button
+          type="button"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
           className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-surface px-3 text-sm text-slate-600 transition-colors hover:bg-brandTint disabled:cursor-not-allowed disabled:opacity-40"
@@ -98,6 +102,7 @@ export default function PaginationControls({
             const isActive = item === page;
             return (
               <button
+                type="button"
                 key={item}
                 onClick={() => onPageChange(item)}
                 className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm transition-colors ${
@@ -123,6 +128,7 @@ export default function PaginationControls({
             className="h-10 w-16 rounded-xl border border-border bg-surfaceMuted px-3 text-center text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
           <button
+            type="button"
             onClick={() => {
               const nextPage = Number(jumpPage);
               if (!Number.isFinite(nextPage)) {
@@ -137,6 +143,7 @@ export default function PaginationControls({
         </div>
 
         <button
+          type="button"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
           className="inline-flex h-10 items-center gap-1 rounded-xl border border-border bg-surface px-3 text-sm text-slate-600 transition-colors hover:bg-brandTint disabled:cursor-not-allowed disabled:opacity-40"
@@ -145,6 +152,6 @@ export default function PaginationControls({
           <ChevronRight size={16} />
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

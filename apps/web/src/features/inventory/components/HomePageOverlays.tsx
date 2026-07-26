@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Category, Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import ContextMenu from '../../../shared/ui/ContextMenu';
 import BulkEditSheet from './BulkEditSheet';
@@ -38,7 +39,7 @@ interface HomePageOverlaysProps {
   onBulkDeleteCancel: () => void;
   onMove: (parentId: string | null) => Promise<void>;
   onMoveClose: () => void;
-  onSave: (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onSave: (data: ItemCreateInput) => Promise<void>;
   onFormClose: () => void;
   onBulkSave: (payload: Partial<Item>) => Promise<void>;
   onBulkEditClose: () => void;

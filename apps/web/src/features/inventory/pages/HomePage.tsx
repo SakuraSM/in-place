@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { HOME_CREATE_PARAM, HOME_CREATE_VALUE } from '../lib/homeRoute';
 import { type HomeViewMode } from '../components/HomeInventorySections';
@@ -14,6 +15,7 @@ import { useHomeInventoryData } from '../hooks/useHomeInventoryData';
 import { useHomeDashboardData } from '../hooks/useHomeDashboardData';
 import HomePageContent from '../components/HomePageContent';
 import HomePageOverlays from '../components/HomePageOverlays';
+import { PageShell } from '../../../shared/ui/PageLayout';
 
 const DEFAULT_VIEW_MODE: HomeViewMode = 'category';
 
@@ -117,7 +119,7 @@ export default function HomePage() {
     void queryClient.invalidateQueries({ queryKey: ['home', 'recent-activity', user?.id] });
   }, [queryClient, user?.id]);
 
-  const handleSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSave = async (data: ItemCreateInput) => {
     const isEditing = Boolean(editItem);
     setFormSubmitError(null);
     try {
@@ -239,22 +241,16 @@ export default function HomePage() {
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-canvas md:h-full md:min-h-0">
+    <PageShell>
       <HomePageHeader
         currentParentId={currentParentId}
         breadcrumbs={breadcrumbs}
-        isRootLevel={isRootLevel}
         isEmpty={isEmpty}
         isSelectionMode={selectionMode}
-        selectedCount={selectedIds.length}
-        totalCount={children.length}
-        isAllSelected={allSelected}
-        viewMode={viewMode}
         onNavigateParent={() => {
           const parent = breadcrumbs[breadcrumbs.length - 2] ?? null;
           handleBreadcrumbNav(parent?.id ?? null);
         }}
-        onNavigateBreadcrumb={handleBreadcrumbNav}
         onToggleSelectionMode={() => {
           if (selectionMode) {
             exitSelectionMode();
@@ -262,11 +258,6 @@ export default function HomePage() {
             setSelectionMode(true);
           }
         }}
-        onToggleSelectAll={handleToggleSelectAll}
-        onViewModeChange={(nextViewMode) => updateHomeRoute({
-          view: nextViewMode,
-          replace: true,
-        })}
         onCreate={() => {
           setEditItem(null);
           setFormSubmitError(null);
@@ -276,6 +267,7 @@ export default function HomePage() {
 
       <HomePageContent
         showDashboard={showRootDashboard}
+        breadcrumbs={breadcrumbs}
         stats={rootStats ?? null}
         recentItems={recentItems}
         recentItemPaths={recentItemPaths}
@@ -288,6 +280,13 @@ export default function HomePage() {
         viewMode={viewMode}
         selectionMode={selectionMode}
         selectedIds={selectedIdSet}
+        isAllSelected={allSelected}
+        onNavigateBreadcrumb={handleBreadcrumbNav}
+        onToggleSelectAll={handleToggleSelectAll}
+        onViewModeChange={(nextViewMode) => updateHomeRoute({
+          view: nextViewMode,
+          replace: true,
+        })}
         onOpenActivity={() => navigate('/activity')}
         onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
         onOpenActivityItem={(entry) => {
@@ -365,6 +364,6 @@ export default function HomePage() {
         onBulkSave={handleBulkSave}
         onBulkEditClose={() => setShowBulkEdit(false)}
       />
-    </div>
+    </PageShell>
   );
 }

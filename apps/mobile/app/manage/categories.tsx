@@ -6,11 +6,13 @@ import { MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { ContentTabs, type ContentTab } from '@/shared/ui/ContentTabs';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
+import { useNotify } from '@/shared/ui/ToastProvider';
 
 interface CategoryDraft {
   scope: CategoryScope;
@@ -20,15 +22,29 @@ interface CategoryDraft {
 }
 
 const EMPTY_CATEGORY: CategoryDraft = {
-  scope: 'item',
+  scope: 'location',
   name: '',
   icon: 'FolderTree',
   color: 'sky',
 };
 
+const SCOPE_TABS: ContentTab<CategoryScope>[] = [
+  { value: 'location', label: '位置分类' },
+  { value: 'container', label: '收纳分类' },
+  { value: 'item', label: '物品分类' },
+];
+
+const SCOPE_DESCRIPTIONS: Record<CategoryScope, string> = {
+  location: '用于公寓、房间、楼层等空间位置。',
+  container: '用于柜子、抽屉、收纳箱等收纳载体。',
+  item: '用于数码、服饰、餐厨等具体物品。',
+};
+
 export default function ManageCategoriesScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const notify = useNotify();
+  const [activeScope, setActiveScope] = useState<CategoryScope>('location');
   const [draft, setDraft] = useState<CategoryDraft>(EMPTY_CATEGORY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
@@ -38,6 +54,11 @@ export default function ManageCategoriesScreen() {
     queryKey: ['mobile', 'categories', user?.id],
     enabled: Boolean(user),
     queryFn: () => categoriesApi.fetchCategories(user!.id),
+  });
+  const presetsQuery = useQuery({
+    queryKey: ['mobile', 'category-presets', user?.id],
+    enabled: Boolean(user),
+    queryFn: () => categoriesApi.fetchCategoryPresets(),
   });
 
   const refreshCategories = async () => {
@@ -59,21 +80,44 @@ export default function ManageCategoriesScreen() {
       return editingId ? categoriesApi.updateCategory(editingId, payload) : categoriesApi.createCategory(payload);
     },
     onSuccess: async () => {
-      setMessage(editingId ? '分类已更新' : '分类已创建');
-      setDraft(EMPTY_CATEGORY);
+      notify({ tone: 'success', title: editingId ? '分类已更新' : '分类已创建' });
+      setMessage(null);
+      setDraft({ ...EMPTY_CATEGORY, scope: activeScope });
       setEditingId(null);
       await refreshCategories();
+    },
+    onError: (error) => {
+      notify({ tone: 'error', title: '分类保存失败', description: error instanceof Error ? error.message : '请稍后重试' });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => categoriesApi.deleteCategory(id),
     onSuccess: async () => {
-      setMessage('分类已删除');
+      notify({ tone: 'success', title: '分类已删除' });
+      setMessage(null);
       setDeleteTarget(null);
       setEditingId(null);
-      setDraft(EMPTY_CATEGORY);
+      setDraft({ ...EMPTY_CATEGORY, scope: activeScope });
       await refreshCategories();
+    },
+  });
+
+  const applyPresetsMutation = useMutation({
+    mutationFn: () => categoriesApi.applyCategoryPresets(),
+    onSuccess: async (result) => {
+      notify({
+        tone: 'success',
+        title: `已补充 ${result.addedCount} 个推荐分类`,
+        description: result.skippedCount > 0 ? `${result.skippedCount} 个已有分类已跳过` : undefined,
+      });
+      await Promise.all([
+        refreshCategories(),
+        queryClient.invalidateQueries({ queryKey: ['mobile', 'category-presets', user?.id] }),
+      ]);
+    },
+    onError: (error) => {
+      notify({ tone: 'error', title: '推荐分类补充失败', description: error instanceof Error ? error.message : '请稍后重试' });
     },
   });
 
@@ -86,9 +130,15 @@ export default function ManageCategoriesScreen() {
   }
 
   const categories = categoriesQuery.data ?? [];
+  const visibleCategories = categories.filter((category) => category.scope === activeScope);
+  const tabs = SCOPE_TABS.map((tab) => ({
+    ...tab,
+    count: categories.filter((category) => category.scope === tab.value).length,
+  }));
 
   const startEdit = (category: Category) => {
     setMessage(null);
+    setActiveScope(category.scope);
     setEditingId(category.id);
     setDraft({
       scope: category.scope,
@@ -104,18 +154,51 @@ export default function ManageCategoriesScreen() {
     <Screen scroll contentInsetMode="form" chrome="muted">
       <BrandHeader title="分类" variant="page" />
 
+      <ContentTabs
+        accessibilityLabel="分类用途"
+        tabs={tabs}
+        value={activeScope}
+        onChange={(scope) => {
+          setActiveScope(scope);
+          setEditingId(null);
+          setDraft({ ...EMPTY_CATEGORY, scope });
+        }}
+      />
+
+      <SectionCard
+        title="推荐分类"
+        subtitle={SCOPE_DESCRIPTIONS[activeScope]}
+        delay={30}
+        density="compact"
+        headerMode="compact"
+      >
+        <View style={presetRowStyle}>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={rowTitleStyle}>
+              {presetsQuery.data?.missingCount ? `还可补充 ${presetsQuery.data.missingCount} 个` : '推荐分类已齐全'}
+            </Text>
+            <Text style={bodyStyle}>不会覆盖已有分类，已主动删除的预设不会恢复。</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            disabled={!presetsQuery.data?.missingCount || applyPresetsMutation.isPending}
+            onPress={() => applyPresetsMutation.mutate()}
+            style={[miniButtonStyle, !presetsQuery.data?.missingCount ? disabledStyle : null]}
+          >
+            <Text style={miniButtonTextStyle}>{applyPresetsMutation.isPending ? '补充中' : '一键补充'}</Text>
+          </Pressable>
+        </View>
+      </SectionCard>
+
       <SectionCard title={editingId ? '编辑分类' : '新建分类'} delay={60} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {saveMutation.isError ? <Text style={errorTextStyle}>{saveMutation.error instanceof Error ? saveMutation.error.message : '保存失败'}</Text> : null}
         {deleteMutation.isError ? <Text style={errorTextStyle}>{deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}</Text> : null}
 
-        <View style={chipRowStyle}>
-          {(['location', 'container', 'item'] as CategoryScope[]).map((scope) => (
-            <Pressable key={scope} onPress={() => setDraft((current) => ({ ...current, scope }))} style={[chipStyle, draft.scope === scope ? activeChipStyle : null]}>
-              <Text style={draft.scope === scope ? activeChipTextStyle : chipTextStyle}>{scope === 'location' ? '位置' : scope === 'container' ? '收纳' : '物品'}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <Text style={scopeNoticeStyle}>
+          用途：{activeScope === 'location' ? '位置' : activeScope === 'container' ? '收纳' : '物品'}
+          {editingId ? '（创建后不可修改）' : ''}
+        </Text>
 
         <TextInput value={draft.name} onChangeText={(name) => setDraft((current) => ({ ...current, name }))} placeholder="分类名称" style={inputStyle} />
 
@@ -128,7 +211,7 @@ export default function ManageCategoriesScreen() {
         </View>
 
         <View style={actionRowStyle}>
-          <Pressable onPress={() => { setEditingId(null); setDraft(EMPTY_CATEGORY); }} style={secondaryButtonStyle}>
+          <Pressable onPress={() => { setEditingId(null); setDraft({ ...EMPTY_CATEGORY, scope: activeScope }); }} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>重置</Text>
           </Pressable>
           <Pressable onPress={() => void saveMutation.mutateAsync()} style={primaryButtonStyle}>
@@ -137,8 +220,9 @@ export default function ManageCategoriesScreen() {
         </View>
       </SectionCard>
 
-      <SectionCard title={`全部分类 ${categories.length}`} delay={120} density="compact" headerMode="compact">
-        {categories.map((category) => (
+      <SectionCard title={`${SCOPE_TABS.find((tab) => tab.value === activeScope)?.label ?? '分类'} ${visibleCategories.length}`} delay={120} density="compact" headerMode="compact">
+        {visibleCategories.length === 0 ? <Text style={bodyStyle}>当前用途还没有分类。</Text> : null}
+        {visibleCategories.map((category) => (
           <View key={category.id} style={rowStyle}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={rowTitleStyle}>{category.name}</Text>
@@ -173,6 +257,7 @@ export default function ManageCategoriesScreen() {
 }
 
 const bodyStyle = { fontSize: 14, color: palette.textMuted };
+const scopeNoticeStyle = { fontSize: 13, fontWeight: '700' as const, color: palette.brandStrong };
 const successTextStyle = { color: '#15803d', fontSize: 14 };
 const errorTextStyle = { color: palette.danger, fontSize: 14 };
 const chipRowStyle = { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 8 };
@@ -209,3 +294,5 @@ const miniButtonStyle = { borderRadius: 10, backgroundColor: palette.canvasStron
 const miniButtonTextStyle = { color: palette.text, fontSize: 13, fontWeight: '700' as const };
 const dangerMiniButtonStyle = { borderRadius: 10, backgroundColor: '#fee2e2', paddingHorizontal: 12, paddingVertical: 8 };
 const dangerMiniButtonTextStyle = { color: palette.danger, fontSize: 13, fontWeight: '700' as const };
+const presetRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
+const disabledStyle = { opacity: 0.45 };

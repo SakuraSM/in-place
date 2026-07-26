@@ -7,9 +7,9 @@ import { createItem, uploadImage } from '../../../legacy/items';
 import { useAuth } from '../../../app/providers/auth-context';
 import type { AIRecognitionResult } from '../../../legacy/database.types';
 import ItemForm from '../components/ItemForm';
-import type { Item } from '../../../legacy/database.types';
+import type { ItemCreateInput } from '@inplace/domain';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import CropImageSheet from '../components/CropImageSheet';
 import { createObjectUrl, cropImageFromFile, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox } from '../lib/imageCrop';
 
@@ -21,6 +21,14 @@ interface DraftItem {
   cropBox: NormalizedCropBox | null;
   saved: boolean;
 }
+
+interface SaveDraftWithImageInput {
+  draft: DraftItem;
+  itemInput: ItemCreateInput;
+  includeDraftImageByDefault: boolean;
+}
+
+const MAX_VISIBLE_RESULT_TAGS = 2;
 
 export default function ScanPage() {
   const { user } = useAuth();
@@ -183,21 +191,29 @@ export default function ScanPage() {
       await Promise.all(
         selected.map((draft) => {
           const idx = drafts.indexOf(draft);
-          return saveDraftWithImage(draft, {
-            user_id: user.id,
-            parent_id: null,
-            type: draft.result.type ?? 'item',
-            name: draft.result.name,
-            description: draft.result.description,
-            category: draft.result.category,
-            status: 'in_stock',
-            price: draft.result.price ?? null,
-            purchase_date: null,
-            warranty_date: null,
-            images: [],
-            tags: draft.result.tags,
-            metadata: { ai_recognized: true, brand: draft.result.brand, bounding_box: draft.cropBox, source_image: 'scan' },
-          }, { includeDraftImageByDefault: true }).then(() => {
+          return saveDraftWithImage({
+            draft,
+            itemInput: {
+              user_id: user.id,
+              parent_id: null,
+              type: draft.result.type ?? 'item',
+              name: draft.result.name,
+              description: draft.result.description,
+              category: draft.result.category,
+              status: 'in_stock',
+              price: draft.result.price ?? null,
+              quantity: 1,
+              tracking_mode: 'unique',
+              minimum_quantity: null,
+              expiry_date: null,
+              purchase_date: null,
+              warranty_date: null,
+              images: [],
+              tags: draft.result.tags,
+              metadata: { ai_recognized: true, brand: draft.result.brand, bounding_box: draft.cropBox, source_image: 'scan' },
+            },
+            includeDraftImageByDefault: true,
+          }).then(() => {
             setDrafts((prev) =>
               prev.map((d, i) => (i === idx ? { ...d, saved: true } : d))
             );
@@ -209,9 +225,13 @@ export default function ScanPage() {
     }
   };
 
-  const handleEditSave = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleEditSave = async (data: ItemCreateInput) => {
     if (!editingDraft || !user) return;
-    await saveDraftWithImage(drafts[editingDraft.idx], data, { includeDraftImageByDefault: false });
+    await saveDraftWithImage({
+      draft: drafts[editingDraft.idx],
+      itemInput: data,
+      includeDraftImageByDefault: false,
+    });
     setDrafts((prev) =>
       prev.map((d, i) => (i === editingDraft.idx ? { ...d, saved: true } : d))
     );
@@ -250,20 +270,20 @@ export default function ScanPage() {
     setCroppingDraftIndex(null);
   };
 
-  const saveDraftWithImage = async (
-    draft: DraftItem,
-    data: Omit<Item, 'id' | 'created_at' | 'updated_at'>,
-    options: { includeDraftImageByDefault: boolean },
-  ) => {
-    const uploadedImages = data.images.filter((image) => !image.startsWith('blob:'));
+  const saveDraftWithImage = async ({
+    draft,
+    itemInput,
+    includeDraftImageByDefault,
+  }: SaveDraftWithImageInput) => {
+    const uploadedImages = itemInput.images.filter((image) => !image.startsWith('blob:'));
     const draftImageFile = draft.imageFile;
     const currentUser = user;
     const shouldUploadDraftImage =
       Boolean(draftImageFile) &&
       Boolean(currentUser) &&
       (
-        options.includeDraftImageByDefault ||
-        (Boolean(draft.imageUrl) && data.images.includes(draft.imageUrl))
+        includeDraftImageByDefault ||
+        (Boolean(draft.imageUrl) && itemInput.images.includes(draft.imageUrl))
       );
 
     if (shouldUploadDraftImage && draftImageFile && currentUser) {
@@ -272,7 +292,7 @@ export default function ScanPage() {
     }
 
     await createItem({
-      ...data,
+      ...itemInput,
       images: uploadedImages,
     });
   };
@@ -282,15 +302,14 @@ export default function ScanPage() {
   const blobSourceImageUrl = sourceImageUrl?.startsWith('blob:') ? sourceImageUrl : null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className={APP_PAGE_HEADER}>
-        <div className={APP_PAGE_HEADER_STACK}>
-          <h1 className="text-xl font-bold text-slate-900">AI 扫描</h1>
-          <p className="mt-0.5 text-xs text-slate-600">拍照或选图自动识别物品并录入</p>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        width="wide"
+        title="拍照录入"
+        description="识别照片中的物品，确认信息后新建库存"
+      />
 
-      <div className={`mx-auto w-full max-w-[1480px] ${APP_PAGE_CONTENT}`}>
+      <PageContent width="wide">
         {aiEnabled === false ? (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -345,7 +364,7 @@ export default function ScanPage() {
             >
               <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-slate-900">开始扫描</p>
+                  <p className="text-sm font-semibold text-slate-900">开始拍照录入</p>
                   <p className="text-sm leading-6 text-slate-500">
                     上传一张清晰图片，系统会自动识别物品、分类并生成可编辑的录入草稿。
                   </p>
@@ -359,7 +378,7 @@ export default function ScanPage() {
                     className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Camera size={16} />
-                    拍照扫描
+                    拍照识别
                   </button>
                   <button
                     type="button"
@@ -516,7 +535,7 @@ export default function ScanPage() {
                         {draft.result.brand && (
                           <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{draft.result.brand}</span>
                         )}
-                        {draft.result.tags.slice(0, 2).map((tag) => (
+                        {draft.result.tags.slice(0, MAX_VISIBLE_RESULT_TAGS).map((tag) => (
                           <span key={tag} className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] text-sky-700">{tag}</span>
                         ))}
                       </div>
@@ -567,7 +586,7 @@ export default function ScanPage() {
             ) : null}
           </div>
         )}
-      </div>
+      </PageContent>
 
       <input
         ref={cameraFileRef}
@@ -611,6 +630,6 @@ export default function ScanPage() {
           onClose={() => setCroppingDraftIndex(null)}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

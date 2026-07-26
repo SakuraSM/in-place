@@ -4,6 +4,7 @@ import type { AppCoreRequest } from './shared';
 type ServerTag = {
   id: string;
   userId: string;
+  householdId: string;
   name: string;
   description: string;
   color: string;
@@ -17,6 +18,7 @@ function mapTag(tag: ServerTag): TagEntity {
   return {
     id: tag.id,
     user_id: tag.userId,
+    household_id: tag.householdId,
     name: tag.name,
     description: tag.description,
     color: tag.color,

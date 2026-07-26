@@ -1,6 +1,17 @@
 import { createApiClient } from '@inplace/api-client';
-import { createActivityApi, createAiApi, createCategoriesApi, createItemsApi, createTagsApi } from '@inplace/app-core';
+import {
+  createActivityApi,
+  createAiApi,
+  createCategoriesApi,
+  createCodesApi,
+  createHouseholdsApi,
+  createItemsApi,
+  createLifecycleApi,
+  createStocktakesApi,
+  createTagsApi,
+} from '@inplace/app-core';
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { secureServerConfigStorage } from '@/platform/config/secureServerConfigStorage';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
 
@@ -9,6 +20,7 @@ const runtimeEnv = globalThis as {
     env?: Record<string, string | undefined>;
   };
 };
+const MOBILE_HOUSEHOLD_KEY = 'inplace.household.id';
 
 function resolveDefaultMobileApiBaseUrl() {
   // 10.0.2.2 is the standard loopback alias for Android Emulator to reach the host machine.
@@ -43,6 +55,14 @@ export function normalizeMobileApiBaseUrl(rawBaseUrl: string) {
 const mobileApiClientConfig = {
   baseUrl: normalizeMobileApiBaseUrl(resolveDefaultMobileApiBaseUrl()),
   tokenStorage: secureTokenStorage,
+  householdId: null as string | null,
+  contextHeaders() {
+    const headers: Record<string, string> = {};
+    if (mobileApiClientConfig.householdId) {
+      headers['X-InPlace-Household-ID'] = mobileApiClientConfig.householdId;
+    }
+    return headers;
+  },
 };
 
 export const mobileApiClient = createApiClient(mobileApiClientConfig);
@@ -71,11 +91,34 @@ export async function saveMobileApiBaseUrl(rawBaseUrl: string) {
   return normalizedBaseUrl;
 }
 
+export function setMobileHouseholdId(householdId: string | null) {
+  mobileApiClientConfig.householdId = householdId;
+}
+
+export async function loadMobileHouseholdId() {
+  const householdId = await SecureStore.getItemAsync(MOBILE_HOUSEHOLD_KEY);
+  setMobileHouseholdId(householdId);
+  return householdId;
+}
+
+export async function saveMobileHouseholdId(householdId: string | null) {
+  setMobileHouseholdId(householdId);
+  if (householdId) {
+    await SecureStore.setItemAsync(MOBILE_HOUSEHOLD_KEY, householdId);
+  } else {
+    await SecureStore.deleteItemAsync(MOBILE_HOUSEHOLD_KEY);
+  }
+}
+
 export const itemsApi = createItemsApi(mobileApiClient.request);
 export const categoriesApi = createCategoriesApi(mobileApiClient.request);
 export const tagsApi = createTagsApi(mobileApiClient.request);
 export const aiApi = createAiApi(mobileApiClient.request);
 export const activityApi = createActivityApi(mobileApiClient.request);
+export const codesApi = createCodesApi(mobileApiClient.request);
+export const householdsApi = createHouseholdsApi(mobileApiClient.request);
+export const lifecycleApi = createLifecycleApi(mobileApiClient.request);
+export const stocktakesApi = createStocktakesApi(mobileApiClient.request);
 
 type ImageUploadAsset = {
   uri: string;
@@ -143,6 +186,16 @@ export async function uploadImageFromUri(params: ImageUploadAsset) {
   });
 
   return data.url;
+}
+
+export async function uploadAttachmentFromUri(params: ImageUploadAsset) {
+  const formData = new FormData();
+  await appendImageAsset(formData, 'file', params, 'attachment.bin');
+
+  return mobileApiClient.request<{ url: string; name: string; mimeType: string }>('/v1/uploads/attachments', {
+    method: 'POST',
+    body: formData,
+  });
 }
 
 export async function recognizeItemsFromUri(params: ImageUploadAsset) {

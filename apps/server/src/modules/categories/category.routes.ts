@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { requireCurrentUser } from '../../lib/authenticated-request.js';
+import { requireHouseholdAccess } from '../../lib/household-access.js';
 import {
   categoryIdParamsSchema,
   createCategorySchema,
@@ -7,30 +7,30 @@ import {
   updateCategorySchema,
 } from './category.schemas.js';
 import {
-  createCategoryForUser,
-  deleteCategoryForUser,
-  applyCategoryPresetsForUser,
+  createCategoryForHousehold,
+  deleteCategoryForHousehold,
+  applyCategoryPresetsForHousehold,
   getCategoryPresetSummary,
-  listCategoriesForUser,
-  updateCategoryForUser,
+  listCategoriesForHousehold,
+  updateCategoryForHousehold,
 } from './category.repository.js';
 
 export const categoryRoutes: FastifyPluginAsync = async (app) => {
   app.get('/presets', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) return;
-    return reply.send(await getCategoryPresetSummary(currentUser.id));
+    const access = await requireHouseholdAccess({ request, reply });
+    if (!access) return;
+    return reply.send(await getCategoryPresetSummary(access.householdId));
   });
 
   app.post('/presets/apply', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) return;
-    return reply.send(await applyCategoryPresetsForUser(currentUser.id));
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) return;
+    return reply.send(await applyCategoryPresetsForHousehold(access));
   });
 
   app.get('/', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply });
+    if (!access) {
       return;
     }
 
@@ -43,13 +43,13 @@ export const categoryRoutes: FastifyPluginAsync = async (app) => {
     }
 
     return reply.send({
-      data: await listCategoriesForUser(currentUser.id, parsed.data),
+      data: await listCategoriesForHousehold(access.householdId, parsed.data),
     });
   });
 
   app.post('/', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -62,13 +62,13 @@ export const categoryRoutes: FastifyPluginAsync = async (app) => {
     }
 
     return reply.code(201).send({
-      data: await createCategoryForUser(currentUser.id, parsed.data),
+      data: await createCategoryForHousehold(access, parsed.data),
     });
   });
 
   app.patch('/:id', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -88,7 +88,7 @@ export const categoryRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const updatedCategory = await updateCategoryForUser(currentUser.id, params.data.id, parsed.data);
+    const updatedCategory = await updateCategoryForHousehold(access.householdId, params.data.id, parsed.data);
     if (!updatedCategory) {
       return reply.code(404).send({
         error: 'CATEGORY_NOT_FOUND',
@@ -102,8 +102,8 @@ export const categoryRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete('/:id', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) {
       return;
     }
 
@@ -115,7 +115,7 @@ export const categoryRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const deletedCategory = await deleteCategoryForUser(currentUser.id, params.data.id);
+    const deletedCategory = await deleteCategoryForHousehold(access, params.data.id);
     if (!deletedCategory) {
       return reply.code(404).send({
         error: 'CATEGORY_NOT_FOUND',

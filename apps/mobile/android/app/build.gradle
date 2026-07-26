@@ -92,8 +92,8 @@ android {
         applicationId 'com.inplace.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "0.1.3"
+        versionCode 4
+        versionName "0.2.0"
     }
     signingConfigs {
         debug {
@@ -105,6 +105,7 @@ android {
     }
     buildTypes {
         debug {
+            applicationIdSuffix ".debug"
             signingConfig signingConfigs.debug
         }
         release {

@@ -3,11 +3,11 @@ import { count, desc, eq } from 'drizzle-orm';
 import { getDb } from '../../lib/db.js';
 import type { ListActivityLogsQuery } from './activity.schemas.js';
 
-export async function listActivityLogsForUser(userId: string, query: ListActivityLogsQuery = {}) {
+export async function listActivityLogsForHousehold(householdId: string, query: ListActivityLogsQuery = {}) {
   const page = query.page ?? 1;
   const pageSize = query.pageSize ?? 20;
   const usePagination = query.page !== undefined || query.pageSize !== undefined;
-  const where = eq(activityLogs.userId, userId);
+  const where = eq(activityLogs.householdId, householdId);
 
   const [totalRow] = await getDb()
     .select({ value: count() })
@@ -41,8 +41,9 @@ export async function listActivityLogsForUser(userId: string, query: ListActivit
   };
 }
 
-export async function createActivityLogForUser(input: {
+export async function createActivityLogForHousehold(input: {
   userId: string;
+  householdId: string;
   itemId?: string | null;
   itemType: DbActivityLog['itemType'];
   itemName: string;
@@ -53,6 +54,8 @@ export async function createActivityLogForUser(input: {
     .insert(activityLogs)
     .values({
       userId: input.userId,
+      householdId: input.householdId,
+      actorUserId: input.userId,
       itemId: input.itemId ?? null,
       itemType: input.itemType,
       itemName: input.itemName,

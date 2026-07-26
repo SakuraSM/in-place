@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Modal, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NormalizedCropBox, ScanSourceImage } from './scanImageCrop';
-import { clampCropBox, fullImageCropBox } from './scanImageCrop';
+import { fullImageCropBox } from './scanImageCrop';
+import { applyCropGesture, resolveCropGestureMode, type CropFrameSize, type CropGestureMode } from './cropGesture';
 import { palette } from '@/shared/ui/theme';
 
 interface ScanCropSheetProps {
@@ -13,14 +14,7 @@ interface ScanCropSheetProps {
   onConfirm: (cropBox: NormalizedCropBox) => void;
 }
 
-type CropHandle = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
-
-interface FrameSize {
-  width: number;
-  height: number;
-}
-
-const MIN_DRAG_CROP_SIZE = 0.08;
+const CROP_HANDLE_HIT_SIZE = 24;
 
 export function ScanCropSheet({
   visible,
@@ -31,9 +25,10 @@ export function ScanCropSheet({
   onConfirm,
 }: ScanCropSheetProps) {
   const [cropBox, setCropBox] = useState<NormalizedCropBox>(initialCropBox ?? fullImageCropBox());
-  const [frameSize, setFrameSize] = useState<FrameSize>({ width: 1, height: 1 });
+  const [frameSize, setFrameSize] = useState<CropFrameSize>({ width: 1, height: 1 });
   const gestureStartCropRef = useRef<NormalizedCropBox>(cropBox);
   const latestCropRef = useRef<NormalizedCropBox>(cropBox);
+  const gestureModeRef = useRef<CropGestureMode | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -45,22 +40,42 @@ export function ScanCropSheet({
     latestCropRef.current = cropBox;
   }, [cropBox]);
 
-  const moveResponder = useMemo(() => PanResponder.create({
+  const cropResponder = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: () => !saving,
     onStartShouldSetPanResponder: () => !saving,
-    onPanResponderGrant: () => {
-      gestureStartCropRef.current = cropBox;
+    onPanResponderGrant: (event) => {
+      const startCrop = latestCropRef.current;
+      gestureStartCropRef.current = startCrop;
+      gestureModeRef.current = resolveCropGestureMode({
+        touchX: event.nativeEvent.locationX,
+        touchY: event.nativeEvent.locationY,
+        cropBox: startCrop,
+        frameSize,
+        handleHitSize: CROP_HANDLE_HIT_SIZE,
+      });
     },
     onPanResponderMove: (_, gestureState) => {
-      setCropBox(moveCropBox(gestureStartCropRef.current, gestureState.dx, gestureState.dy, frameSize));
-    },
-  }), [cropBox, frameSize, saving]);
+      const gestureMode = gestureModeRef.current;
+      if (!gestureMode) {
+        return;
+      }
 
-  const resizeResponders = useMemo(() => ({
-    topLeft: createResizeResponder('topLeft', frameSize, gestureStartCropRef, latestCropRef, setCropBox, saving),
-    topRight: createResizeResponder('topRight', frameSize, gestureStartCropRef, latestCropRef, setCropBox, saving),
-    bottomLeft: createResizeResponder('bottomLeft', frameSize, gestureStartCropRef, latestCropRef, setCropBox, saving),
-    bottomRight: createResizeResponder('bottomRight', frameSize, gestureStartCropRef, latestCropRef, setCropBox, saving),
+      setCropBox(applyCropGesture({
+        startCrop: gestureStartCropRef.current,
+        mode: gestureMode,
+        deltaX: gestureState.dx,
+        deltaY: gestureState.dy,
+        frameSize,
+      }));
+    },
+    onPanResponderRelease: () => {
+      gestureModeRef.current = null;
+    },
+    onPanResponderTerminate: () => {
+      gestureModeRef.current = null;
+    },
+    onPanResponderTerminationRequest: () => false,
+    onShouldBlockNativeResponder: () => true,
   }), [frameSize, saving]);
 
   const handleConfirm = () => {
@@ -86,32 +101,42 @@ export function ScanCropSheet({
           </View>
 
           {sourceImage ? (
-            <View
-              onLayout={(event) => setFrameSize({
-                width: Math.max(1, event.nativeEvent.layout.width),
-                height: Math.max(1, event.nativeEvent.layout.height),
-              })}
-              style={[previewFrameStyle, { aspectRatio: imageAspectRatio }]}
-            >
-              <Image source={{ uri: sourceImage.uri }} style={previewImageStyle} />
+            <>
+              <Text style={gestureHintStyle}>拖动框体移动，拖动四角调整范围</Text>
               <View
-                {...moveResponder.panHandlers}
-                style={[
-                  cropOverlayStyle,
-                  {
-                    left: `${cropBox.x * 100}%`,
-                    top: `${cropBox.y * 100}%`,
-                    width: `${cropBox.width * 100}%`,
-                    height: `${cropBox.height * 100}%`,
-                  },
-                ]}
+                onLayout={(event) => setFrameSize({
+                  width: Math.max(1, event.nativeEvent.layout.width),
+                  height: Math.max(1, event.nativeEvent.layout.height),
+                })}
+                style={[previewFrameStyle, { aspectRatio: imageAspectRatio }]}
               >
-                <View {...resizeResponders.topLeft.panHandlers} style={[handleStyle, topLeftHandleStyle]} />
-                <View {...resizeResponders.topRight.panHandlers} style={[handleStyle, topRightHandleStyle]} />
-                <View {...resizeResponders.bottomLeft.panHandlers} style={[handleStyle, bottomLeftHandleStyle]} />
-                <View {...resizeResponders.bottomRight.panHandlers} style={[handleStyle, bottomRightHandleStyle]} />
+                <Image source={{ uri: sourceImage.uri }} style={previewImageStyle} />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    cropOverlayStyle,
+                    {
+                      left: `${cropBox.x * 100}%`,
+                      top: `${cropBox.y * 100}%`,
+                      width: `${cropBox.width * 100}%`,
+                      height: `${cropBox.height * 100}%`,
+                    },
+                  ]}
+                >
+                  <View style={[handleStyle, topLeftHandleStyle]} />
+                  <View style={[handleStyle, topRightHandleStyle]} />
+                  <View style={[handleStyle, bottomLeftHandleStyle]} />
+                  <View style={[handleStyle, bottomRightHandleStyle]} />
+                </View>
+                <View
+                  {...cropResponder.panHandlers}
+                  accessibilityLabel="裁剪范围"
+                  accessibilityHint="在裁剪框内拖动可移动范围，拖动四角可调整大小"
+                  collapsable={false}
+                  style={cropInteractionLayerStyle}
+                />
               </View>
-            </View>
+            </>
           ) : null}
 
           <View style={quickActionsStyle}>
@@ -130,72 +155,6 @@ export function ScanCropSheet({
       </View>
     </Modal>
   );
-}
-
-function createResizeResponder(
-  handle: CropHandle,
-  frameSize: FrameSize,
-  gestureStartCropRef: MutableRefObject<NormalizedCropBox>,
-  latestCropRef: MutableRefObject<NormalizedCropBox>,
-  setCropBox: Dispatch<SetStateAction<NormalizedCropBox>>,
-  saving: boolean,
-) {
-  return PanResponder.create({
-    onMoveShouldSetPanResponder: () => !saving,
-    onStartShouldSetPanResponder: () => !saving,
-    onPanResponderGrant: () => {
-      gestureStartCropRef.current = latestCropRef.current;
-    },
-    onPanResponderMove: (_, gestureState) => {
-      setCropBox(resizeCropBox(gestureStartCropRef.current, handle, gestureState.dx, gestureState.dy, frameSize));
-    },
-  });
-}
-
-function moveCropBox(startCrop: NormalizedCropBox, deltaX: number, deltaY: number, frameSize: FrameSize) {
-  const nextX = startCrop.x + deltaX / frameSize.width;
-  const nextY = startCrop.y + deltaY / frameSize.height;
-
-  return clampCropBox({
-    ...startCrop,
-    x: Math.max(0, Math.min(1 - startCrop.width, nextX)),
-    y: Math.max(0, Math.min(1 - startCrop.height, nextY)),
-  });
-}
-
-function resizeCropBox(
-  startCrop: NormalizedCropBox,
-  handle: CropHandle,
-  deltaX: number,
-  deltaY: number,
-  frameSize: FrameSize,
-) {
-  const normalizedDeltaX = deltaX / frameSize.width;
-  const normalizedDeltaY = deltaY / frameSize.height;
-  const right = startCrop.x + startCrop.width;
-  const bottom = startCrop.y + startCrop.height;
-
-  const next = { ...startCrop };
-
-  if (handle === 'topLeft' || handle === 'bottomLeft') {
-    next.x = Math.max(0, Math.min(right - MIN_DRAG_CROP_SIZE, startCrop.x + normalizedDeltaX));
-    next.width = right - next.x;
-  }
-
-  if (handle === 'topRight' || handle === 'bottomRight') {
-    next.width = Math.max(MIN_DRAG_CROP_SIZE, Math.min(1 - startCrop.x, startCrop.width + normalizedDeltaX));
-  }
-
-  if (handle === 'topLeft' || handle === 'topRight') {
-    next.y = Math.max(0, Math.min(bottom - MIN_DRAG_CROP_SIZE, startCrop.y + normalizedDeltaY));
-    next.height = bottom - next.y;
-  }
-
-  if (handle === 'bottomLeft' || handle === 'bottomRight') {
-    next.height = Math.max(MIN_DRAG_CROP_SIZE, Math.min(1 - startCrop.y, startCrop.height + normalizedDeltaY));
-  }
-
-  return clampCropBox(next);
 }
 
 const modalRootStyle = {
@@ -230,6 +189,12 @@ const sheetTitleStyle = {
   color: palette.text,
 };
 
+const gestureHintStyle = {
+  fontSize: 13,
+  fontWeight: '600' as const,
+  color: palette.textMuted,
+};
+
 const closeButtonStyle = {
   borderRadius: 999,
   backgroundColor: palette.canvasStrong,
@@ -262,6 +227,11 @@ const cropOverlayStyle = {
   borderWidth: 2,
   borderColor: '#38bdf8',
   backgroundColor: 'rgba(14, 165, 233, 0.16)',
+};
+
+const cropInteractionLayerStyle = {
+  ...StyleSheet.absoluteFillObject,
+  zIndex: 2,
 };
 
 const handleStyle = {

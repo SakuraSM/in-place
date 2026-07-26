@@ -13,7 +13,8 @@ import { useToast } from '../../../shared/ui/toast';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import EmptyState from '../../../shared/ui/EmptyState';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
-import { APP_PAGE_CONTENT, APP_PAGE_HEADER, APP_PAGE_HEADER_STACK } from '../../../shared/ui/pageHeader';
+import { ContentTabs } from '../../../shared/ui/ContentTabs';
+import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import CategoryEditorDialog from '../components/CategoryEditorDialog';
 import EntityBadge from '../components/EntityBadge';
 import {
@@ -149,35 +150,36 @@ export default function CategoriesPage() {
 
   const filteredCategories = categories.filter((category) => category.scope === activeScope);
   const activePresentation = SCOPE_PRESENTATION[activeScope];
+  const scopeTabOptions = (Object.entries(SCOPE_PRESENTATION) as [
+    CategoryScope,
+    typeof activePresentation,
+  ][]).map(([scope, presentation]) => ({
+    value: scope,
+    label: presentation.label,
+    icon: presentation.icon,
+    count: categories.filter((category) => category.scope === scope).length,
+  }));
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <header className={APP_PAGE_HEADER}>
-        <div className={`${APP_PAGE_HEADER_STACK} gap-3 md:gap-4`}>
-          <h1 className="text-xl font-bold text-slate-900">分类管理</h1>
-          <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surfaceMuted p-1">
-            {(Object.entries(SCOPE_PRESENTATION) as [CategoryScope, typeof activePresentation][]).map(([scope, presentation]) => {
-              const Icon = presentation.icon;
-              return (
-                <button
-                  key={scope}
-                  type="button"
-                  onClick={() => setActiveScope(scope)}
-                  aria-pressed={activeScope === scope}
-                  className={`flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors ${
-                    activeScope === scope ? 'bg-surface text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Icon size={14} />
-                  {presentation.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </header>
+    <PageShell>
+      <PageHeader width="standard" title="分类管理" />
 
-      <main className={`${APP_PAGE_CONTENT} space-y-4`}>
+      <PageContent width="standard" className="space-y-5">
+        <ContentTabs
+          label="分类范围"
+          options={scopeTabOptions}
+          value={activeScope}
+          onChange={setActiveScope}
+          panelId="category-scope-panel"
+          className="w-fit"
+        />
+
+        <div
+          id="category-scope-panel"
+          role="tabpanel"
+          aria-label={activePresentation.label}
+          className="space-y-5"
+        >
         <section className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm md:flex md:items-center md:justify-between md:gap-5 md:p-5">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
@@ -234,7 +236,8 @@ export default function CategoriesPage() {
             ))}
           </motion.div>
         )}
-      </main>
+        </div>
+      </PageContent>
 
       <button
         type="button"
@@ -281,6 +284,6 @@ export default function CategoriesPage() {
           onCancel={() => setDeleteTarget(null)}
         />
       ) : null}
-    </div>
+    </PageShell>
   );
 }

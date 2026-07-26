@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, MapPin, Tag, Plus, Loader2 } from 'lucide-react';
 import { INVENTORY_NODE_LABELS, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import type { Item, ItemType, ItemStatus, Category } from '../../../legacy/database.types';
+import type { ItemCreateInput, TrackingMode } from '@inplace/domain';
 import { useAuth } from '../../../app/providers/auth-context';
 import { fetchItem, uploadImage } from '../../../legacy/items';
 import { fetchCategories } from '../../../legacy/categories';
@@ -23,6 +24,10 @@ interface FormData {
   category: string;
   status: ItemStatus;
   price: string;
+  quantity: number;
+  tracking_mode: TrackingMode;
+  minimum_quantity: string;
+  expiry_date: string;
   purchase_date: string;
   warranty_date: string;
   images: string[];
@@ -38,7 +43,7 @@ interface Props {
   forceType?: ItemType;
   fixedLocation?: boolean;
   submitError?: string | null;
-  onSave: (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onSave: (data: ItemCreateInput) => Promise<void>;
   onClose: () => void;
 }
 
@@ -70,6 +75,10 @@ export default function ItemForm({
     category: initial?.category ?? '',
     status: initial?.status ?? 'in_stock',
     price: initial?.price?.toString() ?? '',
+    quantity: initial?.quantity ?? 1,
+    tracking_mode: initial?.tracking_mode ?? 'unique',
+    minimum_quantity: initial?.minimum_quantity?.toString() ?? '',
+    expiry_date: initial?.expiry_date ?? '',
     purchase_date: initial?.purchase_date ?? '',
     warranty_date: initial?.warranty_date ?? '',
     images: initial?.images ?? [],
@@ -194,6 +203,10 @@ export default function ItemForm({
         category: form.category,
         status: form.status,
         price: form.price ? parseFloat(form.price) : null,
+        quantity: form.quantity,
+        tracking_mode: form.tracking_mode,
+        minimum_quantity: form.minimum_quantity === '' ? null : Number(form.minimum_quantity),
+        expiry_date: form.expiry_date || null,
         purchase_date: form.purchase_date || null,
         warranty_date: form.warranty_date || null,
         images: form.images,
@@ -460,6 +473,47 @@ export default function ItemForm({
                     />
                   </div>
                 </div>
+
+                <fieldset>
+                  <legend className="mb-2 block text-sm font-medium text-slate-700">库存追踪方式</legend>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      ['unique', '单件'],
+                      ['quantity', '数量'],
+                      ['consumable', '消耗品'],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={form.tracking_mode === value}
+                        onClick={() => update('tracking_mode', value)}
+                        className={`rounded-xl px-2 py-2.5 text-xs font-semibold ${form.tracking_mode === value ? 'bg-brandStrong text-white' : 'bg-surfaceMuted text-slate-600'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+
+                {form.tracking_mode !== 'unique' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm font-medium text-slate-700">当前数量</span>
+                      <input type="number" min={0} value={form.quantity} onChange={(event) => update('quantity', Math.max(0, Number(event.target.value)))} className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-3 text-sm" />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm font-medium text-slate-700">最低库存</span>
+                      <input type="number" min={0} value={form.minimum_quantity} onChange={(event) => update('minimum_quantity', event.target.value)} placeholder="不提醒" className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-3 text-sm" />
+                    </label>
+                  </div>
+                ) : null}
+
+                {form.tracking_mode === 'consumable' ? (
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm font-medium text-slate-700">最近有效期</span>
+                    <input type="date" value={form.expiry_date} onChange={(event) => update('expiry_date', event.target.value)} className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-3 text-sm" />
+                  </label>
+                ) : null}
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">保修截止日期</label>

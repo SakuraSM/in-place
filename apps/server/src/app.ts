@@ -1,8 +1,9 @@
 import Fastify from 'fastify';
 import { mkdir } from 'node:fs/promises';
 import cors from '@fastify/cors';
+import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
-import { authPlugin } from './plugins/auth.js';
+import { AUTH_COOKIE_NAME, authPlugin } from './plugins/auth.js';
 import { activityRoutes } from './modules/activity/activity.routes.js';
 import { aiRoutes } from './modules/ai/ai.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
@@ -11,6 +12,10 @@ import { healthRoutes } from './routes/health.js';
 import { itemRoutes } from './modules/items/item.routes.js';
 import { tagRoutes } from './modules/tags/tag.routes.js';
 import { uploadRoutes } from './routes/uploads.js';
+import { householdRoutes } from './modules/households/household.routes.js';
+import { codeRoutes } from './modules/codes/code.routes.js';
+import { stocktakeRoutes } from './modules/stocktakes/stocktake.routes.js';
+import { lifecycleRoutes } from './modules/lifecycle/lifecycle.routes.js';
 import { getAllowedCorsOrigins, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
 
@@ -46,11 +51,17 @@ export async function createApp(env: AppEnv) {
     credentials: true,
   });
 
+  await app.register(fastifyCookie);
+
   await app.register(fastifyJwt, {
     secret: env.JWT_SECRET,
+    cookie: {
+      cookieName: AUTH_COOKIE_NAME,
+      signed: false,
+    },
   });
 
-  await authPlugin(app);
+  await authPlugin(app, env);
 
   app.get('/api/v1', async () => ({
     service: 'inplace-server',
@@ -59,9 +70,13 @@ export async function createApp(env: AppEnv) {
 
   await app.register(aiRoutes, { prefix: '/api/v1/ai', env });
   await app.register(activityRoutes, { prefix: '/api/v1/activity' });
-  await app.register(authRoutes, { prefix: '/api/v1/auth' });
+  await app.register(authRoutes, { prefix: '/api/v1/auth', env });
   await app.register(categoryRoutes, { prefix: '/api/v1/categories' });
+  await app.register(codeRoutes, { prefix: '/api/v1/codes' });
+  await app.register(householdRoutes, { prefix: '/api/v1/households' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });
+  await app.register(lifecycleRoutes, { prefix: '/api/v1' });
+  await app.register(stocktakeRoutes, { prefix: '/api/v1/stocktakes' });
   await app.register(tagRoutes, { prefix: '/api/v1/tags' });
   await app.register(uploadRoutes, { env });
   await app.register(healthRoutes, { prefix: '/api/v1/health' });

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { AuthSession, AuthUser } from '@inplace/domain';
 import { ApiError } from '@inplace/api-client';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
-import { loadPersistedMobileApiBaseUrl, mobileApiClient, saveMobileApiBaseUrl, setMobileApiBaseUrl } from '@/shared/api/mobileClient';
+import { loadMobileHouseholdId, loadPersistedMobileApiBaseUrl, mobileApiClient, saveMobileApiBaseUrl, setMobileApiBaseUrl } from '@/shared/api/mobileClient';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const bootstrap = async () => {
       await loadPersistedMobileApiBaseUrl();
+      await loadMobileHouseholdId();
       const token = await secureTokenStorage.get();
       if (!token) {
         setLoading(false);
@@ -82,6 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user);
       },
       async signOut() {
+        try {
+          await mobileApiClient.request('/v1/auth/logout', { method: 'POST' });
+        } catch {
+          // 即使服务不可达，也应清除设备上的登录凭证。
+        }
         await secureTokenStorage.set(null);
         setSession(null);
         setUser(null);

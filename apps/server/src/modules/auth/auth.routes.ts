@@ -1,10 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { AppEnv } from '../../env.js';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { requireCurrentUser } from '../../lib/authenticated-request.js';
+import { clearAuthCookie, setAuthCookie } from '../../plugins/auth.js';
 import { changePasswordSchema, loginSchema, registerSchema, updateProfileSchema } from './auth.schemas.js';
 import { createUser, findUserByEmail, normalizeEmail, updateUserPassword, updateUserProfile } from './auth.repository.js';
 
-export const authRoutes: FastifyPluginAsync = async (app) => {
+export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options) => {
   app.post('/register', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -41,6 +43,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       sub: createdUser.id,
       email: createdUser.email,
     });
+    setAuthCookie(request, reply, token, options.env);
 
     return reply.code(201).send({
       token,
@@ -77,6 +80,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       sub: user.id,
       email: user.email,
     });
+    setAuthCookie(request, reply, token, options.env);
 
     return reply.send({
       token,
@@ -100,6 +104,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return reply.send({
       user: request.currentUser,
     });
+  });
+
+  app.post('/logout', async (request, reply) => {
+    clearAuthCookie(request, reply, options.env);
+    return reply.code(204).send();
   });
 
   app.patch('/me', { preHandler: app.authenticate }, async (request, reply) => {

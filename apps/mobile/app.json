@@ -4,7 +4,7 @@
     "description": "家庭物品管理系统",
     "slug": "in-place",
     "scheme": "inplace",
-    "version": "0.1.3",
+    "version": "0.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "runtimeVersion": {
@@ -18,6 +18,13 @@
           "photosPermission": "允许归位读取照片，用于上传物品图片和 AI 识别。",
           "cameraPermission": "允许归位使用相机，用于拍照识别和上传物品图片。"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "允许归位使用相机扫描 InPlace 标签，用于查看、绑定或归位库存。",
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "experiments": {
@@ -26,14 +33,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.inplace.mobile",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.inplace.mobile",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES"

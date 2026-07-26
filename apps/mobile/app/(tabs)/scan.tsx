@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
-import type { AIRecognitionResult, Item } from '@inplace/domain';
+import type { AIRecognitionResult, ItemCreateInput } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
@@ -122,7 +123,7 @@ export default function ScanTab() {
             })
             : null;
 
-          const payload: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
+          const payload: ItemCreateInput = {
             user_id: user.id,
             parent_id: null,
             type: draft.result.type ?? 'item',
@@ -131,6 +132,10 @@ export default function ScanTab() {
             category: draft.result.category,
             status: 'in_stock',
             price: draft.result.price ?? null,
+            quantity: 1,
+            tracking_mode: 'unique',
+            minimum_quantity: null,
+            expiry_date: null,
             purchase_date: null,
             warranty_date: null,
             images: uploadedImageUrl ? [uploadedImageUrl] : [],
@@ -149,7 +154,7 @@ export default function ScanTab() {
 
       return createdItems;
     },
-    onSuccess: async (_, __, ___) => {
+    onSuccess: async () => {
       setDrafts((current) => current.map((draft) => (draft.selected ? { ...draft, saved: true } : draft)));
       setMessage('选中结果已保存');
       await queryClient.invalidateQueries({ queryKey: ['mobile'] });
@@ -311,19 +316,48 @@ export default function ScanTab() {
   }
 
   if (!aiStatusQuery.data) {
-    return <Screen><StateBlock title="AI 未启用" body="先配置 AI" /></Screen>;
+    return (
+      <Screen>
+        <StateBlock title="拍照录入暂不可用" body="仍可扫描 InPlace 标签整理已有库存。" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="扫标签归位"
+          onPress={() => router.push('/scan-code' as Href)}
+          style={primaryButtonStyle}
+        >
+          <Text style={primaryButtonTextStyle}>扫标签归位</Text>
+        </Pressable>
+      </Screen>
+    );
   }
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="扫描" subtitle="拍照或选图识别" variant="page" />
+        <BrandHeader title="拍照录入" subtitle="识别照片，确认后新建库存" variant="page" />
       </Entrance>
 
-      <SectionCard title="图片" delay={70} density="compact" headerMode="compact">
+      <SectionCard
+        title="已有 InPlace 标签？"
+        subtitle="无需识别照片，直接查看、绑定或归位已有库存"
+        delay={40}
+        density="compact"
+        headerMode="compact"
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="扫标签归位"
+          onPress={() => router.push('/scan-code' as Href)}
+          style={labelReturnButtonStyle}
+        >
+          <Text style={labelReturnButtonTextStyle}>扫标签归位</Text>
+        </Pressable>
+      </SectionCard>
+
+      <SectionCard title="拍照或选图" delay={70} density="compact" headerMode="compact">
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void takePhoto()} style={secondaryButtonStyle}>
-            <Text style={secondaryButtonTextStyle}>拍照扫描</Text>
+            <Text style={secondaryButtonTextStyle}>拍照识别</Text>
           </Pressable>
           <Pressable disabled={recognizeMutation.isPending || saveMutation.isPending} onPress={() => void pickImage()} style={secondaryButtonStyle}>
             <Text style={secondaryButtonTextStyle}>选择图片</Text>
@@ -404,6 +438,21 @@ const secondaryButtonTextStyle = {
   color: palette.text,
   fontSize: 15,
   fontWeight: '600' as const,
+};
+
+const labelReturnButtonStyle = {
+  borderRadius: 15,
+  borderWidth: 1,
+  borderColor: palette.brand,
+  backgroundColor: palette.surface,
+  paddingVertical: 13,
+  alignItems: 'center' as const,
+};
+
+const labelReturnButtonTextStyle = {
+  color: palette.brandStrong,
+  fontSize: 15,
+  fontWeight: '700' as const,
 };
 
 const primaryButtonStyle = {
