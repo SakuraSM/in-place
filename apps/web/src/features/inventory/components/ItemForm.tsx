@@ -411,6 +411,7 @@ export default function ItemForm({
                         <span className="flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-sm">
                           <CategoryIcon
                             icon={cat.icon}
+                            presetKey={cat.preset_key}
                             fallback={Tag}
                             size={12}
                             className={isSelected ? colorCls.text : 'text-slate-500'}

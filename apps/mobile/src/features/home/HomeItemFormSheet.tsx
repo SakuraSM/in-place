@@ -11,6 +11,7 @@ import { categoriesApi, itemsApi, tagsApi, uploadImageFromUri } from '@/shared/a
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { updateLocationMetadata } from '@/shared/lib/location';
 import { palette, shadows } from '@/shared/ui/theme';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { LocationSelectField } from './LocationSelectField';
 
@@ -283,12 +284,18 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
                   {categories.map((category) => {
                     const isActive = draft.category === category.name;
                     return (
-                      <Pressable
-                        key={category.id}
+                        <Pressable
+                          key={category.id}
                         onPress={() => updateDraft('category', isActive ? '' : category.name)}
-                        style={[chipStyle, isActive ? activeChipStyle : null]}
-                      >
-                        <Text style={isActive ? activeChipTextStyle : chipTextStyle}>{category.name}</Text>
+                          style={[chipStyle, isActive ? activeChipStyle : null]}
+                        >
+                          <CategoryArtwork
+                            presetKey={category.preset_key}
+                            icon={category.icon}
+                            color={category.color}
+                            size="xs"
+                          />
+                          <Text style={isActive ? activeChipTextStyle : chipTextStyle}>{category.name}</Text>
                       </Pressable>
                     );
                   })}
@@ -636,6 +643,9 @@ const tagRailStyle = {
 };
 
 const chipStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
   borderRadius: 999,
   borderWidth: 1,
   borderColor: palette.border,

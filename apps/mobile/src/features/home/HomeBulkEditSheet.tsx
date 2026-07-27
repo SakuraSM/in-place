@@ -7,6 +7,7 @@ import { buildChildrenMap, getContainerTypeLabel, isLocationItem } from '@/share
 import { formatMobilePath } from '@/features/inventory/mobileInventoryFormat';
 import { LocationHierarchyPicker as SharedLocationHierarchyPicker } from './LocationHierarchyPicker';
 import { palette, shadows } from '@/shared/ui/theme';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 
 export interface BulkEditPayload {
   category?: string;
@@ -199,6 +200,12 @@ export function HomeBulkEditSheet({
                           onPress={() => setCategory(isSelected ? '' : categoryItem.name)}
                           style={[chipStyle, isSelected ? activeChipStyle : null]}
                         >
+                          <CategoryArtwork
+                            presetKey={categoryItem.preset_key}
+                            icon={categoryItem.icon}
+                            color={categoryItem.color}
+                            size="xs"
+                          />
                           <Text style={isSelected ? activeChipTextStyle : chipTextStyle}>{categoryItem.name}</Text>
                         </Pressable>
                       );
@@ -453,6 +460,9 @@ const chipWrapStyle = {
 };
 
 const chipStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
   borderRadius: 999,
   borderWidth: 1,
   borderColor: palette.border,

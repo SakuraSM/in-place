@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { resolveCategoryVisual } from '@inplace/ui/category-artwork';
 import {
   Archive,
   Armchair,
@@ -49,6 +50,7 @@ import {
   Utensils,
   Wrench,
 } from 'lucide-react';
+import { CATEGORY_ARTWORK_ASSETS } from './categoryArtworkAssets';
 
 export const ICON_MAP: Record<string, React.ElementType> = {
   FolderTree,
@@ -168,7 +170,7 @@ export function getColorClasses(colorKey: string) {
 }
 
 export function isCustomCategoryImageIcon(icon: string) {
-  return /^https?:\/\//.test(icon) || icon.startsWith('/api/uploads/');
+  return resolveCategoryVisual({ icon }).kind === 'customImage';
 }
 
 export function getCategoryIconLabel(icon: string) {
@@ -181,21 +183,48 @@ export function getCategoryIconLabel(icon: string) {
 
 export function CategoryIcon({
   icon,
+  presetKey,
   fallback: Fallback = Box,
   size = 18,
   className,
   imageClassName = 'h-full w-full object-cover',
 }: {
   icon: string;
+  presetKey?: string | null;
   fallback?: React.ElementType;
   size?: number;
   className?: string;
   imageClassName?: string;
 }) {
-  if (isCustomCategoryImageIcon(icon)) {
-    return React.createElement('img', { src: icon, alt: '', className: imageClassName });
+  const visual = resolveCategoryVisual({ presetKey, icon });
+  const imageSource = visual.kind === 'preset'
+    ? CATEGORY_ARTWORK_ASSETS[visual.presetKey]
+    : visual.kind === 'customImage'
+      ? visual.uri
+      : null;
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (failedSource && failedSource !== imageSource) {
+      setFailedSource(null);
+    }
+  }, [failedSource, imageSource]);
+
+  if (imageSource && failedSource !== imageSource) {
+    return React.createElement('img', {
+      src: imageSource,
+      alt: '',
+      'aria-hidden': true,
+      onError: () => setFailedSource(imageSource),
+      className: visual.kind === 'preset'
+        ? `h-full w-full object-contain transition-transform duration-200 group-hover:scale-[1.03] motion-reduce:transform-none ${imageClassName.replace(/\bobject-(?:cover|fill)\b/g, '')}`
+        : imageClassName,
+    });
   }
 
-  const IconComp = ICON_MAP[icon] ?? Fallback;
+  const fallbackIcon = visual.kind === 'preset' ? visual.artwork.legacyIcon : icon;
+  const IconComp = ICON_MAP[fallbackIcon] ?? Fallback;
   return React.createElement(IconComp, { size, className });
 }
+
+export const CategoryArtwork = CategoryIcon;

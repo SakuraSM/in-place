@@ -178,6 +178,7 @@ export default function HomeInventorySections({
                   <span className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg ${colorClasses.bg}`}>
                     <CategoryIcon
                       icon={group.icon.icon}
+                      presetKey={group.icon.preset_key}
                       fallback={Box}
                       size={13}
                       className={colorClasses.text}

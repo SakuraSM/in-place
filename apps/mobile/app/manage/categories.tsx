@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { Category, CategoryScope } from '@inplace/domain';
 import { MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
+import { getCategoryPresetLegacyIcon } from '@inplace/ui/category-artwork';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { ContentTabs, type ContentTab } from '@/shared/ui/ContentTabs';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
@@ -131,6 +133,8 @@ export default function ManageCategoriesScreen() {
 
   const categories = categoriesQuery.data ?? [];
   const visibleCategories = categories.filter((category) => category.scope === activeScope);
+  const editingCategory = editingId ? categories.find((category) => category.id === editingId) : null;
+  const editingPresetIcon = getCategoryPresetLegacyIcon(editingCategory?.preset_key);
   const tabs = SCOPE_TABS.map((tab) => ({
     ...tab,
     count: categories.filter((category) => category.scope === tab.value).length,
@@ -200,7 +204,39 @@ export default function ManageCategoriesScreen() {
           {editingId ? '（创建后不可修改）' : ''}
         </Text>
 
-        <TextInput value={draft.name} onChangeText={(name) => setDraft((current) => ({ ...current, name }))} placeholder="分类名称" style={inputStyle} />
+        <View style={editorIdentityStyle}>
+          <CategoryArtwork
+            presetKey={editingCategory?.preset_key}
+            icon={draft.icon}
+            color={draft.color}
+            size="md"
+          />
+          <TextInput
+            value={draft.name}
+            onChangeText={(name) => setDraft((current) => ({ ...current, name }))}
+            placeholder="分类名称"
+            accessibilityLabel="分类名称"
+            style={[inputStyle, { flex: 1 }]}
+          />
+        </View>
+
+        {editingPresetIcon ? (
+          <View style={presetVisualRowStyle}>
+            <Text style={bodyStyle}>
+              {draft.icon === editingPresetIcon ? '当前使用预设插画' : '当前使用自定义图标'}
+            </Text>
+            {draft.icon !== editingPresetIcon ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="恢复预设图片"
+                onPress={() => setDraft((current) => ({ ...current, icon: editingPresetIcon }))}
+                style={miniButtonStyle}
+              >
+                <Text style={miniButtonTextStyle}>恢复预设图片</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={chipRowStyle}>
           {MANAGEMENT_COLOR_OPTIONS.map((option) => (
@@ -224,6 +260,12 @@ export default function ManageCategoriesScreen() {
         {visibleCategories.length === 0 ? <Text style={bodyStyle}>当前用途还没有分类。</Text> : null}
         {visibleCategories.map((category) => (
           <View key={category.id} style={rowStyle}>
+            <CategoryArtwork
+              presetKey={category.preset_key}
+              icon={category.icon}
+              color={category.color}
+              size="sm"
+            />
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={rowTitleStyle}>{category.name}</Text>
               <Text style={bodyStyle}>{category.scope === 'location' ? '位置' : category.scope === 'container' ? '收纳' : '物品'} · {getColorLabel(category.color)}</Text>
@@ -296,3 +338,10 @@ const dangerMiniButtonStyle = { borderRadius: 10, backgroundColor: '#fee2e2', pa
 const dangerMiniButtonTextStyle = { color: palette.danger, fontSize: 13, fontWeight: '700' as const };
 const presetRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
 const disabledStyle = { opacity: 0.45 };
+const editorIdentityStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
+const presetVisualRowStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'space-between' as const,
+  gap: 12,
+};

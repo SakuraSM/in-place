@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Check, ChevronDown, ImageIcon, Shapes, Upload } from 'lucide-react';
+import { getCategoryPresetLegacyIcon } from '@inplace/ui/category-artwork';
 import type { Category, CategoryScope } from '../../../legacy/database.types';
 import { createCategory, updateCategory } from '../../../legacy/categories';
 import { uploadImage } from '../../../legacy/items';
@@ -47,6 +48,8 @@ export default function CategoryEditorDialog({
   const [uploadingIcon, setUploadingIcon] = useState(false);
   const iconInputRef = useRef<HTMLInputElement | null>(null);
   const colorClasses = getColorClasses(color);
+  const presetLegacyIcon = getCategoryPresetLegacyIcon(initial?.preset_key);
+  const isUsingPresetArtwork = Boolean(presetLegacyIcon && icon === presetLegacyIcon);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -104,6 +107,7 @@ export default function CategoryEditorDialog({
           <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${colorClasses.bg}`}>
             <CategoryIcon
               icon={icon}
+              presetKey={initial?.preset_key}
               fallback={Shapes}
               size={26}
               className={colorClasses.text}
@@ -163,7 +167,19 @@ export default function CategoryEditorDialog({
               <Upload size={14} />
               {uploadingIcon ? '上传中…' : '上传自定义图片'}
             </button>
-            {isCustomCategoryImageIcon(icon) ? (
+            {presetLegacyIcon && icon !== presetLegacyIcon ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIcon(presetLegacyIcon);
+                  setShowIconPicker(false);
+                }}
+                className="inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-xl bg-surfaceMuted px-3 text-xs font-medium text-slate-700"
+              >
+                <ImageIcon size={13} />
+                恢复预设图片
+              </button>
+            ) : isCustomCategoryImageIcon(icon) ? (
               <button
                 type="button"
                 onClick={() => setIcon(defaults.icon)}
@@ -180,8 +196,18 @@ export default function CategoryEditorDialog({
             aria-expanded={showIconPicker}
             className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-border bg-surfaceMuted px-3 text-sm text-slate-700 hover:border-brand"
           >
-            <CategoryIcon icon={icon} fallback={Shapes} size={16} className={colorClasses.text} />
-            <span className="flex-1 text-left">{getCategoryIconLabel(icon)}</span>
+            <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-md">
+              <CategoryIcon
+                icon={icon}
+                presetKey={initial?.preset_key}
+                fallback={Shapes}
+                size={16}
+                className={colorClasses.text}
+              />
+            </span>
+            <span className="flex-1 text-left">
+              {isUsingPresetArtwork ? '预设插画' : getCategoryIconLabel(icon)}
+            </span>
             <ChevronDown size={14} className={showIconPicker ? 'rotate-180' : ''} />
           </button>
           {showIconPicker ? (

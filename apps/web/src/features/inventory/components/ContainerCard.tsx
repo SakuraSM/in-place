@@ -1,8 +1,9 @@
 import { ChevronRight, Box, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, type MouseEvent } from 'react';
+import { resolveCategoryVisual } from '@inplace/ui/category-artwork';
 import type { Item, Category } from '../../../legacy/database.types';
-import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
+import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
 import { staggerItem } from '../../../shared/lib/animations';
 import { buildInventoryImageUrl } from '../lib/itemImage';
@@ -45,6 +46,9 @@ export default function ContainerCard({
 }: Props) {
   const [hovered, setHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const categoryVisual = category
+    ? resolveCategoryVisual({ presetKey: category.preset_key, icon: category.icon })
+    : null;
 
   const handleTouchStart = () => {
     longPressTimer.current = setTimeout(() => {
@@ -71,6 +75,7 @@ export default function ContainerCard({
     iconElement = (
       <CategoryIcon
         icon={category.icon}
+        presetKey={category.preset_key}
         fallback={Box}
         size={22}
         className={colorCls.text}
@@ -124,10 +129,15 @@ export default function ContainerCard({
               transition={{ duration: 0.35, ease: 'easeOut' }}
             />
           ) : (
-            <div className={`w-full h-full flex items-center justify-center ${bgCls} ${category && isCustomCategoryImageIcon(category.icon) ? 'p-0' : ''}`}>
+            <div className={`flex h-full w-full items-center justify-center ${bgCls} ${
+              categoryVisual?.kind === 'customImage' ? 'p-0' : categoryVisual?.kind === 'preset' ? 'p-5' : ''
+            }`}>
               <motion.div
-                className={`${textCls} ${category && isCustomCategoryImageIcon(category.icon) ? 'h-full w-full' : ''}`}
-                animate={{ rotate: hovered ? 6 : 0, scale: hovered ? 1.08 : 1 }}
+                className={`${textCls} ${categoryVisual?.kind === 'preset' || categoryVisual?.kind === 'customImage' ? 'h-full w-full' : ''}`}
+                animate={{
+                  rotate: categoryVisual?.kind === 'lucide' && hovered ? 6 : 0,
+                  scale: hovered ? (categoryVisual?.kind === 'preset' ? 1.03 : 1.08) : 1,
+                }}
                 transition={{ type: 'spring', stiffness: 350, damping: 18 }}
               >
                 {iconElement}

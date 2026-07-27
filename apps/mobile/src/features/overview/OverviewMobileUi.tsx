@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import type { Item } from '@inplace/domain';
+import type { Category, Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { LocationHierarchyPicker } from '@/features/home/LocationHierarchyPicker';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
@@ -37,13 +38,14 @@ export function FilterChip({
 
 interface ResultRowProps {
   item: Item;
+  category?: Category;
   path: string;
   selectionMode?: boolean;
   selected?: boolean;
   onToggleSelected?: (itemId: string) => void;
 }
 
-export function ResultRow({ item, path, selectionMode = false, selected = false, onToggleSelected }: ResultRowProps) {
+export function ResultRow({ item, category, path, selectionMode = false, selected = false, onToggleSelected }: ResultRowProps) {
   const imageUri = resolveInventoryImageUri(item.images[0]);
   const handlePress = () => {
     if (selectionMode) {
@@ -73,6 +75,13 @@ export function ResultRow({ item, path, selectionMode = false, selected = false,
       <View style={resultThumbStyle}>
         {imageUri ? (
           <InventoryImage url={item.images[0]} resizeMode="cover" style={resultThumbImageStyle} />
+        ) : category ? (
+          <CategoryArtwork
+            presetKey={category.preset_key}
+            icon={category.icon}
+            color={category.color}
+            size="md"
+          />
         ) : (
           <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="md" />
         )}

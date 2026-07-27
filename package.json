@@ -35,7 +35,8 @@
     "ios": "npm run ios --workspace @inplace/mobile",
     "build:mobile:android": "npm run build:android --workspace @inplace/mobile",
     "build:mobile:ios": "npm run build:ios --workspace @inplace/mobile",
-    "build:mobile": "npm run build:mobile:android && npm run build:mobile:ios"
+    "build:mobile": "npm run build:mobile:android && npm run build:mobile:ios",
+    "artwork:validate": "node scripts/validate-category-artwork.mjs"
   },
   "overrides": {
     "@xmldom/xmldom": "^0.8.13",

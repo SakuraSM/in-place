@@ -215,6 +215,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                           <span className="flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-sm">
                             <CategoryIcon
                               icon={categoryItem.icon}
+                              presetKey={categoryItem.preset_key}
                               fallback={Tag}
                               size={12}
                               className={selected ? colorCls.text : 'text-slate-500'}
