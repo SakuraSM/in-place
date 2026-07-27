@@ -1,10 +1,20 @@
 # InPlace
 
+<p align="center">
+  <img src="apps/web/public/branding/inplace-logo-full.png" alt="InPlace 归位 — 家庭物品管理" width="460" />
+</p>
+
 [English version](README.md)
 
 InPlace 是一个开源的家庭物品管理项目，用于记录家中有哪些物品、放在哪里、如何分类和追踪变更。项目采用 TypeScript monorepo 组织，包含 React Web 应用、Expo 移动端应用、Fastify API 和 PostgreSQL 数据层。
 
 代码仍在持续演进，但当前方向已经明确：客户端通过 API 访问业务能力，API 负责校验和持久化访问，PostgreSQL 作为系统主数据源。
+
+<p align="center">
+  <img src="docs/assets/inplace-home.png" alt="归位 Web 首页，展示库存统计、最近添加、最近操作和位置卡片" width="1200" />
+</p>
+
+<p align="center"><sub>Web 首页 · 库存概览、最近动态与位置收纳</sub></p>
 
 ## 功能特性
 

@@ -1,10 +1,20 @@
 # InPlace
 
+<p align="center">
+  <img src="apps/web/public/branding/inplace-logo-full.png" alt="InPlace — Home inventory management" width="460" />
+</p>
+
 [中文说明](README.zh-CN.md)
 
 InPlace is an open-source home inventory manager for keeping track of household items, where they are stored, and how they are organized. The project is maintained as a TypeScript monorepo with a React web app, an Expo mobile app, a Fastify API, and a PostgreSQL data layer.
 
 The codebase is still evolving, but its current direction is stable: clients talk to the API, the API owns validation and persistence access, and PostgreSQL is the system of record.
+
+<p align="center">
+  <img src="docs/assets/inplace-home.png" alt="InPlace web home page showing inventory statistics, recent additions, recent activity, and location cards" width="1200" />
+</p>
+
+<p align="center"><sub>Web home page · inventory overview, recent activity, and location organization</sub></p>
 
 ## Features
 
