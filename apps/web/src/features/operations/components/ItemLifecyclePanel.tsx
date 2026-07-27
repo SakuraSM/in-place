@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { FileText, Handshake, PackagePlus, RotateCcw, Upload, Wrench } from 'lucide-react';
 import type { Attachment, InventoryBatch, Item, Loan, MaintenanceRecord } from '@inplace/domain';
 import { useToast } from '../../../shared/ui/toast';
+import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
 import { lifecycleApi } from '../api';
 import { updateItem } from '../../../legacy/items';
 
@@ -101,7 +102,7 @@ export default function ItemLifecyclePanel({
         ) : (
           <div className="grid gap-2 xl:grid-cols-[1fr_1fr_auto]">
             <label><span className="sr-only">借用人</span><input value={borrowerName} onChange={(event) => setBorrowerName(event.target.value)} placeholder="家庭成员或外部联系人" className="h-10 w-full rounded-xl border border-border bg-surfaceMuted px-3 text-sm" /></label>
-            <label><span className="sr-only">预计归还日期</span><input type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} className="h-10 w-full rounded-xl border border-border bg-surfaceMuted px-3 text-sm" /></label>
+            <ModernDatePicker value={dueAt} onChange={setDueAt} placeholder="选择预计归还日期" ariaLabel="预计归还日期" />
             <button type="button" disabled={saving || !borrowerName.trim()} onClick={() => void runMutation(() => lifecycleApi.createLoan({ itemId: item.id, borrowerName: borrowerName.trim(), dueAt: dueAt ? new Date(`${dueAt}T12:00:00`).toISOString() : null }), '借出记录已保存').then(() => { setBorrowerName(''); setDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">登记借出</button>
           </div>
         )}
@@ -141,7 +142,7 @@ export default function ItemLifecyclePanel({
       <Section title="维护记录" icon={<Wrench size={16} />}>
         <div className="grid gap-2 xl:grid-cols-[1fr_1fr_auto]">
           <input value={maintenanceTitle} onChange={(event) => setMaintenanceTitle(event.target.value)} placeholder="例如：更换滤芯" aria-label="维护事项" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
-          <input type="date" value={nextDueAt} onChange={(event) => setNextDueAt(event.target.value)} aria-label="下次维护日期" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
+          <ModernDatePicker value={nextDueAt} onChange={setNextDueAt} placeholder="选择下次维护日期" ariaLabel="下次维护日期" />
           <button type="button" disabled={saving || !maintenanceTitle.trim()} onClick={() => void runMutation(() => lifecycleApi.createMaintenance(item.id, { title: maintenanceTitle.trim(), performedAt: new Date().toISOString(), nextDueAt: nextDueAt ? new Date(`${nextDueAt}T12:00:00`).toISOString() : null }), '维护记录已保存').then(() => { setMaintenanceTitle(''); setNextDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">添加</button>
         </div>
         {maintenance.length > 0 ? <ul className="mt-3 space-y-2">{maintenance.map((record) => <li key={record.id} className="text-sm text-slate-600"><span className="font-semibold text-slate-800">{record.title}</span>{record.next_due_at ? ` · 下次 ${new Date(record.next_due_at).toLocaleDateString('zh-CN')}` : ''}</li>)}</ul> : null}
@@ -150,7 +151,7 @@ export default function ItemLifecyclePanel({
       <Section title="消耗品批次" icon={<PackagePlus size={16} />}>
         <div className="grid gap-2 xl:grid-cols-[8rem_1fr_auto]">
           <input type="number" min={1} value={batchQuantity} onChange={(event) => setBatchQuantity(Number(event.target.value))} aria-label="批次数量" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
-          <input type="date" value={batchExpiry} onChange={(event) => setBatchExpiry(event.target.value)} aria-label="有效期" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
+          <ModernDatePicker value={batchExpiry} onChange={setBatchExpiry} placeholder="选择有效期" ariaLabel="批次有效期" />
           <button type="button" disabled={saving || batchQuantity < 1} onClick={() => void runMutation(() => lifecycleApi.createBatch(item.id, { quantity: batchQuantity, expiryDate: batchExpiry || null }), '消耗品批次已添加').then(() => { setBatchQuantity(1); setBatchExpiry(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">入库</button>
         </div>
         {batches.length > 0 ? <p className="mt-3 text-sm text-slate-600">共 {batches.reduce((sum, batch) => sum + batch.quantity, 0)} 件 · {batches.length} 个批次</p> : <p className="mt-3 text-sm text-slate-500">添加批次后会自动切换为消耗品追踪并汇总数量。</p>}

@@ -26,6 +26,15 @@ export type ServerItem = {
   updatedAt: string;
 };
 
+function toDateOnly(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const match = /^(\d{4}-\d{2}-\d{2})(?:$|T)/.exec(value);
+  return match?.[1] ?? value;
+}
+
 export function mapServerItem(item: ServerItem): Item {
   return {
     id: item.id,
@@ -40,9 +49,9 @@ export function mapServerItem(item: ServerItem): Item {
     quantity: item.quantity,
     tracking_mode: item.trackingMode,
     minimum_quantity: item.minimumQuantity,
-    expiry_date: item.expiryDate,
-    purchase_date: item.purchaseDate,
-    warranty_date: item.warrantyDate,
+    expiry_date: toDateOnly(item.expiryDate),
+    purchase_date: toDateOnly(item.purchaseDate),
+    warranty_date: toDateOnly(item.warrantyDate),
     status: item.status,
     images: item.images,
     tags: item.tags,

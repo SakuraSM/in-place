@@ -19,7 +19,12 @@
     "./mobile": {
       "types": "./src/platform/mobile/styles.ts",
       "default": "./src/platform/mobile/styles.ts"
-    }
+    },
+    "./category-artwork": {
+      "types": "./src/category-artwork.ts",
+      "default": "./src/category-artwork.ts"
+    },
+    "./category-artwork-assets/*": "./src/assets/category-presets/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

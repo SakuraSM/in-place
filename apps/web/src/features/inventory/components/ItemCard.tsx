@@ -1,9 +1,10 @@
 import { Package, MoreHorizontal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, type MouseEvent } from 'react';
+import { resolveCategoryVisual } from '@inplace/ui/category-artwork';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import type { Item, Category } from '../../../legacy/database.types';
-import { CategoryIcon, getColorClasses, isCustomCategoryImageIcon } from '../lib/categoryPresentation';
+import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 import { staggerItem } from '../../../shared/lib/animations';
 import { buildInventoryImageUrl } from '../lib/itemImage';
 import EntityBadge from './EntityBadge';
@@ -31,6 +32,9 @@ export default function ItemCard({
 }: Props) {
   const [hovered, setHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const categoryVisual = category
+    ? resolveCategoryVisual({ presetKey: category.preset_key, icon: category.icon })
+    : null;
 
   const handleTouchStart = () => {
     longPressTimer.current = setTimeout(() => {
@@ -89,14 +93,20 @@ export default function ItemCard({
             (() => {
               const colorCls = getColorClasses(category.color);
               return (
-                <div className={`w-full h-full flex items-center justify-center ${colorCls.bg} ${isCustomCategoryImageIcon(category.icon) ? 'p-0' : ''}`}>
+                <div className={`flex h-full w-full items-center justify-center ${colorCls.bg} ${
+                  categoryVisual?.kind === 'customImage' ? 'p-0' : categoryVisual?.kind === 'preset' ? 'p-5' : ''
+                }`}>
                   <motion.div
-                    className={isCustomCategoryImageIcon(category.icon) ? 'h-full w-full' : ''}
-                    animate={{ scale: hovered ? 1.15 : 1, rotate: hovered ? 8 : 0 }}
+                    className={categoryVisual?.kind === 'preset' || categoryVisual?.kind === 'customImage' ? 'h-full w-full' : ''}
+                    animate={{
+                      scale: hovered ? (categoryVisual?.kind === 'preset' ? 1.03 : 1.1) : 1,
+                      rotate: categoryVisual?.kind === 'lucide' && hovered ? 8 : 0,
+                    }}
                     transition={{ type: 'spring', stiffness: 350, damping: 18 }}
                   >
                     <CategoryIcon
                       icon={category.icon}
+                      presetKey={category.preset_key}
                       fallback={Package}
                       size={36}
                       className={colorCls.text}
@@ -131,6 +141,7 @@ export default function ItemCard({
                   <span className="flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-sm">
                     <CategoryIcon
                       icon={category.icon}
+                      presetKey={category.preset_key}
                       fallback={Package}
                       size={11}
                       className={colorCls.text}

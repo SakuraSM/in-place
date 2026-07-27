@@ -9,6 +9,7 @@ import type { ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
+import { isLocationItem } from '@/shared/lib/location';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { BulkActionBar } from '@/shared/ui/BulkActionBar';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -367,6 +368,7 @@ export default function OverviewTab() {
             title={`下级位置/收纳 ${hierarchyContainers.length}`}
             items={hierarchyContainers}
             itemMap={itemMap}
+            categories={categoriesQuery.data ?? []}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             onToggleSelected={handleToggleSelected}
@@ -375,6 +377,7 @@ export default function OverviewTab() {
             title={`下级物品 ${hierarchyLeafItems.length}`}
             items={hierarchyLeafItems}
             itemMap={itemMap}
+            categories={categoriesQuery.data ?? []}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             onToggleSelected={handleToggleSelected}
@@ -388,6 +391,10 @@ export default function OverviewTab() {
               <ResultRow
                 key={item.id}
                 item={item}
+                category={(categoriesQuery.data ?? []).find((category) => (
+                  category.name === item.category
+                  && category.scope === (item.type === 'item' ? 'item' : isLocationItem(item) ? 'location' : 'container')
+                ))}
                 path={buildMobileItemPath(item, itemMap)}
                 selectionMode={selectionMode}
                 selected={selectedIds.includes(item.id)}

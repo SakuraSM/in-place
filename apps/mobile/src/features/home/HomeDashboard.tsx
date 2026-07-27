@@ -6,6 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
 import { InventoryIcon, InventoryThumbFallback } from '@/shared/ui/InventoryIcon';
@@ -167,6 +168,7 @@ export function HomeDashboard({
             title={`位置/收纳 (${rootContainers.length})`}
             items={rootContainers}
             allItems={allItems}
+            categories={categories}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             previewLimit={selectionMode ? undefined : HOME_INVENTORY_PREVIEW_LIMIT}
@@ -178,6 +180,7 @@ export function HomeDashboard({
             title={`物品 (${rootLeafItems.length})`}
             items={rootLeafItems}
             allItems={allItems}
+            categories={categories}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             previewLimit={selectionMode ? undefined : HOME_INVENTORY_PREVIEW_LIMIT}
@@ -191,8 +194,10 @@ export function HomeDashboard({
           <InventoryGroup
             key={group.title}
             title={group.title}
+            category={group.category}
             items={group.items}
             allItems={allItems}
+            categories={categories}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             previewLimit={HOME_INVENTORY_PREVIEW_LIMIT}
@@ -321,8 +326,10 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
 
 function InventoryGroup({
   title,
+  category,
   items,
   allItems,
+  categories,
   selectionMode,
   selectedIds,
   previewLimit,
@@ -331,8 +338,10 @@ function InventoryGroup({
   onToggleSelected,
 }: {
   title: string;
+  category?: Category;
   items: Item[];
   allItems: Item[];
+  categories: Category[];
   selectionMode: boolean;
   selectedIds: string[];
   previewLimit?: number;
@@ -349,7 +358,17 @@ function InventoryGroup({
   return (
     <View style={inventoryGroupStyle}>
       <View style={inventoryGroupHeaderStyle}>
-        <Text style={inventoryGroupTitleStyle}>{title}</Text>
+        <View style={inventoryGroupIdentityStyle}>
+          {category ? (
+            <CategoryArtwork
+              presetKey={category.preset_key}
+              icon={category.icon}
+              color={category.color}
+              size="sm"
+            />
+          ) : null}
+          <Text style={inventoryGroupTitleStyle}>{title}</Text>
+        </View>
         {actionLabel && onAction ? (
           <Pressable onPress={onAction} hitSlop={8} style={inventoryGroupActionStyle}>
             <Text style={inventoryGroupActionTextStyle}>{actionLabel}</Text>
@@ -363,6 +382,7 @@ function InventoryGroup({
             key={item.id}
             item={item}
             allItems={allItems}
+            categories={categories}
             selectionMode={selectionMode}
             selected={selectedIds.includes(item.id)}
             onToggleSelected={onToggleSelected}
@@ -376,17 +396,23 @@ function InventoryGroup({
 function InventoryTile({
   item,
   allItems,
+  categories,
   selectionMode,
   selected,
   onToggleSelected,
 }: {
   item: Item;
   allItems: Item[];
+  categories: Category[];
   selectionMode: boolean;
   selected: boolean;
   onToggleSelected: (itemId: string) => void;
 }) {
   const imageUri = resolveImageUri(item.images[0]);
+  const categoryScope = item.type === 'item' ? 'item' : isLocationItem(item) ? 'location' : 'container';
+  const category = categories.find((candidate) => (
+    candidate.scope === categoryScope && candidate.name === item.category
+  ));
   const contentStats = item.type === 'container' ? countLocationContents(allItems, item.id) : null;
   const countText = item.type === 'container' ? `${contentStats?.total ?? 0} 项` : '1 件';
 
@@ -395,6 +421,14 @@ function InventoryTile({
       <View style={tilePreviewStyle}>
         {imageUri ? (
           <InventoryImage url={item.images[0]} style={tileImageStyle} resizeMode="cover" />
+        ) : category ? (
+          <CategoryArtwork
+            presetKey={category.preset_key}
+            icon={category.icon}
+            color={category.color}
+            size="card"
+            style={tileCategoryArtworkStyle}
+          />
         ) : (
           <InventoryThumbFallback
             type={item.type}
@@ -465,7 +499,7 @@ function groupRootItems({
 }) {
   const containerCategories = categories.filter((category) => category.scope !== 'item');
   const itemCategories = categories.filter((category) => category.scope === 'item');
-  const groups: { title: string; items: Item[] }[] = [];
+  const groups: { title: string; items: Item[]; category?: Category }[] = [];
 
   for (const category of containerCategories) {
     const items = rootContainers.filter((item) => (
@@ -473,7 +507,7 @@ function groupRootItems({
       && (isLocationItem(item) ? 'location' : 'container') === category.scope
     ));
     if (items.length > 0) {
-      groups.push({ title: `${category.name} (${items.length})`, items });
+      groups.push({ title: `${category.name} (${items.length})`, items, category });
     }
   }
 
@@ -488,7 +522,7 @@ function groupRootItems({
   for (const category of itemCategories) {
     const items = rootLeafItems.filter((item) => item.category === category.name);
     if (items.length > 0) {
-      groups.push({ title: `${category.name} (${items.length})`, items });
+      groups.push({ title: `${category.name} (${items.length})`, items, category });
     }
   }
 
@@ -671,6 +705,13 @@ const inventoryGroupHeaderStyle = {
   gap: 10,
 };
 
+const inventoryGroupIdentityStyle = {
+  flex: 1,
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 8,
+};
+
 const inventoryGroupTitleStyle = {
   fontSize: 13,
   fontWeight: '800' as const,
@@ -726,6 +767,12 @@ const tilePreviewStyle = {
 };
 
 const tileFallbackIconStyle = {
+  width: '100%' as const,
+  height: '100%' as const,
+  borderRadius: 20,
+};
+
+const tileCategoryArtworkStyle = {
   width: '100%' as const,
   height: '100%' as const,
   borderRadius: 20,

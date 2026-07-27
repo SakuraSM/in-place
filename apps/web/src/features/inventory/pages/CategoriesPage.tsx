@@ -49,6 +49,7 @@ function CategoryListItem({
       <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl ${colorClasses.bg}`}>
         <CategoryIcon
           icon={category.icon}
+          presetKey={category.preset_key}
           fallback={Shapes}
           size={20}
           className={colorClasses.text}

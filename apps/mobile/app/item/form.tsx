@@ -11,6 +11,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -352,6 +353,12 @@ export default function ItemFormScreen() {
                       draft.category === category.name ? activeChipStyle : null,
                     ]}
                   >
+                    <CategoryArtwork
+                      presetKey={category.preset_key}
+                      icon={category.icon}
+                      color={category.color}
+                      size="xs"
+                    />
                     <Text style={draft.category === category.name ? activeChipTextStyle : chipTextStyle}>
                       {category.name}
                     </Text>
@@ -642,6 +649,9 @@ const chipWrapStyle = {
 };
 
 const chipStyle = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 6,
   borderRadius: 999,
   backgroundColor: palette.surfaceMuted,
   borderWidth: 1,

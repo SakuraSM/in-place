@@ -6,17 +6,28 @@ interface ModernDatePickerProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日'];
 
 function parseDateValue(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  const dateOnlyValue = /^(\d{4}-\d{2}-\d{2})(?:$|T)/.exec(value)?.[1];
+  if (!dateOnlyValue) {
     return null;
   }
 
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  const [year, month, day] = dateOnlyValue.split('-').map(Number);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    parsed.getFullYear() !== year
+    || parsed.getMonth() !== month - 1
+    || parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function formatDateValue(date: Date) {
@@ -40,6 +51,7 @@ export default function ModernDatePicker({
   value,
   onChange,
   placeholder = '请选择日期',
+  ariaLabel,
 }: ModernDatePickerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -67,13 +79,25 @@ export default function ModernDatePicker({
 
       const rect = triggerRef.current.getBoundingClientRect();
       const panelWidth = Math.min(320, window.innerWidth - 24);
+      const panelHeight = panelRef.current?.getBoundingClientRect().height ?? 0;
       const nextLeft = Math.min(
         Math.max(12, rect.left),
         Math.max(12, window.innerWidth - panelWidth - 12),
       );
+      const spaceBelow = window.innerHeight - rect.bottom - 12;
+      const spaceAbove = rect.top - 12;
+      const shouldOpenAbove = panelHeight > 0
+        && spaceBelow < panelHeight
+        && spaceAbove > spaceBelow;
+      const nextTop = shouldOpenAbove
+        ? Math.max(12, rect.top - panelHeight - 8)
+        : Math.min(
+          rect.bottom + 8,
+          Math.max(12, window.innerHeight - panelHeight - 12),
+        );
 
       setPanelStyle({
-        top: rect.bottom + 8,
+        top: nextTop,
         left: nextLeft,
         width: panelWidth,
       });
@@ -137,6 +161,9 @@ export default function ModernDatePicker({
       <button
         ref={triggerRef}
         type="button"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => setOpen((current) => !current)}
         className={`flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-sky-500 ${
           open ? 'border-sky-300 bg-white shadow-sm' : 'text-slate-900'
@@ -152,7 +179,9 @@ export default function ModernDatePicker({
         createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[90] overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.14)]"
+            role="dialog"
+            aria-label="日期选择器"
+            className="fixed z-[90] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.14)]"
             style={{
               top: panelStyle?.top ?? 0,
               left: panelStyle?.left ?? 12,

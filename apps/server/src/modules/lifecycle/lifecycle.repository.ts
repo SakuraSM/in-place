@@ -237,10 +237,10 @@ export async function refreshDerivedReminders(householdId: string) {
       itemId: item.id,
       loanId: null,
       type: 'warranty' as const,
-      sourceKey: `warranty:${item.id}:${item.warrantyDate.toISOString()}`,
+      sourceKey: `warranty:${item.id}:${item.warrantyDate}`,
       title: `${item.name} 保修即将到期`,
       description: '请检查保修凭证或安排售后。',
-      dueAt: item.warrantyDate,
+      dueAt: new Date(`${item.warrantyDate}T12:00:00.000Z`),
     }] : []),
     ...activeLoans.flatMap((loan) => loan.dueAt ? [{
       itemId: loan.itemId,
