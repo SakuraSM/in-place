@@ -471,6 +471,7 @@ export default function ItemForm({
                       value={form.purchase_date}
                       onChange={(value) => update('purchase_date', value)}
                       placeholder="选择购买日期"
+                      ariaLabel="购买日期"
                     />
                   </div>
                 </div>
@@ -510,10 +511,15 @@ export default function ItemForm({
                 ) : null}
 
                 {form.tracking_mode === 'consumable' ? (
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-slate-700">最近有效期</span>
-                    <input type="date" value={form.expiry_date} onChange={(event) => update('expiry_date', event.target.value)} className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-3 text-sm" />
-                  </label>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">最近有效期</label>
+                    <ModernDatePicker
+                      value={form.expiry_date}
+                      onChange={(value) => update('expiry_date', value)}
+                      placeholder="选择最近有效期"
+                      ariaLabel="最近有效期"
+                    />
+                  </div>
                 ) : null}
 
                 <div>
@@ -522,6 +528,7 @@ export default function ItemForm({
                     value={form.warranty_date}
                     onChange={(value) => update('warranty_date', value)}
                     placeholder="选择保修截止日期"
+                    ariaLabel="保修截止日期"
                   />
                 </div>
               </>

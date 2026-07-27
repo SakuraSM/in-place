@@ -287,6 +287,14 @@ function parseImportedDate(value: string | null) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function parseImportedDateOnly(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return /^(\d{4}-\d{2}-\d{2})(?:$|T)/.exec(value)?.[1] ?? null;
+}
+
 function readString(record: Record<string, unknown>, key: string) {
   return typeof record[key] === 'string' ? record[key] : null;
 }
@@ -421,8 +429,8 @@ export async function importInventoryForHousehold(context: InventoryContext, sna
           trackingMode: item.tracking_mode,
           minimumQuantity: item.minimum_quantity,
           expiryDate: item.expiry_date,
-          purchaseDate: parseImportedDate(item.purchase_date),
-          warrantyDate: parseImportedDate(item.warranty_date),
+          purchaseDate: parseImportedDateOnly(item.purchase_date),
+          warrantyDate: parseImportedDateOnly(item.warranty_date),
           status: item.status,
           images: item.images,
           tags: sanitizeTags(item.tags),
