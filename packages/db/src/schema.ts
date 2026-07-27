@@ -87,7 +87,6 @@ export const categories = pgTable('categories', {
   householdIdx: index('categories_household_id_idx').on(table.householdId),
   userTypeIdx: index('categories_user_type_idx').on(table.userId, table.itemType),
   userScopeIdx: index('categories_user_scope_idx').on(table.userId, table.scope),
-  userPresetIdx: uniqueIndex('categories_user_preset_idx').on(table.userId, table.presetKey),
   householdPresetIdx: uniqueIndex('categories_household_preset_idx').on(table.householdId, table.presetKey),
 }));
 
@@ -98,7 +97,6 @@ export const deletedCategoryPresets = pgTable('deleted_category_presets', {
   presetKey: varchar('preset_key', { length: 120 }).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  userPresetIdx: uniqueIndex('deleted_category_presets_user_preset_idx').on(table.userId, table.presetKey),
   householdPresetIdx: uniqueIndex('deleted_category_presets_household_preset_idx').on(table.householdId, table.presetKey),
 }));
 
