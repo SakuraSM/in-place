@@ -129,9 +129,12 @@ At minimum, update these values before starting the stack:
 
 ```env
 POSTGRES_PASSWORD=<generate-a-strong-password>
-JWT_SECRET=<at-least-32-random-characters>
-APP_ENCRYPTION_KEY=<at-least-32-random-characters>
+# Generate two different secrets (for example: openssl rand -hex 32).
+JWT_SECRET=
+APP_ENCRYPTION_KEY=
 CORS_ORIGIN=https://your-domain.com,http://localhost:8080,http://127.0.0.1:8080
+PUBLIC_ORIGIN=https://your-domain.com
+AI_PROVIDER_ALLOWED_BASE_URLS=https://api.openai.com/v1
 VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
@@ -223,15 +226,19 @@ Key variables:
 - `PORT`: API port.
 - `DATABASE_URL`: PostgreSQL connection string.
 - `CORS_ORIGIN`: allowed frontend origins.
+- `PUBLIC_ORIGIN`: canonical public deployment origin used for trusted absolute URLs; required in production.
 - `JWT_SECRET`: JWT signing key. Use at least 32 random characters.
 - `APP_ENCRYPTION_KEY`: encryption key for user-saved AI credentials. Use a dedicated production secret.
 - `MAX_UPLOAD_SIZE_MB`: maximum allowed upload size per image.
 - `BACKUP_PAYLOAD_SIZE_MB`: maximum backup import payload size.
 - `OPENAI_API_KEY`: optional default API key for server-side AI recognition.
 - `OPENAI_BASE_URL`: AI provider base URL. Defaults to `https://api.openai.com/v1`.
+- `AI_PROVIDER_ALLOWED_BASE_URLS`: comma-separated allowlist of HTTPS AI provider base URLs.
+- `AI_REQUEST_TIMEOUT_MS` / `AI_MAX_RESPONSE_BYTES`: outbound AI deadline and response-size limit.
+- `AUTH_SESSION_TTL_DAYS`: lifetime of revocable authentication sessions; defaults to 7 days.
 - `OPENAI_MODEL`: model name used for image recognition.
 
-AI settings saved from the profile page are encrypted on the server. The browser does not receive the plaintext key, and per-user settings override system defaults.
+AI settings saved from the profile page are encrypted on the server. The browser does not receive the plaintext key. A custom provider must be operator-allowlisted and use its own API key; it never inherits the server default key.
 
 ### Web
 

@@ -25,13 +25,20 @@ const MOBILE_HOUSEHOLD_KEY = 'inplace.household.id';
 function resolveDefaultMobileApiBaseUrl() {
   // 10.0.2.2 is the standard loopback alias for Android Emulator to reach the host machine.
   // For iOS simulators and physical devices, use your computer's local IP (e.g., 192.168.x.x).
-  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://127.0.0.1:4000';
+  const developmentBuild = typeof __DEV__ !== 'undefined' && __DEV__;
+  const defaultBaseUrl = developmentBuild
+    ? Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://127.0.0.1:4000'
+    : 'https://localhost:4000';
   return runtimeEnv.process?.env?.EXPO_PUBLIC_API_BASE_URL?.trim() || defaultBaseUrl;
 }
 
 export function normalizeMobileApiBaseUrl(rawBaseUrl: string) {
   try {
     const url = new URL(rawBaseUrl);
+    const developmentBuild = typeof __DEV__ !== 'undefined' && __DEV__;
+    if (url.protocol !== 'https:' && !(developmentBuild && url.protocol === 'http:')) {
+      throw new Error('生产版本仅支持 HTTPS 服务器');
+    }
     const normalizedPath = url.pathname.replace(/\/+$/, '');
 
     if (!normalizedPath || normalizedPath === '') {
@@ -46,8 +53,11 @@ export function normalizeMobileApiBaseUrl(rawBaseUrl: string) {
 
     url.pathname = `${normalizedPath}/api`;
     return url.toString().replace(/\/+$/, '');
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === '生产版本仅支持 HTTPS 服务器') throw error;
     const trimmed = rawBaseUrl.replace(/\/+$/, '');
+    const developmentBuild = typeof __DEV__ !== 'undefined' && __DEV__;
+    if (!developmentBuild) throw new Error('服务器地址必须是有效的 HTTPS URL');
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
   }
 }

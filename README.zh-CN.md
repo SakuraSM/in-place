@@ -129,9 +129,12 @@ cp .env.compose.example .env.compose
 
 ```env
 POSTGRES_PASSWORD=<设置强密码>
-JWT_SECRET=<至少32位随机字符串>
-APP_ENCRYPTION_KEY=<至少32位随机字符串>
+# 生成两个不同的密钥（例如执行 openssl rand -hex 32）。
+JWT_SECRET=
+APP_ENCRYPTION_KEY=
 CORS_ORIGIN=https://your-domain.com,http://localhost:8080,http://127.0.0.1:8080
+PUBLIC_ORIGIN=https://your-domain.com
+AI_PROVIDER_ALLOWED_BASE_URLS=https://api.openai.com/v1
 VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
 ```
@@ -223,15 +226,19 @@ POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 - `PORT`：API 端口。
 - `DATABASE_URL`：PostgreSQL 连接串。
 - `CORS_ORIGIN`：允许访问 API 的前端来源。
+- `PUBLIC_ORIGIN`：生产环境公开访问地址，用于生成可信绝对 URL；生产环境必填。
 - `JWT_SECRET`：JWT 签名密钥，建议使用至少 32 位随机字符串。
 - `APP_ENCRYPTION_KEY`：用户保存的 AI 凭据加密密钥，生产环境请使用独立密钥。
 - `MAX_UPLOAD_SIZE_MB`：单张图片最大上传大小。
 - `BACKUP_PAYLOAD_SIZE_MB`：备份导入最大请求体大小。
 - `OPENAI_API_KEY`：服务端 AI 识别使用的可选默认 API Key。
 - `OPENAI_BASE_URL`：AI 服务基础地址，默认 `https://api.openai.com/v1`。
+- `AI_PROVIDER_ALLOWED_BASE_URLS`：允许使用的 HTTPS AI Provider 地址列表，逗号分隔。
+- `AI_REQUEST_TIMEOUT_MS` / `AI_MAX_RESPONSE_BYTES`：AI 请求超时和响应大小上限。
+- `AUTH_SESSION_TTL_DAYS`：可撤销登录会话的有效天数，默认 7 天。
 - `OPENAI_MODEL`：AI 图片识别使用的模型名。
 
-个人中心保存的 AI 配置会在服务端加密保存。前端不会回显明文 Key，账号级配置优先于系统默认配置。
+个人中心保存的 AI 配置会在服务端加密保存。前端不会回显明文 Key；自定义 Provider 必须位于运维允许列表并配置独立 API Key，不能复用服务端默认 Key。
 
 ### Web
 
@@ -253,7 +260,7 @@ POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 - `EXPO_PROJECT_ID`：GitHub Actions 中用于 EAS Build 的仓库变量。
 - `EXPO_TOKEN`：GitHub Actions 中用于 EAS Build 的密钥。
 
-首次登录或注册时，在 App 内输入服务器地址和账号密码。App 会把服务器地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。
+首次登录或注册时，在 App 内输入服务器地址和账号密码。App 会把服务器地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。生产版移动端仅接受 HTTPS 服务器；HTTP 仅用于 debug 开发构建。
 
 ## 开发脚本
 
