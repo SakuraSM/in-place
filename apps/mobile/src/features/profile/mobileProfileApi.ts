@@ -11,8 +11,9 @@ export async function fetchProfileUpdate(displayName: string) {
 }
 
 export async function fetchPasswordChange(currentPassword: string, newPassword: string) {
-  await mobileApiClient.request<void>('/v1/auth/password', {
+  const response = await mobileApiClient.request<{ token: string }>('/v1/auth/password', {
     method: 'PUT',
     body: JSON.stringify({ currentPassword, newPassword }),
   });
+  return response.token;
 }

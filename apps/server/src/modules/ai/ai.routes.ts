@@ -10,8 +10,12 @@ import {
 } from './ai-settings.repository.js';
 import { updateAiSettingsSchema } from './ai-settings.schemas.js';
 import { AiRecognitionError, recognizeItemsFromImage } from './ai.service.js';
+import { BoundedRateLimiter, sendRateLimit } from '../../lib/bounded-rate-limit.js';
+import { UnsafeAiProviderError } from '../../lib/safe-ai-http.js';
 
 export const aiRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options) => {
+  const recognitionRateLimit = new BoundedRateLimiter(10, 60_000);
+  const activeRecognitionCounts = new Map<string, number>();
   await app.register(multipart, {
     limits: {
       fileSize: options.env.MAX_UPLOAD_SIZE_MB * 1024 * 1024,
@@ -71,7 +75,14 @@ export const aiRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options
       ...(parsed.data.apiKey ? { apiKey: parsed.data.apiKey } : {}),
     };
 
-    await upsertAiSettingsForUser(currentUser.id, payload, options.env);
+    try {
+      await upsertAiSettingsForUser(currentUser.id, payload, options.env);
+    } catch (error) {
+      if (error instanceof UnsafeAiProviderError) {
+        return reply.code(400).send({ error: 'INVALID_AI_PROVIDER', message: error.message });
+      }
+      throw error;
+    }
 
     return reply.send({
       data: await getPublicAiSettingsForUser(currentUser.id, options.env),
@@ -93,8 +104,21 @@ export const aiRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options
     if (!currentUser) {
       return;
     }
+    const rate = recognitionRateLimit.consume(currentUser.id);
+    if (!rate.allowed) return sendRateLimit(reply, rate.retryAfterSeconds);
+    const active = activeRecognitionCounts.get(currentUser.id) ?? 0;
+    if (active >= 2) return sendRateLimit(reply, 1);
 
-    const config = await resolveEffectiveAiConfigForUser(currentUser.id, options.env);
+    let config;
+    try {
+      config = await resolveEffectiveAiConfigForUser(currentUser.id, options.env);
+    } catch (error) {
+      activeRecognitionCounts.set(currentUser.id, active);
+      if (error instanceof UnsafeAiProviderError) {
+        return reply.code(400).send({ error: 'INVALID_AI_PROVIDER', message: error.message });
+      }
+      throw error;
+    }
     if (!config) {
       return reply.code(503).send({
         error: 'AI_NOT_CONFIGURED',
@@ -117,12 +141,14 @@ export const aiRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options
       });
     }
 
+    activeRecognitionCounts.set(currentUser.id, active + 1);
     try {
       const imageBuffer = await streamToBuffer(file.file);
       const items = await recognizeItemsFromImage({
         config,
         imageBuffer,
         mimeType: file.mimetype,
+        env: options.env,
       });
 
       return reply.send({ items });
@@ -140,6 +166,10 @@ export const aiRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options
         error: 'AI_RECOGNITION_FAILED',
         message: error instanceof Error ? error.message : 'AI 识别失败',
       });
+    } finally {
+      const remaining = (activeRecognitionCounts.get(currentUser.id) ?? 1) - 1;
+      if (remaining <= 0) activeRecognitionCounts.delete(currentUser.id);
+      else activeRecognitionCounts.set(currentUser.id, remaining);
     }
   });
 };

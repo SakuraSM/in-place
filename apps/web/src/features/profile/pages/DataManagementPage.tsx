@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, Download, HardDriveDownload, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { apiRequest, getStoredAuthToken, resolveApiUrl } from '../../../shared/api/client';
+import { apiRequest, resolveApiUrl } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
@@ -33,9 +33,8 @@ export default function DataManagementPage() {
     setExportMessage(null);
 
     try {
-      const token = await getStoredAuthToken();
       const response = await fetch(resolveApiUrl(`/v1/items/export?format=${format}`), {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
       });
 
       if (!response.ok) {

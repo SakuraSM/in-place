@@ -5,7 +5,8 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyPluginAsync } from 'fastify';
 import { requireCurrentUser } from '../lib/authenticated-request.js';
-import { resolveRequestOrigin } from '../lib/request-origin.js';
+import { requireHouseholdAccess } from '../lib/household-access.js';
+import { canUserReadUpload } from '../lib/upload-access.js';
 import {
   persistImageUpload,
   persistAttachmentUpload,
@@ -14,16 +15,18 @@ import {
   resolveResizedImage,
   type ImageResizeOptions,
 } from '../lib/uploads.js';
-import type { AppEnv } from '../env.js';
+import { getPublicOrigin, type AppEnv } from '../env.js';
+import { BoundedRateLimiter, sendRateLimit } from '../lib/bounded-rate-limit.js';
+import { ConcurrencyGate } from '../lib/concurrency-gate.js';
 
 const MAX_DIMENSION = 2048;
 // 仅允许一组离散的"桶"尺寸：客户端无论传入多少，服务端都向上取最接近的桶值。
 // 该限制是缓存基数的上限（也意味着对同一原图最多生成 W×H×Q×fit×format 个变体），
 // 防止攻击者通过任意改变 w/h 不断触发 sharp 计算 / 写入磁盘（CodeQL: js/missing-rate-limiting 的风险缓解）。
-const DIMENSION_BUCKETS: ReadonlyArray<number> = [64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048];
-const QUALITY_BUCKETS: ReadonlyArray<number> = [50, 60, 70, 80, 90];
-const ALLOWED_FITS: ReadonlyArray<NonNullable<ImageResizeOptions['fit']>> = ['cover', 'contain', 'inside', 'outside', 'fill'];
-const ALLOWED_FORMATS: ReadonlyArray<NonNullable<ImageResizeOptions['format']>> = ['jpeg', 'png', 'webp', 'avif'];
+const DIMENSION_BUCKETS: ReadonlyArray<number> = [128, 512, 1024, 2048];
+const QUALITY_BUCKETS: ReadonlyArray<number> = [70, 85];
+const ALLOWED_FITS: ReadonlyArray<NonNullable<ImageResizeOptions['fit']>> = ['cover', 'contain'];
+const ALLOWED_FORMATS: ReadonlyArray<NonNullable<ImageResizeOptions['format']>> = ['jpeg', 'webp'];
 
 function snapToBucket(value: number, buckets: ReadonlyArray<number>): number {
   for (const bucket of buckets) {
@@ -72,6 +75,10 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
   });
 
   const uploadRoot = resolveUploadRoot(options.env);
+  const uploadRate = new BoundedRateLimiter(20, 60_000);
+  const resizeRate = new BoundedRateLimiter(60, 60_000);
+  const uploadGate = new ConcurrencyGate(4, 1);
+  const resizeGate = new ConcurrencyGate(4, 2);
 
   await app.register(fastifyStatic, {
     root: uploadRoot,
@@ -103,9 +110,21 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
       if (relSourceFromRoot.startsWith('..') || path.isAbsolute(relSourceFromRoot)) {
         return reply.code(400).send({ error: 'INVALID_PATH', message: '非法的图片路径' });
       }
+      if (!request.currentUser || !await canUserReadUpload(request.currentUser.id, normalized)) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: '文件不存在' });
+      }
+      const sourceMime = resolveImageMimeType(sourcePath);
+      if (path.extname(sourcePath).toLowerCase() === '.svg') {
+        return reply.code(415).send({ error: 'UNSAFE_FILE_TYPE', message: '不再支持 SVG 文件' });
+      }
 
       if (!hasResizeQuery(query)) {
-        reply.header('Cache-Control', 'private, no-store');
+        reply.header('Cache-Control', 'private, no-store').header('X-Content-Type-Options', 'nosniff');
+        if (!sourceMime.startsWith('image/')) {
+          reply
+            .header('Content-Disposition', `attachment; filename="download${path.extname(sourcePath)}"`)
+            .header('Content-Security-Policy', "sandbox; default-src 'none'");
+        }
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -119,9 +138,12 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
         return reply.code(404).send({ error: 'NOT_FOUND', message: '图片不存在' });
       }
 
-      const sourceMime = resolveImageMimeType(sourcePath);
       if (!sourceMime.startsWith('image/') || sourceMime === 'image/svg+xml') {
-        reply.header('Cache-Control', 'private, no-store');
+        reply
+          .header('Cache-Control', 'private, no-store')
+          .header('X-Content-Type-Options', 'nosniff')
+          .header('Content-Disposition', `attachment; filename="download${path.extname(sourcePath)}"`)
+          .header('Content-Security-Policy', "sandbox; default-src 'none'");
         return reply.sendFile(normalized, uploadRoot);
       }
 
@@ -138,6 +160,10 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
         return reply.sendFile(normalized, uploadRoot);
       }
 
+      const resizeRateResult = resizeRate.consume(request.currentUser.id);
+      if (!resizeRateResult.allowed) return sendRateLimit(reply, resizeRateResult.retryAfterSeconds);
+      const releaseResize = resizeGate.tryAcquire(request.currentUser.id);
+      if (!releaseResize) return sendRateLimit(reply, 1);
       try {
         const resized = await resolveResizedImage({
           env: options.env,
@@ -159,23 +185,37 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
           error: 'RESIZE_FAILED',
           message: error instanceof Error ? error.message : '图片缩放失败',
         });
+      } finally {
+        releaseResize();
       }
     },
   });
 
   app.post('/api/v1/uploads/images', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) {
-      return;
-    }
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) return;
+    const uploadRateResult = uploadRate.consume(access.userId);
+    if (!uploadRateResult.allowed) return sendRateLimit(reply, uploadRateResult.retryAfterSeconds);
+    const releaseUpload = uploadGate.tryAcquire(access.userId);
+    if (!releaseUpload) return sendRateLimit(reply, 1);
 
-    let file;
     try {
-      file = await request.file();
+      const file = await request.file();
       if (!file) {
         return reply.code(400).send({
           error: 'FILE_REQUIRED',
           message: '请上传图片文件',
+        });
+      }
+      try {
+        const uploaded = await persistImageUpload(file, access.householdId, access.userId, options.env);
+        return reply.code(201).send({
+          url: new URL(uploaded.publicUrl, getPublicOrigin(options.env)).toString(),
+        });
+      } catch (error) {
+        return reply.code(400).send({
+          error: 'UPLOAD_FAILED',
+          message: error instanceof Error ? error.message : '图片上传失败',
         });
       }
     } catch (error) {
@@ -185,37 +225,32 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
           message: `图片不能超过 ${options.env.MAX_UPLOAD_SIZE_MB}MB，请压缩后重试`,
         });
       }
-
       throw error;
-    }
-
-    try {
-      const uploaded = await persistImageUpload(file, currentUser.id, options.env);
-      return reply.code(201).send({
-        url: new URL(uploaded.publicUrl, resolveRequestOrigin(request)).toString(),
-      });
-    } catch (error) {
-      return reply.code(400).send({
-        error: 'UPLOAD_FAILED',
-        message: error instanceof Error ? error.message : '图片上传失败',
-      });
+    } finally {
+      releaseUpload();
     }
   });
 
   app.post('/api/v1/uploads/attachments', { preHandler: app.authenticate }, async (request, reply) => {
-    const currentUser = requireCurrentUser(request, reply);
-    if (!currentUser) return;
+    const access = await requireHouseholdAccess({ request, reply, minimumRole: 'editor' });
+    if (!access) return;
+    const uploadRateResult = uploadRate.consume(access.userId);
+    if (!uploadRateResult.allowed) return sendRateLimit(reply, uploadRateResult.retryAfterSeconds);
+    const releaseUpload = uploadGate.tryAcquire(access.userId);
+    if (!releaseUpload) return sendRateLimit(reply, 1);
 
     try {
       const file = await request.file();
       if (!file) {
         return reply.code(400).send({ error: 'FILE_REQUIRED', message: '请选择凭证文件' });
       }
-      const uploaded = await persistAttachmentUpload(file, currentUser.id, options.env);
+      const uploaded = await persistAttachmentUpload(file, access.householdId, access.userId, options.env);
       return reply.code(201).send({
-        url: new URL(uploaded.publicUrl, resolveRequestOrigin(request)).toString(),
+        url: new URL(uploaded.publicUrl, getPublicOrigin(options.env)).toString(),
         name: file.filename,
-        mimeType: file.mimetype,
+        mimeType: resolveImageMimeType(uploaded.relativePath) === 'application/octet-stream'
+          ? file.mimetype
+          : resolveImageMimeType(uploaded.relativePath),
       });
     } catch (error) {
       if (error instanceof app.multipartErrors.RequestFileTooLargeError) {
@@ -225,6 +260,8 @@ export const uploadRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, opt
         error: 'UPLOAD_FAILED',
         message: error instanceof Error ? error.message : '文件上传失败',
       });
+    } finally {
+      releaseUpload();
     }
   });
 };

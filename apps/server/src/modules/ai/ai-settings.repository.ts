@@ -4,6 +4,7 @@ import type { AppEnv } from '../../env.js';
 import { getDb } from '../../lib/db.js';
 import { decryptSecret, encryptSecret } from '../../lib/secret-box.js';
 import type { UpdateAiSettingsInput } from './ai-settings.schemas.js';
+import { assertAllowedAiProviderUrl, UnsafeAiProviderError } from '../../lib/safe-ai-http.js';
 
 export interface EffectiveAiConfig {
   apiKey: string;
@@ -41,20 +42,24 @@ function normalizeOptionalText(value?: string | null) {
 
 export async function getPublicAiSettingsForUser(userId: string, env: AppEnv): Promise<PublicAiSettings> {
   const settings = await findUserAiSettings(userId);
+  const usesCustomProvider = Boolean(settings?.baseUrl && settings.baseUrl !== env.OPENAI_BASE_URL);
   return {
     baseUrl: settings?.baseUrl || env.OPENAI_BASE_URL,
     model: settings?.model || env.OPENAI_MODEL,
     hasStoredApiKey: Boolean(settings?.apiKeyEncrypted),
-    enabled: Boolean(settings?.apiKeyEncrypted || env.OPENAI_API_KEY),
+    enabled: Boolean(settings?.apiKeyEncrypted || !usesCustomProvider && env.OPENAI_API_KEY),
     source: settings ? 'user' : 'env',
   };
 }
 
 export async function resolveEffectiveAiConfigForUser(userId: string, env: AppEnv): Promise<EffectiveAiConfig | null> {
   const settings = await findUserAiSettings(userId);
+  const baseUrl = settings?.baseUrl || env.OPENAI_BASE_URL;
+  assertAllowedAiProviderUrl(baseUrl, env);
+  const usesCustomProvider = Boolean(settings?.baseUrl && settings.baseUrl !== env.OPENAI_BASE_URL);
   const apiKey = settings?.apiKeyEncrypted
     ? decryptSecret(settings.apiKeyEncrypted, resolveEncryptionSecret(env))
-    : env.OPENAI_API_KEY || '';
+    : usesCustomProvider ? '' : env.OPENAI_API_KEY || '';
 
   if (!apiKey) {
     return null;
@@ -62,7 +67,7 @@ export async function resolveEffectiveAiConfigForUser(userId: string, env: AppEn
 
   return {
     apiKey,
-    baseUrl: settings?.baseUrl || env.OPENAI_BASE_URL,
+    baseUrl,
     model: settings?.model || env.OPENAI_MODEL,
     source: settings ? 'user' : 'env',
   };
@@ -75,6 +80,11 @@ export async function upsertAiSettingsForUser(userId: string, input: UpdateAiSet
   const nextApiKeyEncrypted = input.apiKey !== undefined
     ? encryptSecret(input.apiKey.trim(), resolveEncryptionSecret(env))
     : current?.apiKeyEncrypted ?? null;
+  const effectiveBaseUrl = nextBaseUrl || env.OPENAI_BASE_URL;
+  assertAllowedAiProviderUrl(effectiveBaseUrl, env);
+  if (effectiveBaseUrl !== env.OPENAI_BASE_URL && !nextApiKeyEncrypted) {
+    throw new UnsafeAiProviderError('自定义 AI Provider 必须配置独立 API Key');
+  }
 
   const [saved] = await getDb()
     .insert(userAiSettings)

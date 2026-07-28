@@ -7,20 +7,38 @@ import fastifyJwt from '@fastify/jwt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppEnv } from '../env.js';
 import { uploadRoutes } from './uploads.js';
+import { canUserReadUpload } from '../lib/upload-access.js';
 
 const TEST_USER_ID = '00000000-0000-4000-8000-000000000001';
 const TEST_JWT_SECRET = 'test-secret-that-is-at-least-thirty-two-characters';
 const AUTH_COOKIE_NAME = 'inplace_access_token';
+
+vi.mock('../lib/household-access.js', () => ({
+  requireHouseholdAccess: vi.fn(async ({ request }) => request.currentUser ? {
+    householdId: '00000000-0000-4000-8000-000000000002',
+    householdName: 'Test household',
+    role: 'owner',
+    userId: request.currentUser.id,
+  } : null),
+}));
+
+vi.mock('../lib/upload-access.js', () => ({
+  canUserReadUpload: vi.fn(async () => true),
+}));
 
 const env: AppEnv = {
   NODE_ENV: 'test',
   PORT: 4000,
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   CORS_ORIGIN: 'http://localhost:5173',
+  PUBLIC_ORIGIN: 'http://localhost:5173',
   JWT_SECRET: TEST_JWT_SECRET,
   MAX_UPLOAD_SIZE_MB: 10,
   BACKUP_PAYLOAD_SIZE_MB: 100,
   OPENAI_BASE_URL: 'https://api.openai.com/v1',
+  AI_REQUEST_TIMEOUT_MS: 30_000,
+  AI_MAX_RESPONSE_BYTES: 1_048_576,
+  AUTH_SESSION_TTL_DAYS: 7,
   OPENAI_MODEL: 'gpt-4o',
 };
 
@@ -111,7 +129,7 @@ describe('upload routes', () => {
   });
 
   it('uploads an image and only serves it to an authenticated request', async () => {
-    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com' });
+    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com', sid: TEST_USER_ID });
     const image = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nWQAAAAASUVORK5CYII=',
       'base64',
@@ -143,18 +161,32 @@ describe('upload routes', () => {
       headers: { authorization: `Bearer ${token}` },
     });
     expect(authenticatedResponse.statusCode).toBe(200);
-    expect(authenticatedResponse.rawPayload).toEqual(image);
+    expect(authenticatedResponse.rawPayload.subarray(0, 4).toString()).toBe('RIFF');
+    expect(authenticatedResponse.headers['content-type']).toContain('image/webp');
     expect(authenticatedResponse.headers['cache-control']).toBe('private, no-store');
+
+    vi.mocked(canUserReadUpload).mockResolvedValueOnce(false);
+    const otherUserToken = app.jwt.sign({
+      sub: '00000000-0000-4000-8000-000000000009',
+      email: 'other@example.com',
+      sid: '00000000-0000-4000-8000-000000000009',
+    });
+    const crossUserResponse = await app.inject({
+      method: 'GET',
+      url: uploadedPath,
+      headers: { authorization: `Bearer ${otherUserToken}` },
+    });
+    expect(crossUserResponse.statusCode).toBe(404);
   });
 
   it('protects attachments and accepts an authenticated cookie', async () => {
-    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com' });
+    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com', sid: TEST_USER_ID });
     const attachment = Buffer.from('private warranty document');
     const uploadResponse = await uploadFile({
       app,
       token,
       endpoint: '/api/v1/uploads/attachments',
-      filename: 'warranty.txt',
+      filename: 'payload.html',
       mimeType: 'text/plain',
       content: attachment,
     });
@@ -173,5 +205,27 @@ describe('upload routes', () => {
     expect(authenticatedResponse.statusCode).toBe(200);
     expect(authenticatedResponse.body).toBe(attachment.toString());
     expect(authenticatedResponse.headers['cache-control']).toBe('private, no-store');
+    expect(authenticatedResponse.headers['content-disposition']).toContain('attachment');
+    expect(authenticatedResponse.headers['content-type']).not.toContain('text/html');
+    const queryVariant = await app.inject({
+      method: 'GET',
+      url: `${uploadedPath}?w=96`,
+      cookies: { [AUTH_COOKIE_NAME]: token },
+    });
+    expect(queryVariant.headers['content-disposition']).toContain('attachment');
+    expect(queryVariant.headers['content-type']).not.toContain('text/html');
+  });
+
+  it('rejects active SVG image uploads', async () => {
+    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com', sid: TEST_USER_ID });
+    const response = await uploadFile({
+      app,
+      token,
+      endpoint: '/api/v1/uploads/images',
+      filename: 'active.svg',
+      mimeType: 'image/svg+xml',
+      content: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+    });
+    expect(response.statusCode).toBe(400);
   });
 });
