@@ -4,6 +4,7 @@ import { users } from '@inplace/db';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../lib/db.js';
 import type { AppEnv } from '../env.js';
+import { findActiveAuthSession } from '../modules/auth/auth-session.repository.js';
 
 export const AUTH_COOKIE_NAME = 'inplace_access_token';
 const AUTH_COOKIE_PATH = '/api';
@@ -16,13 +17,14 @@ export function setAuthCookie(
   request: FastifyRequest,
   reply: FastifyReply,
   token: string,
-  env?: Pick<AppEnv, 'NODE_ENV'>,
+  env?: Pick<AppEnv, 'NODE_ENV' | 'AUTH_SESSION_TTL_DAYS'>,
 ) {
   reply.setCookie(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: shouldUseSecureCookie(request, env),
     path: AUTH_COOKIE_PATH,
+    maxAge: (env?.AUTH_SESSION_TTL_DAYS ?? 7) * 24 * 60 * 60,
   });
 }
 
@@ -41,15 +43,19 @@ type AuthenticatedUser = {
   displayName: string | null;
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 declare module '@fastify/jwt' {
   interface FastifyJWT {
     payload: {
       sub: string;
       email: string;
+      sid: string;
     };
     user: {
       sub: string;
       email: string;
+      sid: string;
     };
   }
 }
@@ -64,7 +70,7 @@ declare module 'fastify' {
   }
 }
 
-export async function authPlugin(app: FastifyInstance, env?: Pick<AppEnv, 'NODE_ENV'>) {
+export async function authPlugin(app: FastifyInstance, env?: Pick<AppEnv, 'NODE_ENV' | 'AUTH_SESSION_TTL_DAYS'>) {
   app.decorateRequest('currentUser', null);
 
   app.decorate(
@@ -81,6 +87,21 @@ export async function authPlugin(app: FastifyInstance, env?: Pick<AppEnv, 'NODE_
       }
 
       const userId = request.user.sub;
+      if (!UUID_PATTERN.test(userId) || !UUID_PATTERN.test(request.user.sid)) {
+        await reply.code(401).send({
+          error: 'UNAUTHORIZED',
+          message: '登录状态已失效，请重新登录',
+        });
+        return;
+      }
+      const session = await findActiveAuthSession(request.user.sid, userId);
+      if (!session) {
+        await reply.code(401).send({
+          error: 'UNAUTHORIZED',
+          message: '登录状态已失效，请重新登录',
+        });
+        return;
+      }
       const [user] = await getDb()
         .select({
           id: users.id,

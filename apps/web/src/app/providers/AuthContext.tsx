@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { apiRequest, setStoredAuthToken, getStoredAuthToken, ApiError } from '../../shared/api/client';
+import { apiRequest, ApiError } from '../../shared/api/client';
 import type { AuthSession, AuthUser } from '@inplace/domain';
 import { AuthContext } from './auth-context';
 
@@ -10,20 +10,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const token = await getStoredAuthToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
         const response = await apiRequest<{ user: AuthUser }>('/v1/auth/me');
-        setSession({ token });
+        setSession({});
         setUser(response.user);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 401) {
-          await setStoredAuthToken(null);
-        }
+        if (!(error instanceof ApiError && error.status === 401)) console.warn('Authentication bootstrap failed', error);
         setSession(null);
         setUser(null);
       } finally {
@@ -46,8 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       skipAuth: true,
     });
 
-    await setStoredAuthToken(response.token);
-    setSession({ token: response.token });
+    setSession({});
     setUser(response.user);
   }, []);
 
@@ -58,8 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       skipAuth: true,
     });
 
-    await setStoredAuthToken(response.token);
-    setSession({ token: response.token });
+    setSession({});
     setUser(response.user);
   }, []);
 
@@ -69,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // 本地凭证仍需清除，避免网络异常导致用户无法退出。
     }
-    await setStoredAuthToken(null);
     setSession(null);
     setUser(null);
   }, []);

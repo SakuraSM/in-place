@@ -4,10 +4,40 @@ import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { requireCurrentUser } from '../../lib/authenticated-request.js';
 import { clearAuthCookie, setAuthCookie } from '../../plugins/auth.js';
 import { changePasswordSchema, loginSchema, registerSchema, updateProfileSchema } from './auth.schemas.js';
-import { createUser, findUserByEmail, normalizeEmail, updateUserPassword, updateUserProfile } from './auth.repository.js';
+import { createUser, findUserByEmail, normalizeEmail, updateUserProfile } from './auth.repository.js';
+import { createAuthSession, revokeAuthSession, rotatePasswordAuthSession } from './auth-session.repository.js';
+import { BoundedRateLimiter, sendRateLimit } from '../../lib/bounded-rate-limit.js';
 
 export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options) => {
+  const loginIpLimit = new BoundedRateLimiter(20, 15 * 60_000);
+  const loginAccountLimit = new BoundedRateLimiter(10, 15 * 60_000);
+  const registerIpLimit = new BoundedRateLimiter(5, 60 * 60_000);
+  const registerGlobalLimit = new BoundedRateLimiter(100, 60 * 60_000);
+
+  async function signSession(
+    reply: Parameters<typeof setAuthCookie>[1],
+    request: Parameters<typeof setAuthCookie>[0],
+    user: { id: string; email: string },
+    sessionId: string,
+  ) {
+    const token = await reply.jwtSign(
+      { sub: user.id, email: user.email, sid: sessionId },
+      { expiresIn: `${options.env.AUTH_SESSION_TTL_DAYS}d` },
+    );
+    setAuthCookie(request, reply, token, options.env);
+    return token;
+  }
+
+  async function issueSession(reply: Parameters<typeof setAuthCookie>[1], request: Parameters<typeof setAuthCookie>[0], user: { id: string; email: string }) {
+    const session = await createAuthSession(user.id, options.env.AUTH_SESSION_TTL_DAYS);
+    return signSession(reply, request, user, session.id);
+  }
+
   app.post('/register', async (request, reply) => {
+    const ipRate = registerIpLimit.consume(request.ip);
+    if (!ipRate.allowed) return sendRateLimit(reply, ipRate.retryAfterSeconds);
+    const globalRate = registerGlobalLimit.consume('global');
+    if (!globalRate.allowed) return sendRateLimit(reply, globalRate.retryAfterSeconds);
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.code(400).send({
@@ -39,11 +69,7 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
-    const token = await reply.jwtSign({
-      sub: createdUser.id,
-      email: createdUser.email,
-    });
-    setAuthCookie(request, reply, token, options.env);
+    const token = await issueSession(reply, request, createdUser);
 
     return reply.code(201).send({
       token,
@@ -52,6 +78,8 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
   });
 
   app.post('/login', async (request, reply) => {
+    const ipRate = loginIpLimit.consume(request.ip);
+    if (!ipRate.allowed) return sendRateLimit(reply, ipRate.retryAfterSeconds);
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.code(400).send({
@@ -59,6 +87,9 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         message: parsed.error.issues[0]?.message ?? '请求参数不合法',
       });
     }
+    const accountKey = normalizeEmail(parsed.data.email);
+    const accountRate = loginAccountLimit.consume(accountKey);
+    if (!accountRate.allowed) return sendRateLimit(reply, accountRate.retryAfterSeconds);
 
     const user = await findUserByEmail(parsed.data.email);
     if (!user) {
@@ -76,11 +107,8 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
-    const token = await reply.jwtSign({
-      sub: user.id,
-      email: user.email,
-    });
-    setAuthCookie(request, reply, token, options.env);
+    loginAccountLimit.reset(accountKey);
+    const token = await issueSession(reply, request, user);
 
     return reply.send({
       token,
@@ -107,6 +135,12 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
   });
 
   app.post('/logout', async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      await revokeAuthSession(request.user.sid, request.user.sub);
+    } catch {
+      // Clearing the browser cookie remains safe even for an expired or malformed token.
+    }
     clearAuthCookie(request, reply, options.env);
     return reply.code(204).send();
   });
@@ -171,8 +205,17 @@ export const authRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
       });
     }
 
-    await updateUserPassword(currentUser.id, await hashPassword(parsed.data.newPassword));
-
-    return reply.code(204).send();
+    const replacementSession = await rotatePasswordAuthSession({
+      userId: currentUser.id,
+      passwordHash: await hashPassword(parsed.data.newPassword),
+      ttlDays: options.env.AUTH_SESSION_TTL_DAYS,
+    });
+    const token = await signSession(
+      reply,
+      request,
+      { id: currentUser.id, email: currentUser.email },
+      replacementSession.id,
+    );
+    return reply.send({ token });
   });
 };

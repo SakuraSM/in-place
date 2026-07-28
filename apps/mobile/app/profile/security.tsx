@@ -10,7 +10,7 @@ import { palette } from '@/shared/ui/theme';
 import { fetchPasswordChange } from '@/features/profile/mobileProfileApi';
 
 export default function SecurityScreen() {
-  const { signOut } = useAuth();
+  const { replaceSessionToken, signOut } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -18,7 +18,8 @@ export default function SecurityScreen() {
 
   const passwordMutation = useMutation({
     mutationFn: () => fetchPasswordChange(currentPassword, newPassword),
-    onSuccess: () => {
+    onSuccess: async (token) => {
+      await replaceSessionToken(token);
       setCurrentPassword('');
       setNewPassword('');
       setMessage('密码已更新');

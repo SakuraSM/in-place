@@ -33,6 +33,18 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const authSessions = pgTable('auth_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index('auth_sessions_user_id_idx').on(table.userId),
+  expiresIdx: index('auth_sessions_expires_at_idx').on(table.expiresAt),
+}));
+
 export const households = pgTable('households', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 120 }).notNull(),
@@ -318,6 +330,7 @@ export type StocktakeEntry = typeof stocktakeEntries.$inferSelect;
 export type Loan = typeof loans.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type AuthSession = typeof authSessions.$inferSelect;
 export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
 export type InventoryBatch = typeof inventoryBatches.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

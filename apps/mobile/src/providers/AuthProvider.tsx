@@ -13,6 +13,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setCurrentUser: (user: AuthUser | null) => void;
+  replaceSessionToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -97,6 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user);
       },
       setCurrentUser: setUser,
+      async replaceSessionToken(token: string) {
+        await secureTokenStorage.set(token);
+        setSession({ token });
+      },
     }),
     [loading, session, user],
   );
