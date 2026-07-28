@@ -16,7 +16,7 @@ import { householdRoutes } from './modules/households/household.routes.js';
 import { codeRoutes } from './modules/codes/code.routes.js';
 import { stocktakeRoutes } from './modules/stocktakes/stocktake.routes.js';
 import { lifecycleRoutes } from './modules/lifecycle/lifecycle.routes.js';
-import { getAllowedCorsOrigins, type AppEnv } from './env.js';
+import { getAllowedCorsOrigins, getPublicOrigin, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
 
 export async function createApp(env: AppEnv) {
@@ -24,11 +24,18 @@ export async function createApp(env: AppEnv) {
 
   const app = Fastify({
     logger: env.NODE_ENV !== 'test',
-    trustProxy: true,
+    trustProxy: 1,
     bodyLimit: env.BACKUP_PAYLOAD_SIZE_MB * 1024 * 1024,
   });
 
-  app.addHook('onRequest', async (_request, reply) => {
+  app.addHook('onRequest', async (request, reply) => {
+    if (env.NODE_ENV === 'production') {
+      const expectedHost = new URL(getPublicOrigin(env)).host.toLowerCase();
+      const receivedHost = request.host.toLowerCase();
+      if (receivedHost !== expectedHost) {
+        return reply.code(421).send({ error: 'INVALID_HOST', message: '请求 Host 不受信任' });
+      }
+    }
     reply
       .header('X-Content-Type-Options', 'nosniff')
       .header('X-Frame-Options', 'DENY')
@@ -75,7 +82,7 @@ export async function createApp(env: AppEnv) {
   await app.register(codeRoutes, { prefix: '/api/v1/codes' });
   await app.register(householdRoutes, { prefix: '/api/v1/households' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });
-  await app.register(lifecycleRoutes, { prefix: '/api/v1' });
+  await app.register(lifecycleRoutes, { prefix: '/api/v1', env });
   await app.register(stocktakeRoutes, { prefix: '/api/v1/stocktakes' });
   await app.register(tagRoutes, { prefix: '/api/v1/tags' });
   await app.register(uploadRoutes, { env });

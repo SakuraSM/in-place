@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { FastifyPluginAsync } from 'fastify';
 import { requireCurrentUser } from '../../lib/authenticated-request.js';
 import { requireHouseholdAccess } from '../../lib/household-access.js';
-import { resolveRequestOrigin } from '../../lib/request-origin.js';
+import { getPublicOrigin } from '../../env.js';
 import {
   createItemSchema,
   exportItemsQuerySchema,
@@ -30,7 +30,8 @@ import {
 } from './item.repository.js';
 import { createActivityLogForHousehold } from '../activity/activity.repository.js';
 import type { AppEnv } from '../../env.js';
-import { persistImageBuffer, resolveImageMimeType, resolveUploadRoot } from '../../lib/uploads.js';
+import { persistImageBuffer, resolveExistingUploadPath, resolveImageMimeType } from '../../lib/uploads.js';
+import { isUploadReferenceAllowed } from '../../lib/upload-access.js';
 import type { CreateItemInput, UpdateItemInput } from './item.schemas.js';
 
 interface ExportCategoryRecord {
@@ -303,8 +304,9 @@ async function buildImageAssets(input: {
   attachmentUrls?: string[];
   env: AppEnv;
   origin: string;
+  householdId: string;
+  userId: string;
 }) {
-  const uploadRoot = resolveUploadRoot(input.env);
   const assets = new Map<string, {
     filename: string;
     mime_type: string;
@@ -325,9 +327,14 @@ async function buildImageAssets(input: {
         if (url.origin !== input.origin || !url.pathname.startsWith('/api/uploads/')) {
           continue;
         }
-
-        const relativePath = decodeURIComponent(url.pathname.replace(/^\/api\/uploads\//, ''));
-        const absolutePath = path.join(uploadRoot, relativePath);
+        if (!isUploadReferenceAllowed({
+          value: imageUrl,
+          householdId: input.householdId,
+          userId: input.userId,
+          publicOrigin: input.origin,
+        })) continue;
+        const encodedRelativePath = url.pathname.replace(/^\/api\/uploads\//, '');
+        const { absolutePath, relativePath } = await resolveExistingUploadPath(input.env, encodedRelativePath);
         const buffer = await readFile(absolutePath);
         assets.set(imageUrl, {
           filename: path.basename(relativePath),
@@ -452,7 +459,9 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         items: itemRecords,
         attachmentUrls: inventory.attachments.map((attachment) => attachment.fileUrl),
         env: options.env,
-        origin: resolveRequestOrigin(request),
+        origin: getPublicOrigin(options.env),
+        householdId: access.householdId,
+        userId: access.userId,
       }),
     };
 
@@ -488,8 +497,8 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
             buffer: Buffer.from(asset.data_base64, 'base64'),
             filename: asset.filename,
             mimetype: asset.mime_type,
-          }, access.userId, options.env);
-          imageUrlMap.set(originalUrl, new URL(uploaded.publicUrl, resolveRequestOrigin(request)).toString());
+          }, access.householdId, access.userId, options.env);
+          imageUrlMap.set(originalUrl, new URL(uploaded.publicUrl, getPublicOrigin(options.env)).toString());
         }
       }
 
@@ -506,6 +515,18 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
             : {}),
         })),
       };
+      const references = [
+        ...remappedSnapshot.items.flatMap((item) => item.images),
+        ...remappedSnapshot.attachments.map((attachment) => attachment.fileUrl),
+      ].filter((value): value is string => typeof value === 'string');
+      if (references.some((value) => !isUploadReferenceAllowed({
+        value,
+        householdId: access.householdId,
+        userId: access.userId,
+        publicOrigin: getPublicOrigin(options.env),
+      }))) {
+        throw new Error('备份包含不允许的上传文件引用');
+      }
 
       return reply.send({
         data: await importInventoryForHousehold(access, remappedSnapshot),
@@ -577,6 +598,14 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         message: parsed.error.issues[0]?.message ?? '请求参数不合法',
       });
     }
+    if (parsed.data.images.some((value) => !isUploadReferenceAllowed({
+      value,
+      householdId: access.householdId,
+      userId: access.userId,
+      publicOrigin: getPublicOrigin(options.env),
+    }))) {
+      return reply.code(400).send({ error: 'INVALID_IMAGE_URL', message: '图片不属于当前家庭或不是安全的 HTTPS 地址' });
+    }
 
     const parentValidation = await validateParentForHousehold(access.householdId, parsed.data.parentId);
     if (parentValidation === 'not_found') {
@@ -635,6 +664,14 @@ export const itemRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, optio
         error: 'INVALID_REQUEST',
         message: parsed.error.issues[0]?.message ?? '请求参数不合法',
       });
+    }
+    if (parsed.data.images?.some((value) => !isUploadReferenceAllowed({
+      value,
+      householdId: access.householdId,
+      userId: access.userId,
+      publicOrigin: getPublicOrigin(options.env),
+    }))) {
+      return reply.code(400).send({ error: 'INVALID_IMAGE_URL', message: '图片不属于当前家庭或不是安全的 HTTPS 地址' });
     }
 
     if (parsed.data.parentId === params.data.id) {

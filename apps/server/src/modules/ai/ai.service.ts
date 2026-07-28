@@ -1,4 +1,6 @@
 import { aiRecognitionResultsSchema, type AiRecognitionResult } from './ai.schemas.js';
+import type { AppEnv } from '../../env.js';
+import { safeAiJsonRequest } from '../../lib/safe-ai-http.js';
 
 const AI_PROMPT = `请分析图片中的物品，返回JSON数组，每个物品包含以下字段：
 {
@@ -39,8 +41,9 @@ export async function recognizeItemsFromImage(input: {
   };
   imageBuffer: Buffer;
   mimeType: string;
+  env: AppEnv;
 }): Promise<AiRecognitionResult[]> {
-  const response = await fetch(`${input.config.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+  const { response, payload } = await safeAiJsonRequest(`${input.config.baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -67,14 +70,14 @@ export async function recognizeItemsFromImage(input: {
         },
       ],
     }),
-  });
+  }, input.env);
 
   if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
+    const errorPayload = payload as { error?: { message?: string } };
     throw new Error(errorPayload.error?.message ?? `OpenAI API 请求失败: ${response.status}`);
   }
 
-  const data = await response.json();
+  const data = payload as Record<string, any>;
   const firstChoice = data.choices?.[0];
   const assistantMessage = firstChoice?.message;
   const content = extractMessageContent(assistantMessage?.content);

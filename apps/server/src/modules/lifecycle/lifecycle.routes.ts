@@ -1,5 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { getPublicOrigin, type AppEnv } from '../../env.js';
 import { requireHouseholdAccess } from '../../lib/household-access.js';
+import { isUploadReferenceAllowed } from '../../lib/upload-access.js';
 import { createActivityLogForHousehold } from '../activity/activity.repository.js';
 import {
   createAttachment,
@@ -26,7 +28,7 @@ import {
   updateReminderSchema,
 } from './lifecycle.schemas.js';
 
-export const lifecycleRoutes: FastifyPluginAsync = async (app) => {
+export const lifecycleRoutes: FastifyPluginAsync<{ env: AppEnv }> = async (app, options) => {
   app.get('/loans', { preHandler: app.authenticate }, async (request, reply) => {
     const access = await requireHouseholdAccess({ request, reply });
     if (!access) return;
@@ -126,6 +128,14 @@ export const lifecycleRoutes: FastifyPluginAsync = async (app) => {
     const body = createAttachmentSchema.safeParse(request.body);
     if (!params.success || !body.success) {
       return reply.code(400).send({ error: 'INVALID_REQUEST', message: '附件参数不合法' });
+    }
+    if (!isUploadReferenceAllowed({
+      value: body.data.fileUrl,
+      householdId: access.householdId,
+      userId: access.userId,
+      publicOrigin: getPublicOrigin(options.env),
+    })) {
+      return reply.code(400).send({ error: 'INVALID_FILE_URL', message: '附件不属于当前家庭或不是安全的 HTTPS 地址' });
     }
     return reply.code(201).send({
       data: await createAttachment({ ...access, itemId: params.data.itemId, ...body.data }),
