@@ -137,6 +137,9 @@ PUBLIC_ORIGIN=https://your-domain.com
 AI_PROVIDER_ALLOWED_BASE_URLS=https://api.openai.com/v1
 VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
+# 可选：启用真实资产地图，必须成对配置。
+AMAP_JS_API_KEY=<高德 Web端（JS API）Key>
+AMAP_JS_SECURITY_CODE=<对应的安全密钥>
 ```
 
 启动服务：
@@ -237,8 +240,12 @@ POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 - `AI_REQUEST_TIMEOUT_MS` / `AI_MAX_RESPONSE_BYTES`：AI 请求超时和响应大小上限。
 - `AUTH_SESSION_TTL_DAYS`：可撤销登录会话的有效天数，默认 7 天。
 - `OPENAI_MODEL`：AI 图片识别使用的模型名。
+- `AMAP_JS_API_KEY`：高德开放平台的 Web端（JS API）Key，用于启用真实资产地图。
+- `AMAP_JS_SECURITY_CODE`：与上述 Key 配套的安全密钥。该值仅由服务端代理使用，不会下发到浏览器；两个变量必须同时配置。
 
 个人中心保存的 AI 配置会在服务端加密保存。前端不会回显明文 Key；自定义 Provider 必须位于运维允许列表并配置独立 API Key，不能复用服务端默认 Key。
+
+启用资产地图时，还应在高德控制台为 Web Key 配置生产域名白名单。不要把安全密钥写入 `VITE_*` 变量、前端源码或提交到仓库。地图坐标保存在家庭位置的 `metadata.geo_location` 中，无需数据库迁移。
 
 ### Web
 

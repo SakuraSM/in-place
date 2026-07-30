@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .geo-asset-marker {
+    display: flex;
+    min-width: 3.5rem;
+    cursor: pointer;
+    flex-direction: column;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    color: #0f172a;
+    filter: drop-shadow(0 8px 12px rgb(15 23 42 / 18%));
+  }
+
+  .geo-asset-marker__count {
+    display: flex;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    border-radius: 9999px 9999px 9999px 0;
+    background: #0f766e;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 800;
+    transform: rotate(-45deg);
+    transition: background-color 160ms ease, transform 160ms ease;
+  }
+
+  .geo-asset-marker__count-value {
+    display: block;
+    transform: rotate(45deg);
+  }
+
+  .geo-asset-marker__label {
+    margin-top: 0.375rem;
+    max-width: 8rem;
+    overflow: hidden;
+    border: 1px solid rgb(203 213 225 / 90%);
+    border-radius: 0.75rem;
+    background: rgb(255 255 255 / 95%);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .geo-asset-marker:hover .geo-asset-marker__count,
+  .geo-asset-marker:focus-visible .geo-asset-marker__count,
+  .geo-asset-marker--selected .geo-asset-marker__count {
+    background: #7c3aed;
+    transform: rotate(-45deg) scale(1.08);
+  }
+
+  .geo-asset-marker:focus-visible {
+    border-radius: 1rem;
+    outline: 3px solid #0f766e;
+    outline-offset: 4px;
+  }
+}
+
 @layer base {
   :root {
     --mobile-nav-height: 3.5rem;

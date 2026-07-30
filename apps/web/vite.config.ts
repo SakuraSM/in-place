@@ -48,6 +48,7 @@ export default defineConfig({
 
           if (id.includes('@tanstack/react-query')) return 'vendor-query';
           if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('@amap/')) return 'vendor-map';
           if (id.includes('react') || id.includes('react-router-dom')) return 'vendor-react';
           if (id.includes('lucide-react')) return 'vendor-icons';
           return 'vendor';

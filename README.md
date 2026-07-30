@@ -137,6 +137,9 @@ PUBLIC_ORIGIN=https://your-domain.com
 AI_PROVIDER_ALLOWED_BASE_URLS=https://api.openai.com/v1
 VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
+# Optional: enable the geographic asset map. Configure both values.
+AMAP_JS_API_KEY=<AMap Web JS API key>
+AMAP_JS_SECURITY_CODE=<matching security code>
 ```
 
 Start the stack:
@@ -237,8 +240,12 @@ Key variables:
 - `AI_REQUEST_TIMEOUT_MS` / `AI_MAX_RESPONSE_BYTES`: outbound AI deadline and response-size limit.
 - `AUTH_SESSION_TTL_DAYS`: lifetime of revocable authentication sessions; defaults to 7 days.
 - `OPENAI_MODEL`: model name used for image recognition.
+- `AMAP_JS_API_KEY`: AMap Web JS API key used to enable the geographic asset map.
+- `AMAP_JS_SECURITY_CODE`: security code paired with the key. It is used only by the server proxy and is never returned to the browser; both AMap variables must be configured together.
 
 AI settings saved from the profile page are encrypted on the server. The browser does not receive the plaintext key. A custom provider must be operator-allowlisted and use its own API key; it never inherits the server default key.
+
+When enabling the asset map, configure the production domain allowlist for the Web key in the AMap console. Never place the security code in a `VITE_*` variable, frontend source, or version control. Coordinates are stored in each household location's `metadata.geo_location`, so no database migration is required.
 
 ### Web
 

@@ -16,6 +16,7 @@ import { householdRoutes } from './modules/households/household.routes.js';
 import { codeRoutes } from './modules/codes/code.routes.js';
 import { stocktakeRoutes } from './modules/stocktakes/stocktake.routes.js';
 import { lifecycleRoutes } from './modules/lifecycle/lifecycle.routes.js';
+import { mapRoutes } from './modules/maps/map.routes.js';
 import { getAllowedCorsOrigins, getPublicOrigin, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
 
@@ -83,6 +84,7 @@ export async function createApp(env: AppEnv) {
   await app.register(householdRoutes, { prefix: '/api/v1/households' });
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });
   await app.register(lifecycleRoutes, { prefix: '/api/v1', env });
+  await app.register(mapRoutes, { prefix: '/api/v1/maps', env });
   await app.register(stocktakeRoutes, { prefix: '/api/v1/stocktakes' });
   await app.register(tagRoutes, { prefix: '/api/v1/tags' });
   await app.register(uploadRoutes, { env });
