@@ -47,6 +47,19 @@ describe('production environment security preflight', () => {
     ]);
   });
 
+  it('requires the AMap web key and security code as a pair', () => {
+    expect(() => readEnv({
+      ...base,
+      AMAP_JS_API_KEY: 'public-web-key',
+    })).toThrow('AMAP_JS_API_KEY and AMAP_JS_SECURITY_CODE');
+
+    expect(() => readEnv({
+      ...base,
+      AMAP_JS_API_KEY: 'public-web-key',
+      AMAP_JS_SECURITY_CODE: 'security-code',
+    })).not.toThrow();
+  });
+
   it('requires a credential-free HTTPS public origin in production', () => {
     expect(() => readEnv({ ...base, PUBLIC_ORIGIN: 'http://app.example.com' }))
       .toThrow('PUBLIC_ORIGIN must be an HTTPS URL');

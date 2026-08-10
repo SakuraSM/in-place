@@ -30,6 +30,8 @@ const envSchema = z.object({
   AI_MAX_RESPONSE_BYTES: z.coerce.number().int().min(16_384).max(10_485_760).default(1_048_576),
   AUTH_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
   OPENAI_MODEL: z.string().trim().default('gpt-4o'),
+  AMAP_JS_API_KEY: z.string().trim().optional(),
+  AMAP_JS_SECURITY_CODE: z.string().trim().optional(),
 }).superRefine((env, context) => {
   for (const [key, value] of [
     ['JWT_SECRET', env.JWT_SECRET],
@@ -81,6 +83,13 @@ const envSchema = z.object({
     }
   } catch {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['AI_PROVIDER_ALLOWED_BASE_URLS'], message: 'AI Provider addresses must be valid HTTPS URLs' });
+  }
+  if (Boolean(env.AMAP_JS_API_KEY) !== Boolean(env.AMAP_JS_SECURITY_CODE)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['AMAP_JS_API_KEY'],
+      message: 'AMAP_JS_API_KEY and AMAP_JS_SECURITY_CODE must be configured together',
+    });
   }
 });
 

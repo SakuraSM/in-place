@@ -1,248 +1,201 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Box, ChevronRight, ExternalLink, FolderTree, MapPin, Package, Plus } from 'lucide-react';
-import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
-import EmptyState from '../../../shared/ui/EmptyState';
-import { useAuth } from '../../../app/providers/auth-context';
-import { createItem } from '../../../legacy/items';
+import { MapPinned, Plus, Rows3 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import type { ItemCreateInput } from '@inplace/domain';
-import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
-import LocationTreePanel from '../components/LocationTreePanel';
-import ItemForm from '../components/ItemForm';
+import { useAuth } from '../../../app/providers/auth-context';
+import { useHousehold } from '../../../app/providers/household-context';
+import { createItem } from '../../../legacy/items';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
-import {
-  buildChildrenMap,
-  buildItemIdMap,
-  buildItemLineage,
-  countLocationContents,
-} from '../lib/locationTree';
-import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
-import { resolveItemDetailPath } from '../lib/detailPath';
+import AssetMapErrorBoundary from '../components/AssetMapErrorBoundary';
+import ItemForm from '../components/ItemForm';
+import LocationTreeView from '../components/LocationTreeView';
+import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
+
+const AssetMapView = lazy(() => import('../components/AssetMapView'));
+
+type LocationPageView = 'tree' | 'map';
+
+function resolveLocationPageView(searchParams: URLSearchParams): LocationPageView {
+  return searchParams.get('view') === 'map' ? 'map' : 'tree';
+}
 
 export default function LocationTreePage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { currentHousehold } = useHousehold();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: items = [], isLoading } = useAllInventoryItems();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [createParentId, setCreateParentId] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [mapErrorMessage, setMapErrorMessage] = useState<string | null>(null);
+  const currentView = resolveLocationPageView(searchParams);
 
-  const locationItems = useMemo(
-    () => items.filter(isLocationItem),
-    [items],
-  );
-  const itemMap = useMemo(() => buildItemIdMap(items), [items]);
-  const childrenMap = useMemo(() => buildChildrenMap(items), [items]);
-
-  useEffect(() => {
-    if (locationItems.length === 0) {
-      setSelectedLocationId(null);
-      return;
+  const handleChangeView = useCallback((view: LocationPageView): void => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('view', view);
+    setSearchParams(nextSearchParams);
+    if (view === 'map') {
+      setMapErrorMessage(null);
     }
+  }, [searchParams, setSearchParams]);
 
-    if (!selectedLocationId || !itemMap.has(selectedLocationId) || !isLocationItem(itemMap.get(selectedLocationId))) {
-      setSelectedLocationId(locationItems[0]?.id ?? null);
-    }
-  }, [itemMap, locationItems, selectedLocationId]);
+  const handleOpenCreateLocation = useCallback((parentId: string | null): void => {
+    setCreateParentId(parentId);
+    setCreateError(null);
+    setIsCreateFormOpen(true);
+  }, []);
 
-  const selectedLocation = selectedLocationId ? itemMap.get(selectedLocationId) ?? null : null;
-  const selectedLineage = useMemo(
-    () => (selectedLocation ? buildItemLineage(selectedLocation.id, itemMap) : []),
-    [itemMap, selectedLocation],
-  );
-  const selectedStats = useMemo(
-    () => (selectedLocation ? countLocationContents(items, selectedLocation.id) : null),
-    [items, selectedLocation],
-  );
-  const directChildren = useMemo(
-    () => (selectedLocation ? childrenMap.get(selectedLocation.id) ?? [] : []),
-    [childrenMap, selectedLocation],
-  );
+  const handleCloseCreateLocation = useCallback((): void => {
+    setIsCreateFormOpen(false);
+    setCreateError(null);
+  }, []);
 
-  const handleCreateLocation = async (data: ItemCreateInput) => {
+  const handleCreateLocation = useCallback(async (data: ItemCreateInput): Promise<void> => {
     try {
       setCreateError(null);
       const created = await createItem(data);
-      setShowCreateForm(false);
+      setIsCreateFormOpen(false);
       setSelectedLocationId(created.id);
-      await queryClient.invalidateQueries({ queryKey: ['inventory', 'all-items', user?.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ['inventory', 'all-items', user?.id, currentHousehold?.id],
+      });
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : '新增位置失败，请稍后再试');
     }
-  };
+  }, [currentHousehold?.id, queryClient, user?.id]);
+
+  const handleMapError = useCallback((): void => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('view', 'tree');
+    setMapErrorMessage('资产地图暂时无法显示，已切换回位置树。刷新页面后可再次尝试。');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   return (
     <PageShell>
       <PageHeader
         width="wide"
-        title="位置树"
+        title="空间位置"
+        description="用位置树管理层级，或切换到地图查看家庭资产分布。"
         actions={(
-          <button
-            type="button"
-            onClick={() => setShowCreateForm(true)}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700"
-          >
-            <Plus size={16} />
-            新增位置
-          </button>
+          <>
+            <div
+              className="inline-flex rounded-2xl border border-slate-300 bg-white p-1 shadow-sm"
+              role="tablist"
+              aria-label="空间位置视图"
+            >
+              <ViewTab
+                label="位置树"
+                icon={Rows3}
+                isActive={currentView === 'tree'}
+                onSelect={() => handleChangeView('tree')}
+              />
+              <ViewTab
+                label="资产地图"
+                icon={MapPinned}
+                isActive={currentView === 'map'}
+                onSelect={() => handleChangeView('map')}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenCreateLocation(currentView === 'tree' ? selectedLocationId : null)}
+              className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
+            >
+              <Plus size={16} aria-hidden="true" />
+              新增位置
+            </button>
+          </>
         )}
       />
 
       <PageContent width="wide" className="flex flex-col">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+        {mapErrorMessage ? (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
+            {mapErrorMessage}
           </div>
-        ) : locationItems.length === 0 ? (
-          <EmptyState
-            icon={<FolderTree size={28} className="text-slate-300" />}
-            title="还没有可展示的位置"
+        ) : null}
+
+        {currentView === 'tree' ? (
+          <LocationTreeView
+            items={items}
+            isLoading={isLoading}
+            selectedLocationId={selectedLocationId}
+            onSelectLocation={setSelectedLocationId}
           />
         ) : (
-          <div className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
-            <section className="self-start rounded-3xl border border-slate-100 bg-white p-4 shadow-sm md:p-5 lg:sticky lg:top-28">
-              <div className="mb-4 flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
-                  <MapPin size={18} />
-                </div>
-                <h2 className="font-semibold text-slate-900">空间位置</h2>
-              </div>
-              <LocationTreePanel
-                items={items}
-                selectedLocationId={selectedLocationId}
-                onSelectLocation={setSelectedLocationId}
-                allLabel="选择一个位置"
-              />
-            </section>
-
-            <section className="min-w-0 space-y-4">
-              {selectedLocation ? (
-                <>
-                  <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <span className="inline-flex self-start rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-                          当前位置
-                        </span>
-                        <h2 className="mt-3 break-words text-2xl font-bold text-slate-900">{selectedLocation.name}</h2>
-                        {selectedLocation.description && (
-                          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
-                            {selectedLocation.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="grid w-full shrink-0 grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/overview?locationId=${selectedLocation.id}`)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-brandStrong px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700"
-                        >
-                          查看位置内容
-                          <ExternalLink size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate(resolveItemDetailPath(selectedLocation))}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                        >
-                          查看详情
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {selectedLineage.length > 0 && (
-                      <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
-                        {selectedLineage.map((item, index) => (
-                          <div key={item.id} className="flex items-center gap-1.5">
-                            {index > 0 && <ChevronRight size={12} className="text-slate-300" />}
-                            <span className={index === selectedLineage.length - 1 ? 'font-medium text-slate-700' : ''}>
-                              {item.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-                    {[
-                      { label: '下级位置', value: selectedStats?.locations ?? 0, icon: MapPin, tone: 'bg-sky-50 text-sky-500' },
-                      { label: `下级${INVENTORY_NODE_LABELS.container}`, value: selectedStats?.containers ?? 0, icon: Box, tone: 'bg-teal-50 text-teal-500' },
-                      { label: '下级物品', value: selectedStats?.items ?? 0, icon: Package, tone: 'bg-amber-50 text-amber-500' },
-                      { label: '内容总数', value: selectedStats?.total ?? 0, icon: FolderTree, tone: 'bg-violet-50 text-violet-500' },
-                    ].map(({ label, value, icon: Icon, tone }) => (
-                      <div key={label} className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
-                        <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
-                          <Icon size={18} />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-900">{value}</p>
-                        <p className="mt-1 text-xs text-slate-600">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <h3 className="font-semibold text-slate-900">当前位置内容</h3>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                        {directChildren.length} 项
-                      </span>
-                    </div>
-
-                    {directChildren.length === 0 ? (
-                      <div className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
-                        这个位置下还没有物品或收纳。
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {directChildren.map((child) => (
-                          <button
-                            key={child.id}
-                            type="button"
-                            onClick={() => navigate(resolveItemDetailPath(child))}
-                            className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50"
-                          >
-                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
-                              child.type === 'item' ? 'bg-amber-50 text-amber-500' : isLocationItem(child) ? 'bg-sky-50 text-sky-500' : 'bg-teal-50 text-teal-500'
-                            }`}>
-                              {child.type === 'item' ? <Package size={18} /> : isLocationItem(child) ? <MapPin size={18} /> : <Box size={18} />}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate font-medium text-slate-900">{child.name}</p>
-                              <p className="mt-1 text-xs text-slate-600">
-                                {child.type === 'item' ? '物品' : getContainerTypeLabel(child)}
-                                {child.category ? ` · ${child.category}` : ''}
-                              </p>
-                            </div>
-                            <ChevronRight size={16} className="text-slate-300" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : null}
-            </section>
-          </div>
+          <AssetMapErrorBoundary onMapError={handleMapError}>
+            <Suspense fallback={<MapLoadingState />}>
+              {isLoading ? (
+                <MapLoadingState />
+              ) : (
+                <AssetMapView
+                  householdId={currentHousehold?.id ?? null}
+                  canEdit={currentHousehold?.role !== 'viewer'}
+                  items={items}
+                  onRequestCreateLocation={() => handleOpenCreateLocation(null)}
+                />
+              )}
+            </Suspense>
+          </AssetMapErrorBoundary>
         )}
       </PageContent>
-      {showCreateForm && (
+
+      {isCreateFormOpen ? (
         <ItemForm
-          defaultParentId={selectedLocationId}
+          defaultParentId={createParentId}
           forceType="container"
           fixedLocation
           submitError={createError}
           onSave={handleCreateLocation}
-          onClose={() => {
-            setShowCreateForm(false);
-            setCreateError(null);
-          }}
+          onClose={handleCloseCreateLocation}
         />
-      )}
+      ) : null}
     </PageShell>
+  );
+}
+
+interface ViewTabProps {
+  label: string;
+  icon: typeof Rows3;
+  isActive: boolean;
+  onSelect: () => void;
+}
+
+function ViewTab({
+  label,
+  icon: Icon,
+  isActive,
+  onSelect,
+}: ViewTabProps) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      onClick={onSelect}
+      className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong ${
+        isActive
+          ? 'bg-brandTint text-brandStrong'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      }`}
+    >
+      <Icon size={14} aria-hidden="true" />
+      {label}
+    </button>
+  );
+}
+
+function MapLoadingState() {
+  return (
+    <div className="flex min-h-[460px] items-center justify-center rounded-3xl border border-slate-200 bg-white" role="status">
+      <div className="text-center">
+        <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+        <p className="mt-3 text-sm font-medium text-slate-600">正在绘制资产地图...</p>
+      </div>
+    </div>
   );
 }
