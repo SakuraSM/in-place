@@ -39,12 +39,15 @@ npm run dev:web
 
 ## 提交前检查
 
-请在提交前至少运行：
+先按 [变更协议](docs/harness/change-protocol.md) 写清影响范围，再从[测试策略](docs/harness/testing-guide.md)选择触达范围的验证。跨 workspace 改动请至少运行：
 
 ```bash
+npm run lint
 npm run typecheck
 npm run build
 ```
+
+涉及 Web、Server 或 Mobile 行为时，还应执行对应 workspace 的测试；没有运行的验证需要在 PR 中写明原因。
 
 如果你的改动涉及数据库结构，请补充或更新对应的 Drizzle 配置与迁移流程。
 
@@ -53,6 +56,8 @@ npm run build
 - 提交应聚焦单一目的
 - 不要顺手混入无关重构
 - 如果是架构性改动，请在 PR 或提交说明中写清楚迁移动机和影响范围
+- 分支不使用 `codex/` 前缀；没有既定命名时使用 `<type>/<short-kebab-summary>`
+- Commit Message 建议遵循 [Harness 约定](docs/harness/commit-message.md)
 
 ## 目录边界
 
@@ -70,3 +75,5 @@ npm run build
 - 是否涉及数据库结构调整
 
 这样可以减少返工，也更方便后续协作。
+
+完整的工程流程、质量规则、门禁现状、任务路由和 PR 模板见 [Harness 文档入口](docs/harness/README.md)。

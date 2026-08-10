@@ -79,6 +79,12 @@ InPlace 按清晰的职责边界组织：
 
 更多背景见 [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md)。
 
+## 工程与产品文档
+
+- [Web UI 与地图功能设计基线](docs/product/web-ui-functional-design.md)：信息架构、交互契约、地图行为、已知 UX 风险和排障入口。
+- [工程 Harness](docs/harness/README.md)：变更协议、质量规则、测试矩阵、现有 CI 门禁、任务路由和 PR 模板。
+- [贡献指南](CONTRIBUTING.md)：本地开发和协作基础。
+
 ## 环境要求
 
 - Node.js `>= 20.10.0`
