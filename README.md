@@ -79,6 +79,12 @@ New data-access code should go through the API rather than adding direct databas
 
 More background is available in [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md).
 
+## Engineering and Product Documentation
+
+- [Web UI and map functional design](docs/product/web-ui-functional-design.md): information architecture, interaction contracts, map behavior, known UX risks, and troubleshooting entry points.
+- [Engineering Harness](docs/harness/README.md): change protocol, quality rules, test matrix, current CI gates, task routing, and PR templates.
+- [Contributing](CONTRIBUTING.md): local development and contribution basics.
+
 ## Requirements
 
 - Node.js `>= 20.10.0`
