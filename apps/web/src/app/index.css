@@ -15,25 +15,62 @@
     filter: drop-shadow(0 8px 12px rgb(15 23 42 / 18%));
   }
 
-  .geo-asset-marker__count {
+  .geo-asset-marker__icon {
+    position: relative;
     display: flex;
-    height: 2.75rem;
-    min-width: 2.75rem;
+    height: 3.25rem;
+    width: 3.25rem;
     align-items: center;
     justify-content: center;
     border: 3px solid white;
-    border-radius: 9999px 9999px 9999px 0;
-    background: #0f766e;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 800;
-    transform: rotate(-45deg);
-    transition: background-color 160ms ease, transform 160ms ease;
+    border-radius: 1rem 1rem 1rem 0.35rem;
+    background: #ecfeff;
+    color: #0f766e;
+    overflow: visible;
+    transform: rotate(-3deg);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
 
-  .geo-asset-marker__count-value {
-    display: block;
-    transform: rotate(45deg);
+  .geo-asset-marker__icon-content {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: calc(1rem - 3px) calc(1rem - 3px) calc(1rem - 3px) calc(0.35rem - 1px);
+  }
+
+  .geo-asset-marker__icon-image {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    padding: 0.3rem;
+  }
+
+  .geo-asset-marker__fallback-icon {
+    flex-shrink: 0;
+  }
+
+  .geo-asset-marker__count {
+    position: absolute;
+    right: -0.45rem;
+    top: -0.45rem;
+    z-index: 1;
+    display: flex;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    border-radius: 9999px;
+    background: #0f766e;
+    color: white;
+    font-size: 0.6875rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0 0.25rem;
+    box-shadow: 0 3px 8px rgb(15 23 42 / 22%);
   }
 
   .geo-asset-marker__label {
@@ -51,11 +88,18 @@
     white-space: nowrap;
   }
 
+  .geo-asset-marker:hover .geo-asset-marker__icon,
+  .geo-asset-marker:focus-visible .geo-asset-marker__icon,
+  .geo-asset-marker--selected .geo-asset-marker__icon {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgb(124 58 237 / 18%);
+    transform: rotate(0) scale(1.08);
+  }
+
   .geo-asset-marker:hover .geo-asset-marker__count,
   .geo-asset-marker:focus-visible .geo-asset-marker__count,
   .geo-asset-marker--selected .geo-asset-marker__count {
     background: #7c3aed;
-    transform: rotate(-45deg) scale(1.08);
   }
 
   .geo-asset-marker:focus-visible {

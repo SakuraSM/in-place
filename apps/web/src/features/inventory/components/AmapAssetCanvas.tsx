@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { Crosshair, Loader2, MapPin } from 'lucide-react';
+import type { Category } from '@inplace/domain';
 import type { AmapRuntimeConfig } from '../api/mapApi';
 import type {
   AssetGeoLocation,
@@ -14,10 +16,12 @@ import {
   type AmapMarkerClusterInstance,
   type AmapSdkNamespace,
 } from '../lib/amapSdk';
+import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
 
 interface AmapAssetCanvasProps {
   config: AmapRuntimeConfig;
   points: GeoAssetMapPoint[];
+  categories: Category[];
   selectedPointIds: string[];
   assignmentTargetName: string | null;
   onSelectPoints: (pointIds: string[]) => void;
@@ -69,8 +73,9 @@ function readMapClickCoordinate(event: unknown): AssetGeoLocation | null {
 
 function createMarkerElement(
   point: GeoAssetMapPoint,
+  category: Category | null,
   onSelect: (pointIds: string[]) => void,
-): HTMLButtonElement {
+): { element: HTMLButtonElement; iconRoot: Root } {
   const markerButton = document.createElement('button');
   markerButton.type = 'button';
   markerButton.className = 'geo-asset-marker';
@@ -84,19 +89,54 @@ function createMarkerElement(
     onSelect([point.id]);
   });
 
+  const iconFrame = document.createElement('span');
+  iconFrame.className = 'geo-asset-marker__icon';
+  if (category) {
+    const colorClasses = getColorClasses(category.color);
+    iconFrame.classList.add(...colorClasses.bg.split(' '), ...colorClasses.text.split(' '));
+  }
+  const iconMount = document.createElement('span');
+  iconMount.className = 'geo-asset-marker__icon-content';
+  const iconRoot = createRoot(iconMount);
+  iconRoot.render(category ? (
+    <CategoryIcon
+      icon={category.icon}
+      presetKey={category.preset_key}
+      fallback={MapPin}
+      size={23}
+      className="geo-asset-marker__fallback-icon"
+      imageClassName="geo-asset-marker__icon-image"
+    />
+  ) : (
+    <MapPin className="geo-asset-marker__fallback-icon" size={23} aria-hidden="true" />
+  ));
+
   const count = document.createElement('span');
   count.className = 'geo-asset-marker__count';
-  const countValue = document.createElement('span');
-  countValue.className = 'geo-asset-marker__count-value';
-  countValue.textContent = String(point.metrics.assetCount);
-  count.append(countValue);
-  markerButton.append(count);
+  count.textContent = String(point.metrics.assetCount);
+  count.setAttribute('aria-hidden', 'true');
+  iconFrame.append(iconMount, count);
+  markerButton.append(iconFrame);
 
   const label = document.createElement('span');
   label.className = 'geo-asset-marker__label';
   label.textContent = point.sourceNode.item.name;
   markerButton.append(label);
-  return markerButton;
+  return { element: markerButton, iconRoot };
+}
+
+function resolvePointCategory(
+  point: GeoAssetMapPoint,
+  categories: Category[],
+): Category | null {
+  const categoryName = point.sourceNode.item.category.trim();
+  if (!categoryName) {
+    return null;
+  }
+
+  return categories.find((category) => (
+    category.scope === 'location' && category.name === categoryName
+  )) ?? null;
 }
 
 function createClusterElement(
@@ -145,6 +185,7 @@ function calculatePointBounds(points: GeoAssetMapPoint[]): [[number, number], [n
 export default function AmapAssetCanvas({
   config,
   points,
+  categories,
   selectedPointIds,
   assignmentTargetName,
   onSelectPoints,
@@ -155,6 +196,7 @@ export default function AmapAssetCanvas({
   const namespaceRef = useRef<AmapSdkNamespace | null>(null);
   const clusterRef = useRef<AmapMarkerClusterInstance | null>(null);
   const markerElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const markerIconRootsRef = useRef<Map<string, Root>>(new Map());
   const assignmentTargetNameRef = useRef(assignmentTargetName);
   const onCoordinateChosenRef = useRef(onCoordinateChosen);
   const onSelectPointsRef = useRef(onSelectPoints);
@@ -169,6 +211,7 @@ export default function AmapAssetCanvas({
   useEffect(() => {
     let isDisposed = false;
     let initializedMap: AMap.Map | null = null;
+    const markerIconRoots = markerIconRootsRef.current;
 
     const initializeMap = async (): Promise<void> => {
       try {
@@ -236,6 +279,10 @@ export default function AmapAssetCanvas({
     void initializeMap();
     return () => {
       isDisposed = true;
+      for (const iconRoot of markerIconRoots.values()) {
+        iconRoot.unmount();
+      }
+      markerIconRoots.clear();
       initializedMap?.destroy();
       clusterRef.current?.setMap(null);
       clusterRef.current = null;
@@ -253,6 +300,10 @@ export default function AmapAssetCanvas({
 
     clusterRef.current?.setMap(null);
     clusterRef.current = null;
+    for (const iconRoot of markerIconRootsRef.current.values()) {
+      iconRoot.unmount();
+    }
+    markerIconRootsRef.current.clear();
     markerElementsRef.current = new Map();
 
     const pointsById = new Map(points.map((point) => [point.id, point]));
@@ -272,9 +323,15 @@ export default function AmapAssetCanvas({
         if (!point) {
           return;
         }
-        const markerElement = createMarkerElement(point, (pointIds) => onSelectPointsRef.current(pointIds));
-        markerElementsRef.current.set(point.id, markerElement);
-        context.marker.setContent(markerElement);
+        markerIconRootsRef.current.get(point.id)?.unmount();
+        const { element, iconRoot } = createMarkerElement(
+          point,
+          resolvePointCategory(point, categories),
+          (pointIds) => onSelectPointsRef.current(pointIds),
+        );
+        markerElementsRef.current.set(point.id, element);
+        markerIconRootsRef.current.set(point.id, iconRoot);
+        context.marker.setContent(element);
         context.marker.setAnchor('bottom-center');
       },
       renderClusterMarker: (context) => {
@@ -305,7 +362,7 @@ export default function AmapAssetCanvas({
       map.setZoomAndCenter(DEFAULT_MAP_ZOOM, DEFAULT_MAP_CENTER);
     }
 
-  }, [loadStatus, points]);
+  }, [categories, loadStatus, points]);
 
   useEffect(() => {
     const selectedPointIdSet = new Set(selectedPointIds);

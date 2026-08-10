@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Item } from '@inplace/domain';
+import { fetchCategories } from '../../../legacy/categories';
 import { updateItem } from '../../../legacy/items';
 import AssetMapView from './AssetMapView';
 
@@ -13,6 +14,10 @@ vi.mock('../../../app/providers/auth-context', () => ({
 
 vi.mock('../../../legacy/items', () => ({
   updateItem: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('../../../legacy/categories', () => ({
+  fetchCategories: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../api/mapApi', () => ({
@@ -27,11 +32,13 @@ vi.mock('../api/mapApi', () => ({
 vi.mock('./AmapAssetCanvas', () => ({
   default: ({
     points,
+    categories,
     assignmentTargetName,
     onSelectPoints,
     onCoordinateChosen,
   }: {
-    points: Array<{ id: string; sourceNode: { item: { name: string } } }>;
+    points: Array<{ id: string; sourceNode: { item: { name: string; category: string } } }>;
+    categories: Array<{ name: string; icon: string }>;
     assignmentTargetName: string | null;
     onSelectPoints: (pointIds: string[]) => void;
     onCoordinateChosen: (coordinate: {
@@ -42,7 +49,12 @@ vi.mock('./AmapAssetCanvas', () => ({
   }) => (
     <div aria-label="真实地理资产地图" data-assignment={assignmentTargetName ?? ''}>
       {points.map((point) => (
-        <button key={point.id} type="button" onClick={() => onSelectPoints([point.id])}>
+        <button
+          key={point.id}
+          type="button"
+          data-location-icon={categories.find((category) => category.name === point.sourceNode.item.category)?.icon ?? ''}
+          onClick={() => onSelectPoints([point.id])}
+        >
           地图标记 {point.sourceNode.item.name}
         </button>
       ))}
@@ -104,7 +116,7 @@ const GEO_LOCATION = {
 const EXPECTED_CURRENCY_OCCURRENCES = 2;
 
 const INVENTORY_FIXTURE = [
-  createItem({ id: 'beijing-home', name: '北京家', type: 'container', metadata: GEO_LOCATION }),
+  createItem({ id: 'beijing-home', name: '北京家', type: 'container', category: '公寓', metadata: GEO_LOCATION }),
   createItem({ id: 'camera', name: '相机', parent_id: 'beijing-home', category: '数码', status: 'borrowed', price: 5000 }),
   createItem({ id: 'coat', name: '羽绒服', parent_id: 'beijing-home', category: '衣物', price: 800 }),
   createItem({ id: 'hangzhou-home', name: '杭州仓库', type: 'container', metadata: { location_tag: true } }),
@@ -143,6 +155,28 @@ function renderView(
 describe('AssetMapView', () => {
   beforeEach(() => {
     vi.mocked(updateItem).mockClear();
+    vi.mocked(fetchCategories).mockResolvedValue([]);
+  });
+
+  it('passes the outermost location container category icon to the map', async () => {
+    vi.mocked(fetchCategories).mockResolvedValue([{
+      id: 'location-category',
+      user_id: 'user-1',
+      household_id: 'household-1',
+      item_type: 'container',
+      scope: 'location',
+      preset_key: 'location.apartment',
+      name: '公寓',
+      icon: 'Building2',
+      color: 'sky',
+      created_at: '2026-07-29T00:00:00.000Z',
+    }]);
+    renderView();
+
+    expect(await screen.findByRole('button', { name: '地图标记 北京家' })).toHaveAttribute(
+      'data-location-icon',
+      'Building2',
+    );
   });
 
   it('shows geocoded asset points and filters their assets', async () => {

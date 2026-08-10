@@ -4,6 +4,7 @@ import { AlertTriangle, KeyRound, MapPinned, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Item } from '@inplace/domain';
 import { useAuth } from '../../../app/providers/auth-context';
+import { fetchCategories } from '../../../legacy/categories';
 import { updateItem } from '../../../legacy/items';
 import { fetchMapRuntimeConfig } from '../api/mapApi';
 import {
@@ -38,6 +39,7 @@ const DEFAULT_FILTERS: GeoAssetMapFilters = {
 };
 
 const MAP_CONFIG_STALE_TIME_MS = Number.POSITIVE_INFINITY;
+const CATEGORY_STALE_TIME_MS = 5 * 60 * 1000;
 
 export default function AssetMapView({
   householdId,
@@ -58,6 +60,12 @@ export default function AssetMapView({
     queryFn: fetchMapRuntimeConfig,
     staleTime: MAP_CONFIG_STALE_TIME_MS,
     retry: false,
+  });
+  const categoriesQuery = useQuery({
+    queryKey: ['inventory', 'categories', user?.id, householdId],
+    queryFn: () => fetchCategories(user!.id),
+    enabled: Boolean(user?.id && householdId),
+    staleTime: CATEGORY_STALE_TIME_MS,
   });
   const filteredPoints = useMemo(
     () => filterGeoAssetMapPoints(projection, filters),
@@ -217,6 +225,7 @@ export default function AssetMapView({
         <AmapAssetCanvas
           config={mapConfigQuery.data}
           points={filteredPoints}
+          categories={categoriesQuery.data ?? []}
           selectedPointIds={selectedPointIds}
           assignmentTargetName={assignmentTarget?.item.name ?? null}
           onSelectPoints={(pointIds) => {
