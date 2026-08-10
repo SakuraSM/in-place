@@ -24,7 +24,26 @@ The codebase is still evolving, but its current direction is stable: clients tal
 - Fastify API backed by PostgreSQL and Drizzle ORM.
 - Image upload support and server-side AI recognition hooks.
 - JSON and CSV data export, plus JSON backup import on mobile.
+- A geographic asset map with location-aware markers, clustering, filtering, and coordinate assignment.
 - Docker Compose deployment for both split-service and all-in-one setups.
+
+## Geographic Asset Map
+
+The Web app projects every nested asset onto its nearest geocoded location, so a household can see where assets are distributed without flattening the existing location and container hierarchy.
+
+<p align="center">
+  <img src="docs/assets/inplace-asset-map.jpg" alt="InPlace geographic asset map showing location-category marker icons, asset filters, totals, and the selected location details" width="1200" />
+</p>
+
+<p align="center"><sub>Geographic asset map · location-category marker icons, filters, totals, and asset drill-down</sub></p>
+
+- Renders a real AMap Web JS map through a same-origin server proxy; the paired security code is never returned to the browser.
+- Uses each outermost location category's icon for its map marker and groups nearby locations into clusters.
+- Supports search plus status, asset-category, and creation-date filters.
+- Shows mapped/unmapped totals, location value summaries, and the assets stored at a selected point.
+- Lets household owners and editors assign or update coordinates while viewers retain read-only access.
+
+The map is optional. See [Deployment](#deployment) for the required AMap Web JS API key, security code, and production domain allowlist.
 
 ## Repository Layout
 
