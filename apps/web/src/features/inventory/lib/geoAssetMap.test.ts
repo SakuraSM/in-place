@@ -180,6 +180,38 @@ describe('geographic asset map projection', () => {
     })[0]?.assets.map((node) => node.id)).toEqual(['coat']);
   });
 
+  it('only exposes categories belonging to mapped assets', () => {
+    const projection = buildGeoAssetMapProjection([
+      createItem({
+        id: 'home',
+        name: '我的家',
+        type: 'container',
+        category: '公寓',
+        metadata: { location_tag: true, [ASSET_GEO_METADATA_KEY]: HOME_GEO },
+      }),
+      createItem({
+        id: 'storage-box',
+        name: '收纳箱',
+        type: 'container',
+        category: '收纳',
+        parent_id: 'home',
+      }),
+      createItem({
+        id: 'camera',
+        name: '相机',
+        parent_id: 'storage-box',
+        category: '数码',
+      }),
+      createItem({
+        id: 'unlocated-tent',
+        name: '帐篷',
+        category: '户外',
+      }),
+    ]);
+
+    expect(projection.categories).toEqual(['数码']);
+  });
+
   it('filters mapped assets by creation date range', () => {
     const projection = buildGeoAssetMapProjection([
       createItem({ id: 'home', name: '我的家', type: 'container', metadata: { location_tag: true, [ASSET_GEO_METADATA_KEY]: HOME_GEO } }),

@@ -215,6 +215,10 @@ export function buildGeoAssetMapProjection(items: Item[]): GeoAssetMapProjection
       right.sourceNode.item.name,
       'zh-CN',
     ));
+  const categories = [...new Set(
+    points.flatMap((point) => point.assets.map((asset) => asset.item.category.trim()))
+      .filter(Boolean),
+  )].sort((left, right) => left.localeCompare(right, 'zh-CN'));
   const totals = points.reduce<GeoAssetMapTotals>(
     (currentTotals, point) => ({
       ...currentTotals,
@@ -237,7 +241,7 @@ export function buildGeoAssetMapProjection(items: Item[]): GeoAssetMapProjection
     pointsById: new Map(points.map((point) => [point.id, point])),
     unmappedLocations,
     unlocatedAssets,
-    categories: hierarchy.categories,
+    categories,
     totals,
   };
 }

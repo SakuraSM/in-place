@@ -39,7 +39,6 @@ const DEFAULT_FILTERS: GeoAssetMapFilters = {
 };
 
 const MAP_CONFIG_STALE_TIME_MS = Number.POSITIVE_INFINITY;
-const CATEGORY_STALE_TIME_MS = 5 * 60 * 1000;
 
 export default function AssetMapView({
   householdId,
@@ -65,7 +64,6 @@ export default function AssetMapView({
     queryKey: ['inventory', 'categories', user?.id, householdId],
     queryFn: () => fetchCategories(user!.id),
     enabled: Boolean(user?.id && householdId),
-    staleTime: CATEGORY_STALE_TIME_MS,
   });
   const filteredPoints = useMemo(
     () => filterGeoAssetMapPoints(projection, filters),
