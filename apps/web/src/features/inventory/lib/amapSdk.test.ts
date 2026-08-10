@@ -74,7 +74,7 @@ describe('reverseGeocode', () => {
 
   it('rejects instead of silently treating coordinates as an address', async () => {
     await expect(reverseGeocode(
-      createNamespace('error', 'USERKEY_PLAT_NOMATCH'),
+      createNamespace('error', { info: 'AMAP_SERVICE_UNAVAILABLE' }),
       { longitude: 121.4737, latitude: 31.2304, address: '' },
     )).rejects.toThrow('AMAP_REVERSE_GEOCODE_FAILED');
   });

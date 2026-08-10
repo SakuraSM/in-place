@@ -212,7 +212,7 @@ export default function AmapAssetCanvas({
           try {
             address = await reverseGeocode(namespace, coordinate);
           } catch {
-            setInteractionError('地址识别失败，请检查高德 Web端 Key、安全密钥及域名白名单');
+            setInteractionError('地址识别失败，请稍后重试或手动输入经纬度');
             isChoosingCoordinateRef.current = false;
             return;
           }

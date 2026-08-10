@@ -5,7 +5,7 @@ describe('AMap proxy URL validation', () => {
   it('routes Web Service API requests to the fixed REST origin', () => {
     const url = buildAmapUpstreamUrl({
       path: 'v3/geocode/regeo',
-      queryString: 'location=116.3%2C39.9&key=public-key&jscode=attacker-code',
+      queryString: 'location=116.3%2C39.9&platform=JS&s=rsv3&key=public-key&jscode=attacker-code',
       apiKey: 'server-public-key',
       securityCode: 'server-security-code',
     });
@@ -15,6 +15,8 @@ describe('AMap proxy URL validation', () => {
     expect(url.searchParams.get('key')).toBe('server-public-key');
     expect(url.searchParams.get('jscode')).toBe('server-security-code');
     expect(url.searchParams.get('location')).toBe('116.3,39.9');
+    expect(url.searchParams.get('platform')).toBe('JS');
+    expect(url.searchParams.get('s')).toBe('rsv3');
   });
 
   it('routes custom map style requests to the fixed Web API origin', () => {
