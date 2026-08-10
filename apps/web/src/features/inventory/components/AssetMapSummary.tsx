@@ -14,6 +14,7 @@ import {
 interface AssetMapSummaryProps {
   totals: GeoAssetMapTotals;
   visibleAssetCount: number;
+  visibleEstimatedValue: number;
 }
 
 interface MapMetricCardProps {
@@ -26,6 +27,7 @@ interface MapMetricCardProps {
 export default function AssetMapSummary({
   totals,
   visibleAssetCount,
+  visibleEstimatedValue,
 }: AssetMapSummaryProps) {
   return (
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="家庭资产统计">
@@ -49,7 +51,7 @@ export default function AssetMapSummary({
       />
       <MapMetricCard
         label="已定位总值"
-        value={formatAssetMapCurrency(totals.estimatedValue)}
+        value={formatAssetMapCurrency(visibleEstimatedValue)}
         icon={CircleDollarSign}
         tone="bg-violet-50 text-violet-700"
       />

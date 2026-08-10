@@ -12,6 +12,8 @@ export interface GeoAssetMapFilters {
   query: string;
   status: typeof GEO_ASSET_ALL_FILTER | ItemStatus;
   category: string;
+  createdAfter: string;
+  createdBefore: string;
 }
 
 interface AssetFilterInput {
@@ -35,6 +37,13 @@ function doesAssetMatchFilters({
     filters.category !== GEO_ASSET_ALL_FILTER
     && assetNode.item.category !== filters.category
   ) {
+    return false;
+  }
+  const createdDate = assetNode.item.created_at.slice(0, 10);
+  if (filters.createdAfter && createdDate < filters.createdAfter) {
+    return false;
+  }
+  if (filters.createdBefore && createdDate > filters.createdBefore) {
     return false;
   }
   return !normalizedQuery || assetNode.searchableText.includes(normalizedQuery);
@@ -64,7 +73,9 @@ export function filterGeoAssetMapPoints(
 ): GeoAssetMapPoint[] {
   const normalizedQuery = filters.query.trim().toLocaleLowerCase('zh-CN');
   const hasAssetFilters = filters.status !== GEO_ASSET_ALL_FILTER
-    || filters.category !== GEO_ASSET_ALL_FILTER;
+    || filters.category !== GEO_ASSET_ALL_FILTER
+    || Boolean(filters.createdAfter)
+    || Boolean(filters.createdBefore);
 
   return projection.points.flatMap((point) => {
     const doesLocationMatch = Boolean(

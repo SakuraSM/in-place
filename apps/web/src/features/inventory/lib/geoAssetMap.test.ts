@@ -105,6 +105,26 @@ describe('geographic asset map projection', () => {
     expect(projection.pointsById.get('home')?.assets).toEqual([]);
   });
 
+  it('keeps nested locations without coordinates available for first-time mapping', () => {
+    const projection = buildGeoAssetMapProjection([
+      createItem({
+        id: 'home',
+        name: '我的家',
+        type: 'container',
+        metadata: { location_tag: true, [ASSET_GEO_METADATA_KEY]: HOME_GEO },
+      }),
+      createItem({
+        id: 'warehouse',
+        name: '异地仓库',
+        parent_id: 'home',
+        type: 'container',
+        metadata: { location_tag: true },
+      }),
+    ]);
+
+    expect(projection.unmappedLocations.map((node) => node.id)).toContain('warehouse');
+  });
+
   it('tracks unlocated root locations and assets', () => {
     const projection = buildGeoAssetMapProjection([
       createItem({
@@ -146,6 +166,8 @@ describe('geographic asset map projection', () => {
       query: '相机',
       status: 'borrowed',
       category: '数码',
+      createdAfter: '',
+      createdBefore: '',
     });
 
     expect(points[0]?.assets.map((node) => node.id)).toEqual(['camera']);
@@ -153,7 +175,27 @@ describe('geographic asset map projection', () => {
       query: '',
       status: GEO_ASSET_ALL_FILTER,
       category: '衣物',
+      createdAfter: '',
+      createdBefore: '',
     })[0]?.assets.map((node) => node.id)).toEqual(['coat']);
+  });
+
+  it('filters mapped assets by creation date range', () => {
+    const projection = buildGeoAssetMapProjection([
+      createItem({ id: 'home', name: '我的家', type: 'container', metadata: { location_tag: true, [ASSET_GEO_METADATA_KEY]: HOME_GEO } }),
+      { ...createItem({ id: 'old-camera', name: '旧相机', parent_id: 'home' }), created_at: '2024-01-01T00:00:00.000Z' },
+      { ...createItem({ id: 'new-camera', name: '新相机', parent_id: 'home' }), created_at: '2026-01-01T00:00:00.000Z' },
+    ]);
+
+    const points = filterGeoAssetMapPoints(projection, {
+      query: '',
+      status: GEO_ASSET_ALL_FILTER,
+      category: GEO_ASSET_ALL_FILTER,
+      createdAfter: '2025-01-01',
+      createdBefore: '2026-12-31',
+    });
+
+    expect(points[0]?.assets.map((node) => node.id)).toEqual(['new-camera']);
   });
 });
 

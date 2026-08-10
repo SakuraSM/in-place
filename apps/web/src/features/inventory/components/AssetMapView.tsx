@@ -33,6 +33,8 @@ const DEFAULT_FILTERS: GeoAssetMapFilters = {
   query: '',
   status: GEO_ASSET_ALL_FILTER,
   category: GEO_ASSET_ALL_FILTER,
+  createdAfter: '',
+  createdBefore: '',
 };
 
 const MAP_CONFIG_STALE_TIME_MS = Number.POSITIVE_INFINITY;
@@ -48,7 +50,7 @@ export default function AssetMapView({
   const { user } = useAuth();
   const projection = useMemo(() => buildGeoAssetMapProjection(items), [items]);
   const [filters, setFilters] = useState<GeoAssetMapFilters>(DEFAULT_FILTERS);
-  const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
+  const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const [assignmentTargetId, setAssignmentTargetId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const mapConfigQuery = useQuery({
@@ -61,9 +63,14 @@ export default function AssetMapView({
     () => filterGeoAssetMapPoints(projection, filters),
     [filters, projection],
   );
-  const selectedPoint = selectedPointId
-    ? projection.pointsById.get(selectedPointId) ?? null
-    : null;
+  const filteredPointsById = useMemo(
+    () => new Map(filteredPoints.map((point) => [point.id, point])),
+    [filteredPoints],
+  );
+  const selectedPoints = selectedPointIds.flatMap((pointId) => {
+    const point = filteredPointsById.get(pointId);
+    return point ? [point] : [];
+  });
   const assignmentTarget = assignmentTargetId
     ? projection.unmappedLocations.find((location) => location.id === assignmentTargetId)
       ?? projection.pointsById.get(assignmentTargetId)?.sourceNode
@@ -73,31 +80,32 @@ export default function AssetMapView({
     () => filteredPoints.reduce((count, point) => count + point.metrics.assetCount, 0),
     [filteredPoints],
   );
+  const visibleEstimatedValue = useMemo(
+    () => filteredPoints.reduce((total, point) => total + point.metrics.estimatedValue, 0),
+    [filteredPoints],
+  );
 
   useEffect(() => {
     setFilters(DEFAULT_FILTERS);
-    setSelectedPointId(null);
+    setSelectedPointIds([]);
     setAssignmentTargetId(null);
     setSaveError(null);
   }, [householdId]);
 
   useEffect(() => {
-    if (selectedPointId && !projection.pointsById.has(selectedPointId)) {
-      setSelectedPointId(null);
+    if (selectedPointIds.some((pointId) => !projection.pointsById.has(pointId))) {
+      setSelectedPointIds((current) => current.filter((pointId) => projection.pointsById.has(pointId)));
     }
     if (assignmentTargetId && !assignmentTarget) {
       setAssignmentTargetId(null);
     }
-  }, [assignmentTarget, assignmentTargetId, projection.pointsById, selectedPointId]);
+  }, [assignmentTarget, assignmentTargetId, projection.pointsById, selectedPointIds]);
 
   useEffect(() => {
-    if (
-      selectedPointId
-      && !filteredPoints.some((point) => point.id === selectedPointId)
-    ) {
-      setSelectedPointId(null);
+    if (selectedPointIds.some((pointId) => !filteredPointsById.has(pointId))) {
+      setSelectedPointIds((current) => current.filter((pointId) => filteredPointsById.has(pointId)));
     }
-  }, [filteredPoints, selectedPointId]);
+  }, [filteredPointsById, selectedPointIds]);
 
   const handleAssignLocation = useCallback((locationId: string): void => {
     if (!canEdit) {
@@ -105,7 +113,7 @@ export default function AssetMapView({
     }
     setSaveError(null);
     setAssignmentTargetId(locationId);
-    setSelectedPointId(null);
+    setSelectedPointIds([]);
   }, [canEdit]);
 
   const handleCoordinateChosen = useCallback(async (
@@ -126,7 +134,7 @@ export default function AssetMapView({
       await queryClient.invalidateQueries({
         queryKey: ['inventory', 'all-items', user?.id, householdId],
       });
-      setSelectedPointId(assignmentTarget.id);
+      setSelectedPointIds([assignmentTarget.id]);
       setAssignmentTargetId(null);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : '位置保存失败，请稍后重试');
@@ -183,6 +191,7 @@ export default function AssetMapView({
       <AssetMapSummary
         totals={projection.totals}
         visibleAssetCount={visibleAssetCount}
+        visibleEstimatedValue={visibleEstimatedValue}
       />
 
       <GeoAssetMapToolbar
@@ -208,22 +217,23 @@ export default function AssetMapView({
         <AmapAssetCanvas
           config={mapConfigQuery.data}
           points={filteredPoints}
-          selectedPointId={selectedPointId}
+          selectedPointIds={selectedPointIds}
           assignmentTargetName={assignmentTarget?.item.name ?? null}
-          onSelectPoint={(pointId) => {
+          onSelectPoints={(pointIds) => {
             setAssignmentTargetId(null);
-            setSelectedPointId(pointId);
+            setSelectedPointIds(pointIds);
           }}
           onCoordinateChosen={handleCoordinateChosen}
         />
         <div className="xl:sticky xl:top-28">
           <GeoAssetMapSidebar
-            selectedPoint={selectedPoint}
+            selectedPoints={selectedPoints}
             unmappedLocations={projection.unmappedLocations}
             assignmentTarget={assignmentTarget}
             canEdit={canEdit}
             onAssignLocation={(location) => handleAssignLocation(location.id)}
             onCancelAssignment={() => setAssignmentTargetId(null)}
+            onSaveCoordinate={handleCoordinateChosen}
             onViewDetails={(node) => navigate(resolveItemDetailPath(node.item))}
           />
         </div>

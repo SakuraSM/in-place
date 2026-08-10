@@ -27,10 +27,10 @@ export default function GeoAssetMapToolbar({
 }: GeoAssetMapToolbarProps) {
   return (
     <section
-      className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-end"
+      className="grid gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_10rem_10rem_9rem_9rem_auto] xl:items-end"
       aria-label="地图筛选"
     >
-      <label className="min-w-0 flex-1">
+      <label className="min-w-0">
         <span className="mb-1.5 block text-xs font-bold text-slate-600">搜索位置或资产</span>
         <span className="relative block">
           <Search
@@ -48,7 +48,7 @@ export default function GeoAssetMapToolbar({
         </span>
       </label>
 
-      <label className="lg:w-44">
+      <label>
         <span className="mb-1.5 block text-xs font-bold text-slate-600">资产状态</span>
         <select
           value={filters.status}
@@ -64,7 +64,7 @@ export default function GeoAssetMapToolbar({
         </select>
       </label>
 
-      <label className="lg:w-44">
+      <label>
         <span className="mb-1.5 block text-xs font-bold text-slate-600">资产分类</span>
         <select
           value={filters.category}
@@ -76,6 +76,28 @@ export default function GeoAssetMapToolbar({
             <option key={category} value={category}>{category}</option>
           ))}
         </select>
+      </label>
+
+      <label>
+        <span className="mb-1.5 block text-xs font-bold text-slate-600">创建日期从</span>
+        <input
+          type="date"
+          value={filters.createdAfter}
+          max={filters.createdBefore || undefined}
+          onChange={(event) => onFiltersChange({ ...filters, createdAfter: event.target.value })}
+          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+        />
+      </label>
+
+      <label>
+        <span className="mb-1.5 block text-xs font-bold text-slate-600">创建日期至</span>
+        <input
+          type="date"
+          value={filters.createdBefore}
+          min={filters.createdAfter || undefined}
+          onChange={(event) => onFiltersChange({ ...filters, createdBefore: event.target.value })}
+          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+        />
       </label>
 
       <button

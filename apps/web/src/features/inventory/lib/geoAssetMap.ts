@@ -133,28 +133,6 @@ function findGeoSourceNode(
   return null;
 }
 
-function hasLocationAncestor(
-  node: AssetMapNode,
-  nodesById: Map<string, AssetMapNode>,
-): boolean {
-  const visitedNodeIds = new Set<string>();
-  let parentId = node.parentId;
-
-  while (parentId && !visitedNodeIds.has(parentId)) {
-    visitedNodeIds.add(parentId);
-    const parentNode = nodesById.get(parentId);
-    if (!parentNode) {
-      return false;
-    }
-    if (parentNode.kind === 'location') {
-      return true;
-    }
-    parentId = parentNode.parentId;
-  }
-
-  return false;
-}
-
 function createMutablePoint(sourceNode: AssetMapNode): MutableGeoAssetMapPoint | null {
   const coordinate = readAssetGeoLocation(sourceNode.item.metadata);
   if (!coordinate) {
@@ -202,7 +180,7 @@ export function buildGeoAssetMapProjection(items: Item[]): GeoAssetMapProjection
     const point = createMutablePoint(node);
     if (point) {
       mutablePointsById.set(point.id, point);
-    } else if (!hasLocationAncestor(node, hierarchy.nodesById)) {
+    } else {
       unmappedLocations.push(node);
     }
   }

@@ -28,12 +28,12 @@ vi.mock('./AmapAssetCanvas', () => ({
   default: ({
     points,
     assignmentTargetName,
-    onSelectPoint,
+    onSelectPoints,
     onCoordinateChosen,
   }: {
     points: Array<{ id: string; sourceNode: { item: { name: string } } }>;
     assignmentTargetName: string | null;
-    onSelectPoint: (pointId: string) => void;
+    onSelectPoints: (pointIds: string[]) => void;
     onCoordinateChosen: (coordinate: {
       longitude: number;
       latitude: number;
@@ -42,10 +42,15 @@ vi.mock('./AmapAssetCanvas', () => ({
   }) => (
     <div aria-label="真实地理资产地图" data-assignment={assignmentTargetName ?? ''}>
       {points.map((point) => (
-        <button key={point.id} type="button" onClick={() => onSelectPoint(point.id)}>
+        <button key={point.id} type="button" onClick={() => onSelectPoints([point.id])}>
           地图标记 {point.sourceNode.item.name}
         </button>
       ))}
+      {points.length > 1 ? (
+        <button type="button" onClick={() => onSelectPoints(points.map((point) => point.id))}>
+          聚合位置
+        </button>
+      ) : null}
       {assignmentTargetName ? (
         <button
           type="button"
@@ -104,6 +109,15 @@ const INVENTORY_FIXTURE = [
   createItem({ id: 'coat', name: '羽绒服', parent_id: 'beijing-home', category: '衣物', price: 800 }),
   createItem({ id: 'hangzhou-home', name: '杭州仓库', type: 'container', metadata: { location_tag: true } }),
 ];
+
+const SECOND_GEO_LOCATION = {
+  geo_location: {
+    longitude: 121.4737,
+    latitude: 31.2304,
+    address: '上海市黄浦区',
+  },
+  location_tag: true,
+};
 
 function renderView(
   props: Partial<React.ComponentProps<typeof AssetMapView>> = {},
@@ -175,6 +189,57 @@ describe('AssetMapView', () => {
         },
       });
     });
+  });
+
+  it('assigns a location by entering exact coordinates', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(await screen.findByRole('button', { name: '地图标注' }));
+    await user.type(screen.getByLabelText('经度'), '120.1551');
+    await user.type(screen.getByLabelText('纬度'), '30.2741');
+    await user.type(screen.getByLabelText('地址备注（可选）'), '杭州仓库');
+    await user.click(screen.getByRole('button', { name: '保存坐标' }));
+
+    await waitFor(() => {
+      expect(updateItem).toHaveBeenCalledWith('hangzhou-home', expect.objectContaining({
+        metadata: expect.objectContaining({
+          geo_location: {
+            longitude: 120.1551,
+            latitude: 30.2741,
+            address: '杭州仓库',
+          },
+        }),
+      }));
+    });
+  });
+
+  it('opens a grouped side panel for clustered map points', async () => {
+    const user = userEvent.setup();
+    renderView({
+      items: [
+        ...INVENTORY_FIXTURE,
+        createItem({ id: 'shanghai-home', name: '上海家', type: 'container', metadata: SECOND_GEO_LOCATION }),
+        createItem({ id: 'laptop', name: '笔记本', parent_id: 'shanghai-home', category: '数码', price: 9000 }),
+      ],
+    });
+
+    await user.click(await screen.findByRole('button', { name: '聚合位置' }));
+    expect(screen.getByRole('complementary', { name: '2个地图位置详情' })).toBeInTheDocument();
+    expect(screen.getByText('2 个地图位置')).toBeInTheDocument();
+    expect(screen.getByText('笔记本')).toBeInTheDocument();
+  });
+
+  it('keeps the selected point sidebar aligned with active filters', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(await screen.findByRole('button', { name: '地图标记 北京家' }));
+    await user.selectOptions(screen.getByLabelText('资产状态'), 'borrowed');
+
+    expect(screen.getByRole('button', { name: /相机/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /羽绒服/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText('¥5,000')).toHaveLength(EXPECTED_CURRENCY_OCCURRENCES);
   });
 
   it('keeps map coordinate editing hidden for viewers', async () => {

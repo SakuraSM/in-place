@@ -7,16 +7,20 @@ import type {
 } from '../lib/geoAssetMap';
 import {
   loadAmapSdk,
+  resolveAmapClusterData,
   reverseGeocode,
+  type AmapClusterDatum,
+  type AmapClusterRenderContext,
+  type AmapMarkerClusterInstance,
   type AmapSdkNamespace,
 } from '../lib/amapSdk';
 
 interface AmapAssetCanvasProps {
   config: AmapRuntimeConfig;
   points: GeoAssetMapPoint[];
-  selectedPointId: string | null;
+  selectedPointIds: string[];
   assignmentTargetName: string | null;
-  onSelectPoint: (pointId: string) => void;
+  onSelectPoints: (pointIds: string[]) => void;
   onCoordinateChosen: (coordinate: AssetGeoLocation) => Promise<void>;
 }
 
@@ -63,7 +67,10 @@ function readMapClickCoordinate(event: unknown): AssetGeoLocation | null {
   return { longitude, latitude, address: '' };
 }
 
-function createMarkerElement(point: GeoAssetMapPoint): HTMLButtonElement {
+function createMarkerElement(
+  point: GeoAssetMapPoint,
+  onSelect: (pointIds: string[]) => void,
+): HTMLButtonElement {
   const markerButton = document.createElement('button');
   markerButton.type = 'button';
   markerButton.className = 'geo-asset-marker';
@@ -72,6 +79,10 @@ function createMarkerElement(point: GeoAssetMapPoint): HTMLButtonElement {
     'aria-label',
     `${point.sourceNode.item.name}，${point.metrics.assetCount} 项资产`,
   );
+  markerButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    onSelect([point.id]);
+  });
 
   const count = document.createElement('span');
   count.className = 'geo-asset-marker__count';
@@ -88,29 +99,72 @@ function createMarkerElement(point: GeoAssetMapPoint): HTMLButtonElement {
   return markerButton;
 }
 
+function createClusterElement(
+  context: AmapClusterRenderContext,
+  allData: AmapClusterDatum[],
+  pointsById: Map<string, GeoAssetMapPoint>,
+  onSelect: (pointIds: string[]) => void,
+): HTMLButtonElement {
+  const clusterData = resolveAmapClusterData(context, allData);
+  const pointIds = clusterData.map((datum) => datum.pointId);
+  const locationCount = context.count ?? pointIds.length;
+  const assetCount = pointIds.reduce(
+    (count, pointId) => count + (pointsById.get(pointId)?.metrics.assetCount ?? 0),
+    0,
+  );
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'geo-asset-cluster';
+  button.setAttribute('aria-label', `${locationCount} 个位置，${assetCount} 项资产`);
+  button.innerHTML = `<span class="geo-asset-cluster__count">${assetCount}</span><span class="geo-asset-cluster__label">${locationCount} 个位置</span>`;
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    onSelect(pointIds);
+  });
+  return button;
+}
+
+function calculatePointBounds(points: GeoAssetMapPoint[]): [[number, number], [number, number]] | null {
+  const firstPoint = points[0];
+  if (!firstPoint) {
+    return null;
+  }
+  let west = firstPoint.coordinate.longitude;
+  let east = west;
+  let south = firstPoint.coordinate.latitude;
+  let north = south;
+  for (const point of points.slice(1)) {
+    west = Math.min(west, point.coordinate.longitude);
+    east = Math.max(east, point.coordinate.longitude);
+    south = Math.min(south, point.coordinate.latitude);
+    north = Math.max(north, point.coordinate.latitude);
+  }
+  return [[west, south], [east, north]];
+}
+
 export default function AmapAssetCanvas({
   config,
   points,
-  selectedPointId,
+  selectedPointIds,
   assignmentTargetName,
-  onSelectPoint,
+  onSelectPoints,
   onCoordinateChosen,
 }: AmapAssetCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<AMap.Map | null>(null);
   const namespaceRef = useRef<AmapSdkNamespace | null>(null);
-  const markersRef = useRef<AMap.Marker[]>([]);
+  const clusterRef = useRef<AmapMarkerClusterInstance | null>(null);
   const markerElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const assignmentTargetNameRef = useRef(assignmentTargetName);
   const onCoordinateChosenRef = useRef(onCoordinateChosen);
-  const onSelectPointRef = useRef(onSelectPoint);
+  const onSelectPointsRef = useRef(onSelectPoints);
   const isChoosingCoordinateRef = useRef(false);
   const [loadStatus, setLoadStatus] = useState<MapLoadStatus>('loading');
   const [interactionError, setInteractionError] = useState<string | null>(null);
 
   assignmentTargetNameRef.current = assignmentTargetName;
   onCoordinateChosenRef.current = onCoordinateChosen;
-  onSelectPointRef.current = onSelectPoint;
+  onSelectPointsRef.current = onSelectPoints;
 
   useEffect(() => {
     let isDisposed = false;
@@ -133,6 +187,12 @@ export default function AmapAssetCanvas({
         });
         initializedMap.addControl(new namespace.Scale());
         initializedMap.addControl(new namespace.ToolBar({ position: 'LB' }));
+        initializedMap.addControl(new namespace.Geolocation({
+          position: 'LB',
+          enableHighAccuracy: true,
+          timeout: 10_000,
+          zoomToAccuracy: true,
+        }));
         initializedMap.on('click', async (event: unknown) => {
           if (
             !assignmentTargetNameRef.current
@@ -148,8 +208,15 @@ export default function AmapAssetCanvas({
 
           isChoosingCoordinateRef.current = true;
           setInteractionError(null);
+          let address: string;
           try {
-            const address = await reverseGeocode(namespace, coordinate);
+            address = await reverseGeocode(namespace, coordinate);
+          } catch {
+            setInteractionError('地址识别失败，请检查高德 Web端 Key、安全密钥及域名白名单');
+            isChoosingCoordinateRef.current = false;
+            return;
+          }
+          try {
             await onCoordinateChosenRef.current({ ...coordinate, address });
           } catch {
             setInteractionError('坐标保存失败，请稍后重试');
@@ -170,6 +237,8 @@ export default function AmapAssetCanvas({
     return () => {
       isDisposed = true;
       initializedMap?.destroy();
+      clusterRef.current?.setMap(null);
+      clusterRef.current = null;
       mapRef.current = null;
       namespaceRef.current = null;
     };
@@ -182,65 +251,113 @@ export default function AmapAssetCanvas({
       return;
     }
 
-    if (markersRef.current.length > 0) {
-      map.remove(markersRef.current);
-    }
-    markersRef.current = [];
+    clusterRef.current?.setMap(null);
+    clusterRef.current = null;
     markerElementsRef.current = new Map();
 
-    const nextMarkers = points.map((point) => {
-      const markerElement = createMarkerElement(point);
-      markerElement.addEventListener('click', (event) => {
-        event.stopPropagation();
-        onSelectPointRef.current(point.id);
-      });
-      markerElementsRef.current.set(point.id, markerElement);
-      return new namespace.Marker({
-        map,
-        position: [
-          point.coordinate.longitude,
-          point.coordinate.latitude,
-        ],
-        content: markerElement,
-        anchor: 'bottom-center',
-        title: point.sourceNode.item.name,
-      });
+    const pointsById = new Map(points.map((point) => [point.id, point]));
+    const clusterData: AmapClusterDatum[] = points.map((point) => ({
+      lnglat: [point.coordinate.longitude, point.coordinate.latitude],
+      pointId: point.id,
+      assetCount: point.metrics.assetCount,
+    }));
+    clusterRef.current = new namespace.MarkerCluster(map, clusterData, {
+      gridSize: 60,
+      maxZoom: 18,
+      zoomOnClick: false,
+      averageCenter: true,
+      renderMarker: (context) => {
+        const datum = resolveAmapClusterData(context, clusterData)[0];
+        const point = datum ? pointsById.get(datum.pointId) : null;
+        if (!point) {
+          return;
+        }
+        const markerElement = createMarkerElement(point, (pointIds) => onSelectPointsRef.current(pointIds));
+        markerElementsRef.current.set(point.id, markerElement);
+        context.marker.setContent(markerElement);
+        context.marker.setAnchor('bottom-center');
+      },
+      renderClusterMarker: (context) => {
+        context.marker.setContent(createClusterElement(
+          context,
+          clusterData,
+          pointsById,
+          (pointIds) => onSelectPointsRef.current(pointIds),
+        ));
+        context.marker.setAnchor('center');
+      },
     });
-    markersRef.current = nextMarkers;
 
-    if (nextMarkers.length === 1 && points[0]) {
+    if (points.length === 1 && points[0]) {
       map.setZoomAndCenter(
         SINGLE_POINT_ZOOM,
         [points[0].coordinate.longitude, points[0].coordinate.latitude],
       );
-    } else if (nextMarkers.length > 1) {
-      map.setFitView(nextMarkers, false, MAP_FIT_PADDING, MAX_FIT_VIEW_ZOOM);
+    } else if (points.length > 1) {
+      const bounds = calculatePointBounds(points);
+      if (bounds) {
+        map.setBounds(new namespace.Bounds(bounds[0], bounds[1]), true, MAP_FIT_PADDING);
+        if (map.getZoom() > MAX_FIT_VIEW_ZOOM) {
+          map.setZoom(MAX_FIT_VIEW_ZOOM, true);
+        }
+      }
     } else {
       map.setZoomAndCenter(DEFAULT_MAP_ZOOM, DEFAULT_MAP_CENTER);
     }
+
   }, [loadStatus, points]);
 
   useEffect(() => {
+    const selectedPointIdSet = new Set(selectedPointIds);
     for (const [pointId, markerElement] of markerElementsRef.current) {
       markerElement.classList.toggle(
         'geo-asset-marker--selected',
-        pointId === selectedPointId,
+        selectedPointIdSet.has(pointId),
       );
     }
 
-    const selectedPoint = points.find((point) => point.id === selectedPointId);
+    const selectedPoint = selectedPointIds.length === 1
+      ? points.find((point) => point.id === selectedPointIds[0])
+      : null;
     if (selectedPoint) {
       mapRef.current?.setCenter([
         selectedPoint.coordinate.longitude,
         selectedPoint.coordinate.latitude,
       ]);
     }
-  }, [points, selectedPointId]);
+  }, [points, selectedPointIds]);
+
+  const handleKeyboardNavigation = (event: React.KeyboardEvent<HTMLElement>): void => {
+    if (!['ArrowLeft', 'ArrowRight', 'Escape'].includes(event.key)) {
+      return;
+    }
+    event.preventDefault();
+    if (event.key === 'Escape') {
+      onSelectPoints([]);
+      return;
+    }
+    if (points.length === 0) {
+      return;
+    }
+    const currentIndex = selectedPointIds.length === 1
+      ? points.findIndex((point) => point.id === selectedPointIds[0])
+      : -1;
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const nextIndex = currentIndex < 0
+      ? 0
+      : (currentIndex + direction + points.length) % points.length;
+    const nextPoint = points[nextIndex];
+    if (nextPoint) {
+      onSelectPoints([nextPoint.id]);
+    }
+  };
 
   return (
     <section
       className="relative min-h-[520px] overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-inner"
       aria-label="真实地理资产地图"
+      tabIndex={0}
+      onKeyDown={handleKeyboardNavigation}
     >
       <div ref={containerRef} className="h-[620px] min-h-[520px] w-full" />
 
