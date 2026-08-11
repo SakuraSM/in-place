@@ -3,6 +3,7 @@ export type AppNavigationItemId =
   | 'overview'
   | 'locations'
   | 'activity'
+  | 'manage'
   | 'categories'
   | 'tags'
   | 'scan'
@@ -32,8 +33,8 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   },
   {
     id: 'overview',
-    label: '总览',
-    shortLabel: '总览',
+    label: '库存检索',
+    shortLabel: '库存',
     section: 'inventory',
     priority: 20,
     isDesktopPrimary: true,
@@ -58,13 +59,22 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
     isMobilePrimary: false,
   },
   {
+    id: 'manage',
+    label: '管理中心',
+    shortLabel: '管理',
+    section: 'management',
+    priority: 45,
+    isDesktopPrimary: false,
+    isMobilePrimary: true,
+  },
+  {
     id: 'categories',
     label: '分类管理',
     shortLabel: '管理',
     section: 'management',
     priority: 50,
     isDesktopPrimary: true,
-    isMobilePrimary: true,
+    isMobilePrimary: false,
   },
   {
     id: 'tags',

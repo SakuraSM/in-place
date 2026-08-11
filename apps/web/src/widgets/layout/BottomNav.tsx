@@ -16,6 +16,7 @@ const WEB_MOBILE_NAVIGATION_ADAPTER: Record<AppNavigationItemId, {
   overview: { to: '/overview', icon: Search },
   locations: { to: '/locations', icon: MapPinned },
   activity: { to: '/activity', icon: Clock3 },
+  manage: { to: '/manage', icon: Shapes },
   categories: { to: '/categories', icon: Shapes },
   tags: { to: '/tags', icon: Shapes },
   scan: { to: '/scan', icon: Camera, matchMode: 'exact' },
@@ -66,7 +67,7 @@ export default function BottomNav() {
                     className={`relative transition-colors duration-150 ${isActive ? 'text-brandStrong' : 'text-slate-500'}`}
                   />
                 </div>
-                <span className={`text-[10px] transition-colors duration-150 ${isActive ? 'font-bold text-brandStrong' : 'font-medium text-slate-500'}`}>
+                <span className={`text-[11px] transition-colors duration-150 ${isActive ? 'font-bold text-brandStrong' : 'font-medium text-slate-600'}`}>
                   {shortLabel}
                 </span>
               </motion.div>

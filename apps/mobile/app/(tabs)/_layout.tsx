@@ -16,6 +16,7 @@ const MOBILE_TAB_ADAPTER: Record<AppNavigationItemId, {
   overview: { name: 'overview', iconName: 'grid-outline', activeIconName: 'grid' },
   locations: { name: 'locations', iconName: 'location-outline', activeIconName: 'location' },
   activity: { name: 'activity', iconName: 'time-outline', activeIconName: 'time' },
+  manage: { name: 'categories', iconName: 'briefcase-outline', activeIconName: 'briefcase' },
   categories: { name: 'categories', iconName: 'briefcase-outline', activeIconName: 'briefcase' },
   tags: { name: 'categories', iconName: 'pricetags-outline', activeIconName: 'pricetags' },
   scan: { name: 'scan', iconName: 'scan-outline', activeIconName: 'scan' },

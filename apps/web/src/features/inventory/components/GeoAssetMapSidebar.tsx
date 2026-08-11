@@ -10,6 +10,7 @@ import {
 interface GeoAssetMapSidebarProps {
   selectedPoints: GeoAssetMapPoint[];
   unmappedLocations: AssetMapNode[];
+  unlocatedAssets: AssetMapNode[];
   assignmentTarget: AssetMapNode | null;
   canEdit: boolean;
   onAssignLocation: (location: AssetMapNode) => void;
@@ -23,6 +24,7 @@ const UNMAPPED_PREVIEW_LIMIT = 8;
 export default function GeoAssetMapSidebar({
   selectedPoints,
   unmappedLocations,
+  unlocatedAssets,
   assignmentTarget,
   canEdit,
   onAssignLocation,
@@ -100,7 +102,7 @@ export default function GeoAssetMapSidebar({
   }
 
   return (
-    <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-label="待标注位置">
+    <aside id="map-unlocated-locations" className="scroll-mt-28 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-label="待标注位置">
       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
         <MapPinOff size={21} aria-hidden="true" />
       </span>
@@ -128,6 +130,26 @@ export default function GeoAssetMapSidebar({
                   </button>
                 ) : null}
               </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {unlocatedAssets.length > 0 ? (
+        <div className="mt-5 border-t border-slate-200 pt-4">
+          <p className="mb-2 text-xs font-bold text-slate-500">未定位资产（{unlocatedAssets.length}）</p>
+          <p className="mb-2 text-xs leading-5 text-slate-500">为这些资产选择一个已标注的位置后，它们会出现在地图中。</p>
+          <div className="space-y-1">
+            {unlocatedAssets.slice(0, UNMAPPED_PREVIEW_LIMIT).map((asset) => (
+              <button
+                key={asset.id}
+                type="button"
+                onClick={() => onViewDetails(asset)}
+                className="flex w-full items-center justify-between gap-2 rounded-2xl px-2 py-2 text-left transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong"
+              >
+                <span className="min-w-0 truncate text-sm font-semibold text-slate-800">{asset.item.name}</span>
+                <ExternalLink size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+              </button>
             ))}
           </div>
         </div>

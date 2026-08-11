@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { Crosshair, Loader2, MapPin } from 'lucide-react';
+import type { Root } from 'react-dom/client';
 import type { Category } from '@inplace/domain';
 import type { AmapRuntimeConfig } from '../api/mapApi';
 import type {
@@ -12,11 +11,19 @@ import {
   resolveAmapClusterData,
   reverseGeocode,
   type AmapClusterDatum,
-  type AmapClusterRenderContext,
   type AmapMarkerClusterInstance,
   type AmapSdkNamespace,
 } from '../lib/amapSdk';
-import { CategoryIcon, getColorClasses } from '../lib/categoryPresentation';
+import {
+  calculatePointBounds,
+  clearMarkerIconRoots,
+  createClusterElement,
+  createMarkerElement,
+  deferRootUnmount,
+  readMapClickCoordinate,
+  resolvePointCategory,
+} from './amapAssetCanvasPresentation';
+import AmapAssetCanvasOverlays from './AmapAssetCanvasOverlays';
 
 interface AmapAssetCanvasProps {
   config: AmapRuntimeConfig;
@@ -46,141 +53,6 @@ const MAP_FIT_PADDING = [
   MAP_FIT_PADDING_SIZE,
   MAP_FIT_PADDING_SIZE,
 ];
-
-function isUnknownRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readMapClickCoordinate(event: unknown): AssetGeoLocation | null {
-  if (!isUnknownRecord(event) || !isUnknownRecord(event.lnglat)) {
-    return null;
-  }
-
-  const getLongitude = event.lnglat.getLng;
-  const getLatitude = event.lnglat.getLat;
-  if (typeof getLongitude !== 'function' || typeof getLatitude !== 'function') {
-    return null;
-  }
-
-  const longitude: unknown = getLongitude.call(event.lnglat);
-  const latitude: unknown = getLatitude.call(event.lnglat);
-  if (typeof longitude !== 'number' || typeof latitude !== 'number') {
-    return null;
-  }
-
-  return { longitude, latitude, address: '' };
-}
-
-function createMarkerElement(
-  point: GeoAssetMapPoint,
-  category: Category | null,
-  onSelect: (pointIds: string[]) => void,
-): { element: HTMLButtonElement; iconRoot: Root } {
-  const markerButton = document.createElement('button');
-  markerButton.type = 'button';
-  markerButton.className = 'geo-asset-marker';
-  markerButton.dataset.pointId = point.id;
-  markerButton.setAttribute(
-    'aria-label',
-    `${point.sourceNode.item.name}，${point.metrics.assetCount} 项资产`,
-  );
-  markerButton.addEventListener('click', (event) => {
-    event.stopPropagation();
-    onSelect([point.id]);
-  });
-
-  const iconFrame = document.createElement('span');
-  iconFrame.className = 'geo-asset-marker__icon';
-  if (category) {
-    const colorClasses = getColorClasses(category.color);
-    iconFrame.classList.add(...colorClasses.bg.split(' '), ...colorClasses.text.split(' '));
-  }
-  const iconMount = document.createElement('span');
-  iconMount.className = 'geo-asset-marker__icon-content';
-  const iconRoot = createRoot(iconMount);
-  iconRoot.render(category ? (
-    <CategoryIcon
-      icon={category.icon}
-      presetKey={category.preset_key}
-      fallback={MapPin}
-      size={23}
-      className="geo-asset-marker__fallback-icon"
-      imageClassName="geo-asset-marker__icon-image"
-    />
-  ) : (
-    <MapPin className="geo-asset-marker__fallback-icon" size={23} aria-hidden="true" />
-  ));
-
-  const count = document.createElement('span');
-  count.className = 'geo-asset-marker__count';
-  count.textContent = String(point.metrics.assetCount);
-  count.setAttribute('aria-hidden', 'true');
-  iconFrame.append(iconMount, count);
-  markerButton.append(iconFrame);
-
-  const label = document.createElement('span');
-  label.className = 'geo-asset-marker__label';
-  label.textContent = point.sourceNode.item.name;
-  markerButton.append(label);
-  return { element: markerButton, iconRoot };
-}
-
-function resolvePointCategory(
-  point: GeoAssetMapPoint,
-  categories: Category[],
-): Category | null {
-  const categoryName = point.sourceNode.item.category.trim();
-  if (!categoryName) {
-    return null;
-  }
-
-  return categories.find((category) => (
-    category.scope === 'location' && category.name === categoryName
-  )) ?? null;
-}
-
-function createClusterElement(
-  context: AmapClusterRenderContext,
-  allData: AmapClusterDatum[],
-  pointsById: Map<string, GeoAssetMapPoint>,
-  onSelect: (pointIds: string[]) => void,
-): HTMLButtonElement {
-  const clusterData = resolveAmapClusterData(context, allData);
-  const pointIds = clusterData.map((datum) => datum.pointId);
-  const locationCount = context.count ?? pointIds.length;
-  const assetCount = pointIds.reduce(
-    (count, pointId) => count + (pointsById.get(pointId)?.metrics.assetCount ?? 0),
-    0,
-  );
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'geo-asset-cluster';
-  button.setAttribute('aria-label', `${locationCount} 个位置，${assetCount} 项资产`);
-  button.innerHTML = `<span class="geo-asset-cluster__count">${assetCount}</span><span class="geo-asset-cluster__label">${locationCount} 个位置</span>`;
-  button.addEventListener('click', (event) => {
-    event.stopPropagation();
-    onSelect(pointIds);
-  });
-  return button;
-}
-
-function calculatePointBounds(points: GeoAssetMapPoint[]): [[number, number], [number, number]] | null {
-  const firstPoint = points[0];
-  if (!firstPoint) {
-    return null;
-  }
-  let west = firstPoint.coordinate.longitude;
-  let east = west;
-  let south = firstPoint.coordinate.latitude;
-  let north = south;
-  for (const point of points.slice(1)) {
-    west = Math.min(west, point.coordinate.longitude);
-    east = Math.max(east, point.coordinate.longitude);
-    south = Math.min(south, point.coordinate.latitude);
-    north = Math.max(north, point.coordinate.latitude);
-  }
-  return [[west, south], [east, north]];
-}
 
 export default function AmapAssetCanvas({
   config,
@@ -279,10 +151,7 @@ export default function AmapAssetCanvas({
     void initializeMap();
     return () => {
       isDisposed = true;
-      for (const iconRoot of markerIconRoots.values()) {
-        iconRoot.unmount();
-      }
-      markerIconRoots.clear();
+      clearMarkerIconRoots(markerIconRoots);
       initializedMap?.destroy();
       clusterRef.current?.setMap(null);
       clusterRef.current = null;
@@ -300,10 +169,7 @@ export default function AmapAssetCanvas({
 
     clusterRef.current?.setMap(null);
     clusterRef.current = null;
-    for (const iconRoot of markerIconRootsRef.current.values()) {
-      iconRoot.unmount();
-    }
-    markerIconRootsRef.current.clear();
+    clearMarkerIconRoots(markerIconRootsRef.current);
     markerElementsRef.current = new Map();
 
     const pointsById = new Map(points.map((point) => [point.id, point]));
@@ -323,24 +189,28 @@ export default function AmapAssetCanvas({
         if (!point) {
           return;
         }
-        markerIconRootsRef.current.get(point.id)?.unmount();
-        const { element, iconRoot } = createMarkerElement(
+        const previousIconRoot = markerIconRootsRef.current.get(point.id);
+        if (previousIconRoot) {
+          markerIconRootsRef.current.delete(point.id);
+          deferRootUnmount(previousIconRoot);
+        }
+        const { element, iconRoot } = createMarkerElement({
           point,
-          resolvePointCategory(point, categories),
-          (pointIds) => onSelectPointsRef.current(pointIds),
-        );
+          category: resolvePointCategory(point, categories),
+          onSelect: (pointIds) => onSelectPointsRef.current(pointIds),
+        });
         markerElementsRef.current.set(point.id, element);
         markerIconRootsRef.current.set(point.id, iconRoot);
         context.marker.setContent(element);
         context.marker.setAnchor('bottom-center');
       },
       renderClusterMarker: (context) => {
-        context.marker.setContent(createClusterElement(
+        context.marker.setContent(createClusterElement({
           context,
-          clusterData,
+          allData: clusterData,
           pointsById,
-          (pointIds) => onSelectPointsRef.current(pointIds),
-        ));
+          onSelect: (pointIds) => onSelectPointsRef.current(pointIds),
+        }));
         context.marker.setAnchor('center');
       },
     });
@@ -417,47 +287,11 @@ export default function AmapAssetCanvas({
       onKeyDown={handleKeyboardNavigation}
     >
       <div ref={containerRef} className="h-[620px] min-h-[520px] w-full" />
-
-      {loadStatus === 'loading' ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/90" role="status">
-          <div className="text-center text-slate-600">
-            <Loader2 className="mx-auto animate-spin" size={28} aria-hidden="true" />
-            <p className="mt-3 text-sm font-semibold">正在加载高德地图...</p>
-          </div>
-        </div>
-      ) : null}
-
-      {loadStatus === 'error' ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/95 px-6" role="alert">
-          <div className="max-w-sm text-center">
-            <MapPin className="mx-auto text-rose-500" size={30} aria-hidden="true" />
-            <h2 className="mt-3 text-lg font-bold text-slate-950">地图加载失败</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              请检查高德 Key、域名白名单和服务端安全代理配置。
-            </p>
-          </div>
-        </div>
-      ) : null}
-
-      {assignmentTargetName ? (
-        <div className="absolute left-4 right-4 top-4 z-10 flex items-center gap-3 rounded-2xl border border-brand/30 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:right-auto">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brandTint text-brandStrong">
-            <Crosshair size={18} aria-hidden="true" />
-          </span>
-          <div>
-            <p className="text-sm font-bold text-slate-950">
-              在地图上点击“{assignmentTargetName}”的位置
-            </p>
-            <p className="mt-0.5 text-xs text-slate-600">选点后会自动识别地址并保存</p>
-          </div>
-        </div>
-      ) : null}
-
-      {interactionError ? (
-        <div className="absolute bottom-4 left-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-lg" role="alert">
-          {interactionError}
-        </div>
-      ) : null}
+      <AmapAssetCanvasOverlays
+        loadStatus={loadStatus}
+        assignmentTargetName={assignmentTargetName}
+        interactionError={interactionError}
+      />
     </section>
   );
 }
