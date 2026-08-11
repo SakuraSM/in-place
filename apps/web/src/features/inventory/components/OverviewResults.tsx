@@ -106,7 +106,7 @@ export default function OverviewResults({
   if (isError) {
     return (
       <div role="alert" className="flex min-h-64 flex-1 flex-col items-center justify-center rounded-3xl border border-rose-100 bg-rose-50 p-8 text-center">
-        <p className="font-bold text-rose-800">总览加载失败</p>
+        <p className="font-bold text-rose-800">库存加载失败</p>
         <p className="mt-2 text-sm text-rose-700">请检查网络连接后重试，当前筛选条件会保留。</p>
         <button
           type="button"

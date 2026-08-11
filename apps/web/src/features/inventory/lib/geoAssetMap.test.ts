@@ -7,8 +7,11 @@ import {
   updateAssetGeoLocationMetadata,
 } from './geoAssetMap';
 import {
+  DEFAULT_GEO_ASSET_MAP_FILTERS,
   filterGeoAssetMapPoints,
   GEO_ASSET_ALL_FILTER,
+  parseGeoAssetMapFilters,
+  serializeGeoAssetMapFilters,
 } from './geoAssetMapFilters';
 
 function createItem(input: Partial<Item> & Pick<Item, 'id' | 'name'>): Item {
@@ -250,5 +253,41 @@ describe('asset coordinate metadata', () => {
         address: 'invalid',
       },
     })).toBeNull();
+  });
+});
+
+describe('geographic asset map URL filters', () => {
+  it('round trips non-default filters without removing the selected view', () => {
+    const searchParams = serializeGeoAssetMapFilters(
+      new URLSearchParams('view=map'),
+      {
+        query: '相机',
+        status: 'borrowed',
+        category: '数码电子',
+        createdAfter: '2026-01-01',
+        createdBefore: '2026-12-31',
+      },
+    );
+
+    expect(searchParams.get('view')).toBe('map');
+    expect(parseGeoAssetMapFilters(searchParams)).toEqual({
+      query: '相机',
+      status: 'borrowed',
+      category: '数码电子',
+      createdAfter: '2026-01-01',
+      createdBefore: '2026-12-31',
+    });
+  });
+
+  it('removes default filters and ignores invalid URL values', () => {
+    const searchParams = serializeGeoAssetMapFilters(
+      new URLSearchParams('view=map&mapQuery=旧值&mapStatus=borrowed'),
+      DEFAULT_GEO_ASSET_MAP_FILTERS,
+    );
+
+    expect(searchParams.toString()).toBe('view=map');
+    expect(parseGeoAssetMapFilters(new URLSearchParams(
+      'mapStatus=invalid&mapFrom=2026-1-1&mapTo=not-a-date',
+    ))).toEqual(DEFAULT_GEO_ASSET_MAP_FILTERS);
   });
 });

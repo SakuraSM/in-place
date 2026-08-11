@@ -13,6 +13,7 @@ type TabIcon = ComponentType<{
 export interface ContentTabOption<Value extends string> {
   value: Value;
   label: string;
+  shortLabel?: string;
   icon?: TabIcon;
   count?: number;
 }
@@ -91,14 +92,21 @@ export function ContentTabs<Value extends string>({
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={joinClassNames(
-              'flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors',
+              'flex min-h-10 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-semibold transition-colors sm:flex-none sm:gap-2 sm:px-3',
               isActive
                 ? 'bg-surface text-brandStrong shadow-sm'
                 : 'text-slate-600 hover:bg-surface/70 hover:text-slate-900',
             )}
           >
             {Icon ? <Icon size={15} aria-hidden /> : null}
-            <span>{option.label}</span>
+            {option.shortLabel ? (
+              <>
+                <span className="truncate sm:hidden">{option.shortLabel}</span>
+                <span className="hidden truncate sm:inline">{option.label}</span>
+              </>
+            ) : (
+              <span className="truncate">{option.label}</span>
+            )}
             {option.count !== undefined ? (
               <span
                 className={joinClassNames(

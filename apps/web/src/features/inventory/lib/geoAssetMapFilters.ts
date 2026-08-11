@@ -8,12 +8,81 @@ import type {
 
 export const GEO_ASSET_ALL_FILTER = 'all';
 
+export const DEFAULT_GEO_ASSET_MAP_FILTERS: GeoAssetMapFilters = {
+  query: '',
+  status: GEO_ASSET_ALL_FILTER,
+  category: GEO_ASSET_ALL_FILTER,
+  createdAfter: '',
+  createdBefore: '',
+};
+
+const MAP_FILTER_PARAM_KEYS = {
+  query: 'mapQuery',
+  status: 'mapStatus',
+  category: 'mapCategory',
+  createdAfter: 'mapFrom',
+  createdBefore: 'mapTo',
+} as const;
+
+const VALID_ITEM_STATUSES = new Set<ItemStatus>([
+  'in_stock',
+  'borrowed',
+  'worn_out',
+]);
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 export interface GeoAssetMapFilters {
   query: string;
   status: typeof GEO_ASSET_ALL_FILTER | ItemStatus;
   category: string;
   createdAfter: string;
   createdBefore: string;
+}
+
+function readDateParam(value: string | null): string {
+  return value && ISO_DATE_PATTERN.test(value) ? value : '';
+}
+
+function readStatusParam(value: string | null): GeoAssetMapFilters['status'] {
+  if (value && VALID_ITEM_STATUSES.has(value as ItemStatus)) {
+    return value as ItemStatus;
+  }
+  return GEO_ASSET_ALL_FILTER;
+}
+
+export function parseGeoAssetMapFilters(searchParams: URLSearchParams): GeoAssetMapFilters {
+  return {
+    query: searchParams.get(MAP_FILTER_PARAM_KEYS.query) ?? '',
+    status: readStatusParam(searchParams.get(MAP_FILTER_PARAM_KEYS.status)),
+    category: searchParams.get(MAP_FILTER_PARAM_KEYS.category) || GEO_ASSET_ALL_FILTER,
+    createdAfter: readDateParam(searchParams.get(MAP_FILTER_PARAM_KEYS.createdAfter)),
+    createdBefore: readDateParam(searchParams.get(MAP_FILTER_PARAM_KEYS.createdBefore)),
+  };
+}
+
+export function serializeGeoAssetMapFilters(
+  currentSearchParams: URLSearchParams,
+  filters: GeoAssetMapFilters,
+): URLSearchParams {
+  const nextSearchParams = new URLSearchParams(currentSearchParams);
+  const values: Array<[string, string, string]> = [
+    [MAP_FILTER_PARAM_KEYS.query, filters.query.trim(), ''],
+    [MAP_FILTER_PARAM_KEYS.status, filters.status, GEO_ASSET_ALL_FILTER],
+    [MAP_FILTER_PARAM_KEYS.category, filters.category, GEO_ASSET_ALL_FILTER],
+    [MAP_FILTER_PARAM_KEYS.createdAfter, filters.createdAfter, ''],
+    [MAP_FILTER_PARAM_KEYS.createdBefore, filters.createdBefore, ''],
+  ];
+
+  values.forEach(([key, value, defaultValue]) => {
+    if (!value || value === defaultValue) {
+      nextSearchParams.delete(key);
+      return;
+    }
+    nextSearchParams.set(key, value);
+  });
+
+  return nextSearchParams;
 }
 
 interface AssetFilterInput {

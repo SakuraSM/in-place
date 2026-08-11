@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, KeyRound, MapPinned, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Item } from '@inplace/domain';
 import { useAuth } from '../../../app/providers/auth-context';
 import { fetchCategories } from '../../../legacy/categories';
@@ -14,7 +14,9 @@ import {
 } from '../lib/geoAssetMap';
 import {
   filterGeoAssetMapPoints,
-  GEO_ASSET_ALL_FILTER,
+  DEFAULT_GEO_ASSET_MAP_FILTERS,
+  parseGeoAssetMapFilters,
+  serializeGeoAssetMapFilters,
   type GeoAssetMapFilters,
 } from '../lib/geoAssetMapFilters';
 import { resolveItemDetailPath } from '../lib/detailPath';
@@ -30,14 +32,6 @@ interface AssetMapViewProps {
   onRequestCreateLocation: () => void;
 }
 
-const DEFAULT_FILTERS: GeoAssetMapFilters = {
-  query: '',
-  status: GEO_ASSET_ALL_FILTER,
-  category: GEO_ASSET_ALL_FILTER,
-  createdAfter: '',
-  createdBefore: '',
-};
-
 const MAP_CONFIG_STALE_TIME_MS = Number.POSITIVE_INFINITY;
 
 export default function AssetMapView({
@@ -47,10 +41,12 @@ export default function AssetMapView({
   onRequestCreateLocation,
 }: AssetMapViewProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const projection = useMemo(() => buildGeoAssetMapProjection(items), [items]);
-  const [filters, setFilters] = useState<GeoAssetMapFilters>(DEFAULT_FILTERS);
+  const filters = useMemo(() => parseGeoAssetMapFilters(searchParams), [searchParams]);
+  const deferredFilters = useDeferredValue(filters);
   const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const [assignmentTargetId, setAssignmentTargetId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -66,8 +62,8 @@ export default function AssetMapView({
     enabled: Boolean(user?.id && householdId),
   });
   const filteredPoints = useMemo(
-    () => filterGeoAssetMapPoints(projection, filters),
-    [filters, projection],
+    () => filterGeoAssetMapPoints(projection, deferredFilters),
+    [deferredFilters, projection],
   );
   const filteredPointsById = useMemo(
     () => new Map(filteredPoints.map((point) => [point.id, point])),
@@ -92,11 +88,24 @@ export default function AssetMapView({
   );
 
   useEffect(() => {
-    setFilters(DEFAULT_FILTERS);
     setSelectedPointIds([]);
     setAssignmentTargetId(null);
     setSaveError(null);
   }, [householdId]);
+
+  const handleFiltersChange = useCallback((nextFilters: GeoAssetMapFilters): void => {
+    setSearchParams(
+      serializeGeoAssetMapFilters(searchParams, nextFilters),
+      { replace: true },
+    );
+  }, [searchParams, setSearchParams]);
+
+  const handleResetFilters = useCallback((): void => {
+    setSearchParams(
+      serializeGeoAssetMapFilters(searchParams, DEFAULT_GEO_ASSET_MAP_FILTERS),
+      { replace: true },
+    );
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (selectedPointIds.some((pointId) => !projection.pointsById.has(pointId))) {
@@ -203,8 +212,8 @@ export default function AssetMapView({
       <GeoAssetMapToolbar
         filters={filters}
         categories={projection.categories}
-        onFiltersChange={setFilters}
-        onReset={() => setFilters(DEFAULT_FILTERS)}
+        onFiltersChange={handleFiltersChange}
+        onReset={handleResetFilters}
       />
 
       {saveError ? (
@@ -236,6 +245,7 @@ export default function AssetMapView({
           <GeoAssetMapSidebar
             selectedPoints={selectedPoints}
             unmappedLocations={projection.unmappedLocations}
+            unlocatedAssets={projection.unlocatedAssets}
             assignmentTarget={assignmentTarget}
             canEdit={canEdit}
             onAssignLocation={(location) => handleAssignLocation(location.id)}

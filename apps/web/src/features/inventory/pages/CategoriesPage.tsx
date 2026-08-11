@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, MapPin, Package, Pencil, Plus, Shapes, Sparkles, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import type { Category, CategoryScope } from '../../../legacy/database.types';
+import type { Category, CategoryScope, Item } from '../../../legacy/database.types';
 import {
   applyCategoryPresets,
   deleteCategory,
@@ -22,6 +22,8 @@ import {
   getColorClasses,
   isCustomCategoryImageIcon,
 } from '../lib/categoryPresentation';
+import { isLocationItem } from '../lib/locationTag';
+import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 
 const SCOPE_PRESENTATION = {
   location: { label: '位置分类', description: '用于公寓、房间、楼层等固定空间', icon: MapPin, tone: 'text-sky-700' },
@@ -36,10 +38,14 @@ const SCOPE_PRESENTATION = {
 
 function CategoryListItem({
   category,
+  usageCount,
+  isUsageLoading,
   onEdit,
   onDelete,
 }: {
   category: Category;
+  usageCount: number;
+  isUsageLoading: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -58,8 +64,9 @@ function CategoryListItem({
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-slate-900">{category.name}</p>
-        <p className="mt-0.5 text-xs text-slate-500">
-          {isCustomCategoryImageIcon(category.icon) ? '自定义图标' : category.preset_key ? '常用预设' : '自定义分类'}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+          <span>{isCustomCategoryImageIcon(category.icon) ? '自定义图标' : category.preset_key ? '常用预设' : '自定义分类'}</span>
+          <span>{isUsageLoading ? '统计使用量中…' : `使用 ${usageCount} 项`}</span>
         </p>
       </div>
       <button
@@ -93,6 +100,7 @@ export default function CategoriesPage() {
   const [showEditor, setShowEditor] = useState(false);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const inventoryQuery = useAllInventoryItems();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -150,6 +158,20 @@ export default function CategoriesPage() {
   };
 
   const filteredCategories = categories.filter((category) => category.scope === activeScope);
+  const categoryUsageCounts = useMemo(() => {
+    return (inventoryQuery.data ?? []).reduce<Map<string, number>>((usageCounts, item) => {
+      const scope = resolveItemCategoryScope(item);
+      if (!item.category || !scope) {
+        return usageCounts;
+      }
+      const key = buildCategoryUsageKey(scope, item.category);
+      usageCounts.set(key, (usageCounts.get(key) ?? 0) + 1);
+      return usageCounts;
+    }, new Map());
+  }, [inventoryQuery.data]);
+  const deleteTargetUsageCount = deleteTarget
+    ? categoryUsageCounts.get(buildCategoryUsageKey(deleteTarget.scope, deleteTarget.name)) ?? 0
+    : 0;
   const activePresentation = SCOPE_PRESENTATION[activeScope];
   const scopeTabOptions = (Object.entries(SCOPE_PRESENTATION) as [
     CategoryScope,
@@ -157,6 +179,7 @@ export default function CategoriesPage() {
   ][]).map(([scope, presentation]) => ({
     value: scope,
     label: presentation.label,
+    shortLabel: presentation.label.replace('分类', ''),
     icon: presentation.icon,
     count: categories.filter((category) => category.scope === scope).length,
   }));
@@ -165,14 +188,14 @@ export default function CategoriesPage() {
     <PageShell>
       <PageHeader width="standard" title="分类管理" />
 
-      <PageContent width="standard" className="space-y-5">
+      <PageContent width="standard" className="space-y-5 pb-28 md:pb-8">
         <ContentTabs
           label="分类范围"
           options={scopeTabOptions}
           value={activeScope}
           onChange={setActiveScope}
           panelId="category-scope-panel"
-          className="w-fit"
+          className="w-full sm:w-fit"
         />
 
         <div
@@ -227,6 +250,8 @@ export default function CategoriesPage() {
               <motion.div key={category.id} variants={staggerItem}>
                 <CategoryListItem
                   category={category}
+                  usageCount={categoryUsageCounts.get(buildCategoryUsageKey(category.scope, category.name)) ?? 0}
+                  isUsageLoading={inventoryQuery.isLoading}
                   onEdit={() => {
                     setEditTarget(category);
                     setShowEditor(true);
@@ -277,8 +302,10 @@ export default function CategoriesPage() {
 
       {deleteTarget ? (
         <ConfirmDialog
-          title="删除类别"
-          message={`确定要删除「${deleteTarget.name}」类别吗？已使用该类别的库存记录不会受影响。`}
+          title="删除分类"
+          message={deleteTargetUsageCount > 0
+            ? `「${deleteTarget.name}」正在被 ${deleteTargetUsageCount} 条库存记录使用。删除只会移除分类选项，现有记录仍会保留该分类文字；建议先完成迁移。`
+            : `确定要删除「${deleteTarget.name}」分类吗？该分类当前未被库存记录使用。`}
           confirmLabel="删除"
           danger
           onConfirm={handleDelete}
@@ -287,4 +314,18 @@ export default function CategoriesPage() {
       ) : null}
     </PageShell>
   );
+}
+
+function buildCategoryUsageKey(scope: CategoryScope, categoryName: string): string {
+  return `${scope}:${categoryName}`;
+}
+
+function resolveItemCategoryScope(item: Item): CategoryScope | null {
+  if (item.type === 'item') {
+    return 'item';
+  }
+  if (item.type !== 'container') {
+    return null;
+  }
+  return isLocationItem(item) ? 'location' : 'container';
 }

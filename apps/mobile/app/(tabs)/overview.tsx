@@ -273,7 +273,7 @@ export default function OverviewTab() {
 
   if (allItemsQuery.isError || searchQuery.isError || categoriesQuery.isError) {
     const error = allItemsQuery.error ?? searchQuery.error ?? categoriesQuery.error;
-    return <Screen><StateBlock title="总览加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
+    return <Screen><StateBlock title="库存加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
   }
 
   return (
@@ -286,7 +286,7 @@ export default function OverviewTab() {
         scrollProps={{ onScroll: handleScroll, scrollEventThrottle: 16 }}
       >
       <View style={pageTitleRowStyle}>
-        <Text style={pageTitleStyle}>总览</Text>
+        <Text style={pageTitleStyle}>库存</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={selectionMode ? '退出批量选择' : '进入批量选择'}

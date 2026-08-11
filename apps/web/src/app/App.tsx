@@ -34,6 +34,7 @@ const RemindersPage = lazy(() => import('../features/operations/pages/RemindersP
 const AcceptInvitePage = lazy(() => import('../features/operations/pages/AcceptInvitePage'));
 const InventoryReportPage = lazy(() => import('../features/operations/pages/InventoryReportPage'));
 const DuplicatesPage = lazy(() => import('../features/operations/pages/DuplicatesPage'));
+const ManagePage = lazy(() => import('../features/operations/pages/ManagePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,7 @@ export default function App() {
                   <Route path="/reminders" element={<ProtectedPage><RemindersPage /></ProtectedPage>} />
                   <Route path="/reports" element={<ProtectedPage><InventoryReportPage /></ProtectedPage>} />
                   <Route path="/duplicates" element={<ProtectedPage><DuplicatesPage /></ProtectedPage>} />
+                  <Route path="/manage" element={<ProtectedPage><ManagePage /></ProtectedPage>} />
                   <Route path="/profile" element={<ProtectedPage><ProfilePage /></ProtectedPage>} />
                   <Route path="/profile/ai" element={<ProtectedPage><AiSettingsPage /></ProtectedPage>} />
                   <Route path="/profile/security" element={<ProtectedPage><SecurityPage /></ProtectedPage>} />

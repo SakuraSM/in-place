@@ -184,7 +184,7 @@ describe('AssetMapView', () => {
     renderView();
 
     expect(await screen.findByRole('button', { name: '地图标记 北京家' })).toBeInTheDocument();
-    expect(screen.getByText('地图内资产')).toBeInTheDocument();
+    expect(screen.getByText('匹配资产')).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText('资产状态'), 'borrowed');
     expect(screen.getByRole('button', { name: '地图标记 北京家' })).toBeInTheDocument();

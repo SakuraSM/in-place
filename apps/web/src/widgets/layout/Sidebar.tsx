@@ -25,6 +25,7 @@ const WEB_NAVIGATION_ADAPTER: Record<AppNavigationItemId, {
   overview: { to: '/overview', icon: Search },
   locations: { to: '/locations', icon: MapPinned },
   activity: { to: '/activity', icon: Clock3 },
+  manage: { to: '/manage', icon: Shapes },
   categories: { to: '/categories', icon: Shapes },
   tags: { to: '/tags', icon: StickyNote },
   scan: { to: '/scan', icon: Camera, matchMode: 'exact' },
