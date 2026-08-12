@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchProfileUpdate } from '@/features/profile/mobileProfileApi';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { palette } from '@/shared/ui/theme';
@@ -27,7 +27,7 @@ export default function ProfileEditScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="个人资料" variant="page" />
+      <PageHeader title="个人资料" subtitle="更新账号显示信息" />
 
       <SectionCard title="昵称" delay={60} density="compact" headerMode="compact">
         <TextInput

@@ -11,6 +11,7 @@ import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette, shadows } from '@/shared/ui/theme';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { HomeDashboard } from '@/features/home/HomeDashboard';
 import { HomeItemFormSheet } from '@/features/home/HomeItemFormSheet';
 import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBulkEditSheet';
@@ -28,6 +29,7 @@ const FLOATING_ACTION_BUTTON_BOTTOM_OFFSET = 20;
 
 export default function HomeTab() {
   const { user } = useAuth();
+  const { currentHouseholdId, canEditInventory } = useHousehold();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<ViewMode>('type');
@@ -38,27 +40,27 @@ export default function HomeTab() {
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const rootItemsQuery = useQuery({
-    queryKey: ['mobile', 'home-root-items', user?.id],
+    queryKey: ['mobile', 'home-root-items', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => fetchAllRootItems(user!.id),
   });
 
   const allItemsQuery = useQuery({
-    queryKey: ['mobile', 'home-all-items', user?.id],
+    queryKey: ['mobile', 'home-all-items', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 60,
     queryFn: () => fetchAllHomeItems(user!.id),
   });
 
   const statsQuery = useQuery({
-    queryKey: ['mobile', 'home-stats', user?.id],
+    queryKey: ['mobile', 'home-stats', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 60,
     queryFn: () => itemsApi.fetchItemStats(user!.id),
   });
 
   const recentActivityQuery = useQuery({
-    queryKey: ['mobile', 'home-recent-activity', user?.id],
+    queryKey: ['mobile', 'home-recent-activity', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 30,
     queryFn: async () => {
@@ -68,7 +70,7 @@ export default function HomeTab() {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'home-categories', user?.id],
+    queryKey: ['mobile', 'home-categories', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 60,
     queryFn: () => categoriesApi.fetchCategories(user!.id),
@@ -97,6 +99,7 @@ export default function HomeTab() {
   }
 
   const handleToggleSelectionMode = () => {
+    if (!canEditInventory) return;
     setSelectionMode((current) => {
       if (current) {
         setSelectedIds([]);
@@ -145,12 +148,13 @@ export default function HomeTab() {
           viewMode={viewMode}
           selectionMode={selectionMode}
           selectedIds={selectedIds}
+          canEditInventory={canEditInventory}
           onToggleSelectionMode={handleToggleSelectionMode}
           onChangeViewMode={setViewMode}
           onToggleSelected={handleToggleSelected}
         />
       </Screen>
-      {!selectionMode ? (
+      {!selectionMode && canEditInventory ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="新增物品"

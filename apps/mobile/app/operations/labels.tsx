@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import * as Print from 'expo-print';
 import QRCode from 'qrcode';
 import type { InventoryCode } from '@inplace/domain';
 import { codesApi, getMobileApiBaseUrl } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { ContentTabs } from '@/shared/ui/ContentTabs';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -25,6 +26,7 @@ const LAYOUT_TABS = [
 ];
 
 export default function LabelsScreen() {
+  const { canEditInventory } = useHousehold();
   const notify = useNotify();
   const [countText, setCountText] = useState('30');
   const [layout, setLayout] = useState<LabelLayout>('a4');
@@ -71,7 +73,7 @@ export default function LabelsScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '标签打印', headerShown: true }} />
+      <PageHeader title="标签打印" subtitle="生成并打印归位二维码" />
       <SectionCard title="二维码标签" subtitle="标签不包含账号、物品名称或数据库 ID" density="compact">
         <Text style={labelStyle}>标签数量（1–100）</Text>
         <TextInput
@@ -83,14 +85,14 @@ export default function LabelsScreen() {
         />
         <ContentTabs accessibilityLabel="纸张模板" tabs={LAYOUT_TABS} value={layout} onChange={setLayout} />
         <View style={actionRowStyle}>
-          <Pressable
+          {canEditInventory ? <Pressable
             disabled={loading || !isCountValid}
             onPress={() => void handleCreate()}
             style={[primaryButtonStyle, loading || !isCountValid ? disabledStyle : null]}
           >
             <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
             <Text style={primaryButtonTextStyle}>{loading ? '生成中…' : '生成标签'}</Text>
-          </Pressable>
+          </Pressable> : null}
           <Pressable
             disabled={codes.length === 0}
             onPress={() => void handlePrint()}

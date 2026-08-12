@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { aiApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Entrance } from '@/shared/ui/Entrance';
@@ -92,7 +93,7 @@ export default function ProfileTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="我的" variant="page" />
+        <BrandHeader title="我的" variant="page" accessory={<HouseholdButton compact />} />
       </Entrance>
 
       <SectionCard title="账户" delay={70} density="dense" headerMode="compact">

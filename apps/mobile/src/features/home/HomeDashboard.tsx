@@ -14,6 +14,7 @@ import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 
 type ViewMode = 'type' | 'category';
 
@@ -29,6 +30,7 @@ interface HomeDashboardProps {
   viewMode: ViewMode;
   selectionMode: boolean;
   selectedIds: string[];
+  canEditInventory: boolean;
   onToggleSelectionMode: () => void;
   onChangeViewMode: (mode: ViewMode) => void;
   onToggleSelected: (itemId: string) => void;
@@ -63,6 +65,7 @@ export function HomeDashboard({
   viewMode,
   selectionMode,
   selectedIds,
+  canEditInventory,
   onToggleSelectionMode,
   onChangeViewMode,
   onToggleSelected,
@@ -84,12 +87,14 @@ export function HomeDashboard({
           align="center"
           accessory={(
             <View style={headerActionsStyle}>
-              <Pressable onPress={onToggleSelectionMode} style={[headerActionStyle, selectionMode ? headerActionActiveStyle : null]}>
-                <Ionicons name={selectionMode ? 'close' : 'checkbox-outline'} size={17} color={selectionMode ? '#ffffff' : palette.textMuted} />
-                <Text style={[headerActionTextStyle, selectionMode ? headerActionActiveTextStyle : null]}>
-                  {selectionMode ? '退出' : '批量'}
-                </Text>
-              </Pressable>
+              {canEditInventory ? (
+                <Pressable onPress={onToggleSelectionMode} style={[headerActionStyle, selectionMode ? headerActionActiveStyle : null]}>
+                  <Ionicons name={selectionMode ? 'close' : 'checkbox-outline'} size={17} color={selectionMode ? '#ffffff' : palette.textMuted} />
+                  <Text style={[headerActionTextStyle, selectionMode ? headerActionActiveTextStyle : null]}>
+                    {selectionMode ? '退出' : '批量'}
+                  </Text>
+                </Pressable>
+              ) : null}
               <View style={viewToggleStyle}>
                 <ModeButton mode="type" viewMode={viewMode} onChangeViewMode={onChangeViewMode} />
                 <ModeButton mode="category" viewMode={viewMode} onChangeViewMode={onChangeViewMode} />
@@ -98,8 +103,9 @@ export function HomeDashboard({
           )}
         />
       </Entrance>
+      <HouseholdButton />
 
-      {!selectionMode ? (
+      {!selectionMode && canEditInventory ? (
         <View accessibilityLabel="快捷操作" style={quickActionsStyle}>
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.label} href={action.href as Href} asChild>

@@ -81,6 +81,16 @@ export function getMobileApiBaseUrl() {
   return mobileApiClientConfig.baseUrl;
 }
 
+export function getMobileWebBaseUrl() {
+  const configuredWebBaseUrl = runtimeEnv.process?.env?.EXPO_PUBLIC_WEB_BASE_URL?.trim();
+  if (configuredWebBaseUrl) return configuredWebBaseUrl.replace(/\/+$/, '');
+  const apiUrl = new URL(getMobileApiBaseUrl());
+  apiUrl.pathname = apiUrl.pathname.replace(/\/api(?:\/.*)?$/, '') || '/';
+  apiUrl.search = '';
+  apiUrl.hash = '';
+  return apiUrl.toString().replace(/\/+$/, '');
+}
+
 export function setMobileApiBaseUrl(rawBaseUrl: string) {
   mobileApiClientConfig.baseUrl = normalizeMobileApiBaseUrl(rawBaseUrl.trim());
   return mobileApiClientConfig.baseUrl;

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { aiApi } from '@/shared/api/mobileClient';
 import { useAuth } from '@/providers/AuthProvider';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -68,7 +68,7 @@ export default function AiSettingsScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="AI 配置" variant="page" />
+      <PageHeader title="AI 配置" subtitle="模型与服务连接" />
 
       <SectionCard title="状态" delay={60} density="compact">
         <Text style={bodyStyle}>启用状态：{aiSettings?.enabled ? '已启用' : '未启用'}</Text>

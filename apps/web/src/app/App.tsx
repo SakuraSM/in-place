@@ -35,6 +35,7 @@ const AcceptInvitePage = lazy(() => import('../features/operations/pages/AcceptI
 const InventoryReportPage = lazy(() => import('../features/operations/pages/InventoryReportPage'));
 const DuplicatesPage = lazy(() => import('../features/operations/pages/DuplicatesPage'));
 const ManagePage = lazy(() => import('../features/operations/pages/ManagePage'));
+const MobileMapCanvasPage = lazy(() => import('../features/inventory/pages/MobileMapCanvasPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ export default function App() {
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/mobile-map" element={<MobileMapCanvasPage />} />
                   <Route path="/" element={<ProtectedPage><HomePage /></ProtectedPage>} />
                   <Route path="/item/:id" element={<ProtectedPage><ItemDetailPage /></ProtectedPage>} />
                   <Route path="/container/:id" element={<ProtectedPage><ContainerDetailPage /></ProtectedPage>} />

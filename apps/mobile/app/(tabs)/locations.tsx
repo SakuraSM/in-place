@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
-import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
+import { ITEM_TYPE_PRESENTATION, readAssetGeoLocation } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
@@ -15,9 +16,12 @@ import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { MetricGrid } from '@/shared/ui/MetricGrid';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
+import { ContentTabs } from '@/shared/ui/ContentTabs';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { palette } from '@/shared/ui/theme';
 import { resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { buildChildrenMap, countLocationContents, getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
+import { MobileAssetMapPanel } from '@/features/locations/MobileAssetMapPanel';
 
 const PAGE_SIZE = 100;
 
@@ -30,10 +34,12 @@ const LOCATION_STAT_ITEMS = [
 
 export default function LocationsTab() {
   const { user } = useAuth();
+  const { currentHouseholdId } = useHousehold();
+  const [view, setView] = useState<'tree' | 'map'>('tree');
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const itemsQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'locations', user?.id],
-    enabled: Boolean(user),
+    queryKey: ['mobile', 'locations', currentHouseholdId, user?.id],
+    enabled: Boolean(user && currentHouseholdId),
     initialPageParam: 1,
     queryFn: ({ pageParam }) => itemsApi.searchItemsPage('', user!.id, { page: pageParam, pageSize: PAGE_SIZE }),
     getNextPageParam: (lastPage) => (lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined),
@@ -94,10 +100,22 @@ export default function LocationsTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="位置" />
+        <BrandHeader variant="page" title="位置" accessory={<HouseholdButton compact />} />
       </Entrance>
 
-      {locationItems.length === 0 ? (
+      <ContentTabs
+        accessibilityLabel="位置视图"
+        tabs={[
+          { value: 'tree', label: '位置树', count: locationItems.length },
+          { value: 'map', label: '地图', count: locationItems.filter((item) => Boolean(readAssetGeoLocation(item.metadata))).length },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+
+      {view === 'map' ? <MobileAssetMapPanel /> : (
+        <>
+        {locationItems.length === 0 ? (
         <SectionCard title="暂无位置" delay={70} density="compact">
           <Text style={bodyStyle}>新建收纳时可设为位置，用来表示卧室、客厅、仓库等空间。</Text>
         </SectionCard>
@@ -146,6 +164,8 @@ export default function LocationsTab() {
               </SectionCard>
             </>
           ) : null}
+        </>
+        )}
         </>
       )}
     </Screen>

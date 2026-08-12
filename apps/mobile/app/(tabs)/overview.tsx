@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ItemStatus } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
 import { isLocationItem } from '@/shared/lib/location';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
@@ -77,6 +79,7 @@ const VALID_STATUS_VALUES = new Set(STATUS_FILTERS.map((option) => option.value)
 
 export default function OverviewTab() {
   const { user } = useAuth();
+  const { currentHouseholdId, canEditInventory } = useHousehold();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     q?: string;
@@ -114,21 +117,21 @@ export default function OverviewTab() {
   const effectiveStatusFilter = typeFilter === 'location' || typeFilter === 'container' || statusFilter === 'all' ? undefined : statusFilter;
 
   const allItemsQuery = useQuery({
-    queryKey: ['mobile', 'overview-all-items', user?.id],
+    queryKey: ['mobile', 'overview-all-items', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 60,
     queryFn: () => fetchAllOverviewItems(user!.id),
   });
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'overview-categories', user?.id],
+    queryKey: ['mobile', 'overview-categories', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     staleTime: 1000 * 60,
     queryFn: () => categoriesApi.fetchCategories(user!.id),
   });
 
   const searchQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'overview-search', user?.id, debouncedQuery, typeFilter, effectiveStatusFilter, selectedLocationId, selectedTagsKey],
+    queryKey: ['mobile', 'overview-search', currentHouseholdId, user?.id, debouncedQuery, typeFilter, effectiveStatusFilter, selectedLocationId, selectedTagsKey],
     enabled: Boolean(user),
     initialPageParam: 1,
     queryFn: ({ pageParam }) => itemsApi.searchItemsPage(debouncedQuery, user!.id, {
@@ -287,17 +290,20 @@ export default function OverviewTab() {
       >
       <View style={pageTitleRowStyle}>
         <Text style={pageTitleStyle}>库存</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={selectionMode ? '退出批量选择' : '进入批量选择'}
-          onPress={handleToggleSelectionMode}
-          style={[selectionToggleStyle, selectionMode ? selectionToggleActiveStyle : null]}
-        >
-          <Ionicons name={selectionMode ? 'close' : 'checkbox-outline'} size={16} color={selectionMode ? '#ffffff' : palette.textMuted} />
-          <Text style={[selectionToggleTextStyle, selectionMode ? selectionToggleActiveTextStyle : null]}>
-            {selectionMode ? '退出' : '批量'}
-          </Text>
-        </Pressable>
+        <HouseholdButton compact />
+        {canEditInventory ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={selectionMode ? '退出批量选择' : '进入批量选择'}
+            onPress={handleToggleSelectionMode}
+            style={[selectionToggleStyle, selectionMode ? selectionToggleActiveStyle : null]}
+          >
+            <Ionicons name={selectionMode ? 'close' : 'checkbox-outline'} size={16} color={selectionMode ? '#ffffff' : palette.textMuted} />
+            <Text style={[selectionToggleTextStyle, selectionMode ? selectionToggleActiveTextStyle : null]}>
+              {selectionMode ? '退出' : '批量'}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={searchBoxStyle}>

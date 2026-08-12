@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Category, Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
@@ -123,11 +124,12 @@ export function LocationFilterSheet({
   onClose: () => void;
   onSelect: (locationId: string | null) => void;
 }) {
+  const { currentHouseholdId } = useHousehold();
   const [currentParentId, setCurrentParentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
 
   const selectedPathQuery = useQuery({
-    queryKey: ['mobile', 'overview-location-filter-path', selectedLocationId],
+    queryKey: ['mobile', 'overview-location-filter-path', currentHouseholdId, selectedLocationId],
     enabled: visible && Boolean(selectedLocationId),
     queryFn: async () => {
       const ancestors = await itemsApi.fetchAncestors(selectedLocationId!);
@@ -136,7 +138,7 @@ export function LocationFilterSheet({
   });
 
   const currentContainersQuery = useQuery({
-    queryKey: ['mobile', 'overview-location-filter-children', userId, currentParentId],
+    queryKey: ['mobile', 'overview-location-filter-children', currentHouseholdId, userId, currentParentId],
     enabled: visible && Boolean(userId),
     queryFn: async () => {
       const children = await itemsApi.fetchChildren(currentParentId, userId!);

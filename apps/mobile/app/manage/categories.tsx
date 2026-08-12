@@ -5,8 +5,9 @@ import type { Category, CategoryScope } from '@inplace/domain';
 import { MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
 import { getCategoryPresetLegacyIcon } from '@inplace/ui/category-artwork';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { categoriesApi } from '@/shared/api/mobileClient';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { ContentTabs, type ContentTab } from '@/shared/ui/ContentTabs';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -44,6 +45,7 @@ const SCOPE_DESCRIPTIONS: Record<CategoryScope, string> = {
 
 export default function ManageCategoriesScreen() {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const notify = useNotify();
   const [activeScope, setActiveScope] = useState<CategoryScope>('location');
@@ -53,18 +55,18 @@ export default function ManageCategoriesScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'categories', user?.id],
+    queryKey: ['mobile', 'categories', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => categoriesApi.fetchCategories(user!.id),
   });
   const presetsQuery = useQuery({
-    queryKey: ['mobile', 'category-presets', user?.id],
+    queryKey: ['mobile', 'category-presets', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => categoriesApi.fetchCategoryPresets(),
   });
 
   const refreshCategories = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['mobile', 'categories', user?.id] });
+    await queryClient.invalidateQueries({ queryKey: ['mobile', 'categories', currentHouseholdId, user?.id] });
   };
 
   const saveMutation = useMutation({
@@ -115,7 +117,7 @@ export default function ManageCategoriesScreen() {
       });
       await Promise.all([
         refreshCategories(),
-        queryClient.invalidateQueries({ queryKey: ['mobile', 'category-presets', user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['mobile', 'category-presets', currentHouseholdId, user?.id] }),
       ]);
     },
     onError: (error) => {
@@ -156,7 +158,7 @@ export default function ManageCategoriesScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="分类" variant="page" />
+      <PageHeader title="分类" subtitle="管理位置、收纳与物品分类" />
 
       <ContentTabs
         accessibilityLabel="分类用途"
@@ -183,18 +185,18 @@ export default function ManageCategoriesScreen() {
             </Text>
             <Text style={bodyStyle}>不会覆盖已有分类，已主动删除的预设不会恢复。</Text>
           </View>
-          <Pressable
+          {canEditInventory && Boolean(presetsQuery.data?.missingCount) ? <Pressable
             accessibilityRole="button"
-            disabled={!presetsQuery.data?.missingCount || applyPresetsMutation.isPending}
+            disabled={applyPresetsMutation.isPending}
             onPress={() => applyPresetsMutation.mutate()}
-            style={[miniButtonStyle, !presetsQuery.data?.missingCount ? disabledStyle : null]}
+            style={miniButtonStyle}
           >
             <Text style={miniButtonTextStyle}>{applyPresetsMutation.isPending ? '补充中' : '一键补充'}</Text>
-          </Pressable>
+          </Pressable> : null}
         </View>
       </SectionCard>
 
-      <SectionCard title={editingId ? '编辑分类' : '新建分类'} delay={60} density="compact" headerMode="compact">
+      {canEditInventory ? <SectionCard title={editingId ? '编辑分类' : '新建分类'} delay={60} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {saveMutation.isError ? <Text style={errorTextStyle}>{saveMutation.error instanceof Error ? saveMutation.error.message : '保存失败'}</Text> : null}
         {deleteMutation.isError ? <Text style={errorTextStyle}>{deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}</Text> : null}
@@ -254,7 +256,7 @@ export default function ManageCategoriesScreen() {
             {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>{editingId ? '更新' : '新建'}</Text>}
           </Pressable>
         </View>
-      </SectionCard>
+      </SectionCard> : null}
 
       <SectionCard title={`${SCOPE_TABS.find((tab) => tab.value === activeScope)?.label ?? '分类'} ${visibleCategories.length}`} delay={120} density="compact" headerMode="compact">
         {visibleCategories.length === 0 ? <Text style={bodyStyle}>当前用途还没有分类。</Text> : null}
@@ -270,14 +272,14 @@ export default function ManageCategoriesScreen() {
               <Text style={rowTitleStyle}>{category.name}</Text>
               <Text style={bodyStyle}>{category.scope === 'location' ? '位置' : category.scope === 'container' ? '收纳' : '物品'} · {getColorLabel(category.color)}</Text>
             </View>
-            <View style={miniRowStyle}>
+            {canEditInventory ? <View style={miniRowStyle}>
               <Pressable onPress={() => startEdit(category)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
               <Pressable onPress={() => setDeleteTarget(category)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
-            </View>
+            </View> : null}
           </View>
         ))}
       </SectionCard>
@@ -337,7 +339,6 @@ const miniButtonTextStyle = { color: palette.text, fontSize: 13, fontWeight: '70
 const dangerMiniButtonStyle = { borderRadius: 10, backgroundColor: '#fee2e2', paddingHorizontal: 12, paddingVertical: 8 };
 const dangerMiniButtonTextStyle = { color: palette.danger, fontSize: 13, fontWeight: '700' as const };
 const presetRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
-const disabledStyle = { opacity: 0.45 };
 const editorIdentityStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 };
 const presetVisualRowStyle = {
   flexDirection: 'row' as const,

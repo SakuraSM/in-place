@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { palette } from '@/shared/ui/theme';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import {
   exportInventoryFile,
   importInventoryBackup,
@@ -16,6 +17,7 @@ import {
 } from '@/features/profile/mobileDataManagement';
 
 export default function DataManagementScreen() {
+  const { canEditInventory } = useHousehold();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const [pendingBackup, setPendingBackup] = useState<PendingInventoryBackup | null>(null);
@@ -70,7 +72,7 @@ export default function DataManagementScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="数据管理" variant="page" />
+      <PageHeader title="数据管理" subtitle="备份、导出与恢复" />
 
       <SectionCard title="导出" delay={60} density="compact">
         <Pressable onPress={() => void exportJsonMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
@@ -81,11 +83,11 @@ export default function DataManagementScreen() {
         </Pressable>
       </SectionCard>
 
-      <SectionCard title="导入 JSON" subtitle="会覆盖当前数据" delay={120} density="compact" tone="muted">
+      {canEditInventory ? <SectionCard title="导入 JSON" subtitle="会覆盖当前数据" delay={120} density="compact" tone="muted">
         <Pressable onPress={() => void pickImportMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
           {pickImportMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>选择 JSON 备份</Text>}
         </Pressable>
-      </SectionCard>
+      </SectionCard> : null}
 
       {message ? <Text style={successTextStyle}>{message}</Text> : null}
       {exportJsonMutation.isError ? <Text style={errorTextStyle}>{exportJsonMutation.error instanceof Error ? exportJsonMutation.error.message : 'JSON 导出失败'}</Text> : null}

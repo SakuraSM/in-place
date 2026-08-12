@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { Text, View } from 'react-native';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { palette } from '@/shared/ui/theme';
@@ -15,7 +15,7 @@ export default function AboutScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="关于" variant="page" />
+      <PageHeader title="关于" subtitle="版本与开源信息" />
 
       <SectionCard title="归位" delay={60} density="compact" headerMode="compact">
         <InfoRow label="版本" value={appVersion} />

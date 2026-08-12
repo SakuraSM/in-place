@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { itemsApi, lifecycleApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { ContentTabs } from '@/shared/ui/ContentTabs';
@@ -22,7 +23,8 @@ const TABS = [
   { value: 'batch' as const, label: '批次' },
 ];
 
-export function MobileLifecycleCard({ item }: { item: Item }) {
+export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canEdit?: boolean }) {
+  const { currentHouseholdId } = useHousehold();
   const notify = useNotify();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<LifecycleTab>('stock');
@@ -33,15 +35,15 @@ export function MobileLifecycleCard({ item }: { item: Item }) {
   const [quantity, setQuantity] = useState('1');
 
   const loansQuery = useQuery({
-    queryKey: ['mobile', 'loans', item.id],
+    queryKey: ['mobile', 'loans', currentHouseholdId, item.id],
     queryFn: async () => (await lifecycleApi.listLoans()).filter((loan) => loan.item_id === item.id),
   });
   const maintenanceQuery = useQuery({
-    queryKey: ['mobile', 'maintenance', item.id],
+    queryKey: ['mobile', 'maintenance', currentHouseholdId, item.id],
     queryFn: () => lifecycleApi.listMaintenance(item.id),
   });
   const batchesQuery = useQuery({
-    queryKey: ['mobile', 'batches', item.id],
+    queryKey: ['mobile', 'batches', currentHouseholdId, item.id],
     queryFn: () => lifecycleApi.listBatches(item.id),
   });
 
@@ -103,14 +105,14 @@ export function MobileLifecycleCard({ item }: { item: Item }) {
               <Text style={stockValueStyle}>{item.quantity}</Text>
               <Text style={metaTextStyle}>{item.tracking_mode === 'consumable' ? '消耗品库存' : '当前库存'}</Text>
             </View>
-            <View style={quantityActionsStyle}>
+            {canEdit ? <View style={quantityActionsStyle}>
               <QuantityButton label="减少库存" icon="remove" onPress={() => stockMutation.mutate(item.quantity - 1)} />
               <QuantityButton label="增加库存" icon="add" onPress={() => stockMutation.mutate(item.quantity + 1)} />
-            </View>
+            </View> : null}
           </View>
         ) : null}
         {tab === 'loan' ? (
-          <LifecycleList empty="暂无借用记录" actionLabel="新增借出" onAction={() => setForm('loan')}>
+          <LifecycleList empty="暂无借用记录" actionLabel={canEdit ? '新增借出' : undefined} onAction={() => setForm('loan')}>
             {(loansQuery.data ?? []).map((loan) => (
               <CompactListRow
                 key={loan.id}
@@ -118,20 +120,20 @@ export function MobileLifecycleCard({ item }: { item: Item }) {
                 subtitle={loan.due_at ? `应还 ${new Date(loan.due_at).toLocaleDateString('zh-CN')}` : '未设置归还日期'}
                 meta={loan.returned_at ? '已归还' : '归还'}
                 iconName="return-down-back-outline"
-                onPress={!loan.returned_at ? () => returnMutation.mutate(loan.id) : undefined}
+                onPress={canEdit && !loan.returned_at ? () => returnMutation.mutate(loan.id) : undefined}
               />
             ))}
           </LifecycleList>
         ) : null}
         {tab === 'maintenance' ? (
-          <LifecycleList empty="暂无维护记录" actionLabel="记录维护" onAction={() => setForm('maintenance')}>
+          <LifecycleList empty="暂无维护记录" actionLabel={canEdit ? '记录维护' : undefined} onAction={() => setForm('maintenance')}>
             {(maintenanceQuery.data ?? []).map((record) => (
               <CompactListRow key={record.id} title={record.title} subtitle={record.notes || new Date(record.performed_at).toLocaleDateString('zh-CN')} meta={record.cost === null ? undefined : `¥${record.cost.toFixed(2)}`} iconName="construct-outline" />
             ))}
           </LifecycleList>
         ) : null}
         {tab === 'batch' ? (
-          <LifecycleList empty="暂无消耗批次" actionLabel="新增批次" onAction={() => setForm('batch')}>
+          <LifecycleList empty="暂无消耗批次" actionLabel={canEdit ? '新增批次' : undefined} onAction={() => setForm('batch')}>
             {(batchesQuery.data ?? []).map((batch) => (
               <CompactListRow key={batch.id} title={`${batch.quantity} 件`} subtitle={batch.notes || '消耗品批次'} meta={batch.expiry_date ? new Date(batch.expiry_date).toLocaleDateString('zh-CN') : '无到期日'} iconName="layers-outline" />
             ))}
@@ -171,11 +173,11 @@ function QuantityButton({ label, icon, onPress }: { label: string; icon: 'add' |
   );
 }
 
-function LifecycleList({ empty, actionLabel, onAction, children }: { empty: string; actionLabel: string; onAction: () => void; children: ReactElement | ReactElement[] }) {
+function LifecycleList({ empty, actionLabel, onAction, children }: { empty: string; actionLabel?: string; onAction: () => void; children: ReactElement | ReactElement[] }) {
   const rows = Array.isArray(children) ? children : children ? [children] : [];
   return (
     <View style={{ gap: 8 }}>
-      <Pressable onPress={onAction} style={addButtonStyle}><Text style={addButtonTextStyle}>{actionLabel}</Text></Pressable>
+      {actionLabel ? <Pressable onPress={onAction} style={addButtonStyle}><Text style={addButtonTextStyle}>{actionLabel}</Text></Pressable> : null}
       {rows.length === 0 ? <Text style={metaTextStyle}>{empty}</Text> : children as never}
     </View>
   );

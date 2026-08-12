@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
 import { Pressable, View } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { categoriesApi, tagsApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
@@ -23,13 +25,14 @@ interface ManageMenuItem {
 
 export default function ManageTab() {
   const { user } = useAuth();
+  const { currentHouseholdId } = useHousehold();
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'categories', user?.id],
+    queryKey: ['mobile', 'categories', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => categoriesApi.fetchCategories(user!.id),
   });
   const tagsQuery = useQuery({
-    queryKey: ['mobile', 'tags', user?.id],
+    queryKey: ['mobile', 'tags', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => tagsApi.fetchTags(user!.id),
   });
@@ -105,7 +108,7 @@ export default function ManageTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="工具中心" variant="page" />
+        <BrandHeader title="工具中心" variant="page" accessory={<HouseholdButton compact />} />
       </Entrance>
 
       <SectionCard title="库存工具" subtitle="盘点、提醒、报告与标签" delay={60} density="dense" headerMode="compact">

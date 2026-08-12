@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Pressable, Text } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { buildInventoryReport } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { stocktakesApi } from '@/shared/api/mobileClient';
 import { fetchAllMobileItems } from '@/shared/api/fetchAllMobileItems';
 import { MetricGrid } from '@/shared/ui/MetricGrid';
@@ -18,9 +19,10 @@ import { palette } from '@/shared/ui/theme';
 
 export default function ReportsScreen() {
   const { user } = useAuth();
+  const { currentHouseholdId } = useHousehold();
   const notify = useNotify();
   const reportQuery = useQuery({
-    queryKey: ['mobile', 'inventory-report', user?.id],
+    queryKey: ['mobile', 'inventory-report', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
       const [items, stocktakes] = await Promise.all([
@@ -60,7 +62,7 @@ export default function ReportsScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '库存报告', headerShown: true }} />
+      <PageHeader title="库存报告" subtitle="价值、补货、到期与盘点摘要" />
       <SectionCard title="家庭库存报告" subtitle="用于搬家、保险留档和日常补货" density="compact">
         <Pressable onPress={() => void handleExportPdf()} style={primaryButtonStyle}>
           <Ionicons name="document-outline" size={18} color="#ffffff" />

@@ -289,10 +289,17 @@ The mobile app lives in [apps/mobile](apps/mobile). It uses the same API, domain
 Key variables:
 
 - `EXPO_PUBLIC_API_BASE_URL`: optional default API server before a user configures one in the app.
+- `EXPO_PUBLIC_WEB_BASE_URL`: optional debug-only Web origin for the map canvas; production derives it from the API origin.
 - `EXPO_PROJECT_ID`: GitHub Actions repository variable used by EAS Build.
 - `EXPO_TOKEN`: GitHub Actions secret used by EAS Build.
 
 On first login or registration, enter the server address and account credentials in the app. The app normalizes the server address to include `/api`, stores the selected server on device, and keeps the auth token in secure storage.
+
+Android provides the same inventory workflows as Web through native screens: Home, Inventory, Capture, Management, and Profile. Locations include tree and map views. The map alone runs in a restricted WebView using the public AMap Web JS key; filters, household permissions, details, and coordinate confirmation remain native. The AMap security code is never sent to the app.
+
+![Android home](docs/assets/android-home.png)
+
+See the [Android/Web parity guide](docs/product/android-web-parity.md) for the capability matrix, map bridge boundary, local preview, and troubleshooting.
 
 ## Development Scripts
 

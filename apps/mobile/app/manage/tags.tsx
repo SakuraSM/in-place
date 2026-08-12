@@ -4,8 +4,9 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import type { Database, TagEntity } from '@inplace/domain';
 import { MANAGEMENT_COLOR_OPTIONS } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { tagsApi } from '@/shared/api/mobileClient';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -26,6 +27,7 @@ const EMPTY_TAG: TagDraft = {
 
 export default function ManageTagsScreen() {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<TagDraft>(EMPTY_TAG);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -33,13 +35,13 @@ export default function ManageTagsScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const tagsQuery = useQuery({
-    queryKey: ['mobile', 'tags', user?.id],
+    queryKey: ['mobile', 'tags', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => tagsApi.fetchTags(user!.id),
   });
 
   const refreshTags = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['mobile', 'tags', user?.id] });
+    await queryClient.invalidateQueries({ queryKey: ['mobile', 'tags', currentHouseholdId, user?.id] });
   };
 
   const saveMutation = useMutation({
@@ -97,9 +99,9 @@ export default function ManageTagsScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="标签" variant="page" />
+      <PageHeader title="标签" subtitle="用于搜索与组合筛选" />
 
-      <SectionCard title={editingId ? '编辑标签' : '新建标签'} delay={60} density="compact" headerMode="compact">
+      {canEditInventory ? <SectionCard title={editingId ? '编辑标签' : '新建标签'} delay={60} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {saveMutation.isError ? <Text style={errorTextStyle}>{saveMutation.error instanceof Error ? saveMutation.error.message : '保存失败'}</Text> : null}
         {deleteMutation.isError ? <Text style={errorTextStyle}>{deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}</Text> : null}
@@ -129,7 +131,7 @@ export default function ManageTagsScreen() {
             {saveMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>{editingId ? '更新' : '新建'}</Text>}
           </Pressable>
         </View>
-      </SectionCard>
+      </SectionCard> : null}
 
       <SectionCard title={`全部标签 ${tags.length}`} delay={120} density="compact" headerMode="compact">
         {tags.map((tag) => (
@@ -138,14 +140,14 @@ export default function ManageTagsScreen() {
               <Text style={rowTitleStyle}>{tag.name}</Text>
               <Text style={bodyStyle}>{tag.description || '暂无'} · {getColorLabel(tag.color)}</Text>
             </View>
-            <View style={miniRowStyle}>
+            {canEditInventory ? <View style={miniRowStyle}>
               <Pressable onPress={() => startEdit(tag)} style={miniButtonStyle}>
                 <Text style={miniButtonTextStyle}>编辑</Text>
               </Pressable>
               <Pressable onPress={() => setDeleteTarget(tag)} style={dangerMiniButtonStyle}>
                 <Text style={dangerMiniButtonTextStyle}>删除</Text>
               </Pressable>
-            </View>
+            </View> : null}
           </View>
         ))}
       </SectionCard>

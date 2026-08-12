@@ -19,6 +19,7 @@ export interface DraftRecognition {
 interface ScanRecognitionResultsProps {
   drafts: DraftRecognition[];
   saving: boolean;
+  canSave?: boolean;
   onSaveSelected: () => void;
   onToggleDraft: (draftId: string) => void;
   onToggleEditing: (draftId: string) => void;
@@ -29,6 +30,7 @@ interface ScanRecognitionResultsProps {
 export function ScanRecognitionResults({
   drafts,
   saving,
+  canSave = true,
   onSaveSelected,
   onToggleDraft,
   onToggleEditing,
@@ -40,13 +42,13 @@ export function ScanRecognitionResults({
 
   return (
     <View style={rootStyle}>
-      <Pressable
+      {canSave ? <Pressable
         onPress={onSaveSelected}
         disabled={!canSaveSelected}
         style={[saveButtonStyle, !canSaveSelected ? disabledButtonStyle : null]}
       >
         {saving ? <ActivityIndicator color="#ffffff" /> : <Text style={saveButtonTextStyle}>保存选中 ({selectedCount})</Text>}
-      </Pressable>
+      </Pressable> : null}
 
       {drafts.length === 0 ? (
         <Text style={hintStyle}>暂无结果</Text>

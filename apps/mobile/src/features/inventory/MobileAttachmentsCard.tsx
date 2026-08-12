@@ -5,6 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Alert, ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { lifecycleApi, uploadAttachmentFromUri } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { palette } from '@/shared/ui/theme';
@@ -55,13 +56,14 @@ async function openProtectedAttachment(fileUrl: string, name: string, mimeType: 
   });
 }
 
-export function MobileAttachmentsCard({ itemId }: { itemId: string }) {
+export function MobileAttachmentsCard({ itemId, canEdit = true }: { itemId: string; canEdit?: boolean }) {
+  const { currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const attachmentsQuery = useQuery({
-    queryKey: ['mobile', 'attachments', itemId],
+    queryKey: ['mobile', 'attachments', currentHouseholdId, itemId],
     queryFn: () => lifecycleApi.listAttachments(itemId),
   });
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['mobile', 'attachments', itemId] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['mobile', 'attachments', currentHouseholdId, itemId] });
   const uploadMutation = useMutation({
     mutationFn: async () => {
       const result = await DocumentPicker.getDocumentAsync({
@@ -106,7 +108,7 @@ export function MobileAttachmentsCard({ itemId }: { itemId: string }) {
 
   return (
     <SectionCard title={`凭证与附件${attachments.length ? ` ${attachments.length}` : ''}`} delay={155} density="dense" headerMode="compact">
-      <Pressable
+      {canEdit ? <Pressable
         accessibilityRole="button"
         accessibilityLabel="上传凭证或附件"
         disabled={uploadMutation.isPending}
@@ -117,7 +119,7 @@ export function MobileAttachmentsCard({ itemId }: { itemId: string }) {
           ? <ActivityIndicator size="small" color={palette.brandStrong} />
           : <Ionicons name="cloud-upload-outline" size={18} color={palette.brandStrong} />}
         <Text style={uploadButtonTextStyle}>{uploadMutation.isPending ? '上传中…' : '上传凭证'}</Text>
-      </Pressable>
+      </Pressable> : null}
 
       {error ? (
         <Text accessibilityRole="alert" style={errorStyle}>
@@ -131,7 +133,7 @@ export function MobileAttachmentsCard({ itemId }: { itemId: string }) {
         <View style={listStyle}>
           {attachments.map((attachment) => (
             <View key={attachment.id} style={rowStyle}>
-              <Pressable
+              {canEdit ? <Pressable
                 accessibilityRole="button"
                 onPress={() => openMutation.mutate(attachment)}
                 style={({ pressed }) => [fileButtonStyle, pressed ? pressedStyle : null]}
@@ -141,7 +143,7 @@ export function MobileAttachmentsCard({ itemId }: { itemId: string }) {
                   <Text numberOfLines={1} style={fileNameStyle}>{attachment.name}</Text>
                   <Text numberOfLines={1} style={fileMetaStyle}>{attachment.mime_type || '附件'}</Text>
                 </View>
-              </Pressable>
+              </Pressable> : null}
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`删除附件 ${attachment.name}`}

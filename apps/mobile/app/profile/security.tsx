@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -28,7 +28,7 @@ export default function SecurityScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <BrandHeader title="账号安全" variant="page" />
+      <PageHeader title="账号安全" subtitle="密码与登录会话" />
 
       <SectionCard title="修改密码" subtitle="至少 8 位" delay={60} density="compact">
         <TextInput

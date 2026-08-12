@@ -7,6 +7,7 @@ import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, Text, TextIn
 import type { ItemCreateInput, ItemStatus, ItemType } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { categoriesApi, itemsApi, tagsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { updateLocationMetadata } from '@/shared/lib/location';
@@ -57,6 +58,7 @@ const INITIAL_FORM: FormState = {
 
 export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<FormState>(INITIAL_FORM);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
   const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(null);
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'home-form-categories', user?.id, draft.type, draft.isLocation],
+    queryKey: ['mobile', 'home-form-categories', currentHouseholdId, user?.id, draft.type, draft.isLocation],
     enabled: visible && Boolean(user),
     queryFn: () => categoriesApi.fetchCategories(
       user!.id,
@@ -73,7 +75,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
   });
 
   const tagsQuery = useQuery({
-    queryKey: ['mobile', 'home-form-tags', user?.id],
+    queryKey: ['mobile', 'home-form-tags', currentHouseholdId, user?.id],
     enabled: visible && Boolean(user),
     queryFn: () => tagsApi.fetchTags(user!.id),
   });
@@ -96,6 +98,7 @@ export function HomeItemFormSheet({ visible, onClose }: HomeItemFormSheetProps) 
       if (!user) {
         throw new Error('请先登录');
       }
+      if (!canEditInventory) throw new Error('当前家庭为只读');
 
       const payload: ItemCreateInput = {
         user_id: user.id,
