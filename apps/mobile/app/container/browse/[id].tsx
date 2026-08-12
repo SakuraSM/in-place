@@ -5,9 +5,10 @@ import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { itemsApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
 import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { ActionButtonRow } from '@/shared/ui/ActionButtonRow';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
@@ -21,19 +22,20 @@ import { InventoryImage } from '@/features/inventory/InventoryImage';
 
 export default function ContainerBrowseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const containerQuery = useQuery({
-    queryKey: ['mobile', 'container-browse-detail', id],
+    queryKey: ['mobile', 'container-browse-detail', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => itemsApi.fetchItem(id!),
   });
   const container = containerQuery.data ?? null;
   const ancestorsQuery = useQuery({
-    queryKey: ['mobile', 'container-browse-ancestors', id],
+    queryKey: ['mobile', 'container-browse-ancestors', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => itemsApi.fetchAncestors(id!),
   });
   const childrenQuery = useQuery({
-    queryKey: ['mobile', 'container-browse-children', id, container?.user_id],
+    queryKey: ['mobile', 'container-browse-children', currentHouseholdId, id, container?.user_id],
     enabled: Boolean(id) && Boolean(container?.user_id),
     queryFn: () => itemsApi.fetchChildren(id!, container!.user_id),
   });
@@ -58,8 +60,7 @@ export default function ContainerBrowseScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <BrandHeader
-        variant="page"
+      <PageHeader
         title={container.name}
         subtitle={`${containerLabel}内容 · ${children.length} 项`}
         accessory={(
@@ -74,13 +75,12 @@ export default function ContainerBrowseScreen() {
         )}
       />
 
-      <ActionButtonRow
+      {canEditInventory ? <ActionButtonRow
         compact
         actions={[
-          { key: 'back', label: '返回', iconName: 'arrow-back', onPress: () => router.back() },
-          { key: 'add', label: '添加内容', iconName: 'add', variant: 'primary', onPress: () => router.push(`/item/form?parentId=${container.id}&type=item`) },
+          { key: 'add', label: '添加内容', iconName: 'add' as const, variant: 'primary' as const, onPress: () => router.push(`/item/form?parentId=${container.id}&type=item`) },
         ]}
-      />
+      /> : null}
 
       <SectionCard title="收纳位置" delay={60} density="dense" headerMode="compact">
         <View style={pathRailStyle}>

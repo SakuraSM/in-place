@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Stack } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text, View } from 'react-native';
 import { groupDuplicateInventory, type DuplicateInventoryGroup } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { fetchAllMobileItems } from '@/shared/api/fetchAllMobileItems';
 import { mobileApiClient } from '@/shared/api/mobileClient';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -15,11 +16,12 @@ import { palette } from '@/shared/ui/theme';
 
 export default function DuplicatesScreen() {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const notify = useNotify();
   const queryClient = useQueryClient();
   const [targetGroup, setTargetGroup] = useState<DuplicateInventoryGroup | null>(null);
   const itemsQuery = useQuery({
-    queryKey: ['mobile', 'duplicate-items', user?.id],
+    queryKey: ['mobile', 'duplicate-items', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => fetchAllMobileItems(user!.id),
   });
@@ -61,7 +63,7 @@ export default function DuplicatesScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '重复项', headerShown: true }} />
+      <PageHeader title="重复项" subtitle="检查并合并相似库存记录" />
       <SectionCard title={`重复物品检测 · ${groups.length} 组`} subtitle="按类型、规范化名称和类别识别" density="compact">
         {groups.length === 0 ? <Text style={emptyTextStyle}>没有发现同名同类别的重复记录。</Text> : null}
         {groups.map((group) => (
@@ -71,9 +73,9 @@ export default function DuplicatesScreen() {
                 <Text style={titleStyle}>{group.items[0].name}</Text>
                 <Text style={metaStyle}>{group.category || '未分类'} · {group.items.length} 条 · 数量 {group.items.reduce((sum, item) => sum + item.quantity, 0)}</Text>
               </View>
-              <Pressable onPress={() => setTargetGroup(group)} style={mergeButtonStyle}>
+              {canEditInventory ? <Pressable onPress={() => setTargetGroup(group)} style={mergeButtonStyle}>
                 <Text style={mergeButtonTextStyle}>合并</Text>
-              </Pressable>
+              </Pressable> : null}
             </View>
             {group.items.map((item, index) => (
               <Text key={item.id} style={recordStyle}>{index === 0 ? '保留' : '移除'} · 数量 {item.quantity} · {new Date(item.created_at).toLocaleDateString('zh-CN')}</Text>

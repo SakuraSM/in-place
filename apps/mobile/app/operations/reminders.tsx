@@ -1,8 +1,9 @@
-import { Stack } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from 'react-native';
 import type { Reminder, ReminderType } from '@inplace/domain';
 import { lifecycleApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -18,10 +19,11 @@ const REMINDER_PRESENTATION: Record<ReminderType, { label: string; icon: 'shield
 };
 
 export default function RemindersScreen() {
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const notify = useNotify();
   const queryClient = useQueryClient();
   const remindersQuery = useQuery({
-    queryKey: ['mobile', 'reminders'],
+    queryKey: ['mobile', 'reminders', currentHouseholdId],
     queryFn: () => lifecycleApi.listReminders(),
   });
   const statusMutation = useMutation({
@@ -48,7 +50,7 @@ export default function RemindersScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '提醒', headerShown: true }} />
+      <PageHeader title="提醒" subtitle="保修、借用、维护与盘点" />
       <SectionCard title={`提醒中心 · ${unreadCount} 条未读`} subtitle="保修、借用、维护和久未盘点" density="compact">
         {reminders.length === 0 ? <Text style={emptyTextStyle}>当前没有提醒。</Text> : null}
         {reminders.map((reminder) => {
@@ -59,14 +61,14 @@ export default function RemindersScreen() {
               title={reminder.title}
               subtitle={reminder.description || presentation.label}
               caption={`到期：${new Date(reminder.due_at).toLocaleDateString('zh-CN')}`}
-              meta={reminder.status === 'unread' ? '标为已读' : '设为未读'}
+              meta={canEditInventory ? (reminder.status === 'unread' ? '标为已读' : '设为未读') : undefined}
               iconName={presentation.icon}
               selected={reminder.status === 'unread'}
               disabled={statusMutation.isPending}
-              onPress={() => statusMutation.mutate({
+              onPress={canEditInventory ? () => statusMutation.mutate({
                 reminder,
                 nextStatus: reminder.status === 'unread' ? 'read' : 'unread',
-              })}
+              }) : undefined}
             />
           );
         })}

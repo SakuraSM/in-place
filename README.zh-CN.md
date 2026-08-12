@@ -289,10 +289,17 @@ POSTGRES_DATA_DIR=/Volumes/data/inplace/postgres
 主要变量：
 
 - `EXPO_PUBLIC_API_BASE_URL`：用户在 App 内配置服务器前使用的默认 API 地址。
+- `EXPO_PUBLIC_WEB_BASE_URL`：仅用于调试的地图画布 Web 地址；生产环境从 API Origin 自动推导。
 - `EXPO_PROJECT_ID`：GitHub Actions 中用于 EAS Build 的仓库变量。
 - `EXPO_TOKEN`：GitHub Actions 中用于 EAS Build 的密钥。
 
 首次登录或注册时，在 App 内输入服务器地址和账号密码。App 会把服务器地址规范化到 `/api`，在设备端保存服务器配置，并使用安全存储保存认证令牌。生产版移动端仅接受 HTTPS 服务器；HTTP 仅用于 debug 开发构建。
+
+Android 通过原生页面覆盖 Web 的主要库存工作流，底部导航固定为“首页 / 库存 / 拍照 / 管理 / 我的”。位置页提供位置树与地图双视图；只有高德地图画布运行在受限 WebView 中，筛选、家庭权限、详情和坐标确认仍由原生层负责。高德安全密钥不会下发到 App。
+
+![Android 首页](docs/assets/android-home.png)
+
+能力矩阵、地图桥接安全边界、本地实时预览和排障步骤见 [Android/Web 对齐说明](docs/product/android-web-parity.md)。
 
 ## 开发脚本
 

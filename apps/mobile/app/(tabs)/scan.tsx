@@ -5,12 +5,14 @@ import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import type { AIRecognitionResult, ItemCreateInput } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { ScanCropSheet } from '@/features/scan/ScanCropSheet';
 import { ScanRecognitionResults, type DraftRecognition } from '@/features/scan/ScanRecognitionResults';
 import { cropImageFromUri, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox, type ScanSourceImage } from '@/features/scan/scanImageCrop';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -78,6 +80,7 @@ async function createRecognitionDrafts(results: AIRecognitionResult[], asset: Se
 
 export default function ScanTab() {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const [selectedAsset, setSelectedAsset] = useState<SelectedAsset | null>(null);
   const [drafts, setDrafts] = useState<DraftRecognition[]>([]);
@@ -87,7 +90,7 @@ export default function ScanTab() {
   const [message, setMessage] = useState<string | null>(null);
 
   const aiStatusQuery = useQuery({
-    queryKey: ['mobile', 'ai-status', user?.id],
+    queryKey: ['mobile', 'ai-status', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     queryFn: () => aiApi.fetchAiAvailability(),
   });
@@ -334,7 +337,7 @@ export default function ScanTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="拍照录入" subtitle="识别照片，确认后新建库存" variant="page" />
+        <BrandHeader title="拍照录入" subtitle="识别照片，确认后新建库存" variant="page" accessory={<HouseholdButton compact />} />
       </Entrance>
 
       <SectionCard
@@ -391,6 +394,7 @@ export default function ScanTab() {
         <ScanRecognitionResults
           drafts={drafts}
           saving={saveMutation.isPending}
+          canSave={canEditInventory}
           onSaveSelected={() => void handleSaveSelected()}
           onToggleDraft={toggleDraft}
           onToggleEditing={toggleDraftEditing}

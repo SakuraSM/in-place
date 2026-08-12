@@ -1,4 +1,5 @@
 export * from './activity';
+export * from './asset-map';
 export * from './ai';
 export * from './categories';
 export * from './codes';
@@ -6,6 +7,9 @@ export * from './households';
 export * from './items';
 export * from './inventory-operations';
 export * from './lifecycle';
+export * from './geo-asset-map';
+export * from './mobile-map-bridge';
+export * from './maps';
 export * from './navigation';
 export * from './presentation';
 export * from './shared';

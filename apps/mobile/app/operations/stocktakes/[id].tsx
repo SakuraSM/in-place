@@ -1,12 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, Pressable, Switch, Text, View } from 'react-native';
 import type { StocktakeEntry } from '@inplace/domain';
 import { parseInventoryCode } from '@inplace/app-core';
 import { codesApi, stocktakesApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Screen } from '@/shared/ui/Screen';
@@ -16,6 +18,7 @@ import { useNotify } from '@/shared/ui/ToastProvider';
 import { palette } from '@/shared/ui/theme';
 
 export default function StocktakeDetailScreen() {
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const { id } = useLocalSearchParams<{ id: string }>();
   const notify = useNotify();
   const queryClient = useQueryClient();
@@ -26,7 +29,7 @@ export default function StocktakeDetailScreen() {
   const [reconcileQuantities, setReconcileQuantities] = useState(true);
 
   const sessionQuery = useQuery({
-    queryKey: ['mobile', 'stocktake', id],
+    queryKey: ['mobile', 'stocktake', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => stocktakesApi.fetch(id),
   });
@@ -102,13 +105,13 @@ export default function StocktakeDetailScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: session.location.name, headerShown: true }} />
+      <PageHeader title={session.location.name} subtitle="盘点详情" />
       <SectionCard
         title={session.location.name}
         subtitle={`${countedCount} / ${session.entries.length} 已核对`}
         density="compact"
       >
-        {!isCompleted ? (
+        {canEditInventory && !isCompleted ? (
           <View style={actionRowStyle}>
             <Pressable onPress={() => setScannerOpen(true)} style={primaryButtonStyle}>
               <Ionicons name="scan" size={18} color="#ffffff" />
@@ -118,7 +121,7 @@ export default function StocktakeDetailScreen() {
               <Text style={secondaryButtonTextStyle}>完成盘点</Text>
             </Pressable>
           </View>
-        ) : <Text style={completedTextStyle}>盘点已完成，结果只读。</Text>}
+        ) : <Text style={completedTextStyle}>{isCompleted ? '盘点已完成，结果只读。' : '当前家庭为只读，仅可查看盘点。'}</Text>}
       </SectionCard>
 
       <SectionCard title={`核对清单 ${session.entries.length}`} density="dense" headerMode="compact">
@@ -129,7 +132,7 @@ export default function StocktakeDetailScreen() {
             subtitle={`预期 ${entry.expected_quantity} · ${entry.status === 'missing' ? '缺失' : entry.status === 'unexpected' ? '清单外' : '待核对'}`}
             meta={`${entry.counted_quantity ?? '—'}`}
             iconName={entry.counted_quantity === null ? 'ellipse-outline' : 'checkmark-circle-outline'}
-            right={!isCompleted ? (
+            right={canEditInventory && !isCompleted ? (
               <View style={quantityRowStyle}>
                 <Pressable
                   accessibilityLabel={`减少${entry.item.name}数量`}

@@ -24,7 +24,9 @@ export function SectionCard({
 }: SectionCardProps) {
   const padding = density === 'dense' ? 10 : density === 'compact' ? 14 : 16;
   const gap = density === 'dense' ? 8 : density === 'compact' ? 10 : 12;
-  const titleSize = density === 'dense' || headerMode === 'compact' ? 16 : 21;
+  const titleSize = density === 'dense' || headerMode === 'compact'
+    ? 16
+    : density === 'compact' ? 18 : 20;
 
   return (
     <Entrance delay={delay} variant="card">

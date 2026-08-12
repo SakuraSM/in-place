@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { router, Stack, type Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { itemsApi, stocktakesApi } from '@/shared/api/mobileClient';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
@@ -17,17 +19,18 @@ import { palette } from '@/shared/ui/theme';
 
 export default function StocktakesScreen() {
   const { user } = useAuth();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const notify = useNotify();
   const queryClient = useQueryClient();
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
 
   const sessionsQuery = useQuery({
-    queryKey: ['mobile', 'stocktakes'],
+    queryKey: ['mobile', 'stocktakes', currentHouseholdId],
     queryFn: () => stocktakesApi.listRecent(),
   });
   const locationsQuery = useQuery({
-    queryKey: ['mobile', 'stocktake-locations', user?.id],
-    enabled: Boolean(user) && locationPickerOpen,
+    queryKey: ['mobile', 'stocktake-locations', currentHouseholdId, user?.id],
+    enabled: canEditInventory && Boolean(user) && locationPickerOpen,
     queryFn: () => fetchLocations(user!.id),
   });
   const createMutation = useMutation({
@@ -62,16 +65,16 @@ export default function StocktakesScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '盘点', headerShown: true }} />
+      <PageHeader title="盘点" subtitle="按位置核对库存差异" />
       <SectionCard title="库存盘点" subtitle="按位置核对数量、遗漏和错误归位" density="compact">
-        <Pressable
+        {canEditInventory ? <Pressable
           accessibilityRole="button"
           onPress={() => setLocationPickerOpen(true)}
           style={primaryButtonStyle}
         >
           <Ionicons name="add" size={19} color="#ffffff" />
           <Text style={primaryButtonTextStyle}>创建盘点</Text>
-        </Pressable>
+        </Pressable> : null}
       </SectionCard>
 
       <SectionCard title={`进行中 ${activeSessions.length}`} density="dense" headerMode="compact">

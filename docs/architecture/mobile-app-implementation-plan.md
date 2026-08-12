@@ -474,3 +474,7 @@ Build in this order and do not skip ahead:
 - Do share schemas, DTOs, request wrappers, and query logic.
 - Keep the server as the only authority for auth, AI, uploads, and persistence.
 - Prefer incremental migration over a large rewrite branch.
+
+## Android/Web Parity Status (2026-08-12)
+
+Android now covers the current Web capability groups with native UI. The location screen provides tree and map views; shared hierarchy, geo projection, filters, metadata merging, map DTOs, and public map config contracts live in `@inplace/app-core`. Only `/mobile-map` uses a restricted WebView. See [Android/Web parity](../product/android-web-parity.md) for the current matrix, security boundary, preview commands, and troubleshooting.

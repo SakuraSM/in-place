@@ -1,37 +1,10 @@
 import { apiRequest, resolveApiUrl } from '../../../shared/api/client';
+import { createMapsApi, type AmapRuntimeConfig, type MapRuntimeConfig } from '@inplace/app-core';
 
-interface DisabledMapConfig {
-  enabled: false;
-}
+export type { AmapRuntimeConfig, MapRuntimeConfig };
 
-export interface AmapRuntimeConfig {
-  enabled: true;
-  provider: 'amap';
-  key: string;
-  serviceHost: string;
-}
-
-interface AmapServerConfig {
-  enabled: true;
-  provider: 'amap';
-  key: string;
-  servicePath: string;
-}
-
-type MapServerConfig = DisabledMapConfig | AmapServerConfig;
-
-export type MapRuntimeConfig = DisabledMapConfig | AmapRuntimeConfig;
+const mapsApi = createMapsApi(apiRequest, resolveApiUrl);
 
 export async function fetchMapRuntimeConfig(): Promise<MapRuntimeConfig> {
-  const config = await apiRequest<MapServerConfig>('/v1/maps/config');
-  if (!config.enabled) {
-    return config;
-  }
-
-  return {
-    enabled: true,
-    provider: config.provider,
-    key: config.key,
-    serviceHost: resolveApiUrl(config.servicePath),
-  };
+  return mapsApi.fetchRuntimeConfig();
 }

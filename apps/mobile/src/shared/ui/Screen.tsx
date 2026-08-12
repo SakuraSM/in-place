@@ -48,6 +48,7 @@ export function Screen({
         <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
         <BackgroundChrome chrome={chrome} />
         <ScrollView
+          testID="screen-scroll"
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[containerStyle, contentStyle]}
           {...scrollProps}
@@ -62,20 +63,19 @@ export function Screen({
     <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
       <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
       <BackgroundChrome chrome={chrome} />
-      <View style={[containerStyle, { flex: 1 }, contentStyle]}>{children as never}</View>
+      <View testID="screen-content" style={[containerStyle, { flex: 1 }, contentStyle]}>{children as never}</View>
     </SafeAreaView>
   );
 }
 
 function BackgroundChrome({ chrome }: { chrome: 'default' | 'muted' | 'none' }) {
-  if (chrome === 'none') {
+  if (chrome === 'none' || chrome === 'muted') {
     return null;
   }
 
   return (
     <View style={backgroundChromeStyle}>
-      <View style={[topGlowStyle, chrome === 'muted' ? mutedTopGlowStyle : null]} />
-      <View style={[sideGlowStyle, chrome === 'muted' ? mutedSideGlowStyle : null]} />
+      <View style={topGlowStyle} />
     </View>
   );
 }
@@ -90,30 +90,11 @@ const backgroundChromeStyle = {
 
 const topGlowStyle = {
   position: 'absolute' as const,
-  top: -78,
-  right: -68,
-  width: 186,
-  height: 186,
+  top: -92,
+  right: -82,
+  width: 164,
+  height: 164,
   borderRadius: 999,
   backgroundColor: '#dff7f4',
-  opacity: 0.36,
-};
-
-const sideGlowStyle = {
-  position: 'absolute' as const,
-  left: -74,
-  top: 210,
-  width: 132,
-  height: 132,
-  borderRadius: 999,
-  backgroundColor: '#effaf7',
-  opacity: 0.2,
-};
-
-const mutedTopGlowStyle = {
-  opacity: 0.28,
-};
-
-const mutedSideGlowStyle = {
-  opacity: 0.2,
+  opacity: 0.16,
 };

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +9,7 @@ import { ITEM_STATUS_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-c
 import { useAuth } from '@/providers/AuthProvider';
 import { categoriesApi, itemsApi, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
@@ -18,17 +17,11 @@ import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { LocationSelectField } from '@/features/home/LocationSelectField';
+import { useHousehold } from '@/providers/HouseholdProvider';
 
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TYPE_OPTIONS: ItemType[] = ['item', 'container'];
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const FORM_HEADER_BACK_HIT_SLOP = {
-  top: 8,
-  right: 8,
-  bottom: 8,
-  left: 8,
-} as const;
-
 interface FormState {
   type: ItemType;
   name: string;
@@ -69,11 +62,12 @@ export default function ItemFormScreen() {
   }>();
   const isEditing = Boolean(id);
   const { user } = useAuth();
+  const { currentHouseholdId, canEditInventory } = useHousehold();
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const itemQuery = useQuery({
-    queryKey: ['mobile', 'edit-item', id],
+    queryKey: ['mobile', 'edit-item', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => itemsApi.fetchItem(id!),
   });
@@ -84,7 +78,7 @@ export default function ItemFormScreen() {
     : itemQuery.data?.metadata?.location_tag === true ? 'location' : 'container';
 
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'form-categories', user?.id, effectiveCategoryScope],
+    queryKey: ['mobile', 'form-categories', currentHouseholdId, user?.id, effectiveCategoryScope],
     enabled: Boolean(user),
     queryFn: () => categoriesApi.fetchCategories(user!.id, effectiveCategoryScope),
   });
@@ -116,6 +110,7 @@ export default function ItemFormScreen() {
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!canEditInventory) throw new Error('当前家庭为只读，无法保存库存');
       if (!user) {
         throw new Error('请先登录');
       }
@@ -261,21 +256,9 @@ export default function ItemFormScreen() {
     <Screen scroll contentInsetMode="form" chrome="muted">
       <Stack.Screen options={{ headerShown: false }} />
 
-      <BrandHeader
-        variant="page"
+      <PageHeader
         title={isEditing ? '编辑物品' : '新建物品'}
         subtitle={isEditing ? undefined : `新建${draft.type === 'container' ? '收纳' : '物品'}`}
-        leading={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="返回"
-            hitSlop={FORM_HEADER_BACK_HIT_SLOP}
-            onPress={() => router.back()}
-            style={headerBackButtonStyle}
-          >
-            <Ionicons name="arrow-back" size={24} color={palette.text} />
-          </Pressable>
-        }
       />
 
       <SectionCard
@@ -563,17 +546,6 @@ const inputStyle = {
   paddingVertical: 10,
   fontSize: 15,
   color: palette.text,
-};
-
-const headerBackButtonStyle = {
-  width: 34,
-  height: 34,
-  borderRadius: 12,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: palette.surface,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
 };
 
 const dateGridStyle = {

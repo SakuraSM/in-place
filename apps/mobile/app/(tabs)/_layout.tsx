@@ -5,6 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Easing, Platform, Pressable, Text, View } from 'react-native';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { StateBlock } from '@/shared/ui/StateBlock';
+import { Screen } from '@/shared/ui/Screen';
 import { palette } from '@/shared/ui/theme';
 
 const MOBILE_TAB_ADAPTER: Record<AppNavigationItemId, {
@@ -43,10 +46,15 @@ type TabBarProps = Parameters<NonNullable<TabsProps['tabBar']>>[0];
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
+  const { loading: householdLoading } = useHousehold();
   const insets = useSafeAreaInsets();
 
   if (!loading && !session) {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (loading || householdLoading) {
+    return <Screen><StateBlock title="正在准备家庭空间" loading /></Screen>;
   }
 
   return (

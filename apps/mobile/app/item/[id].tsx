@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
 import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { BulkActionBar } from '@/shared/ui/BulkActionBar';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
 import { Screen } from '@/shared/ui/Screen';
@@ -26,6 +26,7 @@ import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { MobileAttachmentsCard } from '@/features/inventory/MobileAttachmentsCard';
 import { MobileLifecycleCard } from '@/features/inventory/MobileLifecycleCard';
 import { fetchAllOverviewItems } from '@/features/overview/overviewMobileData';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import {
   bodyStyle,
   categoryPillStyle,
@@ -49,6 +50,7 @@ import {
 export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { currentHouseholdId, canEditInventory } = useHousehold();
   const insets = useSafeAreaInsets();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -56,29 +58,29 @@ export default function ItemDetailScreen() {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const itemQuery = useQuery({
-    queryKey: ['mobile', 'item-detail', id],
+    queryKey: ['mobile', 'item-detail', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => itemsApi.fetchItem(id!),
   });
   const item = itemQuery.data ?? null;
   const ancestorsQuery = useQuery({
-    queryKey: ['mobile', 'item-ancestors', id],
+    queryKey: ['mobile', 'item-ancestors', currentHouseholdId, id],
     enabled: Boolean(id),
     queryFn: () => itemsApi.fetchAncestors(id!),
   });
   const childrenQuery = useQuery({
-    queryKey: ['mobile', 'item-children', id],
+    queryKey: ['mobile', 'item-children', currentHouseholdId, id],
     enabled: Boolean(id) && item?.type === 'container',
     queryFn: () => itemsApi.fetchChildren(id!, item!.user_id),
   });
   const categoriesQuery = useQuery({
-    queryKey: ['mobile', 'detail-categories', item?.user_id],
+    queryKey: ['mobile', 'detail-categories', currentHouseholdId, item?.user_id],
     enabled: Boolean(item?.user_id),
     staleTime: 1000 * 60,
     queryFn: () => categoriesApi.fetchCategories(item!.user_id),
   });
   const allItemsQuery = useQuery({
-    queryKey: ['mobile', 'detail-all-items', item?.user_id],
+    queryKey: ['mobile', 'detail-all-items', currentHouseholdId, item?.user_id],
     enabled: Boolean(item?.user_id),
     staleTime: 1000 * 60,
     queryFn: () => fetchAllOverviewItems(item!.user_id),
@@ -166,13 +168,12 @@ export default function ItemDetailScreen() {
       chrome="muted"
       contentStyle={selectionMode ? { paddingBottom: 112 } : undefined}
     >
-      <BrandHeader variant="page" title="详情" />
+      <PageHeader title={item.name} subtitle={itemTypeLabel} />
 
-      <ActionButtonRow
+      {canEditInventory ? <ActionButtonRow
         compact
         actions={[
-          { key: 'back', label: '返回', iconName: 'arrow-back', onPress: () => router.back() },
-          { key: 'edit', label: '编辑', iconName: 'create-outline', onPress: () => router.push(`/item/form?id=${item.id}`) },
+          { key: 'edit', label: '编辑', iconName: 'create-outline' as const, onPress: () => router.push(`/item/form?id=${item.id}`) },
           ...(canBulkOperateChildren
             ? [{ key: 'bulk', label: selectionMode ? '退出' : '批量', iconName: selectionMode ? 'close' as const : 'checkbox-outline' as const, onPress: handleToggleSelectionMode }]
             : []),
@@ -180,7 +181,7 @@ export default function ItemDetailScreen() {
             ? [{ key: 'add', label: '添加', iconName: 'add' as const, variant: 'primary' as const, onPress: () => router.push(`/item/form?parentId=${item.id}&type=item`) }]
             : []),
         ]}
-      />
+      /> : null}
 
       {activeImageUri ? (
         <View style={heroImageCardStyle}>
@@ -237,8 +238,8 @@ export default function ItemDetailScreen() {
         </SectionCard>
       ) : null}
 
-      {item.type === 'item' ? <MobileAttachmentsCard itemId={item.id} /> : null}
-      {item.type === 'item' ? <MobileLifecycleCard item={item} /> : null}
+      {item.type === 'item' ? <MobileAttachmentsCard itemId={item.id} canEdit={canEditInventory} /> : null}
+      {item.type === 'item' ? <MobileLifecycleCard item={item} canEdit={canEditInventory} /> : null}
 
       {item.images.length > 1 ? (
         <SectionCard title={`图片 ${item.images.length}`} delay={175} density="dense" headerMode="compact">
@@ -273,7 +274,7 @@ export default function ItemDetailScreen() {
         />
       ) : null}
 
-      <SectionCard title="危险操作" delay={230} density="dense" tone="muted" headerMode="compact">
+      {canEditInventory ? <SectionCard title="危险操作" delay={230} density="dense" tone="muted" headerMode="compact">
         {deleteMutation.isError ? (
           <Text style={errorTextStyle}>
             {deleteMutation.error instanceof Error ? deleteMutation.error.message : '删除失败'}
@@ -283,6 +284,7 @@ export default function ItemDetailScreen() {
           <Text style={dangerButtonTextStyle}>删除{item.type === 'container' ? getContainerTypeLabel(item) : '物品'}</Text>
         </Pressable>
       </SectionCard>
+      : null}
 
       <ConfirmDialog
         visible={isDeleteDialogOpen}
@@ -295,7 +297,7 @@ export default function ItemDetailScreen() {
         onConfirm={() => void deleteMutation.mutateAsync()}
       />
       </Screen>
-      {selectionMode ? (
+      {selectionMode && canEditInventory ? (
         <BulkActionBar
           selectedCount={selectedIds.length}
           bottom={Math.max(insets.bottom, 10) + 14}

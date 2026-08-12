@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Pressable, Share, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import type { Household, HouseholdMember, HouseholdRole } from '@inplace/domain';
-import { householdsApi, saveMobileHouseholdId } from '@/shared/api/mobileClient';
+import { householdsApi } from '@/shared/api/mobileClient';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -15,6 +14,8 @@ import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { useNotify } from '@/shared/ui/ToastProvider';
 import { palette } from '@/shared/ui/theme';
+import { useHousehold } from '@/providers/HouseholdProvider';
+import { PageHeader } from '@/shared/ui/PageHeader';
 
 type InviteRecord = Awaited<ReturnType<typeof householdsApi.createInvite>>;
 
@@ -26,7 +27,7 @@ const ROLE_LABELS: Record<HouseholdRole, string> = {
 
 export default function HouseholdScreen() {
   const notify = useNotify();
-  const queryClient = useQueryClient();
+  const householdContext = useHousehold();
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
   const [householdName, setHouseholdName] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -39,9 +40,10 @@ export default function HouseholdScreen() {
     queryFn: () => householdsApi.fetchHouseholds(),
   });
   useEffect(() => {
-    const firstHousehold = householdsQuery.data?.[0];
-    if (!selectedHouseholdId && firstHousehold) setSelectedHouseholdId(firstHousehold.id);
-  }, [householdsQuery.data, selectedHouseholdId]);
+    const preferredHousehold = householdsQuery.data?.find((household) => household.id === householdContext.currentHouseholdId)
+      ?? householdsQuery.data?.[0];
+    if (!selectedHouseholdId && preferredHousehold) setSelectedHouseholdId(preferredHousehold.id);
+  }, [householdContext.currentHouseholdId, householdsQuery.data, selectedHouseholdId]);
   const selectedHousehold = householdsQuery.data?.find((household) => household.id === selectedHouseholdId) ?? null;
   const membersQuery = useQuery({
     queryKey: ['mobile', 'household-members', selectedHouseholdId],
@@ -56,6 +58,8 @@ export default function HouseholdScreen() {
       setHouseholdName('');
       setSelectedHouseholdId(household.id);
       await householdsQuery.refetch();
+      await householdContext.refreshHouseholds();
+      await householdContext.switchHousehold(household.id);
       notify({ tone: 'success', title: '家庭空间已创建', description: household.name });
     },
     onError: (error) => notify({ tone: 'error', title: '创建失败', description: error instanceof Error ? error.message : '请稍后重试' }),
@@ -94,9 +98,8 @@ export default function HouseholdScreen() {
   }
 
   const switchHousehold = async (household: Household) => {
-    await saveMobileHouseholdId(household.id);
+    await householdContext.switchHousehold(household.id);
     setSelectedHouseholdId(household.id);
-    await queryClient.invalidateQueries({ queryKey: ['mobile'] });
     notify({ tone: 'success', title: `已切换到${household.name}` });
   };
   const inviteUrl = invite ? `inplace://household/join/${invite.token}` : '';
@@ -116,7 +119,7 @@ export default function HouseholdScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Stack.Screen options={{ title: '家庭空间', headerShown: true }} />
+      <PageHeader title="家庭空间" subtitle="成员、角色与邀请" />
       <SectionCard title="家庭空间" subtitle="切换后库存操作只影响当前家庭" density="compact">
         {(householdsQuery.data ?? []).map((household) => (
           <CompactListRow

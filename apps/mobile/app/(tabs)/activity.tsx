@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ActivityAction, ActivityLog } from '@inplace/domain';
 import { ACTIVITY_ACTION_PRESENTATION, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { activityApi } from '@/shared/api/mobileClient';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
@@ -26,8 +27,9 @@ function createEmptyActionSummary() {
 
 export default function ActivityTab() {
   const { user } = useAuth();
+  const { currentHouseholdId } = useHousehold();
   const activityQuery = useInfiniteQuery({
-    queryKey: ['mobile', 'activity', user?.id],
+    queryKey: ['mobile', 'activity', currentHouseholdId, user?.id],
     enabled: Boolean(user),
     initialPageParam: 1,
     queryFn: ({ pageParam }) => activityApi.fetchActivityLogsPage(user!.id, { page: pageParam, pageSize: PAGE_SIZE }),

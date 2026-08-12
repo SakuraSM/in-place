@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { formatMobileLocationPath } from '@/features/inventory/mobileInventoryFormat';
 import { LocationHierarchyPicker } from './LocationHierarchyPicker';
 import { palette, shadows } from '@/shared/ui/theme';
@@ -21,13 +22,14 @@ export function LocationSelectField({
   excludedIds = [],
   onChange,
 }: LocationSelectFieldProps) {
+  const { currentHouseholdId } = useHousehold();
   const [isOpen, setIsOpen] = useState(false);
   const [currentParentId, setCurrentParentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
   const excludedIdSet = useMemo(() => new Set(excludedIds), [excludedIds]);
 
   const selectedPathQuery = useQuery({
-    queryKey: ['mobile', 'location-picker-path', selectedParentId],
+    queryKey: ['mobile', 'location-picker-path', currentHouseholdId, selectedParentId],
     enabled: Boolean(selectedParentId),
     queryFn: async () => {
       const ancestors = await itemsApi.fetchAncestors(selectedParentId!);
@@ -36,7 +38,7 @@ export function LocationSelectField({
   });
 
   const currentContainersQuery = useQuery({
-    queryKey: ['mobile', 'location-picker-children', userId, currentParentId],
+    queryKey: ['mobile', 'location-picker-children', currentHouseholdId, userId, currentParentId],
     enabled: isOpen && Boolean(userId),
     queryFn: async () => {
       const children = await itemsApi.fetchChildren(currentParentId, userId!);

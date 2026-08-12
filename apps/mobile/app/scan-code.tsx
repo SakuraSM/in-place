@@ -1,18 +1,22 @@
 import { useCallback, useState } from 'react';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { parseInventoryCode } from '@inplace/app-core';
 import { codesApi, itemsApi } from '@/shared/api/mobileClient';
+import { useHousehold } from '@/providers/HouseholdProvider';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
 import { useNotify } from '@/shared/ui/ToastProvider';
 import { palette } from '@/shared/ui/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CodeScanScreen() {
+  const insets = useSafeAreaInsets();
+  const { canEditInventory, currentHouseholdId } = useHousehold();
   const queryClient = useQueryClient();
   const notify = useNotify();
   const [permission, requestPermission] = useCameraPermissions();
@@ -22,8 +26,8 @@ export default function CodeScanScreen() {
   const [movedIds, setMovedIds] = useState<Set<string>>(() => new Set());
   const [unboundCode, setUnboundCode] = useState<string | null>(null);
   const bindableItemsQuery = useQuery({
-    queryKey: ['mobile', 'code-bind-items'],
-    enabled: Boolean(unboundCode),
+    queryKey: ['mobile', 'code-bind-items', currentHouseholdId],
+    enabled: canEditInventory && Boolean(unboundCode),
     queryFn: fetchBindableItems,
   });
 
@@ -39,6 +43,10 @@ export default function CodeScanScreen() {
       const resolved = await codesApi.resolveCode(code);
       const scannedItem = resolved.item;
       if (!scannedItem) {
+        if (!canEditInventory) {
+          setMessage('这是未绑定标签；当前家庭为只读，无法绑定。');
+          return;
+        }
         setUnboundCode(code);
         setMessage('这是未绑定标签，请选择要绑定的位置、收纳或物品。');
         return;
@@ -59,7 +67,7 @@ export default function CodeScanScreen() {
         return;
       }
 
-      if (resolved.entityKind === 'location' || resolved.entityKind === 'container') {
+      if (canEditInventory && (resolved.entityKind === 'location' || resolved.entityKind === 'container')) {
         setDestination(scannedItem);
         setMessage(`目标位置：${scannedItem.name}。请连续扫描要归位的物品。`);
         return;
@@ -70,7 +78,7 @@ export default function CodeScanScreen() {
     } finally {
       setTimeout(() => setBusy(false), 900);
     }
-  }, [busy, destination, movedIds]);
+  }, [busy, canEditInventory, destination, movedIds]);
 
   const handleBind = async (item: Item) => {
     if (!unboundCode) return;
@@ -88,7 +96,7 @@ export default function CodeScanScreen() {
   if (!permission) return <View style={styles.center}><Text>正在检查相机权限…</Text></View>;
   if (!permission.granted) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
         <Text style={styles.title}>需要相机权限</Text>
         <Text style={styles.description}>相机只用于识别“归位”二维码。</Text>
         <Pressable onPress={() => void requestPermission()} style={styles.primaryButton}><Text style={styles.primaryButtonText}>允许使用相机</Text></Pressable>
@@ -97,21 +105,27 @@ export default function CodeScanScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <Stack.Screen options={{ title: '扫标签归位', headerShown: true }} />
+    <View style={[styles.screen, { paddingTop: insets.top }] }>
       <CameraView
         style={styles.camera}
         facing="back"
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={busy ? undefined : (result: BarcodeScanningResult) => void handleBarcode(result)}
       />
-      <View style={styles.panel}>
-        <Text style={styles.title}>{destination ? `归位到 ${destination.name}` : '扫描 InPlace 标签'}</Text>
-        <Text style={styles.description}>{message}</Text>
+      <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 16) + 16 }] }>
+        <View style={styles.panelHeader}>
+          <Pressable accessibilityRole="button" accessibilityLabel="返回" onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>返回</Text>
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{destination ? `归位到 ${destination.name}` : '扫描 InPlace 标签'}</Text>
+            <Text style={styles.description}>{message}</Text>
+          </View>
+        </View>
         {destination ? <Text style={styles.count}>本次已归位 {movedIds.size} 件</Text> : null}
-        <Pressable onPress={() => { setDestination(null); setMovedIds(new Set()); setMessage('已重置扫描目标'); }} style={styles.secondaryButton}>
+        {canEditInventory ? <Pressable onPress={() => { setDestination(null); setMovedIds(new Set()); setMessage('已重置扫描目标'); }} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>重置目标</Text>
-        </Pressable>
+        </Pressable> : null}
       </View>
       <BottomSheet visible={Boolean(unboundCode)} title="绑定未使用标签" onClose={() => setUnboundCode(null)}>
         <Text style={styles.description}>选择一个对象。绑定后再次扫描即可查看或归位。</Text>
@@ -150,6 +164,9 @@ const styles = StyleSheet.create({
   camera: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: palette.canvas },
   panel: { padding: 20, paddingBottom: 34, backgroundColor: palette.surface },
+  panelHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  backButton: { minWidth: 48, minHeight: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.surfaceMuted },
+  backButtonText: { color: palette.brandStrong, fontSize: 14, fontWeight: '800' },
   title: { color: palette.text, fontSize: 20, fontWeight: '800' },
   description: { marginTop: 6, color: palette.textSoft, fontSize: 14, lineHeight: 21 },
   count: { marginTop: 10, color: palette.brandStrong, fontSize: 14, fontWeight: '700' },
