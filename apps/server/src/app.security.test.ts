@@ -42,4 +42,13 @@ describe('production host boundary', () => {
     expect(expected.statusCode).toBe(200);
     await app.close();
   });
+
+  it('does not apply an unusable Host allowlist when PUBLIC_ORIGIN is omitted', async () => {
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), 'inplace-host-'));
+    cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(temporaryRoot);
+    const app = await createApp({ ...env, PUBLIC_ORIGIN: undefined });
+    const response = await app.inject({ method: 'GET', url: '/api/v1', headers: { host: '192.168.1.20:8080' } });
+    expect(response.statusCode).toBe(200);
+    await app.close();
+  });
 });

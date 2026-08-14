@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAllowedAiBaseUrls, readEnv } from './env.js';
+import { getAllowedAiBaseUrls, getPublicOrigin, readEnv } from './env.js';
 
 const base = {
   NODE_ENV: 'production',
@@ -12,9 +12,30 @@ const base = {
 };
 
 describe('production environment security preflight', () => {
-  it('requires independent production secrets and a public origin', () => {
-    expect(() => readEnv({ ...base, PUBLIC_ORIGIN: undefined })).toThrow('PUBLIC_ORIGIN');
+  it('requires independent production secrets', () => {
     expect(() => readEnv({ ...base, APP_ENCRYPTION_KEY: undefined })).toThrow('APP_ENCRYPTION_KEY');
+  });
+
+  it('keeps existing production containers bootable without optional deployment hints', () => {
+    const env = readEnv({
+      ...base,
+      PUBLIC_ORIGIN: undefined,
+      AI_PROVIDER_ALLOWED_BASE_URLS: undefined,
+    });
+
+    expect(getPublicOrigin(env)).toBe('https://app.example.com');
+    expect(getAllowedAiBaseUrls(env)).toEqual(['https://api.openai.com/v1']);
+  });
+
+  it('treats empty optional deployment hints from Compose as unset', () => {
+    const env = readEnv({
+      ...base,
+      PUBLIC_ORIGIN: '',
+      AI_PROVIDER_ALLOWED_BASE_URLS: '',
+    });
+
+    expect(env.PUBLIC_ORIGIN).toBeUndefined();
+    expect(getAllowedAiBaseUrls(env)).toEqual(['https://api.openai.com/v1']);
   });
 
   it('rejects published placeholder secrets', () => {

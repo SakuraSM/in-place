@@ -150,7 +150,7 @@ Prepare the environment:
 cp .env.compose.example .env.compose
 ```
 
-At minimum, update these values before starting the stack:
+Review these values before starting the stack. The database password and two independent secrets are required; the deployment hints below them are optional:
 
 ```env
 POSTGRES_PASSWORD=<generate-a-strong-password>
@@ -158,7 +158,9 @@ POSTGRES_PASSWORD=<generate-a-strong-password>
 JWT_SECRET=
 APP_ENCRYPTION_KEY=
 CORS_ORIGIN=https://your-domain.com,http://localhost:8080,http://127.0.0.1:8080
+# Recommended for public deployments; optional for existing/local containers.
 PUBLIC_ORIGIN=https://your-domain.com
+# Optional extra providers; OPENAI_BASE_URL is always allowed.
 AI_PROVIDER_ALLOWED_BASE_URLS=https://api.openai.com/v1
 VITE_API_BASE_URL=/api
 BACKUP_PAYLOAD_SIZE_MB=100
@@ -254,14 +256,14 @@ Key variables:
 - `PORT`: API port.
 - `DATABASE_URL`: PostgreSQL connection string.
 - `CORS_ORIGIN`: allowed frontend origins.
-- `PUBLIC_ORIGIN`: canonical public deployment origin used for trusted absolute URLs; required in production.
+- `PUBLIC_ORIGIN`: optional canonical public deployment origin used for trusted absolute URLs and strict Host validation. Recommended for public deployments; when omitted, absolute URLs fall back to the first `CORS_ORIGIN`.
 - `JWT_SECRET`: JWT signing key. Use at least 32 random characters.
 - `APP_ENCRYPTION_KEY`: encryption key for user-saved AI credentials. Use a dedicated production secret.
 - `MAX_UPLOAD_SIZE_MB`: maximum allowed upload size per image.
 - `BACKUP_PAYLOAD_SIZE_MB`: maximum backup import payload size.
 - `OPENAI_API_KEY`: optional default API key for server-side AI recognition.
 - `OPENAI_BASE_URL`: AI provider base URL. Defaults to `https://api.openai.com/v1`.
-- `AI_PROVIDER_ALLOWED_BASE_URLS`: comma-separated allowlist of HTTPS AI provider base URLs.
+- `AI_PROVIDER_ALLOWED_BASE_URLS`: optional comma-separated allowlist of additional HTTPS AI provider base URLs. `OPENAI_BASE_URL` is always allowed.
 - `AI_REQUEST_TIMEOUT_MS` / `AI_MAX_RESPONSE_BYTES`: outbound AI deadline and response-size limit.
 - `AUTH_SESSION_TTL_DAYS`: lifetime of revocable authentication sessions; defaults to 7 days.
 - `OPENAI_MODEL`: model name used for image recognition.
