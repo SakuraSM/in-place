@@ -30,7 +30,7 @@ export async function createApp(env: AppEnv) {
   });
 
   app.addHook('onRequest', async (request, reply) => {
-    if (env.NODE_ENV === 'production') {
+    if (env.NODE_ENV === 'production' && env.PUBLIC_ORIGIN) {
       const expectedHost = new URL(getPublicOrigin(env)).host.toLowerCase();
       const receivedHost = request.host.toLowerCase();
       if (receivedHost !== expectedHost) {
