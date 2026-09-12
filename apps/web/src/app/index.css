@@ -170,13 +170,29 @@
   }
 
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-    outline: 3px solid rgba(13, 148, 136, 0.42);
+    outline: 3px solid rgba(13, 148, 136, 0.5);
     outline-offset: 3px;
+  }
+
+  :where(button, input, textarea, select):disabled,
+  [aria-disabled='true'] {
+    color: #66756d;
   }
 
   button:not(:disabled),
   [role='button']:not([aria-disabled='true']) {
     cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

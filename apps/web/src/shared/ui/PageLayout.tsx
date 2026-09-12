@@ -8,6 +8,12 @@ const PAGE_TITLE_CLASSES: Record<PageTitleSize, string> = {
   detail: 'text-2xl md:text-3xl',
 };
 
+const PAGE_WIDTH_CLASSES: Record<PageWidth, string> = {
+  wide: 'mx-auto max-w-[1600px]',
+  standard: 'mx-auto max-w-6xl',
+  narrow: 'mx-auto max-w-3xl',
+};
+
 interface PageShellProps {
   children: ReactNode;
   className?: string;
@@ -50,7 +56,11 @@ export function PageContainer({
   return (
     <div
       data-page-width={width}
-      className={joinClassNames('app-page-gutter w-full', className)}
+      className={joinClassNames(
+        'app-page-gutter w-full',
+        PAGE_WIDTH_CLASSES[width],
+        className,
+      )}
     >
       {children}
     </div>

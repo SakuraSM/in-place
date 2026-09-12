@@ -8,10 +8,15 @@ import {
 } from './PageLayout';
 
 const PAGE_WIDTHS: PageWidth[] = ['wide', 'standard', 'narrow'];
+const PAGE_WIDTH_CLASSES: Record<PageWidth, string> = {
+  wide: 'max-w-[1600px]',
+  standard: 'max-w-6xl',
+  narrow: 'max-w-3xl',
+};
 
 describe('PageLayout', () => {
   it.each(PAGE_WIDTHS)(
-    'stretches the %s header and content while preserving the shared gutter',
+    'centers the %s header and content with the intended maximum width',
     (width) => {
       render(
         <PageShell>
@@ -23,10 +28,8 @@ describe('PageLayout', () => {
       const headerContainer = screen.getByRole('banner').firstElementChild;
       const contentContainer = screen.getByText('页面内容');
 
-      expect(headerContainer).toHaveClass('app-page-gutter', 'w-full');
-      expect(contentContainer).toHaveClass('app-page-gutter', 'w-full');
-      expect(headerContainer).not.toHaveClass(/max-w-/);
-      expect(contentContainer).not.toHaveClass(/max-w-/);
+      expect(headerContainer).toHaveClass('app-page-gutter', 'mx-auto', 'w-full', PAGE_WIDTH_CLASSES[width]);
+      expect(contentContainer).toHaveClass('app-page-gutter', 'mx-auto', 'w-full', PAGE_WIDTH_CLASSES[width]);
       expect(headerContainer).toHaveAttribute('data-page-width', width);
       expect(contentContainer).toHaveAttribute('data-page-width', width);
     },
