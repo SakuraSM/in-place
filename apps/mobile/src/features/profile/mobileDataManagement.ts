@@ -1,8 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { getMobileApiBaseUrl, mobileApiClient } from '@/shared/api/mobileClient';
-import { secureTokenStorage } from '@/platform/auth/secureTokenStorage';
+import { mobileApiClient } from '@/shared/api/mobileClient';
 
 export interface PendingInventoryBackup {
   fileName: string;
@@ -17,23 +16,7 @@ export interface InventoryFileExportResult {
 const INVENTORY_BACKUP_PICKER_TYPE = '*/*';
 
 export async function exportInventoryFile(format: 'json' | 'csv'): Promise<InventoryFileExportResult> {
-  const token = await secureTokenStorage.get();
-  const response = await fetch(`${getMobileApiBaseUrl()}/v1/items/export?format=${format}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
-
-  if (!response.ok) {
-    let message = '导出失败';
-    try {
-      const payload = await response.json() as { message?: string };
-      message = payload.message ?? message;
-    } catch {
-      const text = await response.text();
-      message = text || message;
-    }
-
-    throw new Error(message);
-  }
+  const response = await mobileApiClient.requestResponse(`/v1/items/export?format=${format}`);
 
   const fileContents = await response.text();
   const extension = format === 'json' ? 'json' : 'csv';

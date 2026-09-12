@@ -1,4 +1,5 @@
 export * from './activity';
+export * from './batch-operations';
 export * from './asset-map';
 export * from './ai';
 export * from './categories';

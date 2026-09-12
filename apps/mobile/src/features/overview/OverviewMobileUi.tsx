@@ -213,7 +213,7 @@ export function TagFilterSheet({
   onToggleTag: (tag: string) => void;
 }) {
   return (
-    <BottomSheet visible={visible} title="标签筛选" onClose={onClose}>
+    <BottomSheet visible={visible} title="标签筛选 · 匹配任一" onClose={onClose}>
       <View style={sheetSearchStyle}>
         <Ionicons name="search-outline" size={17} color={palette.textSoft} />
         <TextInput value={tagQuery} onChangeText={onChangeQuery} placeholder="搜索标签" style={sheetSearchInputStyle} />

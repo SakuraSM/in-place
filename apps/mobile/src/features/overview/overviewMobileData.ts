@@ -65,7 +65,7 @@ export function buildHierarchyItems({
       return false;
     }
 
-    if (selectedTags.length > 0 && !selectedTags.every((tag) => item.tags.includes(tag))) {
+    if (selectedTags.length > 0 && !selectedTags.some((tag) => item.tags.includes(tag))) {
       return false;
     }
 

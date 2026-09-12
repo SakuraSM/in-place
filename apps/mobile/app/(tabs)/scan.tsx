@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
-import type { AIRecognitionResult, ItemCreateInput } from '@inplace/domain';
+import type { AIRecognitionResult } from '@inplace/domain';
+import { BatchOperationError } from '@inplace/app-core';
+import { applySavedRecognitionDrafts, saveRecognitionDrafts } from '@/features/scan/saveRecognitionDrafts';
 import { useAuth } from '@/providers/AuthProvider';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
@@ -28,7 +30,6 @@ interface SelectedAsset {
 }
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const CROPPED_IMAGE_MIME_TYPE = 'image/jpeg';
 
 function validatePickedImage(asset: ImagePicker.ImagePickerAsset) {
   if (asset.type && asset.type !== 'image') {
@@ -88,6 +89,7 @@ export default function ScanTab() {
   const [cropSaving, setCropSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const saveGuard = useRef(false);
 
   const aiStatusQuery = useQuery({
     queryKey: ['mobile', 'ai-status', currentHouseholdId, user?.id],
@@ -111,55 +113,13 @@ export default function ScanTab() {
         throw new Error('请先登录');
       }
 
-      const selectedDrafts = drafts.filter((draft) => draft.selected && !draft.saved);
-      if (selectedDrafts.length === 0) {
-        throw new Error('请至少选择一个识别结果');
-      }
-
-      const createdItems = await Promise.all(
-        selectedDrafts.map(async (draft) => {
-          const uploadedImageUrl = draft.imageUri
-            ? await uploadImageFromUri({
-              uri: draft.imageUri,
-              fileName: `${draft.id}.jpg`,
-              mimeType: CROPPED_IMAGE_MIME_TYPE,
-            })
-            : null;
-
-          const payload: ItemCreateInput = {
-            user_id: user.id,
-            parent_id: null,
-            type: draft.result.type ?? 'item',
-            name: draft.result.name,
-            description: draft.result.description,
-            category: draft.result.category,
-            status: 'in_stock',
-            price: draft.result.price ?? null,
-            quantity: 1,
-            tracking_mode: 'unique',
-            minimum_quantity: null,
-            expiry_date: null,
-            purchase_date: null,
-            warranty_date: null,
-            images: uploadedImageUrl ? [uploadedImageUrl] : [],
-            tags: draft.result.tags,
-            metadata: {
-              ai_recognized: true,
-              brand: draft.result.brand,
-              source_image: 'mobile-scan',
-              bounding_box: draft.result.boundingBox ?? null,
-            },
-          };
-
-          return itemsApi.createItem(payload);
-        }),
-      );
-
-      return createdItems;
+      if (!canEditInventory) throw new Error('当前家庭为只读，无法保存库存');
+      return saveRecognitionDrafts({ drafts, userId: user.id, upload: uploadImageFromUri, create: itemsApi.createItem });
     },
-    onSuccess: async () => {
-      setDrafts((current) => current.map((draft) => (draft.selected ? { ...draft, saved: true } : draft)));
-      setMessage('选中结果已保存');
+    onSuccess: async (result) => {
+      setDrafts((current) => applySavedRecognitionDrafts(current, result));
+      setMessage(result.succeeded.length > 0 ? `已保存 ${result.succeeded.length} 项` : null);
+      setError(result.failed.length > 0 ? new BatchOperationError(result).message : null);
       await queryClient.invalidateQueries({ queryKey: ['mobile'] });
     },
   });
@@ -259,6 +219,8 @@ export default function ScanTab() {
   };
 
   const handleSaveSelected = async () => {
+    if (saveGuard.current) return;
+    saveGuard.current = true;
     setError(null);
     setMessage(null);
 
@@ -266,6 +228,8 @@ export default function ScanTab() {
       await saveMutation.mutateAsync();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '保存失败');
+    } finally {
+      saveGuard.current = false;
     }
   };
 

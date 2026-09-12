@@ -4,6 +4,7 @@ import path from 'node:path';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
+import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppEnv } from '../env.js';
 import { uploadRoutes } from './uploads.js';
@@ -130,10 +131,10 @@ describe('upload routes', () => {
 
   it('uploads an image and only serves it to an authenticated request', async () => {
     const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com', sid: TEST_USER_ID });
-    const image = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nWQAAAAASUVORK5CYII=',
-      'base64',
-    );
+    // Generate valid PNG data; the former hand-copied fixture had an invalid IDAT checksum.
+    const image = await sharp({
+      create: { width: 2, height: 2, channels: 3, background: '#0f766e' },
+    }).png().toBuffer();
     const uploadResponse = await uploadFile({
       app,
       token,
@@ -143,7 +144,7 @@ describe('upload routes', () => {
       content: image,
     });
 
-    expect(uploadResponse.statusCode).toBe(201);
+    expect(uploadResponse.statusCode, uploadResponse.body).toBe(201);
     const uploadedUrl = uploadResponse.json<{ url: string }>().url;
     const uploadedPath = new URL(uploadedUrl).pathname;
 
@@ -191,7 +192,7 @@ describe('upload routes', () => {
       content: attachment,
     });
 
-    expect(uploadResponse.statusCode).toBe(201);
+    expect(uploadResponse.statusCode, uploadResponse.body).toBe(201);
     const uploadedPath = new URL(uploadResponse.json<{ url: string }>().url).pathname;
 
     const anonymousResponse = await app.inject({ method: 'HEAD', url: uploadedPath });
@@ -227,5 +228,15 @@ describe('upload routes', () => {
       content: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
     });
     expect(response.statusCode).toBe(400);
+  });
+
+  it('rejects damaged content even when the filename and MIME claim PNG', async () => {
+    const token = app.jwt.sign({ sub: TEST_USER_ID, email: 'uploader@example.com', sid: TEST_USER_ID });
+    const response = await uploadFile({
+      app, token, endpoint: '/api/v1/uploads/images', filename: 'damaged.png', mimeType: 'image/png',
+      content: Buffer.from('not a valid PNG'),
+    });
+    expect(response.statusCode, response.body).toBe(400);
+    expect(response.json()).toMatchObject({ error: 'UPLOAD_FAILED' });
   });
 });

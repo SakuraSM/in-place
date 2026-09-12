@@ -23,6 +23,8 @@ export async function apiRequest<T>(path: string, options: RequestInit & { skipA
   return apiClient.request<T>(path, options);
 }
 
+export const apiRequestResponse = apiClient.requestResponse;
+
 export function getStoredHouseholdId() {
   return window.localStorage.getItem(HOUSEHOLD_ID_KEY);
 }

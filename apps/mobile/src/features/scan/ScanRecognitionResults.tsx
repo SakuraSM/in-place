@@ -11,6 +11,7 @@ export interface DraftRecognition {
   result: AIRecognitionResult;
   selected: boolean;
   saved: boolean;
+  savedItemId?: string;
   editing: boolean;
   imageUri: string | null;
   cropBox: NormalizedCropBox | null;

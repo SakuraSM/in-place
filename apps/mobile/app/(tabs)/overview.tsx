@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInventoryBatch } from '@/features/inventory/useInventoryBatch';
 import { useEffect, useMemo, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
@@ -175,6 +176,10 @@ export default function OverviewTab() {
     () => visibleItems.filter((item) => selectedIds.includes(item.id)),
     [selectedIds, visibleItems],
   );
+  const batch = useInventoryBatch({
+    setSelectedIds,
+    refresh: () => Promise.all([allItemsQuery.refetch(), searchQuery.refetch()]),
+  });
   const total = viewMode === 'hierarchy' ? hierarchyItems.length : meta?.total ?? flatItems.length;
 
   useEffect(() => {
@@ -253,25 +258,25 @@ export default function OverviewTab() {
   };
 
   const handleBulkSave = async (payload: BulkEditPayload) => {
-    await itemsApi.updateItemsBatch(selectedIds, payload);
-    await Promise.all([
-      allItemsQuery.refetch(),
-      searchQuery.refetch(),
-    ]);
-    setIsBulkEditOpen(false);
-    setSelectedIds([]);
-    setSelectionMode(false);
+    await batch.run({
+      execute: () => itemsApi.updateItemsBatch(selectedIds, payload),
+      onSuccess: () => {
+        setIsBulkEditOpen(false);
+        setSelectedIds([]);
+        setSelectionMode(false);
+      },
+    });
   };
 
   const handleBulkDelete = async () => {
-    await itemsApi.deleteItemsBatch(selectedIds);
-    await Promise.all([
-      allItemsQuery.refetch(),
-      searchQuery.refetch(),
-    ]);
-    setIsBulkDeleteOpen(false);
-    setSelectedIds([]);
-    setSelectionMode(false);
+    await batch.run({
+      execute: () => itemsApi.deleteItemsBatch(selectedIds),
+      onSuccess: () => {
+        setIsBulkDeleteOpen(false);
+        setSelectedIds([]);
+        setSelectionMode(false);
+      },
+    });
   };
 
   if (allItemsQuery.isError || searchQuery.isError || categoriesQuery.isError) {
@@ -451,6 +456,7 @@ export default function OverviewTab() {
         />
       ) : null}
       <HomeBulkEditSheet
+        errorMessage={batch.errorMessage}
         visible={isBulkEditOpen}
         items={selectedItems}
         allItems={allItems}
@@ -461,10 +467,11 @@ export default function OverviewTab() {
       <ConfirmDialog
         visible={isBulkDeleteOpen}
         title="确认批量删除"
-        message={`删除已选择的 ${selectedIds.length} 项？下级内容也会一并删除。`}
+        message={`${batch.errorMessage ? `${batch.errorMessage}\n` : ''}删除已选择的 ${selectedIds.length} 项？下级内容也会一并删除。`}
+        loading={batch.isPending}
         confirmLabel="删除"
         danger
-        onCancel={() => setIsBulkDeleteOpen(false)}
+        onCancel={() => { if (!batch.isPending) setIsBulkDeleteOpen(false); }}
         onConfirm={() => void handleBulkDelete()}
       />
     </View>

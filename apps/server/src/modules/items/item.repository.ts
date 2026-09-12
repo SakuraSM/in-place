@@ -14,11 +14,12 @@ import {
   tagRegistry,
   type Item,
 } from '@inplace/db';
-import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { CreateItemInput, ImportInventoryInput, ListItemsQuery, UpdateItemInput } from './item.schemas.js';
 import { getDb } from '../../lib/db.js';
 import { ensureTagsForHousehold } from '../tags/tag.repository.js';
+import { buildItemKeywordFilter } from './item-search.js';
 
 interface InventoryContext {
   userId: string;
@@ -110,12 +111,7 @@ export async function listItemsForHousehold(householdId: string, query: ListItem
   }
 
   if (query.query) {
-    const keyword = `%${query.query}%`;
-    filters.push(or(
-      ilike(items.name, keyword),
-      ilike(items.description, keyword),
-      ilike(items.category, keyword),
-    )!);
+    filters.push(buildItemKeywordFilter(query.query));
   }
   const where = and(...filters);
   const page = query.page ?? 1;

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, Download, HardDriveDownload, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { apiRequest, resolveApiUrl } from '../../../shared/api/client';
+import { apiRequest, apiRequestResponse } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
@@ -33,22 +33,7 @@ export default function DataManagementPage() {
     setExportMessage(null);
 
     try {
-      const response = await fetch(resolveApiUrl(`/v1/items/export?format=${format}`), {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        let message = '导出失败';
-        try {
-          const payload = await response.json() as { message?: string };
-          message = payload.message ?? message;
-        } catch {
-          const text = await response.text();
-          message = text || message;
-        }
-
-        throw new Error(message);
-      }
+      const response = await apiRequestResponse(`/v1/items/export?format=${format}`);
 
       const blob = await response.blob();
       const contentDisposition = response.headers.get('Content-Disposition');

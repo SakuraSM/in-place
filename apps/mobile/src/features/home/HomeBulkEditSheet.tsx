@@ -18,6 +18,7 @@ export interface BulkEditPayload {
 }
 
 interface HomeBulkEditSheetProps {
+  errorMessage?: string | null;
   visible: boolean;
   items: Item[];
   allItems: Item[];
@@ -29,6 +30,7 @@ interface HomeBulkEditSheetProps {
 const STATUS_OPTIONS: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 
 export function HomeBulkEditSheet({
+  errorMessage,
   visible,
   items,
   allItems,
@@ -170,11 +172,12 @@ export function HomeBulkEditSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => { if (!isSaving) onClose(); }}>
       <View style={modalRootStyle}>
-        <Pressable style={backdropStyle} onPress={onClose} />
+        <Pressable style={backdropStyle} disabled={isSaving} onPress={onClose} />
         <View style={sheetStyle}>
           <View style={dragHandleStyle} />
+          {errorMessage ? <Text accessibilityRole="alert" style={{ color: palette.danger, padding: 12 }}>{errorMessage}</Text> : null}
           <View style={sheetHeaderStyle}>
             <View>
               <Text style={sheetTitleStyle}>批量编辑</Text>

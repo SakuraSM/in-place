@@ -13,6 +13,7 @@ import { palette, shadows } from '@/shared/ui/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { HomeDashboard } from '@/features/home/HomeDashboard';
+import { useInventoryBatch } from '@/features/inventory/useInventoryBatch';
 import { HomeItemFormSheet } from '@/features/home/HomeItemFormSheet';
 import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBulkEditSheet';
 
@@ -38,6 +39,10 @@ export default function HomeTab() {
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const batch = useInventoryBatch({
+    setSelectedIds,
+    refresh: () => queryClient.invalidateQueries({ queryKey: ['mobile'] }),
+  });
 
   const rootItemsQuery = useQuery({
     queryKey: ['mobile', 'home-root-items', currentHouseholdId, user?.id],
@@ -118,19 +123,25 @@ export default function HomeTab() {
   };
 
   const handleBulkSave = async (payload: BulkEditPayload) => {
-    await itemsApi.updateItemsBatch(selectedIds, payload);
-    await queryClient.invalidateQueries({ queryKey: ['mobile'] });
-    setIsBulkEditOpen(false);
-    setSelectedIds([]);
-    setSelectionMode(false);
+    await batch.run({
+      execute: () => itemsApi.updateItemsBatch(selectedIds, payload),
+      onSuccess: () => {
+        setIsBulkEditOpen(false);
+        setSelectedIds([]);
+        setSelectionMode(false);
+      },
+    });
   };
 
   const handleBulkDelete = async () => {
-    await itemsApi.deleteItemsBatch(selectedIds);
-    await queryClient.invalidateQueries({ queryKey: ['mobile'] });
-    setIsBulkDeleteOpen(false);
-    setSelectedIds([]);
-    setSelectionMode(false);
+    await batch.run({
+      execute: () => itemsApi.deleteItemsBatch(selectedIds),
+      onSuccess: () => {
+        setIsBulkDeleteOpen(false);
+        setSelectedIds([]);
+        setSelectionMode(false);
+      },
+    });
   };
 
   return (
@@ -175,6 +186,7 @@ export default function HomeTab() {
       ) : null}
       <HomeItemFormSheet visible={isAddSheetOpen} onClose={() => setIsAddSheetOpen(false)} />
       <HomeBulkEditSheet
+        errorMessage={batch.errorMessage}
         visible={isBulkEditOpen}
         items={selectedItems}
         allItems={allItems}
@@ -185,10 +197,11 @@ export default function HomeTab() {
       <ConfirmDialog
         visible={isBulkDeleteOpen}
         title="确认批量删除"
-        message={`删除已选择的 ${selectedIds.length} 项？下级内容也会一并删除。`}
+        message={`${batch.errorMessage ? `${batch.errorMessage}\n` : ''}删除已选择的 ${selectedIds.length} 项？下级内容也会一并删除。`}
+        loading={batch.isPending}
         confirmLabel="删除"
         danger
-        onCancel={() => setIsBulkDeleteOpen(false)}
+        onCancel={() => { if (!batch.isPending) setIsBulkDeleteOpen(false); }}
         onConfirm={() => void handleBulkDelete()}
       />
     </View>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { BatchOperationError } from '@inplace/app-core';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch } from '../../../legacy/items';
@@ -211,6 +212,13 @@ export default function HomePage() {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '批量修改失败，请稍后重试';
+      if (error instanceof BatchOperationError) {
+        setSelectedIds(error.failedIds);
+        await loadChildren(currentParentId).catch(() => {
+          notify({ tone: 'error', title: '库存刷新失败', description: '已保留失败项，请重新加载库存。' });
+        });
+        invalidateDashboard();
+      }
       notify({ tone: 'error', title: '批量修改失败', description: message });
     }
   };
@@ -231,6 +239,13 @@ export default function HomePage() {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '批量删除失败，请稍后重试';
+      if (error instanceof BatchOperationError) {
+        setSelectedIds(error.failedIds);
+        await loadChildren(currentParentId).catch(() => {
+          notify({ tone: 'error', title: '库存刷新失败', description: '已保留失败项，请重新加载库存。' });
+        });
+        invalidateDashboard();
+      }
       notify({ tone: 'error', title: '批量删除失败', description: message });
     } finally {
       setIsBulkDeleteSubmitting(false);
