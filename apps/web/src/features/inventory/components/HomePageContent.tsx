@@ -1,4 +1,5 @@
 import { Package } from 'lucide-react';
+import { useState } from 'react';
 import type {
   ActivityLog,
   Category,
@@ -10,6 +11,8 @@ import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import HomeDashboard from './HomeDashboard';
 import HomeInventoryToolbar from './HomeInventoryToolbar';
 import HomeInventorySections, { type HomeViewMode } from './HomeInventorySections';
+
+const HOME_PAGE_SIZE = 48;
 
 interface HomePageContentProps {
   showDashboard: boolean;
@@ -67,6 +70,10 @@ export default function HomePageContent({
   onToggleSelection,
 }: HomePageContentProps) {
   const isEmpty = items.length === 0;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(items.length / HOME_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visibleItems = items.slice((currentPage - 1) * HOME_PAGE_SIZE, currentPage * HOME_PAGE_SIZE);
 
   return (
     <PageContent width="wide" className="flex min-w-0 flex-col">
@@ -118,10 +125,11 @@ export default function HomePageContent({
             id="home-inventory-panel"
             role="tabpanel"
             aria-label={viewMode === 'type' ? '按类型分组的库存' : '按分类分组的库存'}
-            className="flex min-h-full flex-1 flex-col"
+            className="flex flex-col"
           >
+            {pageCount > 1 ? <p className="mb-3 text-sm text-slate-500">当前页显示第 {(currentPage - 1) * HOME_PAGE_SIZE + 1}–{Math.min(currentPage * HOME_PAGE_SIZE, items.length)} 项，分组数量仅统计本页。</p> : null}
             <HomeInventorySections
-              items={items}
+              items={visibleItems}
               categories={categories}
               childCounts={childCounts}
               viewMode={viewMode}
@@ -132,6 +140,13 @@ export default function HomePageContent({
               onOpenContext={onOpenContext}
               onToggleSelection={onToggleSelection}
             />
+            {pageCount > 1 ? <nav aria-label="首页库存分页" className="my-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-borderSoft bg-surface p-4 text-sm">
+              <span>第 {currentPage} / {pageCount} 页 · 共 {items.length} 项，每页最多 {HOME_PAGE_SIZE} 项</span>
+              <div className="flex gap-2">
+                <button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} className="min-h-11 rounded-xl border border-border px-4 disabled:opacity-40">上一页</button>
+                <button type="button" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)} className="min-h-11 rounded-xl border border-border px-4 disabled:opacity-40">下一页</button>
+              </div>
+            </nav> : null}
           </div>
         )}
     </PageContent>

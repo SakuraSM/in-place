@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { BatchOperationError } from '@inplace/app-core';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,6 +23,7 @@ const DEFAULT_VIEW_MODE: HomeViewMode = 'category';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { canEditInventory } = useInventoryPermissions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useToast();
@@ -51,6 +53,8 @@ export default function HomePage() {
     categories,
     loading,
     loadChildren,
+    error: inventoryError,
+    retry: retryInventory,
   } = useHomeInventoryData(user?.id ?? null, currentParentId);
   const {
     recentItems,
@@ -61,7 +65,7 @@ export default function HomePage() {
   } = useHomeDashboardData(user?.id ?? null, showRootDashboard);
 
   useEffect(() => {
-    if (searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
+    if (!canEditInventory || searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
       return;
     }
 
@@ -72,7 +76,7 @@ export default function HomePage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete(HOME_CREATE_PARAM);
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, setEditItem, setSearchParams, setShowForm]);
+  }, [canEditInventory, searchParams, setEditItem, setSearchParams, setShowForm]);
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;
@@ -257,7 +261,7 @@ export default function HomePage() {
 
   return (
     <PageShell>
-      <HomePageHeader
+      <HomePageHeader canEditInventory={canEditInventory}
         currentParentId={currentParentId}
         breadcrumbs={breadcrumbs}
         isEmpty={isEmpty}
@@ -280,7 +284,9 @@ export default function HomePage() {
         }}
       />
 
+      {inventoryError ? <div role="alert" className="app-page-gutter py-3 text-sm text-rose-700">部分库存信息加载失败。<button type="button" onClick={retryInventory} className="ml-3 underline">重试</button></div> : null}
       <HomePageContent
+        key={currentParentId ?? 'root'}
         showDashboard={showRootDashboard}
         breadcrumbs={breadcrumbs}
         stats={rootStats ?? null}
@@ -318,11 +324,11 @@ export default function HomePage() {
           navigate(`/overview${params.toString() ? `?${params.toString()}` : ''}`);
         }}
         onOpenContainer={handleContainerClick}
-        onOpenContext={setContextItem}
+        onOpenContext={(item) => { if (canEditInventory) setContextItem(item); else navigate(resolveItemDetailPath(item)); }}
         onToggleSelection={toggleSelection}
       />
 
-      <HomePageOverlays
+      {canEditInventory ? <HomePageOverlays
         selectionMode={selectionMode}
         selectedItems={selectedItems}
         categories={categories}
@@ -378,7 +384,7 @@ export default function HomePage() {
         }}
         onBulkSave={handleBulkSave}
         onBulkEditClose={() => setShowBulkEdit(false)}
-      />
+      /> : null}
     </PageShell>
   );
 }

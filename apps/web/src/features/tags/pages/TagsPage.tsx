@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, StickyNote, Pencil, Trash2 } from 'lucide-react';
@@ -145,6 +146,7 @@ function colorClasses(color: string) {
 }
 
 export default function TagsPage() {
+  const { canEditInventory } = useInventoryPermissions();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [tags, setTags] = useState<TagEntity[]>([]);
@@ -276,7 +278,7 @@ export default function TagsPage() {
                           minute: '2-digit',
                         })}
                       </p>
-                      <button
+                      {canEditInventory ? <button
                         onClick={() => {
                           setEditingTag(tag);
                           setShowEditor(true);
@@ -285,14 +287,14 @@ export default function TagsPage() {
                       >
                         <Pencil size={13} />
                         编辑
-                      </button>
-                      <button
+                      </button> : null}
+                      {canEditInventory ? <button
                         onClick={() => setDeleteTarget(tag)}
                         className="inline-flex h-8 items-center gap-1 rounded-xl bg-rose-50 px-2.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200 transition-colors hover:bg-rose-100 whitespace-nowrap"
                       >
                         <Trash2 size={13} />
                         删除
-                      </button>
+                      </button> : null}
                     </div>
                   </div>
                 </motion.div>
@@ -330,7 +332,7 @@ export default function TagsPage() {
         ) : null}
       </PageContent>
 
-      <motion.button
+      {canEditInventory ? <motion.button
         type="button"
         onClick={() => {
           setEditingTag(null);
@@ -342,7 +344,7 @@ export default function TagsPage() {
         className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 md:bottom-28 md:right-8"
       >
         <Plus size={24} />
-      </motion.button>
+      </motion.button> : null}
 
       {showEditor && user ? (
         <TagEditor

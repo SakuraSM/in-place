@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
 import { activityApi, categoriesApi, itemsApi } from '@/shared/api/mobileClient';
@@ -19,9 +19,6 @@ import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBul
 
 type ViewMode = 'type' | 'category';
 
-const ROOT_PAGE_SIZE = 100;
-const ALL_ITEMS_PAGE_SIZE = 100;
-const ALL_ITEMS_MAX_PAGES = 20;
 const RECENT_ACTIVITY_PAGE_SIZE = 3;
 const FLOATING_ACTION_BUTTON_SIZE = 56;
 const FLOATING_ACTION_BUTTON_ICON_SIZE = 28;
@@ -44,29 +41,23 @@ export default function HomeTab() {
     refresh: () => queryClient.invalidateQueries({ queryKey: ['mobile'] }),
   });
 
-  const rootItemsQuery = useQuery({
-    queryKey: ['mobile', 'home-root-items', currentHouseholdId, user?.id],
-    enabled: Boolean(user),
-    queryFn: () => fetchAllRootItems(user!.id),
-  });
-
   const allItemsQuery = useQuery({
     queryKey: ['mobile', 'home-all-items', currentHouseholdId, user?.id],
-    enabled: Boolean(user),
+    enabled: Boolean(user && currentHouseholdId),
     staleTime: 1000 * 60,
-    queryFn: () => fetchAllHomeItems(user!.id),
+    queryFn: () => itemsApi.searchItems('', user!.id),
   });
 
   const statsQuery = useQuery({
     queryKey: ['mobile', 'home-stats', currentHouseholdId, user?.id],
-    enabled: Boolean(user),
+    enabled: Boolean(user && currentHouseholdId),
     staleTime: 1000 * 60,
     queryFn: () => itemsApi.fetchItemStats(user!.id),
   });
 
   const recentActivityQuery = useQuery({
     queryKey: ['mobile', 'home-recent-activity', currentHouseholdId, user?.id],
-    enabled: Boolean(user),
+    enabled: Boolean(user && currentHouseholdId),
     staleTime: 1000 * 30,
     queryFn: async () => {
       const response = await activityApi.fetchActivityLogsPage(user!.id, { page: 1, pageSize: RECENT_ACTIVITY_PAGE_SIZE });
@@ -76,12 +67,13 @@ export default function HomeTab() {
 
   const categoriesQuery = useQuery({
     queryKey: ['mobile', 'home-categories', currentHouseholdId, user?.id],
-    enabled: Boolean(user),
+    enabled: Boolean(user && currentHouseholdId),
     staleTime: 1000 * 60,
     queryFn: () => categoriesApi.fetchCategories(user!.id),
   });
 
   const allItems = useMemo(() => allItemsQuery.data ?? [], [allItemsQuery.data]);
+  const rootItems = useMemo(() => allItems.filter((item) => !item.parent_id), [allItems]);
   const recentItems = useMemo(
     () => [...allItems]
       .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
@@ -90,18 +82,18 @@ export default function HomeTab() {
   );
   const recentItemPaths = useMemo(() => buildRecentItemPaths(recentItems, allItems), [allItems, recentItems]);
   const selectedItems = useMemo(
-    () => (rootItemsQuery.data ?? []).filter((item) => selectedIds.includes(item.id)),
-    [rootItemsQuery.data, selectedIds],
+    () => rootItems.filter((item) => selectedIds.includes(item.id)),
+    [rootItems, selectedIds],
   );
 
-  if (rootItemsQuery.isLoading) {
+  if (allItemsQuery.isLoading) {
     return <Screen><StateBlock title="加载首页" loading /></Screen>;
   }
 
-  if (rootItemsQuery.isError || allItemsQuery.isError || statsQuery.isError || recentActivityQuery.isError || categoriesQuery.isError) {
-    const error = rootItemsQuery.error ?? allItemsQuery.error ?? statsQuery.error ?? recentActivityQuery.error ?? categoriesQuery.error;
-    return <Screen><StateBlock title="首页加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
+  if (allItemsQuery.isError) {
+    return <Screen><StateBlock title="首页加载失败" body={allItemsQuery.error instanceof Error ? allItemsQuery.error.message : '请稍后重试'} /><Pressable accessibilityRole="button" onPress={() => void allItemsQuery.refetch()} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.brandStrong }}>重试</Text></Pressable></Screen>;
   }
+  const hasAuxiliaryError = statsQuery.isError || recentActivityQuery.isError || categoriesQuery.isError;
 
   const handleToggleSelectionMode = () => {
     if (!canEditInventory) return;
@@ -147,13 +139,14 @@ export default function HomeTab() {
   return (
     <View style={screenRootStyle}>
       <Screen scroll contentInsetMode="page" chrome="muted" contentStyle={{ paddingBottom: 112 }}>
+        {hasAuxiliaryError ? <Pressable accessibilityRole="button" onPress={() => { void statsQuery.refetch(); void recentActivityQuery.refetch(); void categoriesQuery.refetch(); }} style={{ minHeight: 48 }}><Text style={{ color: palette.danger }}>部分统计或辅助信息加载失败，点击重试</Text></Pressable> : null}
         <HomeDashboard
           stats={statsQuery.data ?? null}
-          statsLoading={statsQuery.isLoading}
+          statsLoading={statsQuery.isLoading || statsQuery.isError}
           recentItems={recentItems}
           recentItemPaths={recentItemPaths}
           recentActivity={recentActivityQuery.data ?? []}
-          rootItems={rootItemsQuery.data ?? []}
+          rootItems={rootItems}
           allItems={allItems}
           categories={categoriesQuery.data ?? []}
           viewMode={viewMode}
@@ -208,36 +201,6 @@ export default function HomeTab() {
   );
 }
 
-async function fetchAllRootItems(userId: string) {
-  const collectedItems: Item[] = [];
-  let page = 1;
-  let hasNextPage = true;
-
-  while (hasNextPage && page <= ALL_ITEMS_MAX_PAGES) {
-    const response = await itemsApi.fetchChildrenPage(null, userId, { page, pageSize: ROOT_PAGE_SIZE });
-    collectedItems.push(...response.data);
-    hasNextPage = response.meta.hasNextPage;
-    page += 1;
-  }
-
-  return collectedItems;
-}
-
-async function fetchAllHomeItems(userId: string) {
-  const collectedItems: Item[] = [];
-  let page = 1;
-  let hasNextPage = true;
-
-  while (hasNextPage && page <= ALL_ITEMS_MAX_PAGES) {
-    const response = await itemsApi.searchItemsPage('', userId, { page, pageSize: ALL_ITEMS_PAGE_SIZE });
-    collectedItems.push(...response.data);
-    hasNextPage = response.meta.hasNextPage;
-    page += 1;
-  }
-
-  return collectedItems;
-}
-
 function buildRecentItemPaths(recentItems: Item[], allItems: Item[]) {
   const itemMap = new Map(allItems.map((item) => [item.id, item]));
 
@@ -273,7 +236,7 @@ const floatingButtonStyle = {
   width: FLOATING_ACTION_BUTTON_SIZE,
   height: FLOATING_ACTION_BUTTON_SIZE,
   borderRadius: 999,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   ...shadows.lg,

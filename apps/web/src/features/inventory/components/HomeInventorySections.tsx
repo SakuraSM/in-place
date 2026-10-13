@@ -166,7 +166,7 @@ export default function HomeInventorySections({
   return (
     <div
       key={viewMode}
-        className="flex min-h-full flex-1 flex-col space-y-7"
+        className="flex flex-col space-y-7"
       >
         {groupedItems.map((group) => {
           const colorClasses = group.icon ? getColorClasses(group.icon.color) : null;

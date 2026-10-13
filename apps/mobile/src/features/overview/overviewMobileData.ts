@@ -2,24 +2,10 @@ import type { Item, ItemStatus, ItemType } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { isLocationItem } from '@/shared/lib/location';
 
-const ALL_ITEMS_PAGE_SIZE = 100;
-const ALL_ITEMS_MAX_PAGES = 20;
-
 export type TypeFilterValue = ItemType | 'all' | 'location';
 
-export async function fetchAllOverviewItems(userId: string) {
-  const collectedItems: Item[] = [];
-  let page = 1;
-  let hasNextPage = true;
-
-  while (hasNextPage && page <= ALL_ITEMS_MAX_PAGES) {
-    const response = await itemsApi.searchItemsPage('', userId, { page, pageSize: ALL_ITEMS_PAGE_SIZE });
-    collectedItems.push(...response.data);
-    hasNextPage = response.meta.hasNextPage;
-    page += 1;
-  }
-
-  return collectedItems;
+export async function fetchAllOverviewItems(userId: string): Promise<Item[]> {
+  return itemsApi.searchItems('', userId);
 }
 
 export function buildAvailableTags(items: Item[]) {

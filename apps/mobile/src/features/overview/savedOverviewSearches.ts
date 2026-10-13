@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { InventoryFilterState } from '@inplace/app-core';
+import { inventoryStorageKey, isInventoryFilterState, normalizeInventoryFilters, type InventoryScope, type InventoryFilterState } from '@inplace/app-core';
 
 export interface SavedOverviewSearch {
   id: string;
@@ -8,7 +8,6 @@ export interface SavedOverviewSearch {
   createdAt: string;
 }
 
-const STORAGE_KEY = 'inplace.overview.saved-searches.v1';
 const MAX_SAVED_SEARCHES = 10;
 
 function isSavedOverviewSearch(value: unknown): value is SavedOverviewSearch {
@@ -17,11 +16,11 @@ function isSavedOverviewSearch(value: unknown): value is SavedOverviewSearch {
   return typeof candidate.id === 'string'
     && typeof candidate.name === 'string'
     && typeof candidate.createdAt === 'string'
-    && Boolean(candidate.filters);
+    && isInventoryFilterState(candidate.filters);
 }
 
-export async function loadSavedOverviewSearches(): Promise<SavedOverviewSearch[]> {
-  const storedValue = await AsyncStorage.getItem(STORAGE_KEY);
+export async function loadSavedOverviewSearches(scope: InventoryScope): Promise<SavedOverviewSearch[]> {
+  const storedValue = await AsyncStorage.getItem(inventoryStorageKey(scope));
   if (!storedValue) return [];
 
   try {
@@ -35,25 +34,26 @@ export async function loadSavedOverviewSearches(): Promise<SavedOverviewSearch[]
 export async function saveOverviewSearch(
   name: string,
   filters: InventoryFilterState,
+  scope: InventoryScope,
 ): Promise<SavedOverviewSearch[]> {
-  const currentSearches = await loadSavedOverviewSearches();
+  const currentSearches = await loadSavedOverviewSearches(scope);
   const savedSearch: SavedOverviewSearch = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: name.trim(),
-    filters,
+    filters: normalizeInventoryFilters(filters),
     createdAt: new Date().toISOString(),
   };
   const nextSearches = [
     savedSearch,
     ...currentSearches.filter((search) => search.name !== savedSearch.name),
   ].slice(0, MAX_SAVED_SEARCHES);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextSearches));
+  await AsyncStorage.setItem(inventoryStorageKey(scope), JSON.stringify(nextSearches));
   return nextSearches;
 }
 
-export async function deleteOverviewSearch(id: string): Promise<SavedOverviewSearch[]> {
-  const currentSearches = await loadSavedOverviewSearches();
+export async function deleteOverviewSearch(id: string, scope: InventoryScope): Promise<SavedOverviewSearch[]> {
+  const currentSearches = await loadSavedOverviewSearches(scope);
   const nextSearches = currentSearches.filter((search) => search.id !== id);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextSearches));
+  await AsyncStorage.setItem(inventoryStorageKey(scope), JSON.stringify(nextSearches));
   return nextSearches;
 }

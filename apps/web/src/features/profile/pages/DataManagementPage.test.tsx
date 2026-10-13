@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+vi.mock('../../../app/providers/household-context', () => ({ useHousehold: () => ({ currentHousehold: { id: 'shared-family-b', name: '合成家庭', role: 'owner' } }) }));
 import DataManagementPage from './DataManagementPage';
 
 afterEach(() => { window.localStorage.clear(); vi.unstubAllGlobals(); });
@@ -18,7 +20,7 @@ describe('Web household export', () => {
     });
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     window.localStorage.setItem('inplace.household.id', 'shared-family-b');
-    render(<MemoryRouter><DataManagementPage /></MemoryRouter>);
+    render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><DataManagementPage /></MemoryRouter></QueryClientProvider>);
     fireEvent.click(screen.getByRole('button', { name: `导出 ${format}` }));
     await waitFor(() => expect(screen.getByText(format === 'JSON' ? 'JSON 备份已开始下载' : 'CSV 导出已开始下载')).toBeInTheDocument());
     const [url, options] = fetchMock.mock.calls[0];

@@ -13,6 +13,7 @@ on:
       - 'packages/api-client/**'
       - 'packages/app-core/**'
       - 'packages/domain/**'
+      - 'packages/ui/**'
   push:
     branches:
       - main
@@ -27,6 +28,7 @@ on:
       - 'packages/api-client/**'
       - 'packages/app-core/**'
       - 'packages/domain/**'
+      - 'packages/ui/**'
   workflow_dispatch:
     inputs:
       platform:
@@ -71,6 +73,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Test mobile app
+        run: npm test --workspace @inplace/mobile
+
+      - name: Lint mobile app
+        run: npm run lint --workspace @inplace/mobile
 
       - name: Typecheck mobile app
         run: npm run typecheck --workspace @inplace/mobile

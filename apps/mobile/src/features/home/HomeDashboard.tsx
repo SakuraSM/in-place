@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ContentTabs } from '@/shared/ui/ContentTabs';
 import { Link, router, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActivityLog, Category, Item, ItemStats } from '@inplace/domain';
@@ -70,6 +72,7 @@ export function HomeDashboard({
   onChangeViewMode,
   onToggleSelected,
 }: HomeDashboardProps) {
+  const [recentTab, setRecentTab] = useState<'items' | 'activity'>('items');
   const rootContainers = rootItems.filter((item) => item.type === 'container');
   const rootLeafItems = rootItems.filter((item) => item.type === 'item');
   const groupedRootItems = groupRootItems({
@@ -138,31 +141,20 @@ export function HomeDashboard({
                 label: item.label,
                 value: statsLoading ? '—' : stats?.[item.key] ?? 0,
                 iconName: item.icon,
-                onPress: () => router.push('/(tabs)/overview'),
+                onPress: () => router.push(item.key === 'items' ? '/(tabs)/overview?type=item' : item.key === 'containers' ? '/(tabs)/overview?type=container' : item.key === 'borrowed' ? '/(tabs)/overview?status=borrowed' : '/(tabs)/overview'),
               }))}
             />
           </DashboardSection>
 
-          <DashboardSection title="最近添加" delay={110}>
-            {recentItems.length === 0 ? (
-              <EmptyBlock text="暂无新增" />
+          <DashboardSection delay={110}>
+            <ContentTabs accessibilityLabel="最近记录" value={recentTab} onChange={setRecentTab} tabs={[{ value: 'items', label: '最近添加' }, { value: 'activity', label: '最近操作' }]} />
+            {recentTab === 'items' ? (
+              recentItems.length ? recentItems.slice(0, RECENT_SECTION_LIMIT).map((item) => <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] ?? ''} />) : <EmptyBlock text="暂无新增" />
             ) : (
-              recentItems.slice(0, RECENT_SECTION_LIMIT).map((item) => (
-                <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] ?? ''} />
-              ))
-            )}
-          </DashboardSection>
-
-          <DashboardSection
-            title="最近操作"
-            actionLabel="查看全部"
-            onAction={() => router.push('/(tabs)/activity')}
-            delay={150}
-          >
-            {recentActivity.length === 0 ? (
-              <EmptyBlock text="暂无操作" />
-            ) : (
-              recentActivity.slice(0, RECENT_SECTION_LIMIT).map((entry) => <ActivityRow key={entry.id} entry={entry} />)
+              <>
+                <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/activity')} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.brandStrong }}>查看全部操作</Text></Pressable>
+                {recentActivity.length ? recentActivity.slice(0, RECENT_SECTION_LIMIT).map((entry) => <ActivityRow key={entry.id} entry={entry} />) : <EmptyBlock text="暂无操作" />}
+              </>
             )}
           </DashboardSection>
         </>

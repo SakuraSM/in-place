@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react-native';
+import { router } from 'expo-router';
+import { fireEvent, render } from '@testing-library/react-native';
 import { HomeDashboard } from '../HomeDashboard';
 
 jest.mock('expo-router', () => {
@@ -57,4 +58,13 @@ describe('HomeDashboard', () => {
     expect(selectionScreen.queryByLabelText('快捷操作')).toBeNull();
     expect(selectionScreen.getByText('已选择 1 项')).toBeTruthy();
   });
+});
+
+it('opens borrowed inventory from the matching statistic and switches recent records', () => {
+  const screen = render(<HomeDashboard {...baseProps} />);
+  fireEvent.press(screen.getByText('借出中'));
+  expect(router.push).toHaveBeenCalledWith('/(tabs)/overview?status=borrowed');
+  fireEvent.press(screen.getByRole('tab', { name: '最近操作' }));
+  expect(screen.getByText('查看全部操作')).toBeTruthy();
+  expect(screen.queryByText('暂无新增')).toBeNull();
 });

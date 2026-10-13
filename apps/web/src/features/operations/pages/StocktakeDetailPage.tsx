@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Check, ClipboardCheck, Minus, Plus } from 'lucide-react';
 import { useParams } from 'react-router-dom';
@@ -15,6 +16,7 @@ const STATUS_LABELS = {
 } as const;
 
 export default function StocktakeDetailPage() {
+  const { canEditInventory } = useInventoryPermissions();
   const { id = '' } = useParams();
   const { notify } = useToast();
   const [session, setSession] = useState<StocktakeSession | null>(null);
@@ -140,7 +142,7 @@ export default function StocktakeDetailPage() {
           </div>
         </section>
 
-        {session.status === 'in_progress' ? (
+        {canEditInventory && session.status === 'in_progress' ? (
           <section className="rounded-3xl border border-brand/25 bg-surface p-5 shadow-sm">
             <h2 className="font-bold text-slate-900">扫码核对</h2>
             <p className="mb-4 mt-1 text-sm text-slate-500">连续扫描物品标签；清单外物品也会单独标记。</p>
@@ -162,11 +164,11 @@ export default function StocktakeDetailPage() {
                     <p className="font-semibold text-slate-900">{entry.item.name}</p>
                     <p className="text-xs text-slate-500">{STATUS_LABELS[entry.status]} · 期望 {entry.expected_quantity} · 实盘 {entry.counted_quantity ?? '—'}</p>
                   </div>
-                  {session.status === 'in_progress' ? (
+                  {canEditInventory && session.status === 'in_progress' ? (
                     <div className="flex items-center gap-1">
-                      <button type="button" aria-label={`减少 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted - 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Minus size={15} /></button>
+                      <button type="button" disabled={!canEditInventory} aria-label={`减少 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted - 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Minus size={15} /></button>
                       <span className="w-8 text-center text-sm font-bold">{counted}</span>
-                      <button type="button" aria-label={`增加 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Plus size={15} /></button>
+                      <button type="button" disabled={!canEditInventory} aria-label={`增加 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Plus size={15} /></button>
                     </div>
                   ) : null}
                 </article>
@@ -175,7 +177,7 @@ export default function StocktakeDetailPage() {
           </div>
         </section>
 
-        {session.status === 'in_progress' ? (
+        {canEditInventory && session.status === 'in_progress' ? (
           <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
             <h2 className="font-bold text-slate-900">完成前确认差异</h2>
             <p className="mt-1 text-sm text-slate-500">仍待核对的 {summary.pending} 项会标为缺失，但不会删除。</p>

@@ -19,7 +19,7 @@ import { randomUUID } from 'node:crypto';
 import type { CreateItemInput, ImportInventoryInput, ListItemsQuery, UpdateItemInput } from './item.schemas.js';
 import { getDb } from '../../lib/db.js';
 import { ensureTagsForHousehold } from '../tags/tag.repository.js';
-import { buildItemKeywordFilter } from './item-search.js';
+import { buildItemListFilter } from './item-list-filter.js';
 
 interface InventoryContext {
   userId: string;
@@ -94,87 +94,19 @@ function sanitizeTags(tags: string[]) {
 }
 
 export async function listItemsForHousehold(householdId: string, query: ListItemsQuery) {
-  const filters = [eq(items.householdId, householdId)];
-
-  if (query.parentId) {
-    filters.push(eq(items.parentId, query.parentId));
-  } else if (query.rootOnly) {
-    filters.push(isNull(items.parentId));
-  }
-
-  if (query.type) {
-    filters.push(eq(items.type, query.type));
-  }
-
-  if (query.status) {
-    filters.push(eq(items.status, query.status));
-  }
-
-  if (query.query) {
-    filters.push(buildItemKeywordFilter(query.query));
-  }
-  const where = and(...filters);
+  const where = buildItemListFilter(householdId, query);
   const page = query.page ?? 1;
   const pageSize = query.pageSize ?? 20;
   const usePagination = query.page !== undefined || query.pageSize !== undefined;
-
-  const rowsQuery = getDb()
-    .select()
-    .from(items)
-    .where(where)
-    .orderBy(desc(items.type), asc(items.name));
-
-  let rows = await rowsQuery;
-
-  if (query.locationOnly) {
-    rows = rows.filter((row) => row.type === 'container' && row.metadata?.location_tag === true);
-  }
-
-  if (query.locationId) {
-    const locationRows = await getDb()
-      .select({ id: items.id, parentId: items.parentId })
-      .from(items)
-      .where(eq(items.householdId, householdId));
-
-    const childrenMap = new Map<string, string[]>();
-    for (const row of locationRows) {
-      if (!row.parentId) {
-        continue;
-      }
-
-      const bucket = childrenMap.get(row.parentId) ?? [];
-      bucket.push(row.id);
-      childrenMap.set(row.parentId, bucket);
-    }
-
-    const descendantIds = new Set<string>();
-    const stack = [...(childrenMap.get(query.locationId) ?? [])];
-
-    while (stack.length > 0) {
-      const currentId = stack.pop();
-      if (!currentId || descendantIds.has(currentId)) {
-        continue;
-      }
-
-      descendantIds.add(currentId);
-      const children = childrenMap.get(currentId);
-      if (children) {
-        stack.push(...children);
-      }
-    }
-
-    rows = rows.filter((row) => descendantIds.has(row.id));
-  }
-
-  if (query.tags.length > 0) {
-    rows = rows.filter((row) => query.tags.some((tag) => row.tags.includes(tag)));
-  }
-
-  const total = rows.length;
-
-  if (usePagination) {
-    rows = rows.slice((page - 1) * pageSize, page * pageSize);
-  }
+  const { rows, total } = await getDb().transaction(async (transaction) => {
+    const [totals] = await transaction.select({ total: count() }).from(items).where(where);
+    const rowsQuery = transaction.select().from(items).where(where)
+      .orderBy(desc(items.type), asc(items.name), asc(items.id));
+    const rows = usePagination
+      ? await rowsQuery.limit(pageSize).offset((page - 1) * pageSize)
+      : await rowsQuery;
+    return { rows, total: Number(totals.total) };
+  }, { isolationLevel: 'repeatable read', accessMode: 'read only' });
 
   const effectivePageSize = usePagination ? pageSize : Math.max(rows.length, 1);
   const totalPages = usePagination

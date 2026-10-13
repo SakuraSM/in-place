@@ -60,3 +60,21 @@ describe('inventory operations', () => {
     expect(parseInventoryCode('7f9b2d52-8e73-4c61-bfea-469984b617ad')).toBeNull();
   });
 });
+
+it('includes today in upcoming expiry and separates already expired records', () => {
+  const report = buildInventoryReport([
+    createItem('expired', { expiry_date: '2026-10-12' }),
+    createItem('today', { expiry_date: '2026-10-13', warranty_date: '2026-10-13' }),
+    createItem('boundary', { expiry_date: '2026-11-12' }),
+    createItem('future', { expiry_date: '2026-11-13' }),
+  ], [], new Date(2026, 9, 13, 18, 30));
+  expect(report.expiredItems.map((item) => item.id)).toEqual(['expired']);
+  expect(report.expiringItems.map((item) => item.id)).toEqual(['today', 'boundary']);
+  expect(report.warrantyCoveredItems.map((item) => item.id)).toEqual(['today']);
+});
+
+it('selects the oldest duplicate deterministically without mutating inputs', () => {
+  const newest = createItem('new', { created_at: '2026-10-01T00:00:00Z' });
+  const oldest = createItem('old');
+  expect(groupDuplicateInventory([newest, oldest])[0].items.map((item) => item.id)).toEqual(['old', 'new']);
+});

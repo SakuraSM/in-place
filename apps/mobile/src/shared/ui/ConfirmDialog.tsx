@@ -29,10 +29,10 @@ export function ConfirmDialog({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={() => { if (!loading) onCancel(); }}
     >
       <View style={overlayStyle}>
-        <View style={dialogStyle}>
+        <View accessibilityViewIsModal style={dialogStyle}>
           <View style={{ gap: 8 }}>
             <Text style={titleStyle}>{title}</Text>
             <Text style={messageStyle}>{message}</Text>
@@ -114,7 +114,7 @@ const primaryButtonStyle = {
   flex: 1,
   alignItems: 'center' as const,
   borderRadius: 16,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   paddingVertical: 13,
 };
 

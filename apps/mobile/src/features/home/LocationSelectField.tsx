@@ -10,6 +10,7 @@ import { LocationHierarchyPicker } from './LocationHierarchyPicker';
 import { palette, shadows } from '@/shared/ui/theme';
 
 interface LocationSelectFieldProps {
+  disabled?: boolean;
   userId?: string;
   selectedParentId: string | null;
   excludedIds?: string[];
@@ -17,6 +18,7 @@ interface LocationSelectFieldProps {
 }
 
 export function LocationSelectField({
+  disabled = false,
   userId,
   selectedParentId,
   excludedIds = [],
@@ -75,7 +77,7 @@ export function LocationSelectField({
 
   return (
     <>
-      <Pressable onPress={() => setIsOpen(true)} style={fieldButtonStyle}>
+      <Pressable accessibilityRole="button" accessibilityLabel="选择收纳位置" accessibilityState={{ disabled }} disabled={disabled} onPress={() => setIsOpen(true)} style={fieldButtonStyle}>
         <Ionicons name="location-outline" size={17} color={palette.brand} />
         <Text numberOfLines={1} style={fieldButtonTextStyle}>{selectedLabel}</Text>
         <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />

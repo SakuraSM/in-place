@@ -68,12 +68,15 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   }, [session]);
 
   const switchHousehold = useCallback(async (householdId: string) => {
+    if (!households?.some((household) => household.id === householdId) || householdId === currentHouseholdId) return;
+    await queryClient.cancelQueries();
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[1] !== 'households' });
     await saveMobileHouseholdId(householdId);
     setCurrentHouseholdId(householdId);
     await queryClient.invalidateQueries({
       predicate: (query) => query.queryKey[0] === 'mobile' && query.queryKey[1] !== 'households',
     });
-  }, [queryClient]);
+  }, [currentHouseholdId, households, queryClient]);
   const refreshHouseholds = useCallback(async () => {
     await refetchHouseholds();
   }, [refetchHouseholds]);

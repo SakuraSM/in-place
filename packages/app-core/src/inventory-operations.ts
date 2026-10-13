@@ -15,6 +15,7 @@ export interface InventoryReport {
   totalValue: number;
   lowStockItems: Item[];
   expiringItems: Item[];
+  expiredItems: Item[];
   warrantyCoveredItems: Item[];
   latestStocktakeMissingCount: number;
   valueByCategory: Array<{ category: string; value: number }>;
@@ -59,7 +60,7 @@ export function groupDuplicateInventory(items: Item[]): DuplicateInventoryGroup[
       type: groupItems[0].type,
       category: groupItems[0].category,
       normalizedName: normalizeInventoryName(groupItems[0].name),
-      items: groupItems,
+      items: [...groupItems].sort((left, right) => left.created_at.localeCompare(right.created_at) || left.id.localeCompare(right.id)),
     }))
     .sort((left, right) => right.items.length - left.items.length);
 }
@@ -69,7 +70,8 @@ export function buildInventoryReport(
   stocktakes: StocktakeSession[] = [],
   now = new Date(),
 ): InventoryReport {
-  const expiryBoundary = new Date(now);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const expiryBoundary = new Date(startOfToday);
   expiryBoundary.setDate(expiryBoundary.getDate() + DEFAULT_EXPIRY_WINDOW_DAYS);
   const itemRecords = items.filter((item) => item.type === 'item');
   const totalValue = itemRecords.reduce(
@@ -86,7 +88,7 @@ export function buildInventoryReport(
 
   const latestCompletedStocktake = stocktakes
     .filter((stocktake) => stocktake.status === 'completed')
-    .sort((left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime())[0];
+    .sort((left, right) => new Date(right.completed_at ?? right.updated_at).getTime() - new Date(left.completed_at ?? left.updated_at).getTime())[0];
 
   return {
     totalItems: itemRecords.length,
@@ -98,11 +100,12 @@ export function buildInventoryReport(
     )),
     expiringItems: itemRecords.filter((item) => {
       if (!item.expiry_date) return false;
-      const expiryDate = new Date(item.expiry_date);
-      return expiryDate >= now && expiryDate <= expiryBoundary;
+      const expiryDate = new Date(`${item.expiry_date.slice(0, 10)}T00:00:00`);
+      return expiryDate >= startOfToday && expiryDate <= expiryBoundary;
     }),
+    expiredItems: itemRecords.filter((item) => item.expiry_date && new Date(`${item.expiry_date.slice(0, 10)}T00:00:00`) < startOfToday),
     warrantyCoveredItems: itemRecords.filter((item) => (
-      Boolean(item.warranty_date) && new Date(item.warranty_date!).getTime() >= now.getTime()
+      Boolean(item.warranty_date) && new Date(`${item.warranty_date!.slice(0, 10)}T00:00:00`).getTime() >= startOfToday.getTime()
     )),
     latestStocktakeMissingCount: latestCompletedStocktake?.entries.filter(
       (entry) => entry.status === 'missing',

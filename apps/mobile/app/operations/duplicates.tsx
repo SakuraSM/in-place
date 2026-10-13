@@ -45,7 +45,7 @@ export default function DuplicatesScreen() {
       setTargetGroup(null);
       await Promise.all([
         itemsQuery.refetch(),
-        queryClient.invalidateQueries({ queryKey: ['mobile', 'home'] }),
+        queryClient.invalidateQueries({ queryKey: ['mobile'] }),
       ]);
       notify({ tone: 'success', title: `已合并 ${mergedCount} 条记录` });
     },
@@ -64,6 +64,7 @@ export default function DuplicatesScreen() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <PageHeader title="重复项" subtitle="检查并合并相似库存记录" />
+      <Text style={metaStyle}>保留最早记录的位置、状态和日期，合并数量、图片及标签。待移除记录有关联盘点或借用时不能合并。</Text>
       <SectionCard title={`重复物品检测 · ${groups.length} 组`} subtitle="按类型、规范化名称和类别识别" density="compact">
         {groups.length === 0 ? <Text style={emptyTextStyle}>没有发现同名同类别的重复记录。</Text> : null}
         {groups.map((group) => (
@@ -73,12 +74,12 @@ export default function DuplicatesScreen() {
                 <Text style={titleStyle}>{group.items[0].name}</Text>
                 <Text style={metaStyle}>{group.category || '未分类'} · {group.items.length} 条 · 数量 {group.items.reduce((sum, item) => sum + item.quantity, 0)}</Text>
               </View>
-              {canEditInventory ? <Pressable onPress={() => setTargetGroup(group)} style={mergeButtonStyle}>
+              {canEditInventory ? <Pressable accessibilityRole="button" disabled={mergeMutation.isPending} onPress={() => setTargetGroup(group)} style={mergeButtonStyle}>
                 <Text style={mergeButtonTextStyle}>合并</Text>
               </Pressable> : null}
             </View>
             {group.items.map((item, index) => (
-              <Text key={item.id} style={recordStyle}>{index === 0 ? '保留' : '移除'} · 数量 {item.quantity} · {new Date(item.created_at).toLocaleDateString('zh-CN')}</Text>
+              <Text key={item.id} style={recordStyle}>{index === 0 ? '保留' : '移除'} · 数量 {item.quantity} · {new Date(item.created_at).toLocaleDateString('zh-CN')} · 位置 {(itemsQuery.data ?? []).find((parent) => parent.id === item.parent_id)?.name ?? '根目录'} · 单价 {item.price ?? '未填写'} · 到期 {item.expiry_date ?? '未填写'} · 状态 {{ in_stock: '在库', borrowed: '借出', worn_out: '损耗' }[item.status]}</Text>
             ))}
           </View>
         ))}
@@ -104,5 +105,5 @@ const groupTitleRowStyle = { flexDirection: 'row' as const, alignItems: 'center'
 const titleStyle = { fontSize: 16, fontWeight: '900' as const, color: palette.text };
 const metaStyle = { fontSize: 12, color: palette.textSoft };
 const recordStyle = { fontSize: 13, color: palette.textMuted };
-const mergeButtonStyle = { borderRadius: 12, backgroundColor: palette.brandStrong, paddingHorizontal: 13, paddingVertical: 9 };
+const mergeButtonStyle = { minHeight: 48, justifyContent: 'center' as const, borderRadius: 12, backgroundColor: palette.brandStrong, paddingHorizontal: 13, paddingVertical: 9 };
 const mergeButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: '#ffffff' };

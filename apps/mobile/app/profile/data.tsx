@@ -17,7 +17,8 @@ import {
 } from '@/features/profile/mobileDataManagement';
 
 export default function DataManagementScreen() {
-  const { canEditInventory } = useHousehold();
+  const { currentHousehold } = useHousehold();
+  const canImport = currentHousehold?.role === 'owner';
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const [pendingBackup, setPendingBackup] = useState<PendingInventoryBackup | null>(null);
@@ -52,7 +53,7 @@ export default function DataManagementScreen() {
 
   const importMutation = useMutation({
     mutationFn: () => {
-      if (!pendingBackup) {
+      if (!pendingBackup || !canImport) {
         throw new Error('请先选择 JSON 备份文件');
       }
 
@@ -75,16 +76,16 @@ export default function DataManagementScreen() {
       <PageHeader title="数据管理" subtitle="备份、导出与恢复" />
 
       <SectionCard title="导出" delay={60} density="compact">
-        <Pressable onPress={() => void exportJsonMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
+        <Pressable onPress={() => exportJsonMutation.mutate()} disabled={busy} style={primaryButtonStyle}>
           {exportJsonMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>导出 JSON 备份</Text>}
         </Pressable>
-        <Pressable onPress={() => void exportCsvMutation.mutateAsync()} disabled={busy} style={secondaryButtonStyle}>
+        <Pressable onPress={() => exportCsvMutation.mutate()} disabled={busy} style={secondaryButtonStyle}>
           {exportCsvMutation.isPending ? <ActivityIndicator /> : <Text style={secondaryButtonTextStyle}>导出 CSV 表格</Text>}
         </Pressable>
       </SectionCard>
 
-      {canEditInventory ? <SectionCard title="导入 JSON" subtitle="会覆盖当前数据" delay={120} density="compact" tone="muted">
-        <Pressable onPress={() => void pickImportMutation.mutateAsync()} disabled={busy} style={primaryButtonStyle}>
+      {canImport ? <SectionCard title="导入 JSON" subtitle={`将覆盖家庭「${currentHousehold?.name}」的库存及相关记录`} delay={120} density="compact" tone="muted">
+        <Pressable onPress={() => pickImportMutation.mutate()} disabled={busy} style={primaryButtonStyle}>
           {pickImportMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>选择 JSON 备份</Text>}
         </Pressable>
       </SectionCard> : null}
@@ -130,7 +131,7 @@ export default function DataManagementScreen() {
 
 const primaryButtonStyle = {
   alignItems: 'center' as const,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   borderRadius: 14,
   paddingVertical: 13,
 };

@@ -1,3 +1,4 @@
+import { useHousehold } from '../../../app/providers/household-context';
 import { useQuery } from '@tanstack/react-query';
 import {
   BarChart3,
@@ -45,13 +46,14 @@ const OPERATION_LINKS: ManageLink[] = [
 
 export default function ManagePage() {
   const { user } = useAuth();
+  const { currentHousehold } = useHousehold();
   const categoriesQuery = useQuery({
-    queryKey: ['manage', 'categories', user?.id],
+    queryKey: ['manage', 'categories', user?.id, currentHousehold?.id],
     queryFn: () => fetchCategories(user!.id),
     enabled: Boolean(user?.id),
   });
   const tagsQuery = useQuery({
-    queryKey: ['manage', 'tags', user?.id],
+    queryKey: ['manage', 'tags', user?.id, currentHousehold?.id],
     queryFn: () => fetchTags(user!.id),
     enabled: Boolean(user?.id),
   });

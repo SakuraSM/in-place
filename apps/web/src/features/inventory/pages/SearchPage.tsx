@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useHousehold } from '../../../app/providers/household-context';
 import { useAuth } from '../../../app/providers/auth-context';
 import type { Item } from '../../../legacy/database.types';
 import { searchItemsPage } from '../../../legacy/items';
@@ -32,6 +33,7 @@ import {
 
 export default function SearchPage() {
   const { user } = useAuth();
+  const { currentHousehold } = useHousehold();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -136,6 +138,7 @@ export default function SearchPage() {
       'inventory',
       'overview-search',
       user?.id,
+      currentHousehold?.id,
       filterKey,
       filters.page,
     ],

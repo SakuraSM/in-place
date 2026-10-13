@@ -1,3 +1,4 @@
+import { collectInventoryPages } from './inventory-pagination';
 import { ApiError } from '@inplace/api-client';
 import type { Item, ItemCreateInput, ItemStats, PaginatedResult, PaginationMeta } from '@inplace/domain';
 import type { AppCoreRequest } from './shared';
@@ -391,8 +392,7 @@ export function createItemsApi(request: AppCoreRequest) {
     locationOnly?: boolean;
     tags?: string[];
   } = {}): Promise<Item[]> {
-    const response = await searchItemsPage(query, userId, options);
-    return response.data;
+    return collectInventoryPages((pagination) => searchItemsPage(query, userId, { ...options, ...pagination }));
   }
 
   async function fetchItemStats(userId: string): Promise<ItemStats> {
