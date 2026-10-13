@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../shared/hooks/useInventoryPermissions';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Shapes, Camera, User, StickyNote, MapPinned, Clock3, PanelLeftClose, PanelLeftOpen, Plus, QrCode, ClipboardCheck, Bell, Users, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -68,6 +69,7 @@ export default function Sidebar({
   onToggle: () => void;
 }) {
   const location = useLocation();
+  const { canEditInventory } = useInventoryPermissions();
   const createRoute = buildHomeCreateRoute(location.pathname, location.search);
 
   return (
@@ -115,14 +117,14 @@ export default function Sidebar({
         </div>
         {collapsed ? (
           <div className="space-y-2">
-            <Link
+            {canEditInventory ? <Link
               to={createRoute}
               title="立即新增"
               aria-label="立即新增"
               className="flex w-full items-center justify-center rounded-2xl bg-brandTint py-2.5 text-brandStrong transition-colors hover:bg-brand/20"
             >
               <Plus size={18} />
-            </Link>
+            </Link> : null}
             <button
               type="button"
               onClick={onToggle}
@@ -134,7 +136,7 @@ export default function Sidebar({
               <PanelLeftOpen size={18} />
             </button>
           </div>
-        ) : (
+        ) : canEditInventory ? (
           <Link
             to={createRoute}
             title="立即新增"
@@ -144,7 +146,7 @@ export default function Sidebar({
             <Plus size={18} />
             立即新增
           </Link>
-        )}
+        ) : null}
       </div>
 
       <nav className={`relative flex-1 space-y-4 overflow-y-auto pb-5 pt-2 transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${collapsed ? 'px-2' : 'px-3'}`}>

@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useEffect, useState } from 'react';
 import { ClipboardCheck, MapPin, Play } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,6 +10,7 @@ import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayou
 import { stocktakesApi } from '../api';
 
 export default function StocktakesPage() {
+  const { canEditInventory } = useInventoryPermissions();
   const { user } = useAuth();
   const { notify } = useToast();
   const navigate = useNavigate();
@@ -66,7 +68,7 @@ export default function StocktakesPage() {
             </label>
             <button
               type="button"
-              disabled={!locationId || starting}
+              disabled={!canEditInventory || !locationId || starting}
               onClick={() => void startStocktake()}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-bold text-white disabled:opacity-50"
             >

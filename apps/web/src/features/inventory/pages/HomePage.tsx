@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useQueryClient } from '@tanstack/react-query';
+import { BatchOperationError } from '@inplace/app-core';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { createItem, updateItem, deleteItem, updateItemsBatch, deleteItemsBatch } from '../../../legacy/items';
@@ -21,6 +23,7 @@ const DEFAULT_VIEW_MODE: HomeViewMode = 'category';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { canEditInventory } = useInventoryPermissions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useToast();
@@ -50,6 +53,8 @@ export default function HomePage() {
     categories,
     loading,
     loadChildren,
+    error: inventoryError,
+    retry: retryInventory,
   } = useHomeInventoryData(user?.id ?? null, currentParentId);
   const {
     recentItems,
@@ -60,7 +65,7 @@ export default function HomePage() {
   } = useHomeDashboardData(user?.id ?? null, showRootDashboard);
 
   useEffect(() => {
-    if (searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
+    if (!canEditInventory || searchParams.get(HOME_CREATE_PARAM) !== HOME_CREATE_VALUE) {
       return;
     }
 
@@ -71,7 +76,7 @@ export default function HomePage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete(HOME_CREATE_PARAM);
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, setEditItem, setSearchParams, setShowForm]);
+  }, [canEditInventory, searchParams, setEditItem, setSearchParams, setShowForm]);
 
   const updateHomeRoute = useCallback((updates: {
     parentId?: string | null;
@@ -211,6 +216,13 @@ export default function HomePage() {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '批量修改失败，请稍后重试';
+      if (error instanceof BatchOperationError) {
+        setSelectedIds(error.failedIds);
+        await loadChildren(currentParentId).catch(() => {
+          notify({ tone: 'error', title: '库存刷新失败', description: '已保留失败项，请重新加载库存。' });
+        });
+        invalidateDashboard();
+      }
       notify({ tone: 'error', title: '批量修改失败', description: message });
     }
   };
@@ -231,6 +243,13 @@ export default function HomePage() {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '批量删除失败，请稍后重试';
+      if (error instanceof BatchOperationError) {
+        setSelectedIds(error.failedIds);
+        await loadChildren(currentParentId).catch(() => {
+          notify({ tone: 'error', title: '库存刷新失败', description: '已保留失败项，请重新加载库存。' });
+        });
+        invalidateDashboard();
+      }
       notify({ tone: 'error', title: '批量删除失败', description: message });
     } finally {
       setIsBulkDeleteSubmitting(false);
@@ -242,7 +261,7 @@ export default function HomePage() {
 
   return (
     <PageShell>
-      <HomePageHeader
+      <HomePageHeader canEditInventory={canEditInventory}
         currentParentId={currentParentId}
         breadcrumbs={breadcrumbs}
         isEmpty={isEmpty}
@@ -265,7 +284,9 @@ export default function HomePage() {
         }}
       />
 
+      {inventoryError ? <div role="alert" className="app-page-gutter py-3 text-sm text-rose-700">部分库存信息加载失败。<button type="button" onClick={retryInventory} className="ml-3 underline">重试</button></div> : null}
       <HomePageContent
+        key={currentParentId ?? 'root'}
         showDashboard={showRootDashboard}
         breadcrumbs={breadcrumbs}
         stats={rootStats ?? null}
@@ -303,11 +324,11 @@ export default function HomePage() {
           navigate(`/overview${params.toString() ? `?${params.toString()}` : ''}`);
         }}
         onOpenContainer={handleContainerClick}
-        onOpenContext={setContextItem}
+        onOpenContext={(item) => { if (canEditInventory) setContextItem(item); else navigate(resolveItemDetailPath(item)); }}
         onToggleSelection={toggleSelection}
       />
 
-      <HomePageOverlays
+      {canEditInventory ? <HomePageOverlays
         selectionMode={selectionMode}
         selectedItems={selectedItems}
         categories={categories}
@@ -363,7 +384,7 @@ export default function HomePage() {
         }}
         onBulkSave={handleBulkSave}
         onBulkEditClose={() => setShowBulkEdit(false)}
-      />
+      /> : null}
     </PageShell>
   );
 }

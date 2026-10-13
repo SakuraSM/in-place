@@ -1,3 +1,4 @@
+import { controlSizes } from '@inplace/ui/mobile';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { palette } from './theme';
 
@@ -61,7 +62,7 @@ const tabListStyle = {
 };
 
 const tabStyle = {
-  minHeight: 40,
+  minHeight: controlSizes.touch,
   borderRadius: 14,
   borderWidth: 1,
   borderColor: palette.borderSoft,

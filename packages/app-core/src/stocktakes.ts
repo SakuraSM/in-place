@@ -61,6 +61,13 @@ export function createStocktakesApi(request: AppCoreRequest) {
       return response.data.map(mapStocktake);
     },
 
+    async fetchLatestCompleted(): Promise<StocktakeSession[]> {
+      const sessions = await this.listRecent();
+      const latest = sessions.filter((session) => session.status === 'completed')
+        .sort((left, right) => (right.completed_at ?? right.updated_at).localeCompare(left.completed_at ?? left.updated_at))[0];
+      return latest ? [await this.fetch(latest.id)] : [];
+    },
+
     async create(locationId: string): Promise<StocktakeSession> {
       const response = await request<{ data: ServerStocktakeSession }>('/v1/stocktakes', {
         method: 'POST',

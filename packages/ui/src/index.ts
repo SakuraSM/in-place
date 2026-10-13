@@ -1,5 +1,17 @@
 // Tokens
-export { colors, semantic, spacing, borderRadius, fontFamilies, fontSizes, fontWeights, shadowsWeb, shadowsMobile } from './tokens';
+export {
+  colors,
+  semantic,
+  spacing,
+  borderRadius,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  shadowsWeb,
+  shadowsMobile,
+  controlSizes,
+  motionDurations,
+} from './tokens';
 export {
   CATEGORY_PRESET_ARTWORK,
   getCategoryPresetLegacyIcon,

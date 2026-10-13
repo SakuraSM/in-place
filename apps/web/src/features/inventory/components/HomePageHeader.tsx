@@ -3,6 +3,7 @@ import type { Item } from '../../../legacy/database.types';
 import { PageHeader } from '../../../shared/ui/PageLayout';
 
 interface HomePageHeaderProps {
+  canEditInventory?: boolean;
   currentParentId: string | null;
   breadcrumbs: Item[];
   isEmpty: boolean;
@@ -13,6 +14,7 @@ interface HomePageHeaderProps {
 }
 
 export default function HomePageHeader({
+  canEditInventory = true,
   currentParentId,
   breadcrumbs,
   isEmpty,
@@ -38,7 +40,7 @@ export default function HomePageHeader({
           返回上一级
         </button>
       ) : undefined}
-      actions={(
+      actions={canEditInventory ? (
         <>
           {!isEmpty ? (
             <button
@@ -66,7 +68,7 @@ export default function HomePageHeader({
             </button>
           ) : null}
         </>
-      )}
+      ) : undefined}
     />
   );
 }

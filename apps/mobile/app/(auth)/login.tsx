@@ -115,7 +115,7 @@ const inputStyle = {
 };
 
 const buttonStyle = {
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   borderRadius: 16,
   paddingVertical: 15,
   alignItems: 'center' as const,

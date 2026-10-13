@@ -44,7 +44,7 @@ export default function HomeDashboard({
 }: Props) {
   return (
     <div className="mb-5 min-w-0 shrink-0 space-y-3 overflow-x-hidden md:mb-6">
-      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] xl:items-stretch">
+      <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] xl:items-stretch">
         <section
           aria-label="库存统计"
           className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:p-5 xl:flex xl:flex-col"
@@ -69,7 +69,7 @@ export default function HomeDashboard({
 
         <section
           aria-labelledby="recent-items-heading"
-          className="hidden min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:block xl:flex xl:flex-col"
+          className="hidden min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -87,7 +87,7 @@ export default function HomeDashboard({
 
         <section
           aria-labelledby="recent-activity-heading"
-          className="hidden min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:block xl:flex xl:flex-col"
+          className="hidden min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:flex xl:flex-col"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -196,7 +196,7 @@ function MobileRecentCard({
   const panelId = `home-recent-${activePanel}`;
 
   return (
-    <section aria-labelledby="mobile-recent-heading" className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm md:hidden">
+    <section aria-labelledby="mobile-recent-heading" className="min-w-0 overflow-hidden rounded-[28px] border border-borderSoft bg-surface p-4 shadow-sm xl:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 id="mobile-recent-heading" className="text-base font-semibold text-slate-900">最近动态</h3>
         <button type="button" onClick={onOpenActivity} className="text-sm font-semibold text-brandStrong focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong">

@@ -45,8 +45,8 @@ type TabsProps = ComponentProps<typeof Tabs>;
 type TabBarProps = Parameters<NonNullable<TabsProps['tabBar']>>[0];
 
 export default function TabsLayout() {
-  const { session, loading } = useAuth();
-  const { loading: householdLoading } = useHousehold();
+  const { session, loading, user } = useAuth();
+  const { loading: householdLoading, currentHouseholdId } = useHousehold();
   const insets = useSafeAreaInsets();
 
   if (!loading && !session) {
@@ -58,7 +58,7 @@ export default function TabsLayout() {
   }
 
   return (
-    <Tabs
+    <Tabs key={`${user?.id ?? 'anonymous'}:${currentHouseholdId ?? 'no-household'}`}
       tabBar={(props) => (
         <MobileTabBar
           {...props}

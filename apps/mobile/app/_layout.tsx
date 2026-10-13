@@ -1,3 +1,4 @@
+import { motionDurations } from '@inplace/ui/mobile';
 import { Stack } from 'expo-router';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -6,7 +7,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { HouseholdProvider } from '@/providers/HouseholdProvider';
 import { ToastProvider } from '@/shared/ui/ToastProvider';
 
-const STACK_TRANSITION_DURATION_MS = 220;
+const STACK_TRANSITION_DURATION_MS = motionDurations.standard;
 
 export default function RootLayout() {
   return (

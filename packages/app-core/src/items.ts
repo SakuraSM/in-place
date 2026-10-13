@@ -1,6 +1,8 @@
+import { collectInventoryPages } from './inventory-pagination';
 import { ApiError } from '@inplace/api-client';
 import type { Item, ItemCreateInput, ItemStats, PaginatedResult, PaginationMeta } from '@inplace/domain';
 import type { AppCoreRequest } from './shared';
+import { BatchOperationError, executeBatch } from './batch-operations';
 
 export type ServerItem = {
   id: string;
@@ -314,11 +316,21 @@ export function createItemsApi(request: AppCoreRequest) {
   }
 
   async function updateItemsBatch(ids: string[], data: Partial<Item>): Promise<void> {
-    await Promise.all(ids.map((id) => updateItem(id, data)));
+    const result = await executeBatch({
+      entries: [...new Set(ids)],
+      identify: (id) => id,
+      execute: (id) => updateItem(id, data),
+    });
+    if (result.failed.length > 0) throw new BatchOperationError(result);
   }
 
   async function deleteItemsBatch(ids: string[]): Promise<void> {
-    await Promise.all(ids.map((id) => deleteItem(id)));
+    const result = await executeBatch({
+      entries: [...new Set(ids)],
+      identify: (id) => id,
+      execute: deleteItem,
+    });
+    if (result.failed.length > 0) throw new BatchOperationError(result);
   }
 
   async function searchItemsPage(query: string, userId: string, options: {
@@ -380,8 +392,7 @@ export function createItemsApi(request: AppCoreRequest) {
     locationOnly?: boolean;
     tags?: string[];
   } = {}): Promise<Item[]> {
-    const response = await searchItemsPage(query, userId, options);
-    return response.data;
+    return collectInventoryPages((pagination) => searchItemsPage(query, userId, { ...options, ...pagination }));
   }
 
   async function fetchItemStats(userId: string): Promise<ItemStats> {

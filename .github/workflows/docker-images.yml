@@ -42,7 +42,24 @@ env:
   IMAGE_PREFIX: ghcr.io/sakurasm/inplace
 
 jobs:
+  validate:
+    name: Validate web, server and shared packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint --workspace @inplace/web
+      - run: npm run build:db
+      - run: npm test --workspace @inplace/web
+      - run: npm test --workspace @inplace/server
+
   build:
+    needs: validate
     name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest
     permissions:

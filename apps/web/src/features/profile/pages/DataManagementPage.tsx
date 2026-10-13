@@ -1,14 +1,19 @@
+import { useHousehold } from '../../../app/providers/household-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { ArrowLeft, Download, HardDriveDownload, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { apiRequest, resolveApiUrl } from '../../../shared/api/client';
+import { apiRequest, apiRequestResponse } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function DataManagementPage() {
+  const { currentHousehold } = useHousehold();
+  const queryClient = useQueryClient();
+  const canImport = currentHousehold?.role === 'owner';
   const [exportingFormat, setExportingFormat] = useState<'json' | 'csv' | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -33,22 +38,7 @@ export default function DataManagementPage() {
     setExportMessage(null);
 
     try {
-      const response = await fetch(resolveApiUrl(`/v1/items/export?format=${format}`), {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        let message = '导出失败';
-        try {
-          const payload = await response.json() as { message?: string };
-          message = payload.message ?? message;
-        } catch {
-          const text = await response.text();
-          message = text || message;
-        }
-
-        throw new Error(message);
-      }
+      const response = await apiRequestResponse(`/v1/items/export?format=${format}`);
 
       const blob = await response.blob();
       const contentDisposition = response.headers.get('Content-Disposition');
@@ -93,7 +83,7 @@ export default function DataManagementPage() {
   };
 
   const handleImportConfirm = async () => {
-    if (!importPayload) {
+    if (!importPayload || !canImport || importing) {
       return;
     }
 
@@ -108,6 +98,7 @@ export default function DataManagementPage() {
       });
       setImportPayload(null);
       setImportFileName('');
+      await queryClient.invalidateQueries();
       setImportMessage('JSON 备份已导入');
     } catch (error) {
       setImportError(error instanceof Error ? error.message : '导入失败');
@@ -184,11 +175,11 @@ export default function DataManagementPage() {
             </SectionPanel>
           </motion.div>
 
-          <motion.div variants={staggerItem}>
+          {canImport ? <motion.div variants={staggerItem}>
             <SectionPanel
               icon={<Upload size={16} />}
               title="JSON 备份导入"
-              description="恢复备份前请确认当前账号数据可以被覆盖。"
+              description={`将覆盖家庭「${currentHousehold?.name}」的库存及相关记录，请先导出备份。`}
             >
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-800">选择备份文件</p>
@@ -221,7 +212,7 @@ export default function DataManagementPage() {
               {importMessage ? <p className="text-sm text-emerald-500">{importMessage}</p> : null}
               {importError ? <p className="text-sm text-rose-500">{importError}</p> : null}
             </SectionPanel>
-          </motion.div>
+          </motion.div> : <p className="text-sm text-slate-500">仅家庭所有者可覆盖导入备份。</p>}
         </div>
         </motion.div>
       </PageContent>
@@ -229,8 +220,9 @@ export default function DataManagementPage() {
       {importPayload ? (
         <ConfirmDialog
           title="导入 JSON 备份"
-          message={`确定导入「${importFileName}」吗？这会覆盖当前家庭空间的 ${importPreview?.items ?? 0} 条物品及相关记录。`}
+          message={`确定导入「${importFileName}」到家庭「${currentHousehold?.name}」吗？该家庭的库存及相关记录会被覆盖，备份包含 ${importPreview?.items ?? 0} 条物品。`}
           confirmLabel={importing ? '导入中...' : '确认导入'}
+          isConfirming={importing}
           danger
           onConfirm={handleImportConfirm}
           onCancel={() => {

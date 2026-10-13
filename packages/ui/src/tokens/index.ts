@@ -3,3 +3,4 @@ export { spacing } from './spacing';
 export { borderRadius } from './borderRadius';
 export { fontFamilies, fontSizes, fontWeights } from './typography';
 export { shadowsWeb, shadowsMobile } from './shadows';
+export { controlSizes, motionDurations } from './interaction';

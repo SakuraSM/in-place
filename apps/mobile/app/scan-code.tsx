@@ -146,17 +146,8 @@ export default function CodeScanScreen() {
   );
 }
 
-async function fetchBindableItems() {
-  const collectedItems: Item[] = [];
-  let page = 1;
-  let hasNextPage = true;
-  while (hasNextPage && page <= 20) {
-    const result = await itemsApi.searchItemsPage('', '', { page, pageSize: 100 });
-    collectedItems.push(...result.data);
-    hasNextPage = result.meta.hasNextPage;
-    page += 1;
-  }
-  return collectedItems;
+async function fetchBindableItems(): Promise<Item[]> {
+  return itemsApi.searchItems('', '');
 }
 
 const styles = StyleSheet.create({

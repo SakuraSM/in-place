@@ -27,7 +27,7 @@ export default function ReportsScreen() {
     queryFn: async () => {
       const [items, stocktakes] = await Promise.all([
         fetchAllMobileItems(user!.id),
-        stocktakesApi.listRecent(),
+        stocktakesApi.fetchLatestCompleted(),
       ]);
       return { items, stocktakes };
     },
@@ -79,6 +79,7 @@ export default function ReportsScreen() {
         ]}
       />
       <ReportList title="补货清单" empty="当前无需补货" rows={report.lowStockItems.map((item) => `${item.name} · ${item.quantity} / 最低 ${item.minimum_quantity}`)} />
+      <ReportList title="已过期" empty="没有已过期物品" rows={report.expiredItems.map((item) => `${item.name} · ${item.expiry_date}`)} />
       <ReportList title="30 天内到期" empty="近期没有到期物品" rows={report.expiringItems.map((item) => `${item.name} · ${item.expiry_date}`)} />
       <ReportList title="分类价值" empty="暂无价值数据" rows={report.valueByCategory.map((entry) => `${entry.category} · ¥${entry.value.toFixed(2)}`)} />
     </Screen>

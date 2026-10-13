@@ -17,7 +17,8 @@ export function createApiClient(config: ApiClientConfig) {
     return `${config.baseUrl}${normalizedPath}`;
   }
 
-  async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  async function requestResponse(path: string, options: RequestOptions = {}): Promise<Response> {
+    const url = buildUrl(path);
     const contextHeaders = await config.contextHeaders?.();
     const headers = new Headers(contextHeaders);
     new Headers(options.headers).forEach((value, key) => headers.set(key, value));
@@ -31,28 +32,38 @@ export function createApiClient(config: ApiClientConfig) {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(buildUrl(path), {
+    const response = await fetch(url, {
       ...options,
       credentials: options.credentials ?? 'include',
       headers,
     });
 
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    const text = await response.text();
-    const payload = text ? JSON.parse(text) as { message?: string } & T : null;
-
     if (!response.ok) {
-      throw new ApiError(payload?.message ?? '请求失败', response.status);
+      const text = await response.text();
+      let message = text || '请求失败';
+      try {
+        const payload: unknown = JSON.parse(text);
+        message = payload && typeof payload === 'object' && 'message' in payload
+          && typeof payload.message === 'string' ? payload.message : '请求失败';
+      } catch {
+        // Plain-text proxy errors are valid failure responses too.
+      }
+      throw new ApiError(message, response.status);
     }
 
-    return payload as T;
+    return response;
+  }
+
+  async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+    const response = await requestResponse(path, options);
+    if (response.status === 204) return undefined as T;
+    const text = await response.text();
+    return (text ? JSON.parse(text) : null) as T;
   }
 
   return {
     request,
+    requestResponse,
     resolveUrl: buildUrl,
   };
 }

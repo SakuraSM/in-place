@@ -98,7 +98,7 @@ export default function OverviewFilters({
       <section aria-labelledby="overview-tags-heading">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 id="overview-tags-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            标签
+            标签 · 匹配任一
           </h2>
           {selectedTags.length > 0 ? (
             <button type="button" onClick={onTagsClear} className="text-xs font-bold text-brandStrong">

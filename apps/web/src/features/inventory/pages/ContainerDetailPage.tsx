@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, SquarePen, Trash2, Tag, MapPin, ChevronRight, Box, Package2 } from 'lucide-react';
@@ -18,6 +19,7 @@ import EntityBadge from '../components/EntityBadge';
 export default function ContainerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canEditInventory } = useInventoryPermissions();
   const [container, setContainer] = useState<Item | null>(null);
   const [ancestors, setAncestors] = useState<Item[]>([]);
   const [children, setChildren] = useState<Item[]>([]);
@@ -212,7 +214,7 @@ export default function ContainerDetailPage() {
             <ArrowLeft size={18} />
           </button>
         )}
-        actions={(
+        actions={canEditInventory ? (
           <>
             <motion.button
               type="button"
@@ -237,7 +239,7 @@ export default function ContainerDetailPage() {
               <span className="hidden md:inline">删除</span>
             </motion.button>
           </>
-        )}
+        ) : undefined}
       />
 
       <PageContent width="wide">

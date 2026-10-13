@@ -5,6 +5,7 @@ import { useToast } from '../../../shared/ui/toast';
 import ModernDatePicker from '../../../shared/ui/ModernDatePicker';
 import { lifecycleApi } from '../api';
 import { updateItem } from '../../../legacy/items';
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 
 function Section({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -23,6 +24,7 @@ export default function ItemLifecyclePanel({
   onItemChange: (item: Item) => void;
 }) {
   const { notify } = useToast();
+  const { canEditInventory } = useInventoryPermissions();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
@@ -53,6 +55,7 @@ export default function ItemLifecyclePanel({
   }, [refresh]);
 
   const runMutation = async (action: () => Promise<void>, successTitle: string) => {
+    if (!canEditInventory || saving) return;
     setSaving(true);
     try {
       await action();
@@ -75,7 +78,8 @@ export default function ItemLifecyclePanel({
   };
 
   return (
-    <div className="space-y-4">
+    <fieldset disabled={!canEditInventory} className="min-w-0 space-y-4">
+      {!canEditInventory ? <p className="text-sm text-slate-500">当前家庭为只读，可查看库存与历史记录。</p> : null}
       {item.tracking_mode !== 'unique' ? (
         <Section title="快速库存" icon={<PackagePlus size={16} />}>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -156,6 +160,6 @@ export default function ItemLifecyclePanel({
         </div>
         {batches.length > 0 ? <p className="mt-3 text-sm text-slate-600">共 {batches.reduce((sum, batch) => sum + batch.quantity, 0)} 件 · {batches.length} 个批次</p> : <p className="mt-3 text-sm text-slate-500">添加批次后会自动切换为消耗品追踪并汇总数量。</p>}
       </Section>
-    </div>
+    </fieldset>
   );
 }

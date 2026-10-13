@@ -81,6 +81,7 @@ More background is available in [docs/architecture/target-architecture.md](docs/
 
 ## Engineering and Product Documentation
 
+- [Optimization batches and acceptance records](docs/product/optimization-batches.md): priorities, dependencies, scope, and verification progress.
 - [Web UI and map functional design](docs/product/web-ui-functional-design.md): information architecture, interaction contracts, map behavior, known UX risks, and troubleshooting entry points.
 - [Engineering Harness](docs/harness/README.md): change protocol, quality rules, test matrix, current CI gates, task routing, and PR templates.
 - [Contributing](CONTRIBUTING.md): local development and contribution basics.

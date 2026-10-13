@@ -1,3 +1,4 @@
+import { useHousehold } from '../../../app/providers/household-context';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchActivityLogsPage } from '../../../legacy/activity';
@@ -6,6 +7,7 @@ import { buildItemIdMap, buildItemLineage } from '../lib/locationTree';
 import { useAllInventoryItems } from './useAllInventoryItems';
 
 export function useHomeDashboardData(userId: string | null, enabled: boolean) {
+  const { currentHousehold } = useHousehold();
   const { data: allInventoryItems = [] } = useAllInventoryItems(enabled);
   const recentItems = useMemo(
     () => [...allInventoryItems]
@@ -23,13 +25,13 @@ export function useHomeDashboardData(userId: string | null, enabled: boolean) {
   );
 
   const { data: rootStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['home', 'stats', userId],
+    queryKey: ['home', 'stats', userId, currentHousehold?.id],
     enabled: Boolean(userId) && enabled,
     queryFn: () => fetchItemStats(userId!),
     staleTime: 60_000,
   });
   const { data: recentActivity = [] } = useQuery({
-    queryKey: ['home', 'recent-activity', userId],
+    queryKey: ['home', 'recent-activity', userId, currentHousehold?.id],
     enabled: Boolean(userId) && enabled,
     queryFn: async () => {
       const response = await fetchActivityLogsPage(userId!, { pageSize: 3 });

@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useCallback, useEffect, useState } from 'react';
 import { Bell, Check, Clock3, ShieldCheck, Wrench } from 'lucide-react';
 import type { Reminder } from '@inplace/domain';
@@ -13,6 +14,7 @@ const TYPE_ICONS = {
 };
 
 export default function RemindersPage() {
+  const { canEditInventory } = useInventoryPermissions();
   const { notify } = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export default function RemindersPage() {
                     <p className="mt-1 text-sm text-slate-600">{reminder.description}</p>
                     <p className={`mt-2 text-xs font-semibold ${overdue ? 'text-rose-700' : 'text-slate-500'}`}>{overdue ? '已到期 · ' : '到期 · '}{new Date(reminder.due_at).toLocaleString('zh-CN')}</p>
                   </div>
-                  {reminder.status === 'unread' ? <button type="button" onClick={() => void markRead(reminder)} className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-surfaceMuted px-3 text-xs font-bold text-slate-700"><Check size={15} />标为已读</button> : null}
+                  {canEditInventory && reminder.status === 'unread' ? <button type="button" onClick={() => void markRead(reminder)} className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-surfaceMuted px-3 text-xs font-bold text-slate-700"><Check size={15} />标为已读</button> : null}
                 </article>
               );
             })}

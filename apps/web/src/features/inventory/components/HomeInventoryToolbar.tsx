@@ -79,7 +79,7 @@ export default function HomeInventoryToolbar({
             onClick={onToggleSelectAll}
             className="rounded-xl border border-border bg-surface px-3 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-surfaceMuted"
           >
-            {isAllSelected ? '取消全选' : '全选'}
+            {isAllSelected ? '取消全选' : `全选本层 ${totalCount} 项`}
           </button>
         </section>
       ) : null}

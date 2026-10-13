@@ -2,7 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { controlSizes } from '@inplace/ui/mobile';
+import { BottomSheet } from '@/shared/ui/BottomSheet';
+export { BottomSheet } from '@/shared/ui/BottomSheet';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import type { Category, Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
@@ -30,9 +33,9 @@ export function FilterChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable disabled={disabled} onPress={onPress} style={[chipStyle, active ? activeChipStyle : null, disabled ? disabledChipStyle : null]}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: active, disabled }} disabled={disabled} onPress={onPress} style={[chipStyle, active ? activeChipStyle : null, disabled ? disabledChipStyle : null]}>
       {icon ? <Ionicons name={icon} size={13} color={active ? '#ffffff' : palette.textMuted} /> : null}
-      <Text allowFontScaling={false} numberOfLines={1} style={active ? activeChipTextStyle : chipTextStyle}>{label}</Text>
+      <Text numberOfLines={1} style={active ? activeChipTextStyle : chipTextStyle}>{label}</Text>
     </Pressable>
   );
 }
@@ -213,10 +216,10 @@ export function TagFilterSheet({
   onToggleTag: (tag: string) => void;
 }) {
   return (
-    <BottomSheet visible={visible} title="标签筛选" onClose={onClose}>
+    <BottomSheet visible={visible} title="标签筛选 · 匹配任一" onClose={onClose}>
       <View style={sheetSearchStyle}>
         <Ionicons name="search-outline" size={17} color={palette.textSoft} />
-        <TextInput value={tagQuery} onChangeText={onChangeQuery} placeholder="搜索标签" style={sheetSearchInputStyle} />
+        <TextInput value={tagQuery} onChangeText={onChangeQuery} accessibilityLabel="搜索标签" placeholder="搜索标签" style={sheetSearchInputStyle} />
       </View>
       <Pressable onPress={onClear} style={[sheetOptionStyle, selectedTags.length === 0 ? sheetOptionActiveStyle : null]}>
         <Text style={sheetOptionTextStyle}>全部标签</Text>
@@ -236,26 +239,6 @@ export function TagFilterSheet({
   );
 }
 
-export function BottomSheet({ visible, title, children, onClose }: { visible: boolean; title: string; children: React.ReactNode; onClose: () => void }) {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={sheetRootStyle}>
-        <Pressable style={sheetBackdropStyle} onPress={onClose} />
-        <View style={sheetStyle}>
-          <View style={sheetHandleStyle} />
-          <View style={sheetHeaderStyle}>
-            <Text style={sheetTitleStyle}>{title}</Text>
-            <Pressable onPress={onClose} style={sheetCloseStyle}>
-              <Ionicons name="close" size={18} color={palette.textMuted} />
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={sheetContentStyle}>{children as never}</ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export const screenContentStyle = { paddingHorizontal: 16, gap: 8 };
 export const pageTitleStyle = { fontSize: 28, lineHeight: 34, fontWeight: '900' as const, color: palette.text, paddingTop: 2 };
 export const pageTitleRowStyle = {
@@ -265,7 +248,7 @@ export const pageTitleRowStyle = {
   gap: 12,
 };
 export const selectionToggleStyle = {
-  height: 38,
+  minHeight: controlSizes.touch,
   borderRadius: 14,
   paddingHorizontal: 12,
   backgroundColor: palette.canvasStrong,
@@ -274,7 +257,7 @@ export const selectionToggleStyle = {
   gap: 6,
 };
 export const selectionToggleActiveStyle = {
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
 };
 export const selectionToggleTextStyle = {
   fontSize: 13,
@@ -285,7 +268,7 @@ export const selectionToggleActiveTextStyle = {
   color: '#ffffff',
 };
 export const searchBoxStyle = {
-  minHeight: 44,
+  minHeight: controlSizes.touch,
   borderRadius: 15,
   borderWidth: 1,
   borderColor: palette.border,
@@ -298,8 +281,8 @@ export const searchBoxStyle = {
 };
 export const searchInputStyle = { flex: 1, minHeight: 40, fontSize: 15, color: palette.text };
 export const clearButtonStyle = {
-  width: 28,
-  height: 28,
+  width: controlSizes.touch,
+  height: controlSizes.touch,
   borderRadius: 999,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -318,7 +301,8 @@ export const loadingMoreStyle = {
 };
 
 const chipStyle = {
-  minHeight: 30,
+  minHeight: controlSizes.touch,
+  minWidth: controlSizes.touch,
   maxWidth: '100%' as const,
   borderRadius: 999,
   backgroundColor: palette.canvasStrong,
@@ -384,47 +368,10 @@ const selectionDotStyle = {
 };
 const selectionDotActiveStyle = {
   borderColor: palette.brand,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
 };
-const sheetRootStyle = { flex: 1, justifyContent: 'flex-end' as const };
-const sheetBackdropStyle = {
-  position: 'absolute' as const,
-  top: 0,
-  right: 0,
-  bottom: 0,
-  left: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.28)',
-};
-const sheetStyle = {
-  maxHeight: '82%' as const,
-  borderTopLeftRadius: 28,
-  borderTopRightRadius: 28,
-  backgroundColor: palette.surface,
-  overflow: 'hidden' as const,
-};
-const sheetHandleStyle = { alignSelf: 'center' as const, width: 42, height: 4, borderRadius: 999, backgroundColor: palette.border, marginTop: 10 };
-const sheetHeaderStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'space-between' as const,
-  paddingHorizontal: 20,
-  paddingTop: 10,
-  paddingBottom: 14,
-  borderBottomWidth: 1,
-  borderBottomColor: palette.borderSoft,
-};
-const sheetTitleStyle = { fontSize: 21, lineHeight: 27, fontWeight: '900' as const, color: palette.text };
-const sheetCloseStyle = {
-  width: 34,
-  height: 34,
-  borderRadius: 999,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: palette.surfaceMuted,
-};
-const sheetContentStyle = { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28, gap: 10 };
 const sheetOptionStyle = {
-  minHeight: 46,
+  minHeight: controlSizes.touch,
   borderRadius: 13,
   backgroundColor: palette.surfaceMuted,
   paddingHorizontal: 12,

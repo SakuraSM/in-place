@@ -1,6 +1,7 @@
+import { controlSizes } from '@inplace/ui/mobile';
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, shadows } from './theme';
 
@@ -22,7 +23,7 @@ export function BottomSheet({ children, title, visible, onClose }: BottomSheetPr
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={rootStyle}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={rootStyle}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`关闭${title}`}
@@ -54,7 +55,7 @@ export function BottomSheet({ children, title, visible, onClose }: BottomSheetPr
             {children as never}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -110,8 +111,8 @@ const titleStyle = {
 };
 
 const closeStyle = {
-  width: 36,
-  height: 36,
+  width: controlSizes.touch,
+  height: controlSizes.touch,
   borderRadius: 18,
   backgroundColor: palette.surfaceMuted,
   alignItems: 'center' as const,

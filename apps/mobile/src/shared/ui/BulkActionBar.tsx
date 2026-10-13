@@ -65,7 +65,7 @@ const editButtonStyle = {
   flex: 1,
   minHeight: 46,
   borderRadius: 16,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,

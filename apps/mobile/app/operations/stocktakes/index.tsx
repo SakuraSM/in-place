@@ -130,28 +130,14 @@ export default function StocktakesScreen() {
   );
 }
 
-async function fetchLocations(userId: string) {
-  const collectedLocations: Item[] = [];
-  let page = 1;
-  let hasNextPage = true;
-  while (hasNextPage && page <= 20) {
-    const result = await itemsApi.searchItemsPage('', userId, {
-      page,
-      pageSize: 100,
-      type: 'container',
-      locationOnly: true,
-    });
-    collectedLocations.push(...result.data);
-    hasNextPage = result.meta.hasNextPage;
-    page += 1;
-  }
-  return collectedLocations;
+async function fetchLocations(userId: string): Promise<Item[]> {
+  return itemsApi.searchItems('', userId, { type: 'container', locationOnly: true });
 }
 
 const primaryButtonStyle = {
   minHeight: 48,
   borderRadius: 16,
-  backgroundColor: palette.brand,
+  backgroundColor: palette.brandStrong,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,

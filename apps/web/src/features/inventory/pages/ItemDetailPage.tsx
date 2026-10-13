@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, SquarePen, Trash2, Tag, Calendar, DollarSign, ShieldCheck, MapPin, ChevronRight, Package } from 'lucide-react';
@@ -19,6 +20,7 @@ import ItemLifecyclePanel from '../../operations/components/ItemLifecyclePanel';
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canEditInventory } = useInventoryPermissions();
   const [item, setItem] = useState<Item | null>(null);
   const [ancestors, setAncestors] = useState<Item[]>([]);
   const [relationChildren, setRelationChildren] = useState<Item[]>([]);
@@ -234,7 +236,7 @@ export default function ItemDetailPage() {
             <ArrowLeft size={18} />
           </button>
         )}
-        actions={(
+        actions={canEditInventory ? (
           <>
             <motion.button
               type="button"
@@ -259,7 +261,7 @@ export default function ItemDetailPage() {
               <span className="hidden md:inline">删除</span>
             </motion.button>
           </>
-        )}
+        ) : undefined}
       />
 
       <PageContent width="wide">

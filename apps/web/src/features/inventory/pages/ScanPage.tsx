@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Camera, Sparkles, Check, Loader2, AlertCircle, Plus, CreditCard as Edit2, Crop, Package, Box, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
+import { BatchOperationError, executeBatch, ITEM_TYPE_PRESENTATION } from '@inplace/app-core';
 import { fetchAiAvailability, recognizeItemFromImage } from '../../../legacy/openai';
 import { createItem, uploadImage } from '../../../legacy/items';
 import { useAuth } from '../../../app/providers/auth-context';
@@ -31,6 +33,8 @@ interface SaveDraftWithImageInput {
 const MAX_VISIBLE_RESULT_TAGS = 2;
 
 export default function ScanPage() {
+  const queryClient = useQueryClient();
+  const saveGuard = useRef(false);
   const { user } = useAuth();
   const cameraFileRef = useRef<HTMLInputElement>(null);
   const photoLibraryRef = useRef<HTMLInputElement>(null);
@@ -184,12 +188,17 @@ export default function ScanPage() {
   };
 
   const handleSaveSelected = async () => {
-    if (!user) return;
+    if (!user || saveGuard.current) return;
+    saveGuard.current = true;
     setSaving(true);
+    setError('');
     const selected = drafts.filter((d) => d.selected && !d.saved);
     try {
-      await Promise.all(
-        selected.map((draft) => {
+      const result = await executeBatch({
+        entries: selected,
+        concurrency: 1,
+        identify: (draft) => String(drafts.indexOf(draft)),
+        execute: (draft) => {
           const idx = drafts.indexOf(draft);
           return saveDraftWithImage({
             draft,
@@ -218,9 +227,14 @@ export default function ScanPage() {
               prev.map((d, i) => (i === idx ? { ...d, saved: true } : d))
             );
           });
-        })
-      );
+        },
+      });
+      if (result.failed.length > 0) setError(new BatchOperationError(result).message);
+      if (result.succeeded.length > 0) await queryClient.invalidateQueries();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '保存失败，请重试');
     } finally {
+      saveGuard.current = false;
       setSaving(false);
     }
   };
@@ -315,7 +329,9 @@ export default function ScanPage() {
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Sparkles size={22} className="text-amber-500" />
             </div>
-            <h3 className="font-semibold text-amber-800 mb-1">AI 功能即将开放</h3>
+            <h3 className="font-semibold text-amber-800 mb-1">尚未配置 AI 识别服务</h3>
+            <p className="mt-2 text-sm text-amber-900">配置识别服务后可使用拍照录入，也可以先手动新增物品。</p>
+            <Link to="/profile/ai" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brandStrong px-4 text-sm font-bold text-white">前往 AI 配置</Link>
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px] 2xl:grid-cols-[minmax(0,1.2fr)_400px] xl:items-start">

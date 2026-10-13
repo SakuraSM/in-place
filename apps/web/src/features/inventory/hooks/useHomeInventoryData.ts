@@ -1,76 +1,38 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Category, Item } from '../../../legacy/database.types';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import type { Item } from '../../../legacy/database.types';
 import { fetchCategories } from '../../../legacy/categories';
-import { fetchAncestors, fetchChildren } from '../../../legacy/items';
+import { useHousehold } from '../../../app/providers/household-context';
+import { useAllInventoryItems } from './useAllInventoryItems';
+import { buildItemIdMap, buildItemLineage } from '../lib/locationTree';
 
-export function useHomeInventoryData(
-  userId: string | null,
-  currentParentId: string | null,
-) {
-  const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
-  const [children, setChildren] = useState<Item[]>([]);
-  const [childCounts, setChildCounts] = useState<Record<string, number>>({});
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+const EMPTY_ITEMS: Item[] = [];
 
-  const loadChildren = useCallback(async (parentId: string | null) => {
-    if (!userId) {
-      return;
-    }
-    setLoading(true);
-    try {
-      const items = await fetchChildren(parentId, userId);
-      setChildren(items);
-      const counts: Record<string, number> = {};
-      await Promise.all(items
-        .filter((item) => item.type === 'container')
-        .map(async (container) => {
-          const nestedItems = await fetchChildren(container.id, userId);
-          counts[container.id] = nestedItems.length;
-        }));
-      setChildCounts(counts);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    void loadChildren(currentParentId);
-  }, [currentParentId, loadChildren]);
-
-  useEffect(() => {
-    let active = true;
-    if (!userId) {
-      return undefined;
-    }
-    if (!currentParentId) {
-      setBreadcrumbs([]);
-      return undefined;
-    }
-
-    void fetchAncestors(currentParentId).then((items) => {
-      if (active) {
-        setBreadcrumbs(items);
-      }
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [currentParentId, userId]);
-
-  useEffect(() => {
-    if (userId) {
-      void fetchCategories(userId).then(setCategories);
-    }
-  }, [userId]);
-
+export function useHomeInventoryData(userId: string | null, currentParentId: string | null) {
+  const { currentHousehold } = useHousehold();
+  const inventory = useAllInventoryItems(Boolean(userId));
+  const categories = useQuery({
+    queryKey: ['inventory', 'categories', userId, currentHousehold?.id],
+    enabled: Boolean(userId && currentHousehold),
+    queryFn: () => fetchCategories(userId!),
+  });
+  const allItems = inventory.data ?? EMPTY_ITEMS;
+  const children = useMemo(() => allItems.filter((item) => item.parent_id === currentParentId), [allItems, currentParentId]);
+  const childCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allItems.forEach((item) => { if (item.parent_id) counts[item.parent_id] = (counts[item.parent_id] ?? 0) + 1; });
+    return counts;
+  }, [allItems]);
+  const breadcrumbs = useMemo(() => currentParentId ? buildItemLineage(currentParentId, buildItemIdMap(allItems)) : [], [allItems, currentParentId]);
+  const loadChildren = async (_parentId: string | null): Promise<void> => {
+    void _parentId;
+    await inventory.refetch({ throwOnError: true });
+  };
   return {
-    breadcrumbs,
-    children,
-    childCounts,
-    categories,
-    loading,
+    breadcrumbs, children, childCounts, categories: categories.data ?? [],
+    loading: inventory.isLoading,
+    error: inventory.error ?? categories.error,
     loadChildren,
+    retry: () => { void inventory.refetch(); void categories.refetch(); },
   };
 }

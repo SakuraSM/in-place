@@ -1,3 +1,4 @@
+import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, MapPin, Package, Pencil, Plus, Shapes, Sparkles, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -49,6 +50,7 @@ function CategoryListItem({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { canEditInventory } = useInventoryPermissions();
   const colorClasses = getColorClasses(category.color);
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-borderSoft bg-surface p-3.5 shadow-sm transition-shadow hover:shadow-md">
@@ -69,27 +71,28 @@ function CategoryListItem({
           <span>{isUsageLoading ? '统计使用量中…' : `使用 ${usageCount} 项`}</span>
         </p>
       </div>
-      <button
+      {canEditInventory ? <button
         type="button"
         onClick={onEdit}
         aria-label={`编辑分类：${category.name}`}
         className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brandTint hover:text-brandStrong"
       >
         <Pencil size={15} />
-      </button>
-      <button
+      </button> : null}
+      {canEditInventory ? <button
         type="button"
         onClick={onDelete}
         aria-label={`删除分类：${category.name}`}
         className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-700"
       >
         <Trash2 size={15} />
-      </button>
+      </button> : null}
     </div>
   );
 }
 
 export default function CategoriesPage() {
+  const { canEditInventory } = useInventoryPermissions();
   const { user } = useAuth();
   const { notify } = useToast();
   const [activeScope, setActiveScope] = useState<CategoryScope>('location');
@@ -221,7 +224,7 @@ export default function CategoriesPage() {
               </p>
             </div>
           </div>
-          {presetSummary.missingCount > 0 ? (
+          {canEditInventory && presetSummary.missingCount > 0 ? (
             <button
               type="button"
               onClick={() => void handleApplyPresets()}
@@ -265,7 +268,7 @@ export default function CategoriesPage() {
         </div>
       </PageContent>
 
-      <button
+      {canEditInventory ? <button
         type="button"
         onClick={() => {
           setEditTarget(null);
@@ -275,7 +278,7 @@ export default function CategoriesPage() {
         className="fixed bottom-24 right-4 z-30 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 transition-colors hover:bg-teal-700 md:bottom-8 md:right-8"
       >
         <Plus size={24} />
-      </button>
+      </button> : null}
 
       {showEditor && user ? (
         <CategoryEditorDialog

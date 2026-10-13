@@ -1,4 +1,14 @@
-import { semantic, spacing, borderRadius, fontFamilies, fontSizes, fontWeights, shadowsMobile } from '../../tokens/index';
+import {
+  semantic,
+  spacing,
+  borderRadius,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  shadowsMobile,
+  controlSizes,
+  motionDurations,
+} from '../../tokens/index';
 
 type NamedStyles<T> = { [P in keyof T]: Record<string, unknown> };
 
@@ -10,6 +20,8 @@ const tokensInternal = {
   fontSizes,
   fontWeights,
   shadows: shadowsMobile,
+  controlSizes,
+  motionDurations,
 } as const;
 
 export const tokens = tokensInternal;
@@ -23,7 +35,7 @@ export function createStyles<T extends NamedStyles<T>>(styles: T | ((t: typeof t
 }
 
 // Re-exported for direct consumption by mobile theme
-export { semantic, shadowsMobile };
+export { semantic, shadowsMobile, controlSizes, motionDurations };
 
 /**
  * Base screen style — applies canvas background.

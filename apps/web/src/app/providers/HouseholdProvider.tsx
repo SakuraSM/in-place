@@ -9,13 +9,14 @@ import { HouseholdContext } from './household-context';
 const householdsApi = createHouseholdsApi(apiRequest);
 
 export function HouseholdProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [households, setHouseholds] = useState<Household[]>([]);
   const [currentHousehold, setCurrentHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(false);
 
   const refreshHouseholds = useCallback(async () => {
+    if (authLoading) return;
     if (!user) {
       setHouseholds([]);
       setCurrentHousehold(null);
@@ -37,7 +38,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [authLoading, user]);
 
   useEffect(() => {
     void refreshHouseholds();
@@ -52,6 +53,10 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (nextHousehold.id === currentHousehold?.id) return;
+    await queryClient.cancelQueries();
+    queryClient.removeQueries();
+    const pathname = /^\/(item|container|stocktakes)\//.test(window.location.pathname) ? '/' : window.location.pathname;
+    window.history.replaceState(window.history.state, '', pathname);
     setStoredHouseholdId(nextHousehold.id);
     setCurrentHousehold(nextHousehold);
     await queryClient.invalidateQueries();
@@ -67,7 +72,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
 
   return (
     <HouseholdContext.Provider value={value}>
-      <Fragment key={currentHousehold?.id ?? 'no-household'}>{children}</Fragment>
+      <Fragment key={`${user?.id ?? 'anonymous'}:${currentHousehold?.id ?? 'no-household'}`}>{children}</Fragment>
     </HouseholdContext.Provider>
   );
 }

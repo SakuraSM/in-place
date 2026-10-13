@@ -7,6 +7,8 @@ import {
   fontSizes,
   fontWeights,
   shadowsWeb,
+  controlSizes,
+  motionDurations,
 } from '../../tokens/index';
 
 /**
@@ -36,6 +38,9 @@ export const tailwindPreset = {
         brand: semantic.brand,
         brandStrong: semantic.brandStrong,
         brandTint: semantic.brandTint,
+        disabledText: semantic.disabledText,
+        disabledSurface: semantic.disabledSurface,
+        focusRing: semantic.focusRing,
       },
       spacing: Object.fromEntries(
         Object.entries(spacing).map(([k, v]) => [k, `${v}px`]),
@@ -52,6 +57,12 @@ export const tailwindPreset = {
       ),
       fontWeight: fontWeights,
       boxShadow: shadowsWeb,
+      minHeight: Object.fromEntries(
+        Object.entries(controlSizes).map(([key, value]) => [`control-${key}`, `${value}px`]),
+      ),
+      transitionDuration: Object.fromEntries(
+        Object.entries(motionDurations).map(([key, value]) => [`motion-${key}`, `${value}ms`]),
+      ),
     },
   },
 };
