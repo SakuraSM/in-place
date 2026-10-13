@@ -54,6 +54,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint --workspace @inplace/web
+      - run: npm run build:db
       - run: npm test --workspace @inplace/web
       - run: npm test --workspace @inplace/server
 
