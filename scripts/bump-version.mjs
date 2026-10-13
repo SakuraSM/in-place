@@ -91,6 +91,24 @@ async function main() {
     updated += 1;
   }
 
+  const lockfilePath = path.join(repoRoot, 'package-lock.json');
+  const lockfileRaw = await readFile(lockfilePath, 'utf8');
+  const lockfile = JSON.parse(lockfileRaw);
+  lockfile.version = version;
+  for (const rel of targets.filter((target) => path.basename(target) === 'package.json')) {
+    const directory = path.dirname(rel);
+    const workspaceKey = directory === '.' ? '' : directory;
+    if (lockfile.packages?.[workspaceKey]) {
+      lockfile.packages[workspaceKey].version = version;
+    }
+  }
+  const nextLockfile = `${JSON.stringify(lockfile, null, 2)}\n`;
+  if (nextLockfile !== lockfileRaw) {
+    await writeFile(lockfilePath, nextLockfile);
+    console.log(`Updated package-lock.json workspace versions -> ${version}`);
+    updated += 1;
+  }
+
   for (const target of textTargets) {
     const file = path.join(repoRoot, target.rel);
     let raw;
