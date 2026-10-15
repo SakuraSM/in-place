@@ -1,3 +1,4 @@
+import { normalizeServerUrl } from './mobileApiUrl';
 import { createApiClient } from '@inplace/api-client';
 import {
   createActivityApi,
@@ -33,33 +34,7 @@ function resolveDefaultMobileApiBaseUrl() {
 }
 
 export function normalizeMobileApiBaseUrl(rawBaseUrl: string) {
-  try {
-    const url = new URL(rawBaseUrl);
-    const developmentBuild = typeof __DEV__ !== 'undefined' && __DEV__;
-    if (url.protocol !== 'https:' && !(developmentBuild && url.protocol === 'http:')) {
-      throw new Error('生产版本仅支持 HTTPS 服务器');
-    }
-    const normalizedPath = url.pathname.replace(/\/+$/, '');
-
-    if (!normalizedPath || normalizedPath === '') {
-      url.pathname = '/api';
-      return url.toString().replace(/\/+$/, '');
-    }
-
-    if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) {
-      url.pathname = normalizedPath;
-      return url.toString().replace(/\/+$/, '');
-    }
-
-    url.pathname = `${normalizedPath}/api`;
-    return url.toString().replace(/\/+$/, '');
-  } catch (error) {
-    if (error instanceof Error && error.message === '生产版本仅支持 HTTPS 服务器') throw error;
-    const trimmed = rawBaseUrl.replace(/\/+$/, '');
-    const developmentBuild = typeof __DEV__ !== 'undefined' && __DEV__;
-    if (!developmentBuild) throw new Error('服务器地址必须是有效的 HTTPS URL');
-    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
-  }
+  return normalizeServerUrl(rawBaseUrl, typeof __DEV__ !== 'undefined' && __DEV__);
 }
 
 const mobileApiClientConfig = {
@@ -74,6 +49,12 @@ const mobileApiClientConfig = {
     return headers;
   },
 };
+
+let configuredBaseUrl: string | null = runtimeEnv.process?.env?.EXPO_PUBLIC_API_BASE_URL?.trim() ? mobileApiClientConfig.baseUrl : null;
+
+export function getMobileApiBaseUrlInput() {
+  return configuredBaseUrl ?? '';
+}
 
 export const mobileApiClient = createApiClient(mobileApiClientConfig);
 
@@ -93,6 +74,7 @@ export function getMobileWebBaseUrl() {
 
 export function setMobileApiBaseUrl(rawBaseUrl: string) {
   mobileApiClientConfig.baseUrl = normalizeMobileApiBaseUrl(rawBaseUrl.trim());
+  configuredBaseUrl = mobileApiClientConfig.baseUrl;
   return mobileApiClientConfig.baseUrl;
 }
 

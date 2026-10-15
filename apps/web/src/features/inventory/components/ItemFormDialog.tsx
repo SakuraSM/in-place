@@ -9,6 +9,7 @@ interface ItemFormDialogProps {
   submitError?: string | null;
   isSaving: boolean;
   isSubmitDisabled: boolean;
+  allowContinue?: boolean;
   shouldCloseOnEscape: boolean;
   children: ReactNode;
   onClose: () => void;
@@ -21,6 +22,7 @@ export default function ItemFormDialog({
   submitError,
   isSaving,
   isSubmitDisabled,
+  allowContinue = false,
   shouldCloseOnEscape,
   children,
   onClose,
@@ -50,12 +52,15 @@ export default function ItemFormDialog({
         </div>
 
         <form onSubmit={(event) => void onSubmit(event)} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">{children}</div>
+          <fieldset disabled={isSaving} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">{children}</fieldset>
           <div className="border-t border-slate-100 bg-white px-5 py-4">
             {submitError ? <div role="alert" className="mb-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div> : null}
-            <button type="submit" disabled={isSubmitDisabled} className="w-full rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <div className="flex gap-3">
+            {allowContinue ? <button type="submit" value="continue" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandTint px-3 py-4 text-sm font-semibold text-brandStrong disabled:opacity-50">保存并继续</button> : null}
+            <button type="submit" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
               {isSaving ? '保存中...' : '保存'}
             </button>
+            </div>
           </div>
         </form>
       </motion.div>

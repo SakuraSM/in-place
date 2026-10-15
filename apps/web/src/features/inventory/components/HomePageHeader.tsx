@@ -1,4 +1,5 @@
-import { ArrowLeft, CheckSquare, Plus, X } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Plus, Search, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { Item } from '../../../legacy/database.types';
 import { PageHeader } from '../../../shared/ui/PageLayout';
 
@@ -40,8 +41,9 @@ export default function HomePageHeader({
           返回上一级
         </button>
       ) : undefined}
-      actions={canEditInventory ? (
-        <>
+      actions={<>
+        <Link to="/overview" state={{ focusSearch: true }} className="flex min-h-11 items-center gap-2 rounded-2xl border border-border bg-surface px-4 text-sm font-semibold text-slate-700"><Search size={17} />找物品</Link>
+        {canEditInventory ? <>
           {!isEmpty ? (
             <button
               type="button"
@@ -67,8 +69,8 @@ export default function HomePageHeader({
               新增
             </button>
           ) : null}
-        </>
-      ) : undefined}
+        </> : null}
+      </>}
     />
   );
 }

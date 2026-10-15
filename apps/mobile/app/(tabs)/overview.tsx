@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useInventoryBatch } from '@/features/inventory/useInventoryBatch';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,6 +89,7 @@ export default function OverviewTab() {
     locationId?: string;
     tag?: string | string[];
     view?: OverviewViewMode;
+    focus?: string;
   }>();
   const [query, setQuery] = useState(params.q ?? '');
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
@@ -98,7 +99,8 @@ export default function OverviewTab() {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
-  const [viewMode, setViewMode] = useState<OverviewViewMode>(params.view === 'flat' ? 'flat' : 'hierarchy');
+  const [viewMode, setViewMode] = useState<OverviewViewMode>(params.view === 'hierarchy' ? 'hierarchy' : 'flat');
+  const searchInput = useRef<TextInput>(null);
   const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
@@ -106,14 +108,20 @@ export default function OverviewTab() {
   }, [params.q]);
 
   useEffect(() => {
-    setViewMode(params.view === 'flat' ? 'flat' : 'hierarchy');
+    setViewMode(params.view === 'hierarchy' ? 'hierarchy' : 'flat');
   }, [params.view]);
+
+  useFocusEffect(useCallback(() => {
+    if (params.focus !== 'search') return;
+    const timer = setTimeout(() => { searchInput.current?.focus(); router.setParams({ focus: undefined }); }, 150);
+    return () => clearTimeout(timer);
+  }, [params.focus]));
 
   const typeFilter = normalizeTypeFilter(params.type, VALID_TYPE_VALUES);
   const statusFilter = normalizeStatusFilter(params.status, VALID_STATUS_VALUES);
   const selectedTags = normalizeTags(params.tag);
   const selectedTagsKey = selectedTags.join('\u0000');
-  const selectedLocationId = params.locationId ?? null;
+  const selectedLocationId = params.locationId || null;
   const effectiveTypeFilter = typeFilter === 'location' ? 'container' : typeFilter === 'all' ? undefined : typeFilter;
   const effectiveStatusFilter = typeFilter === 'location' || typeFilter === 'container' || statusFilter === 'all' ? undefined : statusFilter;
 
@@ -236,7 +244,7 @@ export default function OverviewTab() {
 
   const handleViewModeChange = (value: OverviewViewMode) => {
     setViewMode(value);
-    updateParams({ view: value === 'hierarchy' ? undefined : value });
+    updateParams({ view: value });
   };
 
   const handleToggleSelectionMode = () => {
@@ -281,7 +289,7 @@ export default function OverviewTab() {
 
   if (allItemsQuery.isError || searchQuery.isError || categoriesQuery.isError) {
     const error = allItemsQuery.error ?? searchQuery.error ?? categoriesQuery.error;
-    return <Screen><StateBlock title="库存加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /></Screen>;
+    return <Screen><StateBlock title="库存加载失败" body={error instanceof Error ? error.message : '请稍后重试'} /><Pressable accessibilityRole="button" onPress={() => { void allItemsQuery.refetch(); void searchQuery.refetch(); void categoriesQuery.refetch(); }} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.brandStrong }}>重新加载库存</Text></Pressable></Screen>;
   }
 
   return (
@@ -314,6 +322,8 @@ export default function OverviewTab() {
       <View style={searchBoxStyle}>
         <Ionicons name="search-outline" size={23} color={palette.textSoft} />
         <TextInput
+          ref={searchInput}
+          accessibilityLabel="搜索库存"
           value={query}
           onChangeText={setQuery}
           onEndEditing={() => updateParams({ q: query.trim() || undefined })}
@@ -328,6 +338,7 @@ export default function OverviewTab() {
           </Pressable>
         ) : null}
       </View>
+      <Text style={loadedMetaStyle}>{viewMode === 'hierarchy' ? '层级模式仅查找当前位置的直接下级，可切换平铺跨层查找' : selectedLocation ? `查找${selectedLocation.name}及其下级全部内容` : '查找当前家庭的全部位置、收纳和物品'}</Text>
 
       <OverviewFilterControls
         typeFilters={TYPE_FILTERS}
@@ -362,7 +373,7 @@ export default function OverviewTab() {
             status: filters.status === 'all' ? undefined : filters.status,
             locationId: filters.locationId ?? undefined,
             tag: filters.tags.length > 0 ? filters.tags : undefined,
-            view: filters.view === 'hierarchy' ? undefined : filters.view,
+            view: filters.view,
           });
         }}
       />

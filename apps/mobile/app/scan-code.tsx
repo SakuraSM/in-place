@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,6 +7,7 @@ import type { Item } from '@inplace/domain';
 import { parseInventoryCode } from '@inplace/app-core';
 import { codesApi, itemsApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
+import { ManualCodeSheet } from '@/features/scan/ManualCodeSheet';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { InventoryIcon } from '@/shared/ui/InventoryIcon';
@@ -21,6 +22,10 @@ export default function CodeScanScreen() {
   const notify = useNotify();
   const [permission, requestPermission] = useCameraPermissions();
   const [busy, setBusy] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const busyRef = useRef(false);
+  const cooldown = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (cooldown.current) clearTimeout(cooldown.current); }, []);
   const [message, setMessage] = useState('扫描物品进入详情；扫描位置后继续扫描物品即可归位。');
   const [destination, setDestination] = useState<Item | null>(null);
   const [movedIds, setMovedIds] = useState<Set<string>>(() => new Set());
@@ -31,21 +36,20 @@ export default function CodeScanScreen() {
     queryFn: fetchBindableItems,
   });
 
-  const handleBarcode = useCallback(async (result: BarcodeScanningResult) => {
-    if (busy) return;
-    const code = parseInventoryCode(result.data);
+  const handleCode = useCallback(async (raw: string) => {
+    if (busyRef.current) throw new Error('正在处理上一个标签，请稍后再试');
+    const code = parseInventoryCode(raw);
     if (!code) {
-      setMessage('这不是有效的“归位”标签');
-      return;
+      throw new Error('这不是有效的归位标签');
     }
+    busyRef.current = true;
     setBusy(true);
     try {
       const resolved = await codesApi.resolveCode(code);
       const scannedItem = resolved.item;
       if (!scannedItem) {
         if (!canEditInventory) {
-          setMessage('这是未绑定标签；当前家庭为只读，无法绑定。');
-          return;
+          throw new Error('这是未绑定标签；当前家庭为只读，无法绑定。');
         }
         setUnboundCode(code);
         setMessage('这是未绑定标签，请选择要绑定的位置、收纳或物品。');
@@ -54,8 +58,7 @@ export default function CodeScanScreen() {
 
       if (destination) {
         if (scannedItem.type !== 'item') {
-          setMessage('请继续扫描物品标签');
-          return;
+          throw new Error('请继续扫描物品标签');
         }
         if (movedIds.has(scannedItem.id)) {
           setMessage(`${scannedItem.name} 已在本次归位清单中`);
@@ -75,10 +78,11 @@ export default function CodeScanScreen() {
       router.replace(`/item/${scannedItem.id}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '扫码失败，请重试');
+      throw error;
     } finally {
-      setTimeout(() => setBusy(false), 900);
+      cooldown.current = setTimeout(() => { busyRef.current = false; setBusy(false); }, 900);
     }
-  }, [busy, canEditInventory, destination, movedIds]);
+  }, [canEditInventory, destination, movedIds]);
 
   const handleBind = async (item: Item) => {
     if (!unboundCode) return;
@@ -93,25 +97,17 @@ export default function CodeScanScreen() {
     }
   };
 
-  if (!permission) return <View style={styles.center}><Text>正在检查相机权限…</Text></View>;
-  if (!permission.granted) {
-    return (
-      <View style={[styles.center, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
-        <Text style={styles.title}>需要相机权限</Text>
-        <Text style={styles.description}>相机只用于识别“归位”二维码。</Text>
-        <Pressable onPress={() => void requestPermission()} style={styles.primaryButton}><Text style={styles.primaryButtonText}>允许使用相机</Text></Pressable>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.screen, { paddingTop: insets.top }] }>
-      <CameraView
+      {permission?.granted ? <CameraView
         style={styles.camera}
         facing="back"
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={busy ? undefined : (result: BarcodeScanningResult) => void handleBarcode(result)}
-      />
+        onBarcodeScanned={busy || manualOpen || Boolean(unboundCode) ? undefined : (result) => void handleCode(result.data).catch((error: unknown) => setMessage(error instanceof Error ? error.message : '扫码失败'))}
+      /> : <View style={styles.center}>
+        <Text style={styles.title}>扫码或输入标签</Text><Text style={styles.description}>相机只用于识别归位二维码，也可以直接输入或粘贴标签。</Text>
+        <Pressable accessibilityRole="button" onPress={() => void requestPermission()} style={styles.primaryButton}><Text style={styles.primaryButtonText}>允许使用相机</Text></Pressable>
+      </View>}
       <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 16) + 16 }] }>
         <View style={styles.panelHeader}>
           <Pressable accessibilityRole="button" accessibilityLabel="返回" onPress={() => router.back()} style={styles.backButton}>
@@ -122,11 +118,13 @@ export default function CodeScanScreen() {
             <Text style={styles.description}>{message}</Text>
           </View>
         </View>
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => setManualOpen(true)} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>输入或粘贴标签</Text></Pressable>
         {destination ? <Text style={styles.count}>本次已归位 {movedIds.size} 件</Text> : null}
         {canEditInventory ? <Pressable onPress={() => { setDestination(null); setMovedIds(new Set()); setMessage('已重置扫描目标'); }} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>重置目标</Text>
         </Pressable> : null}
       </View>
+      <ManualCodeSheet visible={manualOpen} onClose={() => setManualOpen(false)} onSubmit={handleCode} />
       <BottomSheet visible={Boolean(unboundCode)} title="绑定未使用标签" onClose={() => setUnboundCode(null)}>
         <Text style={styles.description}>选择一个对象。绑定后再次扫描即可查看或归位。</Text>
         {bindableItemsQuery.isLoading ? <Text style={styles.description}>正在加载库存…</Text> : null}

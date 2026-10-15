@@ -1,10 +1,9 @@
-import { useState, useEffect, useId } from 'react';
+import { useState, useId, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Home, Box, Check, X } from 'lucide-react';
-import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
-import { fetchChildren } from '../../../legacy/items';
+import { INVENTORY_NODE_LABELS, buildLocationCandidates, filterLocationCandidates } from '@inplace/app-core';
+import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import type { Item } from '../../../legacy/database.types';
-import { useAuth } from '../../../app/providers/auth-context';
 import { isLocationItem } from '../lib/locationTag';
 import EntityBadge from './EntityBadge';
 import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
@@ -12,31 +11,34 @@ import { useDialogFocus } from '../../../shared/ui/useDialogFocus';
 interface Props {
   value: string | null;
   excludeId?: string;
-  onChange: (id: string | null) => void;
+  excludedIds?: string[];
+  onChange: (id: string | null) => void | Promise<void | boolean>;
   onClose: () => void;
 }
 
-export default function LocationPicker({ value, excludeId, onChange, onClose }: Props) {
-  const { user } = useAuth();
-  const currentUserId = user?.id ?? null;
+export default function LocationPicker({ value, excludeId, excludedIds = [], onChange, onClose }: Props) {
   const [currentParent, setCurrentParent] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
-  const [containers, setContainers] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState('');
+  const [selecting, setSelecting] = useState(false);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const busyRef = useRef(false);
+  const requestClose = () => { if (!busyRef.current) onClose(); };
+  const inventory = useAllInventoryItems();
+  const candidates = buildLocationCandidates(inventory.data ?? [], excludeId ? [excludeId, ...excludedIds] : excludedIds);
+  const searching = Boolean(query.trim());
+  const visible = searching ? filterLocationCandidates(candidates, query) : candidates.filter(({ item }) => item.parent_id === currentParent);
   const titleId = useId();
-  const dialogRef = useDialogFocus({ onClose });
+  const dialogRef = useDialogFocus({ onClose: requestClose });
 
-  useEffect(() => {
-    if (!currentUserId) return;
-    setLoading(true);
-    fetchChildren(currentParent, currentUserId)
-      .then((items) => setContainers(items.filter((i) => i.type === 'container' && i.id !== excludeId)))
-      .finally(() => setLoading(false));
-  }, [currentParent, excludeId, currentUserId]);
-
-  const handleSelect = (id: string | null) => {
-    onChange(id);
-    onClose();
+  const handleSelect = async (id: string | null) => {
+    if (busyRef.current || (id && !candidates.some(({ item }) => item.id === id))) return;
+    busyRef.current = true;
+    setSelecting(true);
+    setSelectionError(null);
+    try { if (await onChange(id) !== false) onClose(); }
+    catch (error) { setSelectionError(error instanceof Error ? error.message : '选择失败，请重试'); }
+    finally { busyRef.current = false; setSelecting(false); }
   };
 
   const handleDrillDown = async (container: Item) => {
@@ -62,7 +64,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={requestClose}
         />
         <motion.div
           ref={dialogRef}
@@ -107,7 +109,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
             </div>
             <motion.button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               aria-label="关闭位置选择"
               whileHover={{ scale: 1.08, rotate: 90 }}
               whileTap={{ scale: 0.92 }}
@@ -118,10 +120,15 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
             </motion.button>
           </div>
 
+          <div className="px-4 pt-3"><input type="search" aria-label="搜索收纳位置" placeholder="搜索位置名称或路径" value={query} onChange={(event) => setQuery(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+
           <div className="overflow-y-auto flex-1 p-4 space-y-2">
+            {selectionError ? <p role="alert" className="text-sm text-red-700">{selectionError}</p> : null}
+            {selecting ? <p role="status" className="text-sm text-slate-600">正在保存位置…</p> : null}
             <motion.button
               type="button"
-              onClick={() => handleSelect(currentParent)}
+              disabled={selecting}
+              onClick={() => void handleSelect(currentParent)}
               whileHover={{ x: 2 }}
               whileTap={{ scale: 0.98 }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
@@ -141,14 +148,14 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
               )}
             </motion.button>
 
-            {loading ? (
+            {inventory.isError ? <div role="alert" className="p-4 text-sm text-red-700">位置加载失败。<button type="button" onClick={() => void inventory.refetch()} className="underline">重试</button></div> : inventory.isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
-            ) : containers.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">暂无下级位置或收纳</p>
+            ) : visible.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-6">{searching ? '没有匹配的位置，试试上级位置名称' : '暂无下级位置或收纳'}</p>
             ) : (
-              containers.map((container, i) => (
+              visible.map(({ item: container, path }, i) => (
                 <motion.div
                   key={container.id}
                   initial={{ opacity: 0, x: -8 }}
@@ -158,7 +165,8 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                 >
                   <motion.button
                     type="button"
-                    onClick={() => handleSelect(container.id)}
+                    disabled={selecting}
+                    onClick={() => void handleSelect(container.id)}
                     aria-label={`选择${container.name}`}
                     whileHover={{ x: 2 }}
                     whileTap={{ scale: 0.98 }}
@@ -169,12 +177,13 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                     }`}
                   >
                     <Box size={16} className="text-slate-400 shrink-0" />
-                    <span className="flex-1 text-left truncate">{container.name}</span>
+                    <span className="min-w-0 flex-1 text-left"><span className="block truncate">{container.name}</span>{searching ? <span className="mt-1 block text-xs font-normal text-slate-500">{path}</span> : null}</span>
                     <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact />
                     {value === container.id && <Check size={15} className="text-sky-500" />}
                   </motion.button>
-                  <motion.button
+                  {!searching ? <motion.button
                     type="button"
+                    disabled={selecting}
                     onClick={() => handleDrillDown(container)}
                     aria-label={`查看${container.name}的下级位置`}
                     whileHover={{ scale: 1.1, backgroundColor: '#e2e8f0' }}
@@ -182,7 +191,7 @@ export default function LocationPicker({ value, excludeId, onChange, onClose }: 
                     className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition-colors shrink-0"
                   >
                     <ChevronRight size={16} />
-                  </motion.button>
+                  </motion.button> : null}
                 </motion.div>
               ))
             )}

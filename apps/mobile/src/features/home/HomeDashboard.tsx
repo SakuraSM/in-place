@@ -17,6 +17,7 @@ import { palette, shadows } from '@/shared/ui/theme';
 import { resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
 import { InventoryImage } from '@/features/inventory/InventoryImage';
 import { HouseholdButton } from '@/shared/ui/HouseholdButton';
+import { overviewHref } from '@/features/overview/overviewNavigation';
 
 type ViewMode = 'type' | 'category';
 
@@ -73,6 +74,7 @@ export function HomeDashboard({
   onToggleSelected,
 }: HomeDashboardProps) {
   const [recentTab, setRecentTab] = useState<'items' | 'activity'>('items');
+  const quickActions = canEditInventory ? QUICK_ACTIONS : QUICK_ACTIONS.filter((action) => action.href === '/scan-code' || action.href === '/operations/reminders');
   const rootContainers = rootItems.filter((item) => item.type === 'container');
   const rootLeafItems = rootItems.filter((item) => item.type === 'item');
   const groupedRootItems = groupRootItems({
@@ -107,16 +109,19 @@ export function HomeDashboard({
         />
       </Entrance>
       <HouseholdButton />
+      {!selectionMode ? <Pressable accessibilityRole="button" accessibilityLabel="搜索全部物品" onPress={() => router.navigate(overviewHref('all', 'all', true))} style={{ minHeight: 48, borderRadius: 16, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+        <Ionicons name="search-outline" size={20} color={palette.textSoft} /><Text style={{ color: palette.textSoft, fontSize: 14 }}>物品放哪了？搜索名称、描述或标签</Text>
+      </Pressable> : null}
 
-      {!selectionMode && canEditInventory ? (
+      {!selectionMode ? (
         <View accessibilityLabel="快捷操作" style={quickActionsStyle}>
-          {QUICK_ACTIONS.map((action) => (
+          {quickActions.map((action) => (
             <Link key={action.label} href={action.href as Href} asChild>
               <Pressable accessibilityRole="button" style={quickActionStyle}>
                 <View style={quickActionIconStyle}>
                   <Ionicons name={action.icon} size={20} color={palette.brandStrong} />
                 </View>
-                <Text style={quickActionTextStyle}>{action.label}</Text>
+                <Text style={quickActionTextStyle}>{!canEditInventory && action.href === '/scan-code' ? '查看标签' : action.label}</Text>
               </Pressable>
             </Link>
           ))}
@@ -141,7 +146,7 @@ export function HomeDashboard({
                 label: item.label,
                 value: statsLoading ? '—' : stats?.[item.key] ?? 0,
                 iconName: item.icon,
-                onPress: () => router.push(item.key === 'items' ? '/(tabs)/overview?type=item' : item.key === 'containers' ? '/(tabs)/overview?type=container' : item.key === 'borrowed' ? '/(tabs)/overview?status=borrowed' : '/(tabs)/overview'),
+                onPress: () => router.navigate(overviewHref(item.key === 'items' ? 'item' : item.key === 'containers' ? 'container' : 'all', item.key === 'borrowed' ? 'borrowed' : 'all')),
               }))}
             />
           </DashboardSection>
@@ -171,7 +176,7 @@ export function HomeDashboard({
             selectedIds={selectedIds}
             previewLimit={selectionMode ? undefined : HOME_INVENTORY_PREVIEW_LIMIT}
             actionLabel={selectionMode || rootContainers.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : '查看更多'}
-            onAction={selectionMode || rootContainers.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : () => router.push('/(tabs)/overview?type=container')}
+            onAction={selectionMode || rootContainers.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : () => router.navigate(overviewHref('container'))}
             onToggleSelected={onToggleSelected}
           />
           <InventoryGroup
@@ -183,7 +188,7 @@ export function HomeDashboard({
             selectedIds={selectedIds}
             previewLimit={selectionMode ? undefined : HOME_INVENTORY_PREVIEW_LIMIT}
             actionLabel={selectionMode || rootLeafItems.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : '查看更多'}
-            onAction={selectionMode || rootLeafItems.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : () => router.push('/(tabs)/overview?type=item')}
+            onAction={selectionMode || rootLeafItems.length <= HOME_INVENTORY_PREVIEW_LIMIT ? undefined : () => router.navigate(overviewHref('item'))}
             onToggleSelected={onToggleSelected}
           />
         </>
@@ -535,10 +540,10 @@ function groupRootItems({
 function resolveOverviewHrefForGroup(items: Item[]) {
   const firstItem = items[0];
   if (!firstItem) {
-    return '/(tabs)/overview';
+    return overviewHref();
   }
 
-  return firstItem.type === 'item' ? '/(tabs)/overview?type=item' : '/(tabs)/overview?type=container';
+  return overviewHref(firstItem.type === 'item' ? 'item' : 'container');
 }
 
 function resolveImageUri(url: string | undefined) {

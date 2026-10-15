@@ -1,4 +1,5 @@
 import { ListFilter, Search, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { PageHeader } from '../../../shared/ui/PageLayout';
 
 export function OverviewSearchField({
@@ -10,16 +11,20 @@ export function OverviewSearchField({
   onChange: (value: string) => void;
   autoFocus?: boolean;
 }) {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (autoFocus && input.current?.getClientRects().length) input.current.focus();
+  }, [autoFocus]);
   return (
     <div className="relative">
       <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
       <input
+        ref={input}
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="搜索名称、描述或标签"
         aria-label="搜索库存"
-        autoFocus={autoFocus}
         className="w-full rounded-2xl border border-border bg-surfaceMuted py-3 pl-10 pr-11 text-sm text-slate-900 placeholder:text-slate-500"
       />
       {value ? (
@@ -48,11 +53,13 @@ export function OverviewPageHeader() {
 
 export function OverviewMobileControls({
   query,
+  autoFocus = false,
   activeFilterCount,
   onQueryChange,
   onOpenFilters,
 }: {
   query: string;
+  autoFocus?: boolean;
   activeFilterCount: number;
   onQueryChange: (value: string) => void;
   onOpenFilters: () => void;
@@ -63,7 +70,7 @@ export function OverviewMobileControls({
       className="flex min-w-0 gap-2 xl:hidden"
     >
       <div className="min-w-0 flex-1">
-        <OverviewSearchField value={query} onChange={onQueryChange} />
+        <OverviewSearchField value={query} onChange={onQueryChange} autoFocus={autoFocus} />
       </div>
       <button
         type="button"

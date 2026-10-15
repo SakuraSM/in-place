@@ -52,6 +52,10 @@ export function getInventoryDraftScope(draft: Pick<InventoryDraft, 'type' | 'isL
   return draft.type === 'item' ? 'item' : draft.isLocation ? 'location' : 'container';
 }
 
+export function createNextInventoryDraft(previous: Pick<InventoryDraft, 'type' | 'isLocation' | 'category' | 'parentId'>): InventoryDraft {
+  return { ...createInventoryDraft(), type: previous.type, isLocation: previous.isLocation, category: previous.category, parentId: previous.parentId };
+}
+
 export function parseInventoryTags(value: string): string[] {
   const seen = new Set<string>();
   return value.split(/[,，]/).map((tag) => tag.trim()).filter((tag) => {

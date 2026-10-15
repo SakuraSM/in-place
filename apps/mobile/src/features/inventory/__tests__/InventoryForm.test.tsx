@@ -18,6 +18,7 @@ jest.mock('expo-router', () => ({
   useFocusEffect: (callback: () => void) => { const React = jest.requireActual('react'); React.useEffect(callback, [callback]); },
 }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
+jest.mock('@/shared/ui/ToastProvider', () => ({ useNotify: () => jest.fn() }));
 jest.mock('@/shared/ui/Entrance', () => ({ Entrance: ({ children }: { children: ReactNode }) => children }));
 jest.mock('@/providers/AuthProvider', () => ({ useAuth: () => ({ user: { id: 'user' } }) }));
 jest.mock('@/providers/HouseholdProvider', () => ({ useHousehold: () => ({ currentHouseholdId: 'family', canEditInventory: true }) }));

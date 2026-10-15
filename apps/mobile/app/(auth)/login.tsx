@@ -1,8 +1,9 @@
 import { Link, Redirect } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
-import { getMobileApiBaseUrl } from '@/shared/api/mobileClient';
+import { getMobileApiBaseUrlInput } from '@/shared/api/mobileClient';
+import { ConnectionFields } from '@/features/auth/ConnectionFields';
 import { BrandHeader } from '@/shared/ui/BrandHeader';
 import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
@@ -10,9 +11,10 @@ import { palette, shadows } from '@/shared/ui/theme';
 
 export default function LoginScreen() {
   const { signIn, session, loading } = useAuth();
-  const [apiBaseUrl, setApiBaseUrl] = useState(getMobileApiBaseUrl());
+  const [apiBaseUrl, setApiBaseUrl] = useState(getMobileApiBaseUrlInput());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const busyRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,6 +23,9 @@ export default function LoginScreen() {
   }
 
   const handleSubmit = async () => {
+    if (busyRef.current) return;
+    if (!apiBaseUrl.trim() || !email.trim() || !password) { setError('请填写服务器地址、邮箱和密码'); return; }
+    busyRef.current = true;
     setSubmitting(true);
     setError(null);
 
@@ -29,14 +34,16 @@ export default function LoginScreen() {
       const normalizedApiBaseUrl = apiBaseUrl.trim();
       await signIn(normalizedEmail, password, normalizedApiBaseUrl);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : '登录失败');
+      setError(nextError instanceof Error && /network request failed|failed to fetch/i.test(nextError.message) ? '无法连接服务器，请检查地址、网络和 HTTPS 证书' : nextError instanceof Error ? nextError.message : '登录失败');
     } finally {
+      busyRef.current = false;
       setSubmitting(false);
     }
   };
 
   return (
-    <Screen
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}><Screen
+      scroll
       safeAreaBottom="none"
       contentInsetMode="form"
       contentStyle={{ justifyContent: 'center', gap: 18 }}
@@ -51,35 +58,9 @@ export default function LoginScreen() {
 
       <Entrance delay={90} variant="card">
         <View style={cardStyle}>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            value={apiBaseUrl}
-            onChangeText={setApiBaseUrl}
-            placeholder="服务器地址"
-            placeholderTextColor={palette.textSoft}
-            style={inputStyle}
-          />
-          <TextInput
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="邮箱"
-            placeholderTextColor={palette.textSoft}
-            style={inputStyle}
-          />
-          <TextInput
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            placeholder="密码"
-            placeholderTextColor={palette.textSoft}
-            style={inputStyle}
-          />
+          <ConnectionFields server={apiBaseUrl} email={email} password={password} disabled={submitting} registering={false} onServerChange={setApiBaseUrl} onEmailChange={setEmail} onPasswordChange={setPassword} onSubmit={() => void handleSubmit()} />
 
-          {error ? <Text style={{ color: palette.danger }}>{error}</Text> : null}
+          {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: palette.danger }}>{error}</Text> : null}
 
           <Pressable
             onPress={handleSubmit}
@@ -100,19 +81,9 @@ export default function LoginScreen() {
           </Link>
         </View>
       </Entrance>
-    </Screen>
+    </Screen></KeyboardAvoidingView>
   );
 }
-
-const inputStyle = {
-  backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  borderWidth: 1,
-  borderColor: palette.border,
-  color: palette.text,
-};
 
 const buttonStyle = {
   backgroundColor: palette.brandStrong,

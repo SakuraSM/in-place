@@ -1,4 +1,5 @@
 import type { ItemCreateInput } from '@inplace/domain';
+import { createNextInventoryDraft } from '@inplace/app-core';
 import type { Item, ItemType } from '../../../legacy/database.types';
 import { isLocationItem, updateLocationMetadata } from '../lib/locationTag';
 import type { ItemFormData } from './itemFormTypes';
@@ -62,4 +63,9 @@ export function toItemCreateInput(form: ItemFormData, userId: string): ItemCreat
       form.type === 'container' && form.isLocation,
     ),
   };
+}
+
+export function createNextItemFormData(form: ItemFormData): ItemFormData {
+  const next = createNextInventoryDraft({ type: form.type, isLocation: form.isLocation, category: form.category, parentId: form.parent_id });
+  return { ...createInitialItemFormData({ defaultType: next.type, fixedLocation: next.isLocation, defaultParentId: next.parentId }), category: next.category };
 }
