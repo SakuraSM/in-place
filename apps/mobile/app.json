@@ -33,14 +33,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.inplace.mobile",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.inplace.mobile",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES"
