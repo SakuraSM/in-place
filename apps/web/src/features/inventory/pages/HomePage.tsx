@@ -124,7 +124,7 @@ export default function HomePage() {
     void queryClient.invalidateQueries({ queryKey: ['home', 'recent-activity', user?.id] });
   }, [queryClient, user?.id]);
 
-  const handleSave = async (data: ItemCreateInput) => {
+  const handleSave = async (data: ItemCreateInput, continueAdding = false): Promise<boolean> => {
     const isEditing = Boolean(editItem);
     setFormSubmitError(null);
     try {
@@ -133,19 +133,19 @@ export default function HomePage() {
       } else {
         await createItem(data);
       }
-      setShowForm(false);
-      setEditItem(null);
-      await loadChildren(currentParentId);
+      if (!continueAdding) { setShowForm(false); setEditItem(null); }
       invalidateDashboard();
       notify({
         tone: 'success',
         title: isEditing ? '修改已保存' : '已添加到归位',
-        description: data.name,
+        description: continueAdding ? `${data.name} · 可继续录入` : data.name,
       });
+      return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '保存失败，请稍后重试';
       setFormSubmitError(message);
       notify({ tone: 'error', title: '保存失败', description: message });
+      return false;
     }
   };
 
@@ -168,17 +168,18 @@ export default function HomePage() {
   };
 
   const handleMove = async (newParentId: string | null) => {
-    if (!moveTarget) return;
+    if (!moveTarget) return false;
     try {
       const movedItemName = moveTarget.name;
       await updateItem(moveTarget.id, { parent_id: newParentId });
       setMoveTarget(null);
-      await loadChildren(currentParentId);
       invalidateDashboard();
       notify({ tone: 'success', title: '移动完成', description: movedItemName });
+      return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '移动失败，请稍后重试';
       notify({ tone: 'error', title: '移动失败', description: message });
+      return false;
     }
   };
 

@@ -9,7 +9,6 @@ interface ItemFormPrimaryFieldsProps {
   form: ItemFormData;
   categories: Category[];
   nameId: string;
-  descriptionId: string;
   parentLabel: string | null;
   forceType?: ItemType;
   fixedLocation: boolean;
@@ -29,7 +28,6 @@ export default function ItemFormPrimaryFields({
   form,
   categories,
   nameId,
-  descriptionId,
   parentLabel,
   forceType,
   fixedLocation,
@@ -108,18 +106,12 @@ export default function ItemFormPrimaryFields({
         />
       </label>
 
-      <label htmlFor={descriptionId} className="block">
-        <span className="mb-1.5 block text-sm font-medium text-slate-700">描述</span>
-        <textarea
-          id={descriptionId}
-          name="description"
-          value={form.description}
-          onChange={(event) => onUpdate('description', event.target.value)}
-          placeholder="添加备注或描述..."
-          rows={2}
-          className="w-full resize-none rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand"
-        />
-      </label>
+      <div>
+        <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-700"><MapPin size={14} aria-hidden="true" />{INVENTORY_NODE_LABELS.storageLocation}</p>
+        <button type="button" onClick={onOpenLocationPicker} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm text-slate-600 transition hover:border-brand/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong">
+          {form.parent_id ? `已选择上级 (${parentLabel ?? '加载中...'})` : `未选择${INVENTORY_NODE_LABELS.storageLocation}`}
+        </button>
+      </div>
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-slate-700">类别</legend>
@@ -161,13 +153,6 @@ export default function ItemFormPrimaryFields({
           </div>
         </fieldset>
       ) : null}
-
-      <div>
-        <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-700"><MapPin size={14} aria-hidden="true" />{INVENTORY_NODE_LABELS.storageLocation}</p>
-        <button type="button" onClick={onOpenLocationPicker} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm text-slate-600 transition hover:border-brand/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong">
-          {form.parent_id ? `已选择上级 (${parentLabel ?? '加载中...'})` : `未选择${INVENTORY_NODE_LABELS.storageLocation}`}
-        </button>
-      </div>
     </>
   );
 }

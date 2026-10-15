@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { inventoryDateToIso, parseInventoryQuantity } from '@inplace/app-core';
 import { FileText, Handshake, PackagePlus, RotateCcw, Upload, Wrench } from 'lucide-react';
 import type { Attachment, InventoryBatch, Item, Loan, MaintenanceRecord } from '@inplace/domain';
 import { useToast } from '../../../shared/ui/toast';
@@ -36,6 +37,9 @@ export default function ItemLifecyclePanel({
   const [batchQuantity, setBatchQuantity] = useState(1);
   const [batchExpiry, setBatchExpiry] = useState('');
   const [saving, setSaving] = useState(false);
+  const busyRef = useRef(false);
+  const [stockQuantity, setStockQuantity] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const refresh = useCallback(async () => {
     const [nextLoans, nextAttachments, nextMaintenance, nextBatches] = await Promise.all([
@@ -48,22 +52,31 @@ export default function ItemLifecyclePanel({
     setAttachments(nextAttachments);
     setMaintenance(nextMaintenance);
     setBatches(nextBatches);
+    setLoadError(false);
   }, [item.id]);
 
   useEffect(() => {
-    void refresh().catch(() => undefined);
+    void refresh().catch(() => setLoadError(true));
   }, [refresh]);
 
-  const runMutation = async (action: () => Promise<void>, successTitle: string) => {
-    if (!canEditInventory || saving) return;
+  const runMutation = async (action: () => Promise<void>, successTitle: string, onSaved?: () => void) => {
+    if (!canEditInventory || busyRef.current) return;
+    busyRef.current = true;
     setSaving(true);
     try {
       await action();
-      await refresh();
-      notify({ tone: 'success', title: successTitle });
+      onSaved?.();
+      try {
+        await refresh();
+        notify({ tone: 'success', title: successTitle });
+      } catch {
+        setLoadError(true);
+        notify({ tone: 'info', title: '记录已保存，列表刷新失败', description: '请点击重试加载，无需重复提交' });
+      }
     } catch (error) {
       notify({ tone: 'error', title: '操作失败，表单内容已保留', description: error instanceof Error ? error.message : undefined });
     } finally {
+      busyRef.current = false;
       setSaving(false);
     }
   };
@@ -78,7 +91,9 @@ export default function ItemLifecyclePanel({
   };
 
   return (
-    <fieldset disabled={!canEditInventory} className="min-w-0 space-y-4">
+    <>
+      {loadError ? <p role="alert" className="text-sm text-amber-800">记录加载失败。<button type="button" onClick={() => void refresh().catch(() => setLoadError(true))} className="underline">重试加载</button></p> : null}
+    <fieldset disabled={!canEditInventory || saving} className="min-w-0 space-y-4">
       {!canEditInventory ? <p className="text-sm text-slate-500">当前家庭为只读，可查看库存与历史记录。</p> : null}
       {item.tracking_mode !== 'unique' ? (
         <Section title="快速库存" icon={<PackagePlus size={16} />}>
@@ -92,9 +107,15 @@ export default function ItemLifecyclePanel({
             </div>
             <div className="flex gap-2">
               <button type="button" aria-label="库存减一" disabled={saving || item.quantity <= 0} onClick={() => void adjustQuantity(-1)} className="h-10 rounded-xl bg-surfaceMuted px-4 text-sm font-bold text-slate-800 disabled:opacity-40">− 1</button>
+              <button type="button" onClick={() => setStockQuantity(String(item.quantity))} className="h-10 rounded-xl bg-brandTint px-3 text-sm font-bold text-brandStrong">设置数量</button>
               <button type="button" aria-label="库存加一" disabled={saving} onClick={() => void adjustQuantity(1)} className="h-10 rounded-xl bg-brandStrong px-4 text-sm font-bold text-white">+ 1</button>
             </div>
           </div>
+          {stockQuantity !== null ? <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-sm">库存数量<input type="number" min="0" step="1" value={stockQuantity} onChange={(event) => setStockQuantity(event.target.value)} className="h-10 w-28 rounded-xl border border-border px-3" /></label>
+            <button type="button" onClick={() => void runMutation(async () => { onItemChange(await updateItem(item.id, { quantity: parseInventoryQuantity(stockQuantity) })); }, '库存数量已更新', () => setStockQuantity(null))} className="h-10 rounded-xl bg-brandStrong px-4 text-sm font-bold text-white">保存数量</button>
+            <button type="button" onClick={() => setStockQuantity(null)} className="h-10 px-3 text-sm">取消</button>
+          </div> : null}
         </Section>
       ) : null}
       <Section title="借还记录" icon={<Handshake size={16} />}>
@@ -107,7 +128,7 @@ export default function ItemLifecyclePanel({
           <div className="grid gap-2 xl:grid-cols-[1fr_1fr_auto]">
             <label><span className="sr-only">借用人</span><input value={borrowerName} onChange={(event) => setBorrowerName(event.target.value)} placeholder="家庭成员或外部联系人" className="h-10 w-full rounded-xl border border-border bg-surfaceMuted px-3 text-sm" /></label>
             <ModernDatePicker value={dueAt} onChange={setDueAt} placeholder="选择预计归还日期" ariaLabel="预计归还日期" />
-            <button type="button" disabled={saving || !borrowerName.trim()} onClick={() => void runMutation(() => lifecycleApi.createLoan({ itemId: item.id, borrowerName: borrowerName.trim(), dueAt: dueAt ? new Date(`${dueAt}T12:00:00`).toISOString() : null }), '借出记录已保存').then(() => { setBorrowerName(''); setDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">登记借出</button>
+            <button type="button" disabled={saving || !borrowerName.trim()} onClick={() => void runMutation(() => lifecycleApi.createLoan({ itemId: item.id, borrowerName: borrowerName.trim(), dueAt: inventoryDateToIso(dueAt) }), '借出记录已保存', () => { setBorrowerName(''); setDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">登记借出</button>
           </div>
         )}
         {loans.length > 0 ? <p className="mt-3 text-xs text-slate-500">历史借还 {loans.length} 次</p> : null}
@@ -147,7 +168,7 @@ export default function ItemLifecyclePanel({
         <div className="grid gap-2 xl:grid-cols-[1fr_1fr_auto]">
           <input value={maintenanceTitle} onChange={(event) => setMaintenanceTitle(event.target.value)} placeholder="例如：更换滤芯" aria-label="维护事项" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
           <ModernDatePicker value={nextDueAt} onChange={setNextDueAt} placeholder="选择下次维护日期" ariaLabel="下次维护日期" />
-          <button type="button" disabled={saving || !maintenanceTitle.trim()} onClick={() => void runMutation(() => lifecycleApi.createMaintenance(item.id, { title: maintenanceTitle.trim(), performedAt: new Date().toISOString(), nextDueAt: nextDueAt ? new Date(`${nextDueAt}T12:00:00`).toISOString() : null }), '维护记录已保存').then(() => { setMaintenanceTitle(''); setNextDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">添加</button>
+          <button type="button" disabled={saving || !maintenanceTitle.trim()} onClick={() => void runMutation(() => lifecycleApi.createMaintenance(item.id, { title: maintenanceTitle.trim(), performedAt: new Date().toISOString(), nextDueAt: inventoryDateToIso(nextDueAt) }), '维护记录已保存', () => { setMaintenanceTitle(''); setNextDueAt(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">添加</button>
         </div>
         {maintenance.length > 0 ? <ul className="mt-3 space-y-2">{maintenance.map((record) => <li key={record.id} className="text-sm text-slate-600"><span className="font-semibold text-slate-800">{record.title}</span>{record.next_due_at ? ` · 下次 ${new Date(record.next_due_at).toLocaleDateString('zh-CN')}` : ''}</li>)}</ul> : null}
       </Section>
@@ -156,10 +177,11 @@ export default function ItemLifecyclePanel({
         <div className="grid gap-2 xl:grid-cols-[8rem_1fr_auto]">
           <input type="number" min={1} value={batchQuantity} onChange={(event) => setBatchQuantity(Number(event.target.value))} aria-label="批次数量" className="h-10 rounded-xl border border-border bg-surfaceMuted px-3 text-sm" />
           <ModernDatePicker value={batchExpiry} onChange={setBatchExpiry} placeholder="选择有效期" ariaLabel="批次有效期" />
-          <button type="button" disabled={saving || batchQuantity < 1} onClick={() => void runMutation(() => lifecycleApi.createBatch(item.id, { quantity: batchQuantity, expiryDate: batchExpiry || null }), '消耗品批次已添加').then(() => { setBatchQuantity(1); setBatchExpiry(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">入库</button>
+          <button type="button" disabled={saving || batchQuantity < 1} onClick={() => void runMutation(() => lifecycleApi.createBatch(item.id, { quantity: batchQuantity, expiryDate: batchExpiry || null }), '消耗品批次已添加', () => { setBatchQuantity(1); setBatchExpiry(''); })} className="h-10 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-50">入库</button>
         </div>
         {batches.length > 0 ? <p className="mt-3 text-sm text-slate-600">共 {batches.reduce((sum, batch) => sum + batch.quantity, 0)} 件 · {batches.length} 个批次</p> : <p className="mt-3 text-sm text-slate-500">添加批次后会自动切换为消耗品追踪并汇总数量。</p>}
       </Section>
     </fieldset>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { createInventoryDraft, getInventoryDraftScope, toInventoryItemInput, validateInventoryDraft, type InventoryDraft, type InventoryDraftErrors } from '@inplace/app-core';
+import { createInventoryDraft, createNextInventoryDraft, getInventoryDraftScope, toInventoryItemInput, validateInventoryDraft, type InventoryDraft, type InventoryDraftErrors } from '@inplace/app-core';
 import type { CategoryScope, Item, ItemCreateInput, ItemType } from '@inplace/domain';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { uploadImageFromUri } from '@/shared/api/mobileClient';
@@ -15,7 +15,7 @@ interface InventoryFormOptions {
   userId?: string;
   canEdit: boolean;
   persist: (payload: ItemCreateInput) => Promise<Item>;
-  onSaved: (item: Item) => void;
+  onSaved: (item: Item, continueAdding: boolean) => void;
   onClose: () => void;
 }
 
@@ -30,7 +30,7 @@ export interface InventoryFormController {
   setExpanded: (expanded: boolean) => void;
   update: <Key extends keyof InventoryDraft>(field: Key, value: InventoryDraft[Key]) => void;
   changeKind: (scope: CategoryScope) => void;
-  save: () => Promise<void>;
+  save: (continueAdding?: boolean) => Promise<void>;
   pickImage: () => Promise<void>;
   requestClose: () => void;
   requestReset: () => void;
@@ -77,7 +77,7 @@ export function useInventoryForm(options: InventoryFormOptions): InventoryFormCo
     ]);
   };
 
-  const save = async () => {
+  const save = async (continueAdding = false) => {
     if (busy.current) return;
     if (!options.userId || !options.canEdit) { setError('当前家庭为只读，无法保存库存'); return; }
     const validation = validateInventoryDraft(draft);
@@ -93,7 +93,7 @@ export function useInventoryForm(options: InventoryFormOptions): InventoryFormCo
     let saved: Item | undefined;
     try {
       saved = await options.persist(toInventoryItemInput({ draft, userId: options.userId }));
-      const next = createInventoryDraft({ item: saved });
+      const next = continueAdding && !options.item ? createNextInventoryDraft(draft) : createInventoryDraft({ item: saved });
       setBaseline(next);
       setDraft(next);
     } catch (failure) {
@@ -102,7 +102,7 @@ export function useInventoryForm(options: InventoryFormOptions): InventoryFormCo
       busy.current = false;
       setIsBusy(false);
     }
-    if (saved) options.onSaved(saved);
+    if (saved) options.onSaved(saved, continueAdding && !options.item);
   };
 
   const pickImage = async () => {

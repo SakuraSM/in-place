@@ -8,7 +8,8 @@ import { fetchCategories } from '../../../legacy/categories';
 import { fetchItem, uploadImage } from '../../../legacy/items';
 import { fetchTags } from '../../../legacy/tags';
 import { getFormCategoryScope } from '../lib/categoryScope';
-import { createInitialItemFormData, toItemCreateInput } from './itemFormData';
+import { createInitialItemFormData, createNextItemFormData, toItemCreateInput } from './itemFormData';
+import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import ItemFormAdditionalFields from './ItemFormAdditionalFields';
 import ItemFormDialog from './ItemFormDialog';
 import ItemFormPrimaryFields from './ItemFormPrimaryFields';
@@ -22,7 +23,8 @@ interface ItemFormProps {
   forceType?: ItemType;
   fixedLocation?: boolean;
   submitError?: string | null;
-  onSave: (data: ItemCreateInput) => Promise<void>;
+  onSave: (data: ItemCreateInput) => Promise<void | boolean>;
+  onSaveAndContinue?: (data: ItemCreateInput) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -34,6 +36,7 @@ export default function ItemForm({
   fixedLocation = false,
   submitError,
   onSave,
+  onSaveAndContinue,
   onClose,
 }: ItemFormProps) {
   const { user } = useAuth();
@@ -47,6 +50,11 @@ export default function ItemForm({
     fixedLocation,
   }));
   const [tagInput, setTagInput] = useState('');
+  const [baseline, setBaseline] = useState(form);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const busyRef = useRef(false);
+  const [focusName, setFocusName] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
@@ -57,6 +65,9 @@ export default function ItemForm({
   const nameId = useId();
   const descriptionId = useId();
   const additionalDetailsId = useId();
+  useEffect(() => {
+    if (focusName && !isSaving) document.getElementById(nameId)?.focus();
+  }, [focusName, isSaving, nameId]);
   const categoryScope = getFormCategoryScope(form.type, form.isLocation);
 
   useEffect(() => {
@@ -131,6 +142,8 @@ export default function ItemForm({
     try {
       const uploadedImages = await Promise.all(files.map((file) => uploadImage(file, user.id)));
       setForm((current) => ({ ...current, images: [...current.images, ...uploadedImages] }));
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : '图片上传失败，请重试');
     } finally {
       setIsUploading(false);
     }
@@ -154,13 +167,35 @@ export default function ItemForm({
 
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!user || !form.name.trim()) return;
+    const continueAdding = (event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'continue';
+    if (!user || !form.name.trim() || busyRef.current || isUploading) return;
+    busyRef.current = true;
     setIsSaving(true);
+    setLocalError(null);
     try {
-      await onSave(toItemCreateInput(form, user.id));
+      const payload = toItemCreateInput(form, user.id);
+      if (continueAdding && onSaveAndContinue) {
+        if (await onSaveAndContinue(payload)) {
+          const next = createNextItemFormData(form);
+          setForm(next);
+          setBaseline(next);
+          setTagInput('');
+          setIsAdditionalDetailsOpen(false);
+          setFocusName((value) => value + 1);
+        }
+      } else if (await onSave(payload) !== false) setBaseline(form);
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : '保存失败，输入已保留');
     } finally {
+      busyRef.current = false;
       setIsSaving(false);
     }
+  };
+
+  const requestClose = () => {
+    if (busyRef.current || isUploading) return;
+    if (JSON.stringify(form) !== JSON.stringify(baseline) || tagInput.trim()) setConfirmClose(true);
+    else onClose();
   };
 
   const nodeLabel = form.type === 'container'
@@ -173,18 +208,18 @@ export default function ItemForm({
       <ItemFormDialog
         title={dialogTitle}
         titleId={titleId}
-        submitError={submitError}
-        isSaving={isSaving}
-        isSubmitDisabled={isSaving || !form.name.trim()}
-        shouldCloseOnEscape={!isLocationPickerOpen && !isSaving}
-        onClose={onClose}
+        submitError={localError || submitError}
+        isSaving={isSaving || isUploading}
+        isSubmitDisabled={isSaving || isUploading || !form.name.trim()}
+        allowContinue={Boolean(onSaveAndContinue) && !initial?.id}
+        shouldCloseOnEscape={!isLocationPickerOpen && !isSaving && !confirmClose}
+        onClose={requestClose}
         onSubmit={handleSubmit}
       >
         <ItemFormPrimaryFields
           form={form}
           categories={categories}
           nameId={nameId}
-          descriptionId={descriptionId}
           parentLabel={parentLabel}
           forceType={forceType}
           fixedLocation={fixedLocation}
@@ -206,7 +241,8 @@ export default function ItemForm({
         </button>
 
         {isAdditionalDetailsOpen ? (
-          <div id={additionalDetailsId}>
+          <div id={additionalDetailsId} className="space-y-5">
+            <label htmlFor={descriptionId} className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">描述</span><textarea id={descriptionId} name="description" value={form.description} onChange={(event) => update('description', event.target.value)} placeholder="添加备注或描述…" rows={2} className="w-full rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm" /></label>
             <ItemFormAdditionalFields
               form={form}
               availableTags={availableTags}
@@ -236,6 +272,7 @@ export default function ItemForm({
           onClose={() => setIsLocationPickerOpen(false)}
         />
       ) : null}
+      {confirmClose ? <ConfirmDialog title="放弃修改？" message="尚未保存的内容将被丢弃。" confirmLabel="放弃修改" danger onConfirm={onClose} onCancel={() => setConfirmClose(false)} /> : null}
     </>
   );
 }

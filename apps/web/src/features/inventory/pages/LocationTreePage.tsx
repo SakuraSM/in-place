@@ -23,6 +23,7 @@ function resolveLocationPageView(searchParams: URLSearchParams): LocationPageVie
 export default function LocationTreePage() {
   const { user } = useAuth();
   const { currentHousehold } = useHousehold();
+  const canEditInventory = currentHousehold?.role === 'owner' || currentHousehold?.role === 'editor';
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: items = [], isLoading } = useAllInventoryItems();
@@ -53,19 +54,21 @@ export default function LocationTreePage() {
     setCreateError(null);
   }, []);
 
-  const handleCreateLocation = useCallback(async (data: ItemCreateInput): Promise<void> => {
+  const handleCreateLocation = useCallback(async (data: ItemCreateInput, continueAdding = false): Promise<boolean> => {
+    if (!canEditInventory) return false;
     try {
       setCreateError(null);
       const created = await createItem(data);
-      setIsCreateFormOpen(false);
-      setSelectedLocationId(created.id);
-      await queryClient.invalidateQueries({
+      if (!continueAdding) { setIsCreateFormOpen(false); setSelectedLocationId(created.id); }
+      void queryClient.invalidateQueries({
         queryKey: ['inventory', 'all-items', user?.id, currentHousehold?.id],
       });
+      return true;
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : '新增位置失败，请稍后再试');
+      return false;
     }
-  }, [currentHousehold?.id, queryClient, user?.id]);
+  }, [canEditInventory, currentHousehold?.id, queryClient, user?.id]);
 
   const handleMapError = useCallback((): void => {
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -100,14 +103,14 @@ export default function LocationTreePage() {
                 onSelect={() => handleChangeView('map')}
               />
             </div>
-            <button
+            {canEditInventory ? <button
               type="button"
               onClick={() => handleOpenCreateLocation(currentView === 'tree' ? selectedLocationId : null)}
               className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
             >
               <Plus size={16} aria-hidden="true" />
               新增位置
-            </button>
+            </button> : null}
           </>
         )}
       />
@@ -134,7 +137,7 @@ export default function LocationTreePage() {
               ) : (
                 <AssetMapView
                   householdId={currentHousehold?.id ?? null}
-                  canEdit={currentHousehold?.role !== 'viewer'}
+                  canEdit={canEditInventory}
                   items={items}
                   onRequestCreateLocation={() => handleOpenCreateLocation(null)}
                 />
@@ -144,13 +147,14 @@ export default function LocationTreePage() {
         )}
       </PageContent>
 
-      {isCreateFormOpen ? (
+      {isCreateFormOpen && canEditInventory ? (
         <ItemForm
           defaultParentId={createParentId}
           forceType="container"
           fixedLocation
           submitError={createError}
           onSave={handleCreateLocation}
+          onSaveAndContinue={(data) => handleCreateLocation(data, true)}
           onClose={handleCloseCreateLocation}
         />
       ) : null}

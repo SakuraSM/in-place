@@ -37,9 +37,9 @@ interface HomePageOverlaysProps {
   onDeleteCancel: () => void;
   onBulkDeleteConfirm: () => Promise<void>;
   onBulkDeleteCancel: () => void;
-  onMove: (parentId: string | null) => Promise<void>;
+  onMove: (parentId: string | null) => Promise<boolean>;
   onMoveClose: () => void;
-  onSave: (data: ItemCreateInput) => Promise<void>;
+  onSave: (data: ItemCreateInput, continueAdding?: boolean) => Promise<boolean>;
   onFormClose: () => void;
   onBulkSave: (payload: Partial<Item>) => Promise<void>;
   onBulkEditClose: () => void;
@@ -104,6 +104,7 @@ export default function HomePageOverlays(props: HomePageOverlaysProps) {
 
       {props.moveTarget ? (
         <MoveItemSheet
+          itemId={props.moveTarget.id}
           currentParentId={props.moveTarget.parent_id}
           onMove={props.onMove}
           onClose={props.onMoveClose}
@@ -116,6 +117,7 @@ export default function HomePageOverlays(props: HomePageOverlaysProps) {
           defaultParentId={props.currentParentId}
           submitError={props.formSubmitError}
           onSave={props.onSave}
+          onSaveAndContinue={props.editItem ? undefined : (data) => props.onSave(data, true)}
           onClose={props.onFormClose}
         />
       ) : null}

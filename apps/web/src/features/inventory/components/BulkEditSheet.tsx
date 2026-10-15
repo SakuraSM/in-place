@@ -375,6 +375,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
 
       {showLocationPicker && (
         <LocationPicker
+          excludedIds={items.map((item) => item.id)}
           value={parentId}
           onChange={(id) => setParentId(id)}
           onClose={() => setShowLocationPicker(false)}

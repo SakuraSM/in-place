@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, type TextInput } from 'react-native';
+import type { Ref } from 'react';
 import type { Category, CategoryScope, ItemStatus, TrackingMode } from '@inplace/domain';
 import { ITEM_STATUS_PRESENTATION, parseInventoryTags } from '@inplace/app-core';
 import { FormField } from '@/shared/ui/FormField';
@@ -26,15 +27,18 @@ interface InventoryFormFieldsProps {
   canEdit: boolean;
   categoryError: boolean;
   retryCategories: () => void;
+  nameInputRef?: Ref<TextInput>;
 }
 
-export function InventoryFormFields({ form, categories, tags, userId, itemId, canEdit, categoryError, retryCategories }: InventoryFormFieldsProps) {
+export function InventoryFormFields({ form, categories, tags, userId, itemId, canEdit, categoryError, retryCategories, nameInputRef }: InventoryFormFieldsProps) {
   const { draft, errors, update } = form;
   const disabled = form.isBusy || !canEdit;
   return <View style={{ gap: 12 }}>
     <SectionCard title="基础信息" density="compact">
       <View style={rail}>{KINDS.map((kind) => <FormChoice key={kind.value} label={kind.label} selected={form.scope === kind.value} disabled={disabled || Boolean(itemId)} onPress={() => form.changeKind(kind.value)} />)}</View>
-      <FormField label="名称" value={draft.name} error={errors.name} editable={!disabled} onChangeText={(value) => update('name', value)} placeholder="必填" />
+      <FormField inputRef={nameInputRef} label="名称" value={draft.name} error={errors.name} editable={!disabled} onChangeText={(value) => update('name', value)} placeholder="必填" />
+      <Text style={labelStyle}>收纳位置</Text>
+      <LocationSelectField userId={userId} selectedParentId={draft.parentId} excludedIds={itemId && draft.type === 'container' ? [itemId] : []} disabled={disabled} onChange={(value) => update('parentId', value)} />
       <FormField label="分类" value={draft.category} error={errors.category} editable={!disabled} onChangeText={(value) => update('category', value)} placeholder="选择或填写分类" />
       {categoryError ? <Pressable accessibilityRole="button" onPress={retryCategories} disabled={disabled} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.danger }}>分类加载失败，点击重试</Text></Pressable> : null}
       <View style={rail}>{categories.map((category) => <Pressable key={category.id} accessibilityRole="button" accessibilityLabel={`分类：${category.name}`} accessibilityState={{ selected: draft.category === category.name, disabled }} disabled={disabled} onPress={() => update('category', category.name)}
@@ -42,8 +46,7 @@ export function InventoryFormFields({ form, categories, tags, userId, itemId, ca
         <CategoryArtwork presetKey={category.preset_key} icon={category.icon} color={category.color} size="xs" /><Text style={{ color: palette.text }}>{category.name}</Text>
       </Pressable>)}</View>
       {draft.type === 'item' ? <View style={{ gap: 6 }}><Text style={labelStyle}>状态</Text><View style={rail}>{STATUSES.map((status) => <FormChoice key={status} label={ITEM_STATUS_PRESENTATION[status].label} selected={draft.status === status} disabled={disabled} onPress={() => update('status', status)} />)}</View></View> : null}
-      <Text style={labelStyle}>收纳位置</Text>
-      <LocationSelectField userId={userId} selectedParentId={draft.parentId} excludedIds={itemId && draft.type === 'container' ? [itemId] : []} disabled={disabled} onChange={(value) => update('parentId', value)} />
+
     </SectionCard>
     <Pressable accessibilityRole="button" accessibilityLabel="更多信息" accessibilityState={{ expanded: form.expanded }} onPress={() => form.setExpanded(!form.expanded)} style={{ minHeight: 48, paddingHorizontal: 12, justifyContent: 'center' }}>
       <Text style={{ color: palette.brandStrong, fontSize: 15, fontWeight: '700' }}>{form.expanded ? '收起更多信息' : '更多信息 · 数量、价格、日期、标签和图片'}</Text>

@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, Pressable, Switch, Text, View } from 'react-native';
@@ -9,6 +9,7 @@ import { parseInventoryCode } from '@inplace/app-core';
 import { codesApi, stocktakesApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { PageHeader } from '@/shared/ui/PageHeader';
+import { ManualCodeSheet } from '@/features/scan/ManualCodeSheet';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { CompactListRow } from '@/shared/ui/CompactListRow';
 import { Screen } from '@/shared/ui/Screen';
@@ -43,7 +44,7 @@ export default function StocktakeDetailScreen() {
       })
     ),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktake', id] });
+      await queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktake', currentHouseholdId, id] });
     },
     onError: (error) => notify({
       tone: 'error',
@@ -55,11 +56,7 @@ export default function StocktakeDetailScreen() {
     mutationFn: () => stocktakesApi.complete({ stocktakeId: id, reconcileMoves, reconcileQuantities }),
     onSuccess: async () => {
       setCompleteOpen(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktake', id] }),
-        queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktakes'] }),
-        queryClient.invalidateQueries({ queryKey: ['mobile', 'home'] }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: ['mobile'] });
       notify({ tone: 'success', title: '盘点已完成' });
     },
     onError: (error) => notify({
@@ -81,10 +78,11 @@ export default function StocktakeDetailScreen() {
           countedQuantity: 1,
           foundParentId: session.location_id,
         });
-        await queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktake', id] });
+        await queryClient.invalidateQueries({ queryKey: ['mobile', 'stocktake', currentHouseholdId, id] });
         notify({ tone: 'info', title: '已记录清单外物品', description: '完成盘点前可继续调整数量。' });
       } catch (error) {
         notify({ tone: 'error', title: '清单外物品记录失败', description: error instanceof Error ? error.message : '请重新扫描' });
+        throw error;
       }
       return;
     }
@@ -93,7 +91,7 @@ export default function StocktakeDetailScreen() {
       quantity: Math.max(entry.counted_quantity ?? 0, 1),
     });
     notify({ tone: 'success', title: `${entry.item.name} 已核对` });
-  }, [countMutation, id, notify, queryClient, session]);
+  }, [countMutation, currentHouseholdId, id, notify, queryClient, session]);
 
   if (sessionQuery.isLoading) return <Screen><StateBlock title="加载盘点详情" loading /></Screen>;
   if (sessionQuery.isError || !session) {
@@ -129,7 +127,7 @@ export default function StocktakeDetailScreen() {
           <CompactListRow
             key={entry.id}
             title={entry.item.name}
-            subtitle={`预期 ${entry.expected_quantity} · ${entry.status === 'missing' ? '缺失' : entry.status === 'unexpected' ? '清单外' : '待核对'}`}
+            subtitle={`预期 ${entry.expected_quantity} · ${entry.status === 'missing' ? '缺失' : entry.status === 'unexpected' ? '清单外' : entry.counted_quantity !== null ? '已核对' : '待核对'}`}
             meta={`${entry.counted_quantity ?? '—'}`}
             iconName={entry.counted_quantity === null ? 'ellipse-outline' : 'checkmark-circle-outline'}
             right={canEditInventory && !isCompleted ? (
@@ -196,16 +194,23 @@ function StocktakeScanner({
   onResolveItem: (itemId: string) => Promise<void>;
 }) {
   const [permission, requestPermission] = useCameraPermissions();
-  const handleBarcode = async (result: BarcodeScanningResult) => {
-    if (busy) return;
-    const code = parseInventoryCode(result.data);
-    if (!code) return;
+  const notify = useNotify();
+  const [manualOpen, setManualOpen] = useState(false);
+  const busyRef = useRef(false);
+  const cooldown = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (cooldown.current) clearTimeout(cooldown.current); }, []);
+  const handleCode = async (raw: string) => {
+    if (busyRef.current) throw new Error('正在核对上一个标签，请稍后再试');
+    const code = parseInventoryCode(raw);
+    if (!code) throw new Error('这不是有效的归位标签');
+    busyRef.current = true;
     onBusyChange(true);
     try {
       const resolved = await codesApi.resolveCode(code);
-      if (resolved.item) await onResolveItem(resolved.item.id);
+      if (!resolved.item) throw new Error('标签尚未绑定物品，请先绑定后再盘点');
+      await onResolveItem(resolved.item.id);
     } finally {
-      setTimeout(() => onBusyChange(false), 800);
+      cooldown.current = setTimeout(() => { busyRef.current = false; onBusyChange(false); }, 800);
     }
   };
 
@@ -216,16 +221,18 @@ function StocktakeScanner({
           <CameraView
             style={{ flex: 1 }}
             barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={busy ? undefined : (result) => void handleBarcode(result)}
+            onBarcodeScanned={busy || manualOpen ? undefined : (result) => void handleCode(result.data).catch((error: unknown) => notify({ tone: 'error', title: '标签核对失败', description: error instanceof Error ? error.message : '请重试' }))}
           />
         ) : (
           <View style={scannerPermissionStyle}>
-            <Text style={completedTextStyle}>需要相机权限才能扫码核对。</Text>
+            <Text style={completedTextStyle}>可以授权相机扫码，也可以输入或粘贴标签核对。</Text>
             <Pressable onPress={() => void requestPermission()} style={primaryButtonStyle}>
               <Text style={primaryButtonTextStyle}>允许相机</Text>
             </Pressable>
           </View>
         )}
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => setManualOpen(true)} style={[scannerCloseStyle, { backgroundColor: palette.surface }]}><Text style={{ color: palette.brandStrong }}>输入或粘贴标签</Text></Pressable>
+        <ManualCodeSheet visible={manualOpen} onClose={() => setManualOpen(false)} onSubmit={handleCode} />
         <Pressable onPress={onClose} style={scannerCloseStyle}>
           <Text style={primaryButtonTextStyle}>结束扫码</Text>
         </Pressable>

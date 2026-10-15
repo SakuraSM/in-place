@@ -1,8 +1,10 @@
-import { useState, type ReactElement } from 'react';
+import { useRef, useState, type ReactElement } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
+import { inventoryDateToIso, parseInventoryQuantity } from '@inplace/app-core';
+import { InventoryDateInput } from './form/InventoryFormControls';
 import { itemsApi, lifecycleApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -14,7 +16,7 @@ import { useNotify } from '@/shared/ui/ToastProvider';
 import { palette } from '@/shared/ui/theme';
 
 type LifecycleTab = 'stock' | 'loan' | 'maintenance' | 'batch';
-type LifecycleForm = Exclude<LifecycleTab, 'stock'> | null;
+type LifecycleForm = LifecycleTab | null;
 
 const TABS = [
   { value: 'stock' as const, label: '库存' },
@@ -33,6 +35,8 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
   const [notes, setNotes] = useState('');
   const [date, setDate] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [stockQuantity, setStockQuantity] = useState('');
+  const busyRef = useRef(false);
 
   const loansQuery = useQuery({
     queryKey: ['mobile', 'loans', currentHouseholdId, item.id],
@@ -47,12 +51,25 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
     queryFn: () => lifecycleApi.listBatches(item.id),
   });
 
-  const refreshLifecycle = () => queryClient.invalidateQueries({ queryKey: ['mobile'] });
+  const refreshLifecycle = async (successTitle: string) => {
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['mobile'] }, { throwOnError: true });
+      notify({ tone: 'success', title: successTitle });
+    } catch {
+      notify({ tone: 'error', title: '记录已保存，列表刷新失败', description: '请刷新页面查看，无需重复提交' });
+    }
+  };
+  const submit = async (action: () => Promise<unknown>) => {
+    if (!canEdit || busyRef.current) return;
+    busyRef.current = true;
+    try { await action(); } catch { /* Mutation errors are shown by onError. */ }
+    finally { busyRef.current = false; }
+  };
   const stockMutation = useMutation({
-    mutationFn: (nextQuantity: number) => itemsApi.updateItem(item.id, { quantity: Math.max(0, nextQuantity) }),
+    mutationFn: (nextQuantity: string) => itemsApi.updateItem(item.id, { quantity: parseInventoryQuantity(nextQuantity) }),
     onSuccess: async () => {
-      await refreshLifecycle();
-      notify({ tone: 'success', title: '库存数量已更新' });
+      setForm(null);
+      await refreshLifecycle('库存数量已更新');
     },
     onError: (error) => notify({ tone: 'error', title: '库存更新失败', description: getErrorMessage(error) }),
   });
@@ -60,17 +77,18 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
     mutationFn: async () => {
       if (form === 'loan') {
         if (!name.trim()) throw new Error('请输入借用人');
-        await lifecycleApi.createLoan({ itemId: item.id, borrowerName: name.trim(), dueAt: date || null, notes });
+        await lifecycleApi.createLoan({ itemId: item.id, borrowerName: name.trim(), dueAt: inventoryDateToIso(date), notes });
       } else if (form === 'maintenance') {
         if (!name.trim()) throw new Error('请输入维护项目');
         await lifecycleApi.createMaintenance(item.id, {
           title: name.trim(),
           notes,
-          performedAt: date || new Date().toISOString().slice(0, 10),
+          performedAt: inventoryDateToIso(date) ?? new Date().toISOString(),
         });
       } else if (form === 'batch') {
-        const parsedQuantity = Number(quantity);
-        if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) throw new Error('批次数量至少为 1');
+        const parsedQuantity = parseInventoryQuantity(quantity);
+        if (parsedQuantity < 1) throw new Error('批次数量至少为 1');
+        inventoryDateToIso(date);
         await lifecycleApi.createBatch(item.id, { quantity: parsedQuantity, expiryDate: date || null, notes });
       }
     },
@@ -81,23 +99,25 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
       setNotes('');
       setDate('');
       setQuantity('1');
-      await refreshLifecycle();
-      notify({ tone: 'success', title: completedForm === 'loan' ? '借出记录已创建' : completedForm === 'maintenance' ? '维护记录已添加' : '批次已入库' });
+      await refreshLifecycle(completedForm === 'loan' ? '借出记录已创建' : completedForm === 'maintenance' ? '维护记录已添加' : '批次已入库');
     },
     onError: (error) => notify({ tone: 'error', title: '保存失败，输入已保留', description: getErrorMessage(error) }),
   });
   const returnMutation = useMutation({
     mutationFn: (loanId: string) => lifecycleApi.returnLoan(loanId),
     onSuccess: async () => {
-      await refreshLifecycle();
-      notify({ tone: 'success', title: '物品已归还' });
+      await refreshLifecycle('物品已归还');
     },
     onError: (error) => notify({ tone: 'error', title: '归还失败', description: getErrorMessage(error) }),
   });
 
+  const saving = stockMutation.isPending || createMutation.isPending || returnMutation.isPending;
+  const loadError = loansQuery.error ?? maintenanceQuery.error ?? batchesQuery.error;
+
   return (
     <>
       <SectionCard title="库存与生命周期" subtitle="数量、借用、维护和消耗批次" density="compact">
+        {loadError ? <Pressable accessibilityRole="button" onPress={() => { void loansQuery.refetch(); void maintenanceQuery.refetch(); void batchesQuery.refetch(); }}><Text style={metaTextStyle}>记录加载失败，点击重试</Text></Pressable> : null}
         <ContentTabs accessibilityLabel="生命周期内容" tabs={TABS} value={tab} onChange={setTab} />
         {tab === 'stock' ? (
           <View style={stockPanelStyle}>
@@ -106,8 +126,9 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
               <Text style={metaTextStyle}>{item.tracking_mode === 'consumable' ? '消耗品库存' : '当前库存'}</Text>
             </View>
             {canEdit ? <View style={quantityActionsStyle}>
-              <QuantityButton label="减少库存" icon="remove" onPress={() => stockMutation.mutate(item.quantity - 1)} />
-              <QuantityButton label="增加库存" icon="add" onPress={() => stockMutation.mutate(item.quantity + 1)} />
+              <QuantityButton label="减少库存" icon="remove" disabled={saving || item.quantity <= 0} onPress={() => void submit(() => stockMutation.mutateAsync(String(item.quantity - 1)))} />
+              <Pressable accessibilityRole="button" disabled={saving} onPress={() => { setStockQuantity(String(item.quantity)); setForm('stock'); }} style={addButtonStyle}><Text style={[addButtonTextStyle, { paddingHorizontal: 10 }]}>设置数量</Text></Pressable>
+              <QuantityButton label="增加库存" icon="add" disabled={saving} onPress={() => void submit(() => stockMutation.mutateAsync(String(item.quantity + 1)))} />
             </View> : null}
           </View>
         ) : null}
@@ -120,7 +141,7 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
                 subtitle={loan.due_at ? `应还 ${new Date(loan.due_at).toLocaleDateString('zh-CN')}` : '未设置归还日期'}
                 meta={loan.returned_at ? '已归还' : '归还'}
                 iconName="return-down-back-outline"
-                onPress={canEdit && !loan.returned_at ? () => returnMutation.mutate(loan.id) : undefined}
+                onPress={canEdit && !saving && !loan.returned_at ? () => void submit(() => returnMutation.mutateAsync(loan.id)) : undefined}
               />
             ))}
           </LifecycleList>
@@ -141,14 +162,16 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
         ) : null}
       </SectionCard>
 
-      <BottomSheet visible={Boolean(form)} title={getFormTitle(form)} onClose={() => setForm(null)}>
-        {form === 'loan' ? <FormField label="借用人" value={name} onChangeText={setName} placeholder="姓名" /> : null}
-        {form === 'maintenance' ? <FormField label="维护项目" value={name} onChangeText={setName} placeholder="例如：更换滤芯" /> : null}
-        {form === 'batch' ? <FormField label="批次数量" value={quantity} onChangeText={setQuantity} keyboardType="number-pad" /> : null}
-        <FormField label={form === 'maintenance' ? '维护日期' : form === 'batch' ? '到期日期（可选）' : '应还日期（可选）'} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
-        <FormField label="备注（可选）" value={notes} onChangeText={setNotes} placeholder="补充说明" multiline />
-        <Pressable disabled={createMutation.isPending} onPress={() => createMutation.mutate()} style={primaryButtonStyle}>
-          <Text style={primaryButtonTextStyle}>{createMutation.isPending ? '保存中…' : '保存'}</Text>
+      <BottomSheet visible={Boolean(form)} title={getFormTitle(form)} onClose={() => { if (!saving) setForm(null); }}>
+        {form === 'loan' ? <FormField label="借用人" value={name} onChangeText={setName} editable={!saving} placeholder="姓名" /> : null}
+        {form === 'maintenance' ? <FormField label="维护项目" value={name} onChangeText={setName} editable={!saving} placeholder="例如：更换滤芯" /> : null}
+        {form === 'batch' || form === 'stock' ? <FormField label={form === 'stock' ? '库存数量' : '批次数量'} value={form === 'stock' ? stockQuantity : quantity} onChangeText={form === 'stock' ? setStockQuantity : setQuantity} editable={!saving} keyboardType="number-pad" /> : null}
+        {form !== 'stock' ? <>
+          <InventoryDateInput label={form === 'maintenance' ? '维护日期' : form === 'batch' ? '到期日期（可选）' : '应还日期（可选）'} value={date} onChange={setDate} disabled={saving} />
+          <FormField label="备注（可选）" value={notes} onChangeText={setNotes} placeholder="补充说明" editable={!saving} multiline />
+        </> : null}
+        <Pressable accessibilityRole="button" disabled={saving} onPress={() => void submit(() => form === 'stock' ? stockMutation.mutateAsync(stockQuantity) : createMutation.mutateAsync())} style={primaryButtonStyle}>
+          <Text style={primaryButtonTextStyle}>{saving ? '保存中…' : '保存'}</Text>
         </Pressable>
       </BottomSheet>
     </>
@@ -156,6 +179,7 @@ export function MobileLifecycleCard({ item, canEdit = true }: { item: Item; canE
 }
 
 function getFormTitle(form: LifecycleForm) {
+  if (form === 'stock') return '设置库存数量';
   if (form === 'loan') return '新增借出';
   if (form === 'maintenance') return '记录维护';
   return '新增消耗批次';
@@ -165,9 +189,9 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : '请稍后重试';
 }
 
-function QuantityButton({ label, icon, onPress }: { label: string; icon: 'add' | 'remove'; onPress: () => void }) {
+function QuantityButton({ label, icon, disabled, onPress }: { label: string; icon: 'add' | 'remove'; disabled: boolean; onPress: () => void }) {
   return (
-    <Pressable accessibilityLabel={label} onPress={onPress} style={quantityButtonStyle}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={onPress} style={[quantityButtonStyle, disabled ? { opacity: 0.4 } : null]}>
       <Ionicons name={icon} size={20} color={palette.brandStrong} />
     </Pressable>
   );
@@ -188,7 +212,7 @@ const stockValueStyle = { fontSize: 28, fontWeight: '900' as const, color: palet
 const metaTextStyle = { fontSize: 13, lineHeight: 18, color: palette.textSoft };
 const quantityActionsStyle = { flexDirection: 'row' as const, gap: 8 };
 const quantityButtonStyle = { width: 42, height: 42, borderRadius: 14, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
-const addButtonStyle = { minHeight: 42, borderRadius: 14, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
+const addButtonStyle = { minHeight: 48, borderRadius: 14, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
 const addButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: palette.brandStrong };
-const primaryButtonStyle = { minHeight: 46, borderRadius: 15, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };
+const primaryButtonStyle = { minHeight: 48, borderRadius: 15, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };
 const primaryButtonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: '#ffffff' };

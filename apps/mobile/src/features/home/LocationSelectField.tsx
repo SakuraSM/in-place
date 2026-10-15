@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import type { Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { formatMobileLocationPath } from '@/features/inventory/mobileInventoryFormat';
 import { LocationHierarchyPicker } from './LocationHierarchyPicker';
-import { palette, shadows } from '@/shared/ui/theme';
+import { palette } from '@/shared/ui/theme';
+import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { FormField } from '@/shared/ui/FormField';
+import { buildLocationCandidates, filterLocationCandidates } from '@inplace/app-core';
 
 interface LocationSelectFieldProps {
   disabled?: boolean;
@@ -28,7 +31,7 @@ export function LocationSelectField({
   const [isOpen, setIsOpen] = useState(false);
   const [currentParentId, setCurrentParentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Item[]>([]);
-  const excludedIdSet = useMemo(() => new Set(excludedIds), [excludedIds]);
+  const [query, setQuery] = useState('');
 
   const selectedPathQuery = useQuery({
     queryKey: ['mobile', 'location-picker-path', currentHouseholdId, selectedParentId],
@@ -39,28 +42,22 @@ export function LocationSelectField({
     },
   });
 
-  const currentContainersQuery = useQuery({
-    queryKey: ['mobile', 'location-picker-children', currentHouseholdId, userId, currentParentId],
+  const inventory = useQuery({
+    queryKey: ['mobile', 'overview-all-items', currentHouseholdId, userId],
     enabled: isOpen && Boolean(userId),
-    queryFn: async () => {
-      const children = await itemsApi.fetchChildren(currentParentId, userId!);
-      return children.filter((item) => item.type === 'container' && !excludedIdSet.has(item.id));
-    },
+    staleTime: 60_000,
+    queryFn: () => itemsApi.searchItems('', userId!),
   });
-
-  useEffect(() => {
-    if (!isOpen) {
-      setCurrentParentId(null);
-      setBreadcrumbs([]);
-    }
-  }, [isOpen]);
-
-  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? '加载收纳位置...' : '未选择收纳位置';
-  const containers = currentContainersQuery.data ?? [];
+  const candidates = buildLocationCandidates(inventory.data ?? [], excludedIds);
+  const containers = candidates.filter(({ item }) => item.parent_id === currentParentId).map(({ item }) => item);
+  const results = filterLocationCandidates(candidates, query);
+  const selectedLabel = selectedParentId ? selectedPathQuery.data ?? (selectedPathQuery.isError ? '位置加载失败，点击重新选择' : '加载收纳位置…') : '未选择收纳位置';
+  const close = () => { setIsOpen(false); setQuery(''); setCurrentParentId(null); setBreadcrumbs([]); };
 
   const handleSelect = (parentId: string | null) => {
+    if (parentId && !candidates.some(({ item }) => item.id === parentId)) return;
     onChange(parentId);
-    setIsOpen(false);
+    close();
   };
 
   const handleNavigate = (index: number) => {
@@ -83,37 +80,28 @@ export function LocationSelectField({
         <Ionicons name="chevron-forward" size={18} color={palette.textSoft} />
       </Pressable>
 
-      <Modal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
-        <View style={modalRootStyle}>
-          <Pressable style={backdropStyle} onPress={() => setIsOpen(false)} />
-          <View style={sheetStyle}>
-            <View style={dragHandleStyle} />
-            <View style={sheetHeaderStyle}>
-              <Text style={sheetTitleStyle}>选择收纳位置</Text>
-              <Pressable onPress={() => setIsOpen(false)} style={closeButtonStyle}>
-                <Ionicons name="close" size={18} color={palette.textMuted} />
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={sheetContentStyle} keyboardShouldPersistTaps="handled">
-              <LocationHierarchyPicker
-                breadcrumbs={breadcrumbs}
-                containers={containers}
-                currentParentId={currentParentId}
-                selectedParentId={selectedParentId}
-                selectedParentPath={selectedLabel}
-                isLoading={currentContainersQuery.isLoading}
-                onSelect={handleSelect}
-                onNavigate={handleNavigate}
-                onDrillDown={(container) => {
-                  setBreadcrumbs((current) => [...current, container]);
-                  setCurrentParentId(container.id);
-                }}
-              />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <BottomSheet visible={isOpen} title="选择收纳位置" onClose={close}>
+        <FormField label="搜索收纳位置" placeholder="位置名称或路径" value={query} onChangeText={setQuery} returnKeyType="search" />
+        {inventory.isError ? <Pressable accessibilityRole="button" onPress={() => void inventory.refetch()}><Text style={{ color: palette.danger }}>位置加载失败，点击重试</Text></Pressable>
+          : query.trim() ? <>
+            {inventory.isLoading ? <Text>加载位置中…</Text> : null}
+            {!inventory.isLoading && results.length === 0 ? <Text>没有匹配的位置，试试上级位置名称</Text> : null}
+            {results.map(({ item, path }) => <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={`选择${path}`} onPress={() => handleSelect(item.id)} style={[fieldButtonStyle, { paddingVertical: 12 }]}>
+              <View style={{ flex: 1, gap: 4 }}><Text style={fieldButtonTextStyle}>{item.name}</Text><Text style={{ color: palette.textSoft, fontSize: 12 }}>{path}</Text></View>
+              {selectedParentId === item.id ? <Ionicons name="checkmark" size={18} color={palette.brand} /> : null}
+            </Pressable>)}
+          </> : <LocationHierarchyPicker
+            breadcrumbs={breadcrumbs}
+            containers={containers}
+            currentParentId={currentParentId}
+            selectedParentId={selectedParentId}
+            selectedParentPath={selectedLabel}
+            isLoading={inventory.isLoading}
+            onSelect={handleSelect}
+            onNavigate={handleNavigate}
+            onDrillDown={(container) => { setBreadcrumbs((current) => [...current, container]); setCurrentParentId(container.id); }}
+          />}
+      </BottomSheet>
     </>
   );
 }
@@ -140,66 +128,4 @@ const fieldButtonTextStyle = {
   color: palette.text,
   fontSize: 15,
   fontWeight: '700' as const,
-};
-
-const modalRootStyle = {
-  flex: 1,
-  justifyContent: 'flex-end' as const,
-};
-
-const backdropStyle = {
-  position: 'absolute' as const,
-  top: 0,
-  right: 0,
-  bottom: 0,
-  left: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.28)',
-};
-
-const sheetStyle = {
-  maxHeight: '78%' as const,
-  borderTopLeftRadius: 28,
-  borderTopRightRadius: 28,
-  backgroundColor: palette.surface,
-  overflow: 'hidden' as const,
-  ...shadows.lg,
-};
-
-const dragHandleStyle = {
-  alignSelf: 'center' as const,
-  width: 42,
-  height: 4,
-  borderRadius: 999,
-  backgroundColor: palette.border,
-  marginTop: 10,
-  marginBottom: 4,
-};
-
-const sheetHeaderStyle = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'space-between' as const,
-  paddingHorizontal: 20,
-  paddingVertical: 14,
-};
-
-const sheetTitleStyle = {
-  color: palette.text,
-  fontSize: 22,
-  fontWeight: '900' as const,
-};
-
-const closeButtonStyle = {
-  width: 38,
-  height: 38,
-  borderRadius: 19,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  backgroundColor: palette.surfaceMuted,
-};
-
-const sheetContentStyle = {
-  paddingHorizontal: 20,
-  paddingBottom: 28,
-  gap: 10,
 };

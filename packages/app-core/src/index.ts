@@ -8,6 +8,8 @@ export * from './households';
 export * from './items';
 export * from './inventory-operations';
 export * from './inventory-draft';
+export * from './inventory-input';
+export * from './location-candidates';
 export * from './lifecycle';
 export * from './geo-asset-map';
 export * from './mobile-map-bridge';

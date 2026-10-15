@@ -7,6 +7,24 @@ jest.mock('@/shared/api/mobileClient', () => ({ uploadImageFromUri: jest.fn() })
 jest.mock('@/shared/lib/imagePickerPermission', () => ({ getMediaLibraryPermissionError: async () => null }));
 
 describe('inventory form submission guard', () => {
+  it('continues from the same location and category only after a successful write', async () => {
+    const persist = jest.fn(async (payload: ItemCreateInput) => ({ ...payload, id: 'saved', household_id: 'family', created_at: '', updated_at: '' }));
+    const onSaved = jest.fn();
+    const { result } = renderHook(() => useInventoryForm({ userId: 'user', parentId: 'box', canEdit: true, persist, onClose: jest.fn(), onSaved }));
+    act(() => { result.current.update('name', '第一件'); result.current.update('category', '数码'); result.current.update('quantity', '5'); result.current.update('images', ['image']); result.current.update('expiryDate', '2027-01-01'); });
+    await act(() => result.current.save(true));
+    expect(result.current.draft).toMatchObject({ name: '', category: '数码', parentId: 'box', type: 'item', quantity: '1', images: [], expiryDate: '' });
+    expect(result.current.isDirty).toBe(false);
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ name: '第一件' }), true);
+    persist.mockRejectedValueOnce(new Error('离线'));
+    act(() => result.current.update('name', '第二件'));
+    await act(() => result.current.save(true));
+    expect(result.current.draft.name).toBe('第二件');
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    await act(() => result.current.save());
+    expect(persist).toHaveBeenLastCalledWith(expect.objectContaining({ name: '第二件', parent_id: 'box', category: '数码', quantity: 1, images: [] }));
+    expect(onSaved).toHaveBeenLastCalledWith(expect.objectContaining({ name: '第二件' }), false);
+  });
   it('blocks duplicate save, reset, editing and close until persistence finishes', async () => {
     let complete: (item: Item) => void = () => undefined;
     let payload: ItemCreateInput | undefined;

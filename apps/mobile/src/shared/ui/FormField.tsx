@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 import { palette } from './theme';
 
@@ -7,14 +7,16 @@ interface FormFieldProps extends TextInputProps {
   hint?: string;
   error?: string;
   trailing?: ReactElement;
+  inputRef?: Ref<TextInput>;
 }
 
-export function FormField({ label, hint, error, trailing, style, ...inputProps }: FormFieldProps) {
+export function FormField({ label, hint, error, trailing, inputRef, style, ...inputProps }: FormFieldProps) {
   return (
     <View style={fieldStyle}>
       <Text style={labelStyle}>{label}</Text>
       <View style={[inputFrameStyle, error ? errorFrameStyle : null]}>
         <TextInput
+          ref={inputRef}
           accessibilityLabel={label}
           accessibilityHint={hint}
           accessibilityState={{ disabled: inputProps.editable === false }}

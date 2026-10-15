@@ -97,6 +97,7 @@ export default function ContainerBrowseScreen() {
         </View>
       </SectionCard>
 
+      {children.length === 0 ? <StateBlock title="这里还没有内容" body={canEditInventory ? '点击上方“添加内容”，新物品会直接放在这里。' : '该位置暂无物品，可请家庭成员添加。'} /> : null}
       <ContentSection title={`位置/收纳 (${containers.length})`} items={containers} />
       <ContentSection title={`物品 (${leafItems.length})`} items={leafItems} />
     </Screen>

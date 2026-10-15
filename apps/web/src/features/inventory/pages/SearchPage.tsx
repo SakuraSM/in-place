@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useHousehold } from '../../../app/providers/household-context';
 import { useAuth } from '../../../app/providers/auth-context';
 import type { Item } from '../../../legacy/database.types';
@@ -35,6 +35,7 @@ export default function SearchPage() {
   const { user } = useAuth();
   const { currentHousehold } = useHousehold();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => parseOverviewSearchParams(searchParams), [searchParams]);
@@ -240,6 +241,7 @@ export default function SearchPage() {
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
           <OverviewMobileControls
+            autoFocus={location.state?.focusSearch === true}
             query={queryInput}
             activeFilterCount={activeFilterCount}
             onQueryChange={setQueryInput}
