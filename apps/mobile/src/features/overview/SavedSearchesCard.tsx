@@ -114,12 +114,12 @@ const triggerStyle = {
   alignItems: 'center' as const,
   gap: 6,
 };
-const triggerTextStyle = { fontSize: 13, fontWeight: '800' as const, color: palette.brandStrong };
+const triggerTextStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.brandStrong };
 const saveRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 };
 const inputStyle = {
   flex: 1,
   minHeight: controlSizes.touch,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
@@ -128,13 +128,13 @@ const inputStyle = {
 };
 const saveButtonStyle = {
   minHeight: controlSizes.touch,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.brandStrong,
   paddingHorizontal: 13,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
-const saveButtonTextStyle = { fontSize: 13, fontWeight: '800' as const, color: '#ffffff' };
+const saveButtonTextStyle = { fontSize: 13, fontWeight: '600' as const, color: '#ffffff' };
 const emptyStyle = { fontSize: 14, lineHeight: 20, color: palette.textSoft };
 const rowStyle = {
   minHeight: 58,
@@ -145,5 +145,5 @@ const rowStyle = {
   gap: 12,
 };
 const rowMainStyle = { flex: 1, gap: 3, paddingVertical: 10 };
-const rowTitleStyle = { fontSize: 15, fontWeight: '800' as const, color: palette.text };
+const rowTitleStyle = { fontSize: 14, fontWeight: '600' as const, color: palette.text };
 const rowMetaStyle = { fontSize: 12, color: palette.textSoft };

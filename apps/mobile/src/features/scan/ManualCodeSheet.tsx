@@ -23,6 +23,6 @@ export function ManualCodeSheet({ visible, onClose, onSubmit }: { visible: boole
   };
   return <BottomSheet visible={visible} title="输入标签" onClose={() => { if (!busy.current) { setError(null); onClose(); } }}>
     <FormField label="标签编号或链接" value={value} onChangeText={setValue} error={error ?? undefined} placeholder="粘贴归位标签链接或编号" autoCapitalize="none" autoCorrect={false} editable={!saving} returnKeyType="go" onSubmitEditing={() => void submit()} />
-    <Pressable accessibilityRole="button" disabled={saving || !value.trim()} onPress={() => void submit()} style={{ minHeight: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.brandStrong }}><Text style={{ color: '#fff', fontWeight: '700' }}>{saving ? '识别中…' : '识别标签'}</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={saving || !value.trim()} onPress={() => void submit()} style={{ minHeight: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.brandStrong }}><Text style={{ color: '#fff', fontWeight: '600' }}>{saving ? '识别中…' : '识别标签'}</Text></Pressable>
   </BottomSheet>;
 }

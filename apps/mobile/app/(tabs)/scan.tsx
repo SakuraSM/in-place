@@ -405,7 +405,7 @@ const secondaryButtonStyle = {
 
 const secondaryButtonTextStyle = {
   color: palette.text,
-  fontSize: 15,
+  fontSize: 14,
   fontWeight: '600' as const,
 };
 
@@ -420,8 +420,8 @@ const labelReturnButtonStyle = {
 
 const labelReturnButtonTextStyle = {
   color: palette.brandStrong,
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 const primaryButtonStyle = {
@@ -438,7 +438,7 @@ const disabledButtonStyle = {
 
 const primaryButtonTextStyle = {
   color: '#ffffff',
-  fontSize: 15,
+  fontSize: 14,
   fontWeight: '600' as const,
 };
 

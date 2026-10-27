@@ -26,7 +26,7 @@ export default function HouseholdSwitcher({ compact = false }: { compact?: boole
         value={currentHousehold?.id ?? ''}
         disabled={loading || households.length === 0}
         onChange={(event) => void switchHousehold(event.target.value)}
-        className="h-11 w-full appearance-none rounded-2xl border border-borderSoft bg-surfaceMuted py-2 pl-10 pr-9 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-60"
+        className="ui-field h-11 w-full appearance-none rounded-xl border border-borderSoft bg-surface py-2 pl-10 pr-9 text-sm font-semibold text-slate-800 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-60"
       >
         {households.map((household) => (
           <option key={household.id} value={household.id}>

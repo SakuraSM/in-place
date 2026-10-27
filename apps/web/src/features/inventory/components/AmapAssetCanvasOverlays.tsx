@@ -26,7 +26,7 @@ export default function AmapAssetCanvasOverlays({
         <div className="absolute inset-0 flex items-center justify-center bg-white/95 px-6" role="alert">
           <div className="max-w-sm text-center">
             <MapPin className="mx-auto text-rose-500" size={30} aria-hidden="true" />
-            <h2 className="mt-3 text-lg font-bold text-slate-950">地图加载失败</h2>
+            <h2 className="mt-3 text-lg font-semibold text-slate-950">地图加载失败</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               请检查高德 Key、域名白名单和服务端安全代理配置。
             </p>
@@ -40,7 +40,7 @@ export default function AmapAssetCanvasOverlays({
             <Crosshair size={18} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-slate-950">
+            <p className="text-sm font-semibold text-slate-950">
               在地图上点击“{assignmentTargetName}”的位置
             </p>
             <p className="mt-0.5 text-xs text-slate-600">选点后会自动识别地址并保存</p>

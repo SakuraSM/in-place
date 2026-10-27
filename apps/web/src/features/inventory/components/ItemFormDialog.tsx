@@ -57,7 +57,7 @@ export default function ItemFormDialog({
             {submitError ? <div role="alert" className="mb-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div> : null}
             <div className="flex gap-3">
             {allowContinue ? <button type="submit" value="continue" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandTint px-3 py-4 text-sm font-semibold text-brandStrong disabled:opacity-50">保存并继续</button> : null}
-            <button type="submit" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50">
               {isSaving ? '保存中...' : '保存'}
             </button>
             </div>

@@ -139,7 +139,7 @@ function ActivityRow({ entry }: { entry: ActivityLog }) {
 }
 
 const bodyStyle = {
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 22,
   color: palette.textMuted,
 };

@@ -16,7 +16,6 @@ import SavedOverviewSearches from '../components/SavedOverviewSearches';
 import {
   OverviewPageHeader,
   OverviewMobileControls,
-  OverviewSearchField,
 } from '../components/OverviewSearchHeader';
 import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 import { resolveItemDetailPath } from '../lib/detailPath';
@@ -232,16 +231,9 @@ export default function SearchPage() {
       <OverviewPageHeader />
 
       <PageContent width="wide" className="flex min-h-0 min-w-0 flex-1 items-stretch gap-6">
-        <aside className="sticky top-28 hidden w-72 shrink-0 rounded-3xl border border-borderSoft bg-surface xl:block">
-          <div className="border-b border-borderSoft px-5 py-5">
-            <OverviewSearchField value={queryInput} onChange={setQueryInput} autoFocus />
-          </div>
-          <div className="px-5 py-5">{filterControls}</div>
-        </aside>
-
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
           <OverviewMobileControls
-            autoFocus={location.state?.focusSearch === true}
+            autoFocus={!isMobile || location.state?.focusSearch === true}
             query={queryInput}
             activeFilterCount={activeFilterCount}
             onQueryChange={setQueryInput}
@@ -314,7 +306,7 @@ export default function SearchPage() {
             <button
               type="button"
               onClick={() => setShowMobileFilters(false)}
-              className="min-h-12 w-full rounded-2xl bg-brandStrong px-4 text-sm font-bold text-white"
+              className="min-h-12 w-full rounded-2xl bg-brandStrong px-4 text-sm font-semibold text-white"
             >
               查看 {pagination.total} 个结果
             </button>

@@ -173,12 +173,12 @@ const successTextStyle = { color: '#15803d', fontSize: 14 };
 const errorTextStyle = { color: palette.danger, fontSize: 14 };
 const inputStyle = {
   backgroundColor: palette.surfaceMuted,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   paddingHorizontal: 16,
   paddingVertical: 12,
-  fontSize: 15,
+  fontSize: 14,
   color: palette.text,
 };
 const multilineInputStyle = { minHeight: 84, textAlignVertical: 'top' as const };
@@ -193,16 +193,16 @@ const chipStyle = {
 };
 const activeChipStyle = { backgroundColor: palette.brandTint, borderColor: '#99f6e4' };
 const chipTextStyle = { color: palette.textMuted, fontSize: 13, fontWeight: '600' as const };
-const activeChipTextStyle = { color: palette.brandStrong, fontSize: 13, fontWeight: '700' as const };
+const activeChipTextStyle = { color: palette.brandStrong, fontSize: 13, fontWeight: '600' as const };
 const actionRowStyle = { flexDirection: 'row' as const, gap: 12 };
 const secondaryButtonStyle = { flex: 1, borderRadius: 16, backgroundColor: palette.canvasStrong, paddingVertical: 13, alignItems: 'center' as const };
-const secondaryButtonTextStyle = { color: palette.text, fontSize: 15, fontWeight: '700' as const };
+const secondaryButtonTextStyle = { color: palette.text, fontSize: 14, fontWeight: '600' as const };
 const primaryButtonStyle = { flex: 1, borderRadius: 16, backgroundColor: palette.brand, paddingVertical: 13, alignItems: 'center' as const };
-const primaryButtonTextStyle = { color: '#ffffff', fontSize: 15, fontWeight: '700' as const };
+const primaryButtonTextStyle = { color: '#ffffff', fontSize: 14, fontWeight: '600' as const };
 const rowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, borderTopWidth: 1, borderTopColor: palette.borderSoft, paddingTop: 12 };
-const rowTitleStyle = { fontSize: 16, fontWeight: '700' as const, color: palette.text };
+const rowTitleStyle = { fontSize: 16, fontWeight: '600' as const, color: palette.text };
 const miniRowStyle = { flexDirection: 'row' as const, gap: 8 };
 const miniButtonStyle = { borderRadius: 10, backgroundColor: palette.canvasStrong, paddingHorizontal: 12, paddingVertical: 8 };
-const miniButtonTextStyle = { color: palette.text, fontSize: 13, fontWeight: '700' as const };
+const miniButtonTextStyle = { color: palette.text, fontSize: 13, fontWeight: '600' as const };
 const dangerMiniButtonStyle = { borderRadius: 10, backgroundColor: '#fee2e2', paddingHorizontal: 12, paddingVertical: 8 };
-const dangerMiniButtonTextStyle = { color: palette.danger, fontSize: 13, fontWeight: '700' as const };
+const dangerMiniButtonTextStyle = { color: palette.danger, fontSize: 13, fontWeight: '600' as const };

@@ -29,7 +29,7 @@ function ItemChoice({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-2xl border border-border bg-surfaceMuted px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+        className="ui-field h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
       >
         <option value="">选择位置、收纳或物品</option>
         {items.map((item) => (
@@ -151,7 +151,7 @@ export default function CodeResolvePage() {
           {error ? (
             <div className="rounded-2xl bg-rose-50 p-4">
               <p role="alert" className="text-sm text-rose-700">{error}</p>
-              <button type="button" onClick={() => void loadCode()} className="mt-3 text-sm font-bold text-rose-800">重新读取</button>
+              <button type="button" onClick={() => void loadCode()} className="mt-3 text-sm font-semibold text-rose-800">重新读取</button>
             </div>
           ) : null}
 
@@ -163,12 +163,12 @@ export default function CodeResolvePage() {
                 type="button"
                 disabled={!selectedItemId || saving}
                 onClick={() => void bindSelected()}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-bold text-white disabled:opacity-50"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-semibold text-white disabled:opacity-50"
               >
                 <Link2 size={18} />
                 {saving ? '绑定中…' : '绑定这个标签'}
               </button>
-              <Link to="/?create=1" className="inline-flex items-center gap-2 text-sm font-bold text-brandStrong">
+              <Link to="/?create=1" className="inline-flex items-center gap-2 text-sm font-semibold text-brandStrong">
                 先新建对象 <ArrowRight size={16} />
               </Link>
             </div>
@@ -186,7 +186,7 @@ export default function CodeResolvePage() {
               <p className="mt-3 text-sm text-slate-600">{resolved.item.category || '暂未设置类别'}</p>
               <Link
                 to={resolveItemDetailPath(resolved.item)}
-                className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl border border-border bg-surfaceMuted px-4 text-sm font-bold text-slate-800"
+                className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl border border-border bg-surfaceMuted px-4 text-sm font-semibold text-slate-800"
               >
                 {resolved.item.type === 'item' ? <Package size={17} /> : <MapPin size={17} />}
                 查看详情
@@ -197,14 +197,14 @@ export default function CodeResolvePage() {
 
         {destination ? (
           <section className="rounded-3xl border border-brand/25 bg-surface p-5 shadow-sm md:p-7">
-            <h2 className="text-lg font-bold text-slate-950">连续归位到「{destination.name}」</h2>
+            <h2 className="text-lg font-semibold text-slate-950">连续归位到「{destination.name}」</h2>
             <p className="mt-1 text-sm leading-6 text-slate-600">继续扫描物品标签；重复扫描会自动忽略，失败时已归位清单不会丢失。</p>
             <div className="mt-5">
               <CodeScanner onCode={(nextCode) => void moveScannedItem(nextCode)} continuous />
             </div>
             {movedItems.length > 0 ? (
               <div className="mt-5 border-t border-borderSoft pt-4">
-                <p className="text-sm font-bold text-slate-800">本次已归位 {movedItems.length} 件</p>
+                <p className="text-sm font-semibold text-slate-800">本次已归位 {movedItems.length} 件</p>
                 <ul className="mt-2 space-y-2">
                   {movedItems.map((item) => (
                     <li key={item.id} className="flex items-center gap-2 text-sm text-slate-600">

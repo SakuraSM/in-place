@@ -11,6 +11,7 @@ export {
   shadowsMobile,
   controlSizes,
   motionDurations,
+  layout,
 } from './tokens';
 export {
   CATEGORY_PRESET_ARTWORK,
@@ -24,3 +25,5 @@ export type {
   CategoryPresetArtworkKey,
   CategoryVisual,
 } from './category-artwork';
+export { buildCategoryValueBars } from './value-bars';
+export type { CategoryValueEntry, CategoryValueBar } from './value-bars';

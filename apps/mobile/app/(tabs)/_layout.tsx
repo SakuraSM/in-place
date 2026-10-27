@@ -2,7 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Easing, Platform, Pressable, Text, View } from 'react-native';
+import { Easing, Pressable, Text, View } from 'react-native';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import { useAuth } from '@/providers/AuthProvider';
 import { useHousehold } from '@/providers/HouseholdProvider';
@@ -160,7 +160,7 @@ function MobileTabBar({
               pressed ? pressedTabBarItemStyle : null,
             ]}
           >
-            <View style={tabIconShellStyle}>
+            <View style={[tabIconShellStyle, isFocused ? activeTabIconShellStyle : null]}>
               <Ionicons
                 name={isFocused ? item.activeIconName : item.iconName}
                 size={TAB_ICON_SIZE}
@@ -185,16 +185,8 @@ const tabBarContainerStyle = {
   paddingTop: 6,
   paddingHorizontal: 8,
   borderTopWidth: 1,
-  borderTopColor: palette.borderSoft,
-  backgroundColor: 'rgba(255,255,255,0.98)',
-  ...(Platform.OS === 'ios' ? {
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: -6 },
-  } : {
-    elevation: 8,
-  }),
+  borderTopColor: palette.border,
+  backgroundColor: palette.surface,
 };
 
 const tabBarItemStyle = {
@@ -218,9 +210,11 @@ const tabIconShellStyle = {
 
 const tabLabelTextStyle = {
   fontSize: 11,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const activeTabLabelTextStyle = {
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
 };
+
+const activeTabIconShellStyle = { backgroundColor: palette.brandTint, borderRadius: 8 };

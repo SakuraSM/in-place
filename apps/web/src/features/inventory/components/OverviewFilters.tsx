@@ -50,7 +50,7 @@ export default function OverviewFilters({
   return (
     <div className="space-y-6">
       <fieldset>
-        <legend className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">类型</legend>
+        <legend className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">类型</legend>
         <div className="flex flex-wrap gap-2">
           {OVERVIEW_TYPE_FILTERS.map(({ value, label, icon: Icon }) => (
             <button
@@ -72,7 +72,7 @@ export default function OverviewFilters({
       </fieldset>
 
       <fieldset disabled={statusDisabled}>
-        <legend className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">状态</legend>
+        <legend className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">状态</legend>
         <div className="grid grid-cols-2 gap-2">
           {OVERVIEW_STATUS_FILTERS.map(({ value, label }) => (
             <button
@@ -97,11 +97,11 @@ export default function OverviewFilters({
 
       <section aria-labelledby="overview-tags-heading">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="overview-tags-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <h2 id="overview-tags-heading" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             标签 · 匹配任一
           </h2>
           {selectedTags.length > 0 ? (
-            <button type="button" onClick={onTagsClear} className="text-xs font-bold text-brandStrong">
+            <button type="button" onClick={onTagsClear} className="text-xs font-semibold text-brandStrong">
               清空
             </button>
           ) : null}
@@ -118,7 +118,7 @@ export default function OverviewFilters({
                 onChange={(event) => setTagQuery(event.target.value)}
                 aria-label="搜索标签"
                 placeholder="搜索标签"
-                className="w-full rounded-xl border border-border bg-surfaceMuted py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-500"
+                className="ui-field w-full rounded-xl border border-border bg-surface py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-500"
               />
               {tagQuery ? (
                 <button
@@ -158,11 +158,11 @@ export default function OverviewFilters({
 
       <section aria-labelledby="overview-location-heading">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="overview-location-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <h2 id="overview-location-heading" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             位置
           </h2>
           {selectedLocationId ? (
-            <button type="button" onClick={() => onLocationChange(null)} className="text-xs font-bold text-brandStrong">
+            <button type="button" onClick={() => onLocationChange(null)} className="text-xs font-semibold text-brandStrong">
               清空
             </button>
           ) : null}

@@ -68,12 +68,12 @@ export default function RegisterPage() {
           role="status"
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm rounded-[28px] border border-emerald-200 bg-surface p-9 text-center shadow-card"
+          className="w-full max-w-sm rounded-3xl border border-emerald-200 bg-surface p-9 text-center shadow-card"
         >
           <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <CheckCircle2 size={32} />
           </span>
-          <h1 className="text-xl font-bold text-slate-900">注册成功</h1>
+          <h1 className="text-xl font-semibold text-slate-900">注册成功</h1>
           <p className="mt-2 text-sm text-slate-600">正在进入你的归位空间…</p>
         </motion.section>
       </main>
@@ -89,7 +89,7 @@ export default function RegisterPage() {
       footer={(
         <>
           已有账号？{' '}
-          <Link to="/login" className="font-bold text-brandStrong hover:text-teal-700">
+          <Link to="/login" className="font-semibold text-brandStrong hover:text-teal-700">
             立即登录
           </Link>
         </>
@@ -110,11 +110,11 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor={REGISTER_EMAIL_ID} className="mb-1.5 block text-sm font-bold text-slate-700">
+          <label htmlFor={REGISTER_EMAIL_ID} className="mb-1.5 block text-sm font-semibold text-slate-700">
             邮箱地址
           </label>
           <div className="relative">
-            <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               id={REGISTER_EMAIL_ID}
               name="email"
@@ -126,17 +126,17 @@ export default function RegisterPage() {
               required
               aria-invalid={Boolean(errorMessage)}
               aria-describedby={fieldErrorDescription}
-              className="w-full rounded-2xl border border-border bg-surfaceMuted py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="ui-field w-full rounded-xl border border-border bg-surface py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-muted transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor={REGISTER_PASSWORD_ID} className="mb-1.5 block text-sm font-bold text-slate-700">
+          <label htmlFor={REGISTER_PASSWORD_ID} className="mb-1.5 block text-sm font-semibold text-slate-700">
             密码
           </label>
           <div className="relative">
-            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               id={REGISTER_PASSWORD_ID}
               name="password"
@@ -149,7 +149,7 @@ export default function RegisterPage() {
               required
               aria-invalid={Boolean(errorMessage)}
               aria-describedby={`${REGISTER_PASSWORD_HELP_ID}${fieldErrorDescription ? ` ${fieldErrorDescription}` : ''}`}
-              className="w-full rounded-2xl border border-border bg-surfaceMuted py-3.5 pl-10 pr-12 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="ui-field w-full rounded-xl border border-border bg-surface py-3.5 pl-10 pr-12 text-sm text-slate-900 placeholder:text-muted transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
             <button
               type="button"
@@ -167,11 +167,11 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor={REGISTER_CONFIRM_PASSWORD_ID} className="mb-1.5 block text-sm font-bold text-slate-700">
+          <label htmlFor={REGISTER_CONFIRM_PASSWORD_ID} className="mb-1.5 block text-sm font-semibold text-slate-700">
             确认密码
           </label>
           <div className="relative">
-            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               id={REGISTER_CONFIRM_PASSWORD_ID}
               name="confirm-password"
@@ -183,7 +183,7 @@ export default function RegisterPage() {
               required
               aria-invalid={Boolean(errorMessage)}
               aria-describedby={fieldErrorDescription}
-              className="w-full rounded-2xl border border-border bg-surfaceMuted py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="ui-field w-full rounded-xl border border-border bg-surface py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-muted transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-1 w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-teal-300"
+          className="mt-1 w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:bg-teal-300"
         >
           {isSubmitting ? '注册中…' : '创建账号'}
         </button>

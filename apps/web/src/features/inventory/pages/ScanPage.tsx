@@ -331,7 +331,7 @@ export default function ScanPage() {
             </div>
             <h3 className="font-semibold text-amber-800 mb-1">尚未配置 AI 识别服务</h3>
             <p className="mt-2 text-sm text-amber-900">配置识别服务后可使用拍照录入，也可以先手动新增物品。</p>
-            <Link to="/profile/ai" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brandStrong px-4 text-sm font-bold text-white">前往 AI 配置</Link>
+            <Link to="/profile/ai" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brandStrong px-4 text-sm font-semibold text-white">前往 AI 配置</Link>
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px] 2xl:grid-cols-[minmax(0,1.2fr)_400px] xl:items-start">
@@ -363,7 +363,7 @@ export default function ScanPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex aspect-[4/3] flex-col items-center justify-center gap-4 bg-gradient-to-br from-sky-50 via-white to-slate-100 px-6 text-center xl:aspect-[16/11]">
+                <div className="flex aspect-[4/3] flex-col items-center justify-center gap-4 bg-surfaceMuted px-6 text-center xl:aspect-[16/11]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-sky-100">
                     <Sparkles size={28} className="text-sky-500" />
                   </div>
@@ -391,7 +391,7 @@ export default function ScanPage() {
                     type="button"
                     disabled={analyzing}
                     onClick={() => openPicker('camera')}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 py-3.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Camera size={16} />
                     拍照识别
@@ -400,7 +400,7 @@ export default function ScanPage() {
                     type="button"
                     disabled={analyzing}
                     onClick={() => openPicker('album')}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-4 py-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-4 py-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-muted"
                   >
                     <ImageIcon size={16} />
                     从相册选择

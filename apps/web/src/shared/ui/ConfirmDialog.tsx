@@ -34,7 +34,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="rounded-2xl bg-surfaceMuted py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-borderSoft disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl bg-surfaceMuted py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-borderSoft disabled:cursor-not-allowed disabled:opacity-50"
           >
             取消
           </button>
@@ -42,8 +42,8 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isConfirming}
-            className={`rounded-2xl py-3 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-              danger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brandStrong hover:bg-teal-700'
+            className={`rounded-2xl py-3 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+              danger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brandStrong hover:bg-brandHover'
             }`}
           >
             {isConfirming ? '处理中…' : confirmLabel}

@@ -23,7 +23,7 @@ function ItemVisual({
   const Icon = isContainer ? Box : Package;
   const classes =
     size === 'lg'
-      ? 'h-24 w-24 rounded-[28px]'
+      ? 'h-24 w-24 rounded-3xl'
       : size === 'sm'
       ? 'h-12 w-12 rounded-2xl'
       : 'h-16 w-16 rounded-3xl';
@@ -127,7 +127,7 @@ function ChildCard({
             className="aspect-[4/3] w-full object-cover object-center"
           />
         ) : (
-          <div className="flex aspect-[4/3] w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.7),transparent_50%),linear-gradient(180deg,#f8fafc,#e2e8f0)]">
+          <div className="flex aspect-[4/3] w-full items-center justify-center bg-canvasStrong">
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
                 item.type === 'container'
@@ -144,7 +144,7 @@ function ChildCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
-          <p className="truncate mt-0.5 text-[11px] text-slate-400">
+          <p className="truncate mt-0.5 text-[11px] text-muted">
             {item.type === 'container' ? getContainerTypeLabel(item) : '物品'}
           </p>
         </div>
@@ -200,7 +200,7 @@ function MobileChildList({
           <ItemVisual item={child} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">{child.name}</p>
-            <p className="truncate mt-1 text-[11px] text-slate-400">
+            <p className="truncate mt-1 text-[11px] text-muted">
               {child.type === 'container' ? getContainerTypeLabel(child) : '物品'}
             </p>
           </div>
@@ -219,7 +219,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
 
   return (
     <section
-      className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.18),transparent_32%),linear-gradient(180deg,#f8fbff_0%,#f2f7ff_42%,#f8fafc_100%)] p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]"
+      className="overflow-hidden rounded-3xl border border-slate-200/80 bg-canvasStrong p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]"
     >
       {isContainer ? (
         <button
@@ -284,7 +284,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
             {showChildrenPanel && (
               <>
                 <RelationshipLine label={`直接包含 ${children.length} 项内容`} />
-                <div className="relative rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94))] p-4 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
+                <div className="relative rounded-3xl border border-white/80 bg-canvasStrong p-4 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
                   <div className="pointer-events-none absolute inset-x-16 -bottom-5 h-8 rounded-full bg-slate-200/40 blur-2xl" />
 
                   {children.length > 0 ? (
@@ -300,7 +300,7 @@ export default function SpatialRelationScene({ currentItem, ancestors, children,
                       <MobileChildList children={children} onNodeClick={onNodeClick} />
                     </>
                   ) : (
-                    <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 px-4 py-12 text-center">
+                    <div className="rounded-3xl border border-dashed border-slate-200 bg-white/70 px-4 py-12 text-center">
                       <p className="text-sm font-semibold text-slate-600">这里还没有内容</p>
                     </div>
                   )}

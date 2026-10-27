@@ -45,6 +45,6 @@ const rowStyle = {
   paddingTop: 12,
   gap: 4,
 };
-const labelStyle = { color: palette.textSoft, fontSize: 13, fontWeight: '700' as const };
-const valueStyle = { color: palette.text, fontSize: 15, lineHeight: 21 };
+const labelStyle = { color: palette.textSoft, fontSize: 13, fontWeight: '600' as const };
+const valueStyle = { color: palette.text, fontSize: 14, lineHeight: 21 };
 const bodyStyle = { color: palette.textMuted, fontSize: 14, lineHeight: 21 };

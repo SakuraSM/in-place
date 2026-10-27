@@ -72,7 +72,7 @@ function ItemLifecycleFields({ form, onUpdate }: Pick<ItemFormAdditionalFieldsPr
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-slate-700">购买价格</span>
-          <input type="number" value={form.price} onChange={(event) => onUpdate('price', event.target.value)} placeholder="0.00" min="0" step="0.01" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand" />
+          <input type="number" value={form.price} onChange={(event) => onUpdate('price', event.target.value)} placeholder="0.00" min="0" step="0.01" className="ui-field w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand" />
         </label>
         <div>
           <p className="mb-1.5 text-sm font-medium text-slate-700">购买日期</p>
@@ -99,11 +99,11 @@ function ItemLifecycleFields({ form, onUpdate }: Pick<ItemFormAdditionalFieldsPr
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-slate-700">当前数量</span>
-            <input type="number" min={0} value={form.quantity} onChange={(event) => onUpdate('quantity', Math.max(0, Number(event.target.value)))} className="w-full rounded-xl border border-border bg-white px-3 py-3 text-sm" />
+            <input type="number" min={0} value={form.quantity} onChange={(event) => onUpdate('quantity', Math.max(0, Number(event.target.value)))} className="ui-field w-full rounded-xl border border-border bg-white px-3 py-3 text-sm" />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-slate-700">最低库存</span>
-            <input type="number" min={0} value={form.minimum_quantity} onChange={(event) => onUpdate('minimum_quantity', event.target.value)} placeholder="不提醒" className="w-full rounded-xl border border-border bg-white px-3 py-3 text-sm" />
+            <input type="number" min={0} value={form.minimum_quantity} onChange={(event) => onUpdate('minimum_quantity', event.target.value)} placeholder="不提醒" className="ui-field w-full rounded-xl border border-border bg-white px-3 py-3 text-sm" />
           </label>
         </div>
       ) : null}
@@ -145,7 +145,7 @@ function TagFields({ form, availableTags, suggestedTags, tagInput, normalizedTag
         </div>
       ) : null}
       <div className="mb-2 flex gap-2">
-        <input type="text" value={tagInput} onChange={(event) => onTagInputChange(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), onAddTag())} placeholder="搜索已有标签，或输入新标签后按回车" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand" />
+        <input type="text" value={tagInput} onChange={(event) => onTagInputChange(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), onAddTag())} placeholder="搜索已有标签，或输入新标签后按回车" className="ui-field min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand" />
         <button type="button" onClick={onAddTag} aria-label="添加标签" className="flex h-10 w-10 items-center justify-center rounded-xl bg-brandTint text-brandStrong"><Plus size={16} aria-hidden="true" /></button>
       </div>
       {normalizedTagInput && !hasExactSuggestedTag ? <p className="mb-2 text-xs text-slate-500">未找到完全匹配的标签，继续回车可新建「{tagInput.trim()}」。</p> : null}

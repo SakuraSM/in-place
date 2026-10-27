@@ -1,80 +1,28 @@
 import type { ReactNode } from 'react';
-import { Boxes, Search, ShieldCheck } from 'lucide-react';
 import BrandLockup from '../../../shared/ui/BrandLockup';
+import { CategoryIcon } from '../../inventory/lib/categoryPresentation';
 
-interface AuthShellProps {
-  title: string;
-  description: string;
-  children: ReactNode;
-  footer: ReactNode;
-}
+interface AuthShellProps { title: string; description: string; children: ReactNode; footer: ReactNode }
 
-const AUTH_BENEFITS = [
-  { icon: Search, text: '快速找到每件物品所在位置' },
-  { icon: Boxes, text: '用位置、收纳和标签建立清晰结构' },
-  { icon: ShieldCheck, text: '数据归属账号，支持备份和迁移' },
-] as const;
-
-export default function AuthShell({
-  title,
-  description,
-  children,
-  footer,
-}: AuthShellProps) {
+export default function AuthShell({ title, description, children, footer }: AuthShellProps) {
   return (
-    <main className="app-page-gutter min-h-dvh bg-canvas py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)] lg:gap-6">
-      <section className="relative hidden min-h-[calc(100dvh-48px)] overflow-hidden rounded-[32px] bg-slate-900 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
-        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand/20 blur-3xl" />
-        <div className="absolute -bottom-24 left-16 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
-        <BrandLockup
-          size="md"
-          logoVariant="mark"
-          className="relative w-fit rounded-[22px] border border-white/15 bg-white/10 p-2 pr-4 shadow-sm backdrop-blur-md [&_[data-brand-title]]:text-white [&_p]:text-slate-300"
-        />
-        <div className="relative max-w-xl">
-          <p className="mb-4 text-sm font-bold uppercase tracking-[0.22em] text-teal-300">
-            InPlace · 归位
-          </p>
-          <h1 className="text-4xl font-bold leading-tight xl:text-5xl">
-            让家里的每件东西，
-            <br />
-            都有迹可循。
-          </h1>
-          <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-            记录位置、收纳、状态与标签，减少重复购买和翻找时间，把整理变成一件轻松的事。
-          </p>
-          <ul className="mt-9 space-y-4">
-            {AUTH_BENEFITS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm font-medium text-slate-200">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/10 text-teal-300">
-                  <Icon size={17} />
-                </span>
-                {text}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="relative text-xs text-slate-500">整理有序，生活松弛。</p>
-      </section>
-
-      <section className="mx-auto flex min-h-[calc(100dvh-48px)] w-full max-w-md flex-col justify-center lg:max-w-none lg:px-10 xl:px-16">
-        <BrandLockup
-          size="sm"
-          logoVariant="mark"
-          titleAs="h1"
-          showSubtitle={false}
-          className="mx-auto mb-8 w-fit border-0 bg-transparent px-0 shadow-none lg:hidden"
-        />
-        <div className="rounded-[28px] border border-border bg-surface p-6 shadow-card sm:p-8">
-          <div className="mb-7">
-            <p className="mb-2 text-sm font-bold text-brandStrong">欢迎使用归位</p>
-            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+    <main className="min-h-dvh bg-canvas px-5 py-6 md:px-10">
+      <div className="mx-auto max-w-[1120px]"><BrandLockup size="sm" logoVariant="mark" subtitle="INPLACE" /></div>
+      <div className="mx-auto grid max-w-[1120px] items-center gap-8 py-8 md:min-h-[calc(100dvh-120px)] md:grid-cols-[1.1fr_1fr] md:gap-20 md:py-12">
+        <section className="relative min-h-40 md:min-h-0 md:px-6">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-brandStrong">A home for everything</p>
+          <h1 className="relative z-10 mt-4 text-[28px] font-semibold leading-relaxed tracking-tight md:text-[46px]">记得拥有，<br />也记得归处。</h1>
+          <p className="relative z-10 mt-4 max-w-[60%] text-xs leading-6 text-muted md:max-w-none md:text-sm md:leading-7">从一件小物开始，<br />把日常收拾成喜欢的样子。</p>
+          <div className="pointer-events-none absolute -right-2 top-4 h-36 w-36 md:static md:mt-5 md:h-[280px] md:w-[280px]"><CategoryIcon icon="Building2" presetKey="location.apartment" imageClassName="h-full w-full object-contain" /></div>
+        </section>
+        <section className="mx-auto w-full max-w-[450px]">
+          <div className="ui-panel p-6 md:p-9">
+            <div className="mb-7"><p className="mb-3 text-[10px] font-medium uppercase tracking-[0.16em] text-brandStrong">Welcome home</p><h2 className="text-[25px] font-semibold tracking-tight text-ink">{title}</h2><p className="mt-2 text-xs leading-6 text-muted">{description}</p></div>
+            {children}
           </div>
-          {children}
-        </div>
-        <div className="mt-6 text-center text-sm text-slate-600">{footer}</div>
-      </section>
+          <div className="mt-6 text-center text-sm text-muted">{footer}</div>
+        </section>
+      </div>
     </main>
   );
 }

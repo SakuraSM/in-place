@@ -113,13 +113,14 @@ export default function ContainerCard({
         whileTap={{ scale: 0.96 }}
         transition={{ type: 'spring', stiffness: 400, damping: 22 }}
         role={selectionMode ? 'checkbox' : undefined}
+        data-container-card
         aria-checked={selectionMode ? selected : undefined}
         aria-label={selectionMode ? `${selected ? '取消选择' : '选择'}${item.name}` : `打开${item.name}`}
         className={`w-full cursor-pointer rounded-2xl border bg-surface p-3 text-left shadow-sm ${
           selected ? 'border-brand ring-2 ring-brand/20' : 'border-borderSoft'
         }`}
       >
-        <div className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-slate-50 lg:aspect-[4/3]">
+        <div data-container-preview className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-slate-50 lg:aspect-[4/3]">
           {item.images.length > 0 ? (
             <motion.img
               src={buildInventoryImageUrl(item.images[0], 'card')}
@@ -129,7 +130,7 @@ export default function ContainerCard({
               transition={{ duration: 0.35, ease: 'easeOut' }}
             />
           ) : (
-            <div className={`flex h-full w-full items-center justify-center ${bgCls} ${
+            <div data-container-artwork={categoryVisual?.kind} className={`flex h-full w-full items-center justify-center ${bgCls} ${
               categoryVisual?.kind === 'customImage' ? 'p-0' : categoryVisual?.kind === 'preset' ? 'p-5' : ''
             }`}>
               <motion.div
@@ -154,7 +155,7 @@ export default function ContainerCard({
             <EntityBadge kind={isLocationItem(item) ? 'location' : 'container'} compact />
           </div>
         </div>
-        <p className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
+        <p data-container-title className="font-semibold text-slate-800 text-sm leading-tight truncate mb-1">{item.name}</p>
         <div className="flex items-end justify-between gap-2">
           <div className="min-w-0 space-y-1 text-xs text-slate-600">
             {category && shouldShowCategory ? (
@@ -184,7 +185,7 @@ export default function ContainerCard({
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.15 }}
           aria-label={`打开${item.name}的更多操作`}
-          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white/95 text-slate-500 opacity-100 shadow-sm backdrop-blur-sm transition-[opacity,color,background-color] hover:bg-brandTint hover:text-brandStrong focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+          className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white/95 text-slate-500 opacity-100 transition-[opacity,color,background-color] hover:bg-brandTint hover:text-brandStrong focus:opacity-100 md:h-9 md:w-9 md:opacity-0 md:group-hover:opacity-100"
           title="更多操作"
         >
           <MoreHorizontal size={14} />

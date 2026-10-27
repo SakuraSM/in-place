@@ -3,7 +3,7 @@ import { Home, Search, Shapes, Camera, User, MapPinned, Clock3, type LucideIcon 
 import { motion } from 'framer-motion';
 import { getMobilePrimaryNavigationItems, type AppNavigationItemId } from '@inplace/app-core';
 import {
-  isNavigationPathActive,
+  isMobileNavigationPathActive,
   type NavigationMatchMode,
 } from './navigationMatch';
 
@@ -32,10 +32,10 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav aria-label="移动端主导航" className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl lg:hidden">
+    <nav aria-label="移动端主导航" className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface md:hidden">
       <div className="mx-auto flex max-w-lg items-center px-1">
         {tabs.map(({ to, icon: Icon, shortLabel, matchMode }) => {
-          const isActive = isNavigationPathActive({
+          const isActive = isMobileNavigationPathActive({
             pathname: location.pathname,
             targetPath: to,
             mode: matchMode,
@@ -46,10 +46,10 @@ export default function BottomNav() {
               to={to}
               end={to === '/' || matchMode === 'exact'}
               aria-current={isActive ? 'page' : undefined}
-              className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 py-2"
+              className="flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 py-2"
             >
               <motion.div
-                whileTap={{ scale: 0.85, rotate: isActive ? 0 : -5 }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                 className="relative flex flex-col items-center gap-0.5"
               >
@@ -63,11 +63,11 @@ export default function BottomNav() {
                   )}
                   <Icon
                     size={20}
-                    strokeWidth={isActive ? 2.5 : 2}
+                    strokeWidth={isActive ? 2 : 1.7}
                     className={`relative transition-colors duration-150 ${isActive ? 'text-brandStrong' : 'text-slate-500'}`}
                   />
                 </div>
-                <span className={`text-[11px] transition-colors duration-150 ${isActive ? 'font-bold text-brandStrong' : 'font-medium text-slate-600'}`}>
+                <span className={`text-[11px] transition-colors duration-150 ${isActive ? 'font-semibold text-brandStrong' : 'font-medium text-slate-600'}`}>
                   {shortLabel}
                 </span>
               </motion.div>

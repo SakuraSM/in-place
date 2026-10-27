@@ -46,9 +46,11 @@ interface HomePageOverlaysProps {
 }
 
 export default function HomePageOverlays(props: HomePageOverlaysProps) {
+  const isWelcomeVisible = useWelcomeVisibility(!props.currentParentId && !props.selectionMode);
+  const isFloatingCreateVisible = !props.selectionMode && !isWelcomeVisible;
   return (
     <>
-      {!props.selectionMode ? (
+      {isFloatingCreateVisible ? (
         <motion.button
           type="button"
           onClick={props.onCreate}
@@ -59,13 +61,14 @@ export default function HomePageOverlays(props: HomePageOverlaysProps) {
         >
           <Plus size={24} />
         </motion.button>
-      ) : (
+      ) : null}
+      {props.selectionMode ? (
         <HomeBulkActionBar
           selectedCount={props.selectedCount}
           onEdit={props.onBulkEditOpen}
           onDelete={props.onBulkDeleteOpen}
         />
-      )}
+      ) : null}
 
       {props.contextItem ? (
         <ContextMenu
@@ -133,3 +136,4 @@ export default function HomePageOverlays(props: HomePageOverlaysProps) {
     </>
   );
 }
+import { useWelcomeVisibility } from '../hooks/useWelcomeVisibility';

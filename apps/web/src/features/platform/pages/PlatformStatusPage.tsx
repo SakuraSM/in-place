@@ -41,25 +41,25 @@ export default function PlatformStatusPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen bg-canvas text-ink">
       <div className="mx-auto max-w-5xl px-6 py-16 md:px-10">
         <div className="mb-10 flex items-center gap-3">
-          <div className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-300">
+          <div className="rounded-2xl bg-brandTint p-3 text-brandStrong">
             <Globe size={28} />
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">
+            <p className="text-sm uppercase tracking-[0.24em] text-brandStrong">
               归位平台
             </p>
-            <h1 className="mt-1 text-3xl font-semibold text-white md:text-4xl">
+            <h1 className="mt-1 text-3xl font-semibold text-ink md:text-4xl">
               Docker Compose deployment is online
             </h1>
           </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-[1.3fr_0.9fr]">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <p className="text-sm leading-7 text-slate-300">
+          <section className="rounded-3xl border border-border bg-surface p-6 backdrop-blur">
+            <p className="text-sm leading-7 text-muted">
               The current web container is running in platform mode. This mode is used when the
               legacy Supabase-based frontend flow is not configured. It keeps the deployment
               verifiable while the application is being migrated to the API + PostgreSQL stack.
@@ -89,17 +89,18 @@ export default function PlatformStatusPage() {
               />
             </div>
 
-            <div className="mt-8 rounded-2xl border border-white/10 bg-slate-900/60 p-5">
+            <div className="mt-8 rounded-2xl border border-border bg-surfaceMuted p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-medium text-white">API health check</h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Request target: <code className="rounded bg-white/5 px-1.5 py-0.5 text-slate-200">{apiBaseUrl}/v1/health</code>
+                  <h2 className="text-lg font-medium text-ink">API health check</h2>
+                  <p className="mt-1 text-sm text-muted">
+                    Request target: <code className="rounded bg-surfaceMuted px-1.5 py-0.5 text-ink">{apiBaseUrl}/v1/health</code>
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => void loadHealth()}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink transition hover:bg-brandTint"
                 >
                   <RefreshCcw size={16} />
                   Retry
@@ -108,35 +109,35 @@ export default function PlatformStatusPage() {
 
               <div className="mt-4">
                 {state.kind === 'loading' && (
-                  <p className="text-sm text-amber-200">Checking API and database connectivity...</p>
+                  <p className="text-sm text-warning">Checking API and database connectivity...</p>
                 )}
 
                 {state.kind === 'success' && (
-                  <pre className="overflow-x-auto rounded-2xl bg-black/30 p-4 text-sm text-emerald-200">
+                  <pre className="overflow-x-auto rounded-2xl bg-surfaceMuted p-4 text-sm text-success">
 {JSON.stringify(state.data, null, 2)}
                   </pre>
                 )}
 
                 {state.kind === 'error' && (
-                  <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-100">
+                  <div className="rounded-2xl border border-danger/20 bg-dangerTint p-4 text-sm text-danger">
                     <div className="flex items-center gap-2 font-medium">
                       <AlertTriangle size={16} />
                       Health check failed
                     </div>
-                    <p className="mt-2 text-rose-100/90">{state.message}</p>
+                    <p className="mt-2 text-danger">{state.message}</p>
                   </div>
                 )}
               </div>
             </div>
           </section>
 
-          <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <h2 className="text-xl font-medium text-white">Next migration steps</h2>
-            <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-300">
+          <aside className="rounded-3xl border border-border bg-surface p-6 backdrop-blur">
+            <h2 className="text-xl font-medium text-ink">Next migration steps</h2>
+            <ul className="mt-4 space-y-3 text-sm leading-7 text-muted">
               <li>Move legacy frontend data access from Supabase SDK calls to API clients.</li>
               <li>Introduce inventory and category endpoints in the Fastify application.</li>
               <li>Wire frontend authentication and CRUD flows to the new API boundary.</li>
-              <li>Keep PostgreSQL schema changes versioned under <code className="rounded bg-white/5 px-1.5 py-0.5">packages/db</code>.</li>
+              <li>Keep PostgreSQL schema changes versioned under <code className="rounded bg-surfaceMuted px-1.5 py-0.5">packages/db</code>.</li>
             </ul>
           </aside>
         </div>
@@ -159,10 +160,10 @@ function StatusCard({
   tone: 'emerald' | 'amber' | 'rose' | 'slate';
 }) {
   const toneClass = {
-    emerald: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200',
-    amber: 'border-amber-400/20 bg-amber-400/10 text-amber-100',
-    rose: 'border-rose-400/20 bg-rose-400/10 text-rose-100',
-    slate: 'border-slate-400/20 bg-slate-400/10 text-slate-100',
+    emerald: 'border-success/20 bg-successTint text-success',
+    amber: 'border-warning/20 bg-warningTint text-warning',
+    rose: 'border-danger/20 bg-dangerTint text-danger',
+    slate: 'border-border bg-surfaceMuted text-muted',
   }[tone];
 
   return (

@@ -73,7 +73,7 @@ function MapMetricCard({
       <div className={`flex h-8 w-8 items-center justify-center rounded-xl md:h-10 md:w-10 md:rounded-2xl ${tone}`}>
         <Icon size={18} aria-hidden="true" />
       </div>
-      <p className="mt-2 truncate text-sm font-bold tabular-nums text-slate-950 sm:text-base md:mt-3 md:text-2xl">{value}</p>
+      <p className="mt-2 truncate text-sm font-semibold tabular-nums text-slate-950 sm:text-base md:mt-3 md:text-2xl">{value}</p>
       <p className="mt-1 text-[10px] font-medium leading-4 text-slate-600 md:text-xs">{label}</p>
     </>
   );

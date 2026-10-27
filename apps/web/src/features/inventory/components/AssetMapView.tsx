@@ -160,15 +160,15 @@ export default function AssetMapView({
   if (items.length === 0) {
     return (
       <section className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-        <MapPinned size={34} className="mx-auto text-slate-400" aria-hidden="true" />
-        <h2 className="mt-4 text-xl font-bold text-slate-950">地图上还没有资产</h2>
+        <MapPinned size={34} className="mx-auto text-muted" aria-hidden="true" />
+        <h2 className="mt-4 text-xl font-semibold text-slate-950">地图上还没有资产</h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
           先创建一个家庭位置，再标注它在真实地图上的坐标，位置下的物品就会显示在地图中。
         </p>
         <button
           type="button"
           onClick={onRequestCreateLocation}
-          className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
+          className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brandHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
         >
           <Plus size={16} aria-hidden="true" />
           新增位置
@@ -228,7 +228,7 @@ export default function AssetMapView({
         </div>
       ) : null}
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <AmapAssetCanvas
           config={mapConfigQuery.data}
           points={filteredPoints}
@@ -241,7 +241,7 @@ export default function AssetMapView({
           }}
           onCoordinateChosen={handleCoordinateChosen}
         />
-        <div className="xl:sticky xl:top-28">
+        <div className="xl:sticky xl:top-6">
           <GeoAssetMapSidebar
             selectedPoints={selectedPoints}
             unmappedLocations={projection.unmappedLocations}
@@ -261,7 +261,7 @@ export default function AssetMapView({
 
 function MapConfigurationLoading() {
   return (
-    <div className="flex min-h-[460px] items-center justify-center rounded-3xl border border-slate-200 bg-white" role="status">
+    <div className="flex min-h-map-mobile items-center justify-center rounded-3xl border border-border bg-surface md:min-h-map-desktop" role="status">
       <div className="text-center">
         <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-brand border-t-transparent" />
         <p className="mt-3 text-sm font-medium text-slate-600">正在读取地图配置...</p>
@@ -282,7 +282,7 @@ function MapConfigurationMessage({
   return (
     <section className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-14 text-center" role="status">
       <Icon size={32} className="mx-auto text-amber-700" aria-hidden="true" />
-      <h2 className="mt-4 text-xl font-bold text-amber-950">{title}</h2>
+      <h2 className="mt-4 text-xl font-semibold text-amber-950">{title}</h2>
       <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-amber-900">{description}</p>
     </section>
   );

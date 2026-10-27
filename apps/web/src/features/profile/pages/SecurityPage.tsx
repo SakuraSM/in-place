@@ -64,13 +64,13 @@ export default function SecurityPage() {
           animate="animate"
         >
         <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
-          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(248,113,113,0.12),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#fff7f7_100%)] px-5 py-5 md:px-6 md:py-6">
+          <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-rose-100 text-rose-500">
                 <Shield size={26} />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold text-slate-900">密码与会话</p>
+                <p className="text-lg font-semibold text-slate-900">密码与会话</p>
                 <p className="mt-2 text-sm text-slate-500">修改密码和处理当前登录会话。</p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function SecurityPage() {
                     setCurrentPassword(event.target.value);
                   }}
                   placeholder="输入当前密码"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="ui-field w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
               <div>
@@ -109,14 +109,14 @@ export default function SecurityPage() {
                     setNewPassword(event.target.value);
                   }}
                   placeholder="至少 8 位"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="ui-field w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => void handlePasswordSave()}
                   disabled={passwordSaving || !passwordValid}
-                  className="inline-flex h-10 items-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-10 items-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {passwordSaving ? '保存中...' : '修改密码'}
                 </button>

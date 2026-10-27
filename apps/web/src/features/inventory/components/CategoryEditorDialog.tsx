@@ -96,7 +96,7 @@ export default function CategoryEditorDialog({
           type="submit"
           form={formId}
           disabled={saving || !name.trim()}
-          className="w-full cursor-pointer rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full cursor-pointer rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? '保存中…' : '保存分类'}
         </button>
@@ -123,7 +123,7 @@ export default function CategoryEditorDialog({
               placeholder="分类名称…"
               required
               autoFocus
-              className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
+              className="ui-field w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
           </div>
         </div>

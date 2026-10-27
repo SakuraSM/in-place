@@ -76,7 +76,7 @@ export default function LocationTreeView({
   if (locationItems.length === 0) {
     return (
       <EmptyState
-        icon={<FolderTree size={28} className="text-slate-400" />}
+        icon={<FolderTree size={28} className="text-muted" />}
         title="还没有可展示的位置"
       />
     );
@@ -108,7 +108,7 @@ export default function LocationTreeView({
                   <span className="inline-flex self-start rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
                     当前位置
                   </span>
-                  <h2 className="mt-3 break-words text-2xl font-bold text-slate-950">{selectedLocation.name}</h2>
+                  <h2 className="mt-3 break-words text-2xl font-semibold text-slate-950">{selectedLocation.name}</h2>
                   {selectedLocation.description ? (
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
                       {selectedLocation.description}
@@ -120,7 +120,7 @@ export default function LocationTreeView({
                   <button
                     type="button"
                     onClick={() => navigate(`/overview?locationId=${selectedLocation.id}`)}
-                    className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-brandStrong px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
+                    className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-brandStrong px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brandHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
                   >
                     查看位置内容
                     <ExternalLink size={14} />
@@ -140,7 +140,7 @@ export default function LocationTreeView({
                 <nav className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-slate-600" aria-label="位置路径">
                   {selectedLineage.map((item, index) => (
                     <div key={item.id} className="flex items-center gap-1.5">
-                      {index > 0 ? <ChevronRight size={12} className="text-slate-400" /> : null}
+                      {index > 0 ? <ChevronRight size={12} className="text-muted" /> : null}
                       <span className={index === selectedLineage.length - 1 ? 'font-medium text-slate-800' : ''}>
                         {item.name}
                       </span>
@@ -156,7 +156,7 @@ export default function LocationTreeView({
                   <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
                     <Icon size={18} />
                   </div>
-                  <p className="text-2xl font-bold text-slate-950">{selectedStats?.[key] ?? 0}</p>
+                  <p className="text-2xl font-semibold text-slate-950">{selectedStats?.[key] ?? 0}</p>
                   <p className="mt-1 text-xs text-slate-600">{label}</p>
                 </div>
               ))}
@@ -203,7 +203,7 @@ export default function LocationTreeView({
                           {child.category ? ` · ${child.category}` : ''}
                         </p>
                       </div>
-                      <ChevronRight size={16} className="text-slate-400" />
+                      <ChevronRight size={16} className="text-muted" />
                     </button>
                   ))}
                 </div>

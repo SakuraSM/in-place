@@ -3,6 +3,37 @@
 @tailwind utilities;
 
 @layer components {
+  .home-stat-strip .stat-icon { display: none; }
+  .home-stat-strip button { border-radius: 0; flex-direction: column; align-items: flex-start; }
+  .home-stat-strip .stat-label { order: 0; }
+  .home-stat-strip .stat-value { order: 1; }
+  .home-stat-strip .stat-caption { order: 2; }
+  .home-stat-strip .stat-value { @apply mt-2 text-[26px] leading-tight md:text-[32px]; }
+  .home-stat-strip .stat-label { @apply m-0 text-[10px] md:text-xs; }
+  .ui-panel {
+    @apply min-w-0 rounded-3xl border border-border bg-surface p-[18px] md:p-6;
+  }
+
+  .ui-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surfaceMuted disabled:bg-disabledSurface disabled:text-disabledText;
+  }
+
+  .ui-button-primary {
+    @apply ui-button border-brandStrong bg-brandStrong text-white hover:bg-brandHover;
+  }
+
+  .ui-icon-button {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-brandStrong transition-colors hover:bg-brandTint;
+  }
+
+  .ui-list-row {
+    @apply flex min-h-[78px] items-center gap-3 border-b border-borderSoft py-3 last:border-b-0;
+  }
+
+  .ui-field {
+    @apply min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-ink;
+  }
+
   .geo-asset-marker {
     display: flex;
     min-width: 3.5rem;
@@ -91,15 +122,15 @@
   .geo-asset-marker:hover .geo-asset-marker__icon,
   .geo-asset-marker:focus-visible .geo-asset-marker__icon,
   .geo-asset-marker--selected .geo-asset-marker__icon {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgb(124 58 237 / 18%);
+    border-color: #22735b;
+    box-shadow: 0 0 0 3px rgb(34 115 91 / 18%);
     transform: rotate(0) scale(1.08);
   }
 
   .geo-asset-marker:hover .geo-asset-marker__count,
   .geo-asset-marker:focus-visible .geo-asset-marker__count,
   .geo-asset-marker--selected .geo-asset-marker__count {
-    background: #7c3aed;
+    background: #22735b;
   }
 
   .geo-asset-marker:focus-visible {
@@ -126,7 +157,7 @@
 
   .geo-asset-cluster:hover,
   .geo-asset-cluster:focus-visible {
-    background: rgb(109 40 217 / 94%);
+    background: rgb(25 89 65 / 94%);
     outline: 3px solid rgb(13 148 136 / 45%);
     outline-offset: 3px;
     transform: scale(1.08);
@@ -148,7 +179,7 @@
 
 @layer base {
   :root {
-    --mobile-nav-height: 3.5rem;
+    --mobile-nav-height: 4rem;
     --mobile-nav-offset: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -165,12 +196,11 @@
 
   body {
     min-width: 320px;
-    background: #f7fbf8;
-    color: #172033;
+    @apply bg-canvas text-ink;
   }
 
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-    outline: 3px solid rgba(13, 148, 136, 0.5);
+    outline: 2px solid #22735b;
     outline-offset: 3px;
   }
 
@@ -210,8 +240,8 @@
   }
 
   .app-page-gutter {
-    padding-left: calc(1rem + env(safe-area-inset-left, 0px));
-    padding-right: calc(1rem + env(safe-area-inset-right, 0px));
+    padding-left: calc(20px + env(safe-area-inset-left, 0px));
+    padding-right: calc(20px + env(safe-area-inset-right, 0px));
   }
 
   .app-page-header {
@@ -241,15 +271,33 @@
 
 @media (min-width: 768px) {
   .app-page-gutter {
-    padding-left: calc(1.5rem + env(safe-area-inset-left, 0px));
-    padding-right: calc(1.5rem + env(safe-area-inset-right, 0px));
+    padding-left: calc(40px + env(safe-area-inset-left, 0px));
+    padding-right: calc(40px + env(safe-area-inset-right, 0px));
   }
 }
 
+@media (min-width: 768px) and (max-width: 1199px) {
+  .app-sidebar .sidebar-label { display: none; }
+  .app-sidebar .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
+}
+
+@media (max-width: 767px) {
+  .home-page-heading [data-page-description] { display: none; }
+  .home-page-heading h1 { font-size: 24px; }
+  .home-inventory-area [data-inventory-scope='location'] [data-inventory-grid] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .home-inventory-area [data-inventory-scope='location'] [data-container-preview] { height: 86px; aspect-ratio: auto; margin-bottom: 10px; }
+  .home-inventory-area [data-inventory-scope='location'] [data-container-artwork='preset'] { padding: 4px; }
+}
+
+.app-sidebar[data-sidebar-collapsed='true'] .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
+
 @media (min-width: 1280px) {
+  .home-inventory-area [data-inventory-grid] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .app-page-gutter {
-    padding-left: calc(2rem + env(safe-area-inset-left, 0px));
-    padding-right: calc(2rem + env(safe-area-inset-right, 0px));
+    padding-left: calc(40px + env(safe-area-inset-left, 0px));
+    padding-right: calc(40px + env(safe-area-inset-right, 0px));
   }
 }
 

@@ -1,6 +1,9 @@
+import { ActionButtonRow } from '@/shared/ui/ActionButtonRow';
+import { FormField } from '@/shared/ui/FormField';
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { PageHeader } from '@/shared/ui/PageHeader';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -16,6 +19,12 @@ export default function SecurityScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [showLogout, setShowLogout] = useState(false);
 
+  const handleLogout = async (): Promise<void> => {
+    await signOut();
+    setShowLogout(false);
+    router.replace('/(auth)/login');
+  };
+
   const passwordMutation = useMutation({
     mutationFn: () => fetchPasswordChange(currentPassword, newPassword),
     onSuccess: async (token) => {
@@ -27,35 +36,31 @@ export default function SecurityScreen() {
   });
 
   return (
-    <Screen scroll contentInsetMode="form" chrome="muted">
+    <Screen scroll contentInsetMode="form" chrome="muted" footer={<ActionButtonRow actions={[{ key: 'save', label: '修改密码', variant: 'primary', onPress: () => void passwordMutation.mutateAsync(), loading: passwordMutation.isPending }]} />}>
       <PageHeader title="账号安全" subtitle="密码与登录会话" />
 
       <SectionCard title="修改密码" subtitle="至少 8 位" delay={60} density="compact">
-        <TextInput
+        <FormField label="当前密码"
           value={currentPassword}
           onChangeText={(value) => {
             setMessage(null);
             setCurrentPassword(value);
           }}
           placeholder="当前密码"
-          style={inputStyle}
           secureTextEntry
         />
-        <TextInput
+        <FormField label="新密码"
           value={newPassword}
           onChangeText={(value) => {
             setMessage(null);
             setNewPassword(value);
           }}
           placeholder="新密码（至少 8 位）"
-          style={inputStyle}
           secureTextEntry
         />
         {message ? <Text style={successTextStyle}>{message}</Text> : null}
         {passwordMutation.isError ? <Text style={errorTextStyle}>{passwordMutation.error instanceof Error ? passwordMutation.error.message : '密码修改失败'}</Text> : null}
-        <Pressable onPress={() => void passwordMutation.mutateAsync()} style={primaryButtonStyle}>
-          {passwordMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>修改密码</Text>}
-        </Pressable>
+
       </SectionCard>
 
       <SectionCard title="登录会话" delay={120} density="compact" tone="muted">
@@ -71,45 +76,25 @@ export default function SecurityScreen() {
         confirmLabel="退出"
         danger
         onCancel={() => setShowLogout(false)}
-        onConfirm={() => void signOut()}
+        onConfirm={() => void handleLogout()}
       />
     </Screen>
   );
 }
 
-const inputStyle = {
-  backgroundColor: palette.surfaceMuted,
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: palette.border,
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  fontSize: 15,
-  color: palette.text,
-};
 
-const primaryButtonStyle = {
-  alignItems: 'center' as const,
-  backgroundColor: palette.brand,
-  borderRadius: 14,
-  paddingVertical: 13,
-};
 
-const primaryButtonTextStyle = {
-  color: '#ffffff',
-  fontWeight: '600' as const,
-};
 
 const dangerButtonStyle = {
   alignItems: 'center' as const,
   backgroundColor: palette.danger,
-  borderRadius: 14,
+  borderRadius: 12,
   paddingVertical: 13,
 };
 
 const dangerButtonTextStyle = {
   color: '#ffffff',
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const successTextStyle = {

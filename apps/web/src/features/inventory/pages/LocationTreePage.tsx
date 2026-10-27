@@ -106,7 +106,7 @@ export default function LocationTreePage() {
             {canEditInventory ? <button
               type="button"
               onClick={() => handleOpenCreateLocation(currentView === 'tree' ? selectedLocationId : null)}
-              className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
+              className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-medium text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brandHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong"
             >
               <Plus size={16} aria-hidden="true" />
               新增位置
@@ -181,7 +181,7 @@ function ViewTab({
       role="tab"
       aria-selected={isActive}
       onClick={onSelect}
-      className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong ${
+      className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong ${
         isActive
           ? 'bg-brandTint text-brandStrong'
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'

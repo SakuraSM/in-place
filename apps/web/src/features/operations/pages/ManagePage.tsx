@@ -90,7 +90,7 @@ function ManageSection({ title, description, links }: ManageSectionProps) {
   return (
     <section aria-labelledby={`manage-${title}`} className="rounded-3xl border border-borderSoft bg-surface p-4 shadow-sm md:p-5">
       <div className="mb-3">
-        <h2 id={`manage-${title}`} className="text-base font-bold text-slate-950">{title}</h2>
+        <h2 id={`manage-${title}`} className="text-base font-semibold text-slate-950">{title}</h2>
         <p className="mt-1 text-sm text-slate-600">{description}</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -105,14 +105,14 @@ function ManageSection({ title, description, links }: ManageSectionProps) {
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
-                <span className="truncate text-sm font-bold text-slate-950">{linkTitle}</span>
+                <span className="truncate text-sm font-semibold text-slate-950">{linkTitle}</span>
                 {metric !== undefined ? (
-                  <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-bold tabular-nums text-slate-500">{metric}</span>
+                  <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold tabular-nums text-slate-500">{metric}</span>
                 ) : null}
               </span>
               <span className="mt-1 block text-xs leading-5 text-slate-600">{linkDescription}</span>
             </span>
-            <ChevronRight size={17} className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            <ChevronRight size={17} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         ))}
       </div>

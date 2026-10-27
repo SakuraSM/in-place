@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { Entrance } from './Entrance';
-import { palette, shadows } from './theme';
+import { palette } from './theme';
 
 interface SectionCardProps {
   title: string;
@@ -22,27 +22,24 @@ export function SectionCard({
   tone = 'default',
   headerMode = 'default',
 }: SectionCardProps) {
-  const padding = density === 'dense' ? 10 : density === 'compact' ? 14 : 16;
-  const gap = density === 'dense' ? 8 : density === 'compact' ? 10 : 12;
-  const titleSize = density === 'dense' || headerMode === 'compact'
-    ? 16
-    : density === 'compact' ? 18 : 20;
+  const padding = density === 'dense' ? 14 : 18;
+  const gap = density === 'dense' ? 12 : 16;
+  const titleSize = headerMode === 'compact' ? 16 : 17;
 
   return (
     <Entrance delay={delay} variant="card">
       <View
         style={{
           backgroundColor: tone === 'muted' ? palette.surfaceMuted : palette.surface,
-          borderRadius: density === 'dense' ? 16 : 20,
+          borderRadius: 16,
           padding,
           gap,
           borderWidth: 1,
-          borderColor: palette.borderSoft,
-          ...shadows.sm,
+          borderColor: palette.border,
         }}
       >
         <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
-          <Text style={{ fontSize: titleSize, fontWeight: '800', color: palette.text }}>
+          <Text style={{ fontSize: titleSize, fontWeight: '600', color: palette.text }}>
             {title}
           </Text>
           {subtitle ? (

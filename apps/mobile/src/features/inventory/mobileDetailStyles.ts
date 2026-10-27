@@ -1,7 +1,7 @@
 import { palette, shadows } from '@/shared/ui/theme';
 
 export const bodyStyle = {
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 22,
   color: palette.textMuted,
 };
@@ -15,7 +15,7 @@ export const rowStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 10,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
@@ -24,13 +24,13 @@ export const rowStyle = {
 
 export const listTitleStyle = {
   fontSize: 16,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
 export const secondaryButtonStyle = {
-  minHeight: 40,
-  borderRadius: 13,
+  minHeight: 44,
+  borderRadius: 12,
   backgroundColor: palette.surface,
   borderWidth: 1,
   borderColor: palette.border,
@@ -49,8 +49,8 @@ export const secondaryButtonTextStyle = {
 
 export const primaryButtonStyle = {
   flex: 1,
-  minHeight: 40,
-  borderRadius: 13,
+  minHeight: 44,
+  borderRadius: 12,
   backgroundColor: palette.brand,
   paddingHorizontal: 16,
   flexDirection: 'row' as const,
@@ -68,15 +68,15 @@ export const primaryButtonTextStyle = {
 
 export const dangerButtonStyle = {
   alignItems: 'center' as const,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.danger,
   paddingVertical: 12,
 };
 
 export const dangerButtonTextStyle = {
   color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 export const errorTextStyle = {
@@ -102,7 +102,7 @@ export const heroImageCardStyle = {
 export const heroImageStyle = {
   width: '100%' as const,
   aspectRatio: 4 / 3,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.surfaceMuted,
 };
 
@@ -114,15 +114,15 @@ export const titleCardHeaderStyle = {
 
 export const detailKickerStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brand,
   marginBottom: 4,
 };
 
 export const detailTitleStyle = {
-  fontSize: 21,
-  lineHeight: 27,
-  fontWeight: '900' as const,
+  fontSize: 26,
+  lineHeight: 34,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -133,7 +133,7 @@ export const categoryPillStyle = {
   paddingHorizontal: 10,
   paddingVertical: 5,
   fontSize: 12,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -157,7 +157,7 @@ export const metricLabelStyle = {
 
 export const metricValueStyle = {
   fontSize: 17,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -179,7 +179,7 @@ export const infoIconStyle = {
 export const infoValueStyle = {
   marginTop: 2,
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -215,7 +215,7 @@ export const tagPillStyle = {
   paddingHorizontal: 11,
   paddingVertical: 6,
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brandStrong,
 };
 
@@ -225,6 +225,6 @@ export const typePillStyle = {
   paddingHorizontal: 9,
   paddingVertical: 5,
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brand,
 };

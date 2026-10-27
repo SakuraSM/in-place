@@ -185,7 +185,7 @@ const sheetHeaderStyle = {
 
 const sheetTitleStyle = {
   fontSize: 18,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -204,7 +204,7 @@ const closeButtonStyle = {
 
 const closeButtonTextStyle = {
   fontSize: 13,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -271,7 +271,7 @@ const quickActionsStyle = {
 
 const secondaryButtonStyle = {
   flex: 1,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.canvasStrong,
   alignItems: 'center' as const,
   paddingVertical: 11,
@@ -279,7 +279,7 @@ const secondaryButtonStyle = {
 
 const secondaryButtonTextStyle = {
   fontSize: 13,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -291,8 +291,8 @@ const primaryButtonStyle = {
 };
 
 const primaryButtonTextStyle = {
-  fontSize: 15,
-  fontWeight: '800' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
   color: '#ffffff',
 };
 

@@ -169,7 +169,7 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
         <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
           <div>
             <h2 className="font-semibold text-slate-900 text-lg">手动裁图</h2>
-            <p className="text-xs text-slate-400 mt-1">拖拽创建选区，也可以拖动已有框或拉动四角缩放</p>
+            <p className="text-xs text-muted mt-1">拖拽创建选区，也可以拖动已有框或拉动四角缩放</p>
           </div>
           <motion.button
             onClick={onClose}
@@ -237,7 +237,7 @@ export default function CropImageSheet({ imageUrl, initialCrop, onConfirm, onClo
               type="button"
               disabled={!crop}
               onClick={() => crop && onConfirm(crop)}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong py-3 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brandStrong py-3 text-sm font-medium text-white transition-colors hover:bg-brandHover disabled:opacity-50"
             >
               <Crop size={15} />
               使用此区域

@@ -208,11 +208,11 @@ function LifecycleList({ empty, actionLabel, onAction, children }: { empty: stri
 }
 
 const stockPanelStyle = { minHeight: 78, borderRadius: 16, backgroundColor: palette.surfaceMuted, padding: 14, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'space-between' as const, gap: 12 };
-const stockValueStyle = { fontSize: 28, fontWeight: '900' as const, color: palette.text };
+const stockValueStyle = { fontSize: 28, fontWeight: '600' as const, color: palette.text };
 const metaTextStyle = { fontSize: 13, lineHeight: 18, color: palette.textSoft };
 const quantityActionsStyle = { flexDirection: 'row' as const, gap: 8 };
-const quantityButtonStyle = { width: 42, height: 42, borderRadius: 14, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
-const addButtonStyle = { minHeight: 48, borderRadius: 14, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
-const addButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: palette.brandStrong };
+const quantityButtonStyle = { width: 42, height: 42, borderRadius: 12, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
+const addButtonStyle = { minHeight: 48, borderRadius: 12, backgroundColor: palette.brandTint, alignItems: 'center' as const, justifyContent: 'center' as const };
+const addButtonTextStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.brandStrong };
 const primaryButtonStyle = { minHeight: 48, borderRadius: 15, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };
-const primaryButtonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: '#ffffff' };
+const primaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: '#ffffff' };

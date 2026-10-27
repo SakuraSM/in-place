@@ -281,12 +281,12 @@ export default function AmapAssetCanvas({
 
   return (
     <section
-      className="relative min-h-[520px] overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-inner"
+      className="relative min-h-map-mobile overflow-hidden rounded-3xl border border-border bg-surfaceMuted md:min-h-map-desktop"
       aria-label="真实地理资产地图"
       tabIndex={0}
       onKeyDown={handleKeyboardNavigation}
     >
-      <div ref={containerRef} className="h-[620px] min-h-[520px] w-full" />
+      <div ref={containerRef} className="h-map-mobile w-full md:h-map-desktop" />
       <AmapAssetCanvasOverlays
         loadStatus={loadStatus}
         assignmentTargetName={assignmentTargetName}

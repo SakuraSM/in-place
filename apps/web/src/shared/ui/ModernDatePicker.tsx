@@ -169,10 +169,10 @@ export default function ModernDatePicker({
           open ? 'border-sky-300 bg-white shadow-sm' : 'text-slate-900'
         }`}
       >
-        <span className={displayValue ? 'text-slate-900' : 'text-slate-400'}>
+        <span className={displayValue ? 'text-slate-900' : 'text-muted'}>
           {displayValue || placeholder}
         </span>
-        <CalendarDays size={16} className={open ? 'text-sky-500' : 'text-slate-400'} />
+        <CalendarDays size={16} className={open ? 'text-sky-500' : 'text-muted'} />
       </button>
 
       {open && (
@@ -210,7 +210,7 @@ export default function ModernDatePicker({
 
             <div className="mb-2 grid grid-cols-7 gap-1">
               {WEEKDAY_LABELS.map((label) => (
-                <div key={label} className="py-1 text-center text-[11px] font-medium text-slate-400">
+                <div key={label} className="py-1 text-center text-[11px] font-medium text-muted">
                   {label}
                 </div>
               ))}

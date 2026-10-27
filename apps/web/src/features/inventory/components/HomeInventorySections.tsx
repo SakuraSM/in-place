@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Box } from 'lucide-react';
 import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { Category, Item } from '../../../legacy/database.types';
@@ -21,6 +21,7 @@ interface HomeInventorySectionsProps {
   onOpenItem: (item: Item) => void;
   onOpenContext: (item: Item) => void;
   onToggleSelection: (itemId: string) => void;
+  headerActions?: ReactNode;
 }
 
 interface InventoryGridProps {
@@ -50,7 +51,8 @@ function InventoryGrid({
 }: InventoryGridProps) {
   return (
     <div
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-8"
+      data-inventory-grid
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 xl:grid-cols-4"
     >
       {items.map((item) => {
         const category = categories.find(
@@ -104,6 +106,7 @@ export default function HomeInventorySections({
   onOpenItem,
   onOpenContext,
   onToggleSelection,
+  headerActions,
 }: HomeInventorySectionsProps) {
   const groupedItems = useMemo(() => {
     if (viewMode === 'type') {
@@ -168,10 +171,10 @@ export default function HomeInventorySections({
       key={viewMode}
         className="flex flex-col space-y-7"
       >
-        {groupedItems.map((group) => {
+        {groupedItems.map((group, groupIndex) => {
           const colorClasses = group.icon ? getColorClasses(group.icon.color) : null;
           return (
-            <section key={group.key} aria-labelledby={`inventory-group-${group.key}`}>
+            <section key={group.key} data-inventory-scope={group.kind} aria-labelledby={`inventory-group-${group.key}`}>
               <div className="mb-3 flex items-center gap-2">
                 <EntityBadge kind={group.kind} compact />
                 {group.icon && colorClasses ? (
@@ -188,10 +191,11 @@ export default function HomeInventorySections({
                 ) : null}
                 <h2
                   id={`inventory-group-${group.key}`}
-                  className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500"
+                  className="min-w-0 truncate text-xs font-semibold uppercase tracking-[0.12em] text-slate-500"
                 >
                   {group.label} ({group.items.length})
                 </h2>
+                {groupIndex === 0 ? headerActions : null}
               </div>
               <InventoryGrid
                 items={group.items}

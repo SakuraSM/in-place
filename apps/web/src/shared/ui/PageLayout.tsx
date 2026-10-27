@@ -4,14 +4,14 @@ export type PageWidth = 'wide' | 'standard' | 'narrow';
 export type PageTitleSize = 'page' | 'detail';
 
 const PAGE_TITLE_CLASSES: Record<PageTitleSize, string> = {
-  page: 'text-xl md:text-2xl',
-  detail: 'text-2xl md:text-3xl',
+  page: 'text-[26px] leading-[1.3] md:text-[30px]',
+  detail: 'text-[26px] leading-[1.3] md:text-[30px]',
 };
 
 const PAGE_WIDTH_CLASSES: Record<PageWidth, string> = {
-  wide: 'mx-auto max-w-[1600px]',
-  standard: 'mx-auto max-w-6xl',
-  narrow: 'mx-auto max-w-3xl',
+  wide: 'mx-auto max-w-[1200px]',
+  standard: 'mx-auto max-w-[1200px]',
+  narrow: 'mx-auto max-w-[840px]',
 };
 
 interface PageShellProps {
@@ -95,14 +95,14 @@ export function PageHeader({
   return (
     <header
       className={joinClassNames(
-        'app-page-header sticky top-0 z-30 border-b border-borderSoft bg-surface/90 backdrop-blur-xl',
+        'app-page-header bg-canvas',
         className,
       )}
     >
       <PageContainer
         width={width}
         className={joinClassNames(
-          'flex min-h-[76px] flex-col justify-center gap-3 py-3 md:min-h-[88px]',
+          'flex flex-col justify-center gap-3 pb-2 pt-6 md:pb-3 md:pt-8',
           contentClassName,
         )}
       >
@@ -112,14 +112,14 @@ export function PageHeader({
               <div className="min-w-0">
                 {backLink ? <div className="mb-2">{backLink}</div> : null}
                 {eyebrow ? (
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-brandStrong">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brandStrong">
                     {eyebrow}
                   </p>
                 ) : null}
                 {title ? (
                   <h1
                     className={joinClassNames(
-                      'font-bold leading-tight text-slate-950',
+                      'font-semibold tracking-[-0.025em] text-ink',
                       PAGE_TITLE_CLASSES[titleSize],
                       eyebrow ? 'mt-1' : undefined,
                     )}
@@ -128,7 +128,7 @@ export function PageHeader({
                   </h1>
                 ) : null}
                 {description ? (
-                  <p className="mt-1 max-w-[65ch] text-sm leading-6 text-slate-600">
+                  <p data-page-description className="mt-2 max-w-[65ch] text-[13px] leading-6 text-muted">
                     {description}
                   </p>
                 ) : null}
@@ -155,7 +155,7 @@ export function PageContent({
     <PageContainer
       width={width}
       className={joinClassNames(
-        'flex-1 py-5 md:py-6',
+        'min-w-0 flex-1 py-5 md:py-6',
         className,
       )}
     >

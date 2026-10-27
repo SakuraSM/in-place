@@ -1,4 +1,4 @@
-export const APP_PAGE_HEADER = 'app-page-header sticky top-0 z-30 border-b border-borderSoft bg-surface/90 backdrop-blur-xl';
+export const APP_PAGE_HEADER = 'app-page-header bg-canvas';
 
 export const APP_PAGE_HEADER_ROW = 'app-page-gutter flex min-h-[76px] items-center py-3 md:min-h-[88px]';
 

@@ -66,7 +66,7 @@ export function BrandHeader({
             style={{
               fontSize: titleSize,
               lineHeight: titleLineHeight,
-              fontWeight: '800',
+              fontWeight: '600',
               color: palette.text,
             }}
           >

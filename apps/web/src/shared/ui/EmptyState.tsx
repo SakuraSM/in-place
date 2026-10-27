@@ -19,7 +19,7 @@ export default function EmptyState({ icon, title, description, iconMotion }: Emp
       </motion.div>
       <p className="mb-1 font-medium text-slate-500">{title}</p>
       {description ? (
-        <p className="text-sm text-slate-400">{description}</p>
+        <p className="text-sm text-muted">{description}</p>
       ) : null}
     </div>
   );

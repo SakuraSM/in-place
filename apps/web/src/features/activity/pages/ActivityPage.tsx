@@ -87,7 +87,7 @@ export default function ActivityPage() {
               <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
                 <Clock3 size={18} />
               </div>
-              <p className="text-2xl font-bold text-slate-900">{value}</p>
+              <p className="text-2xl font-semibold text-slate-900">{value}</p>
               <p className="mt-1 text-xs text-slate-600">{label}</p>
             </div>
           ))}

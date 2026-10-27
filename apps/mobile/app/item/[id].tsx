@@ -156,6 +156,8 @@ export default function ItemDetailScreen() {
   const childItems = children.filter((child) => child.type === 'item');
   const ancestors = (ancestorsQuery.data ?? []).filter((ancestor) => ancestor.id !== item.id);
   const itemTypeLabel = item.type === 'container' ? getContainerTypeLabel(item) : ITEM_TYPE_PRESENTATION.item.label;
+  const categoryScope = item.type === 'item' ? 'item' : isLocationItem(item) ? 'location' : 'container';
+  const itemCategory = categoriesQuery.data?.find(category => category.name === item.category && category.scope === categoryScope);
   const activeImageUri = resolveInventoryImageUri(item.images[0]);
   const canBulkOperateChildren = item.type === 'container' && children.length > 1;
   const locationPath = formatDetailLocationPath(ancestors);
@@ -187,7 +189,7 @@ export default function ItemDetailScreen() {
         <View style={heroImageCardStyle}>
           <InventoryImage url={item.images[0]} resizeMode="cover" style={heroImageStyle} />
         </View>
-      ) : null}
+      ) : <InventoryArtwork item={item} category={itemCategory} />}
 
       <SectionCard title="概览" delay={80} density="dense" headerMode="compact">
         <View style={overviewHeaderStyle}>
@@ -564,14 +566,14 @@ const statSummaryTileStyle = {
 const statSummaryValueStyle = {
   fontSize: 22,
   lineHeight: 26,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: palette.brandStrong,
 };
 
 const statSummaryLabelStyle = {
   fontSize: 12,
   lineHeight: 16,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
 };
 
@@ -604,7 +606,7 @@ const overviewMetaCompactRowStyle = {
 
 const overviewMetaLabelStyle = {
   fontSize: 12,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
 };
 
@@ -612,7 +614,7 @@ const overviewMetaValueStyle = {
   flex: 1,
   minWidth: 0,
   fontSize: 13,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -650,3 +652,4 @@ const thumbImageStyle = {
   borderRadius: 16,
   backgroundColor: palette.surfaceMuted,
 };
+import { InventoryArtwork } from '@/features/inventory/InventoryArtwork';

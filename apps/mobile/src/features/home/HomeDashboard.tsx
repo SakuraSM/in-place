@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HomeWelcome } from './HomeWelcome';
 import { ContentTabs } from '@/shared/ui/ContentTabs';
 import { Link, router, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,13 +38,13 @@ interface HomeDashboardProps {
   onToggleSelectionMode: () => void;
   onChangeViewMode: (mode: ViewMode) => void;
   onToggleSelected: (itemId: string) => void;
+  onCreate?: () => void;
 }
 
 const RECENT_SECTION_LIMIT = 3;
 const HOME_INVENTORY_PREVIEW_LIMIT = 4;
 
 const QUICK_ACTIONS = [
-  { label: '新增', href: '/item/form', icon: 'add-circle-outline' },
   { label: '扫标签归位', href: '/scan-code', icon: 'qr-code-outline' },
   { label: '盘点', href: '/operations/stocktakes', icon: 'clipboard-outline' },
   { label: '提醒', href: '/operations/reminders', icon: 'notifications-outline' },
@@ -72,6 +73,7 @@ export function HomeDashboard({
   onToggleSelectionMode,
   onChangeViewMode,
   onToggleSelected,
+  onCreate,
 }: HomeDashboardProps) {
   const [recentTab, setRecentTab] = useState<'items' | 'activity'>('items');
   const quickActions = canEditInventory ? QUICK_ACTIONS : QUICK_ACTIONS.filter((action) => action.href === '/scan-code' || action.href === '/operations/reminders');
@@ -83,14 +85,7 @@ export function HomeDashboard({
     categories,
   });
 
-  return (
-    <>
-      <Entrance variant="page">
-        <BrandHeader
-          title="归位"
-          variant="page"
-          align="center"
-          accessory={(
+  const headerControls = (
             <View style={headerActionsStyle}>
               {canEditInventory ? (
                 <Pressable onPress={onToggleSelectionMode} style={[headerActionStyle, selectionMode ? headerActionActiveStyle : null]}>
@@ -105,14 +100,42 @@ export function HomeDashboard({
                 <ModeButton mode="category" viewMode={viewMode} onChangeViewMode={onChangeViewMode} />
               </View>
             </View>
-          )}
+          );
+
+  return (
+    <>
+      <Entrance variant="page">
+        <BrandHeader
+          title="归位"
+          variant="page"
+          align="center"
+          accessory={<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Pressable accessibilityRole="button" accessibilityLabel="搜索全部物品" onPress={() => router.navigate(overviewHref('all', 'all', true))} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="search-outline" size={22} color={palette.brandStrong} /></Pressable><HouseholdButton compact /></View>}
         />
       </Entrance>
-      <HouseholdButton />
-      {!selectionMode ? <Pressable accessibilityRole="button" accessibilityLabel="搜索全部物品" onPress={() => router.navigate(overviewHref('all', 'all', true))} style={{ minHeight: 48, borderRadius: 16, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-        <Ionicons name="search-outline" size={20} color={palette.textSoft} /><Text style={{ color: palette.textSoft, fontSize: 14 }}>物品放哪了？搜索名称、描述或标签</Text>
-      </Pressable> : null}
+      {!selectionMode ? <HomeWelcome canEdit={canEditInventory} onCreate={onCreate} /> : null}
+      {selectionMode ? (
+        <View style={selectionNoticeStyle}>
+          <Text style={selectionNoticeTitleStyle}>已选择 {selectedIds.length} 项</Text>
+          <Text style={selectionNoticeTextStyle}>点击卡片选择</Text>
+        </View>
+      ) : null}
 
+      {!selectionMode ? (
+        <>
+          <View>
+            <MetricGrid
+              columns={4}
+              appearance="strip"
+              dense
+              items={STAT_ITEMS.map((item) => ({
+                key: item.key,
+                label: item.label,
+                value: statsLoading ? '—' : stats?.[item.key] ?? 0,
+                iconName: item.icon,
+                onPress: () => router.navigate(overviewHref(item.key === 'items' ? 'item' : item.key === 'containers' ? 'container' : 'all', item.key === 'borrowed' ? 'borrowed' : 'all')),
+              }))}
+            />
+          </View>
       {!selectionMode ? (
         <View accessibilityLabel="快捷操作" style={quickActionsStyle}>
           {quickActions.map((action) => (
@@ -128,43 +151,12 @@ export function HomeDashboard({
         </View>
       ) : null}
 
-      {selectionMode ? (
-        <View style={selectionNoticeStyle}>
-          <Text style={selectionNoticeTitleStyle}>已选择 {selectedIds.length} 项</Text>
-          <Text style={selectionNoticeTextStyle}>点击卡片选择</Text>
-        </View>
-      ) : null}
 
-      {!selectionMode ? (
-        <>
-          <DashboardSection delay={70}>
-            <MetricGrid
-              columns={2}
-              dense
-              items={STAT_ITEMS.map((item) => ({
-                key: item.key,
-                label: item.label,
-                value: statsLoading ? '—' : stats?.[item.key] ?? 0,
-                iconName: item.icon,
-                onPress: () => router.navigate(overviewHref(item.key === 'items' ? 'item' : item.key === 'containers' ? 'container' : 'all', item.key === 'borrowed' ? 'borrowed' : 'all')),
-              }))}
-            />
-          </DashboardSection>
 
-          <DashboardSection delay={110}>
-            <ContentTabs accessibilityLabel="最近记录" value={recentTab} onChange={setRecentTab} tabs={[{ value: 'items', label: '最近添加' }, { value: 'activity', label: '最近操作' }]} />
-            {recentTab === 'items' ? (
-              recentItems.length ? recentItems.slice(0, RECENT_SECTION_LIMIT).map((item) => <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] ?? ''} />) : <EmptyBlock text="暂无新增" />
-            ) : (
-              <>
-                <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/activity')} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.brandStrong }}>查看全部操作</Text></Pressable>
-                {recentActivity.length ? recentActivity.slice(0, RECENT_SECTION_LIMIT).map((entry) => <ActivityRow key={entry.id} entry={entry} />) : <EmptyBlock text="暂无操作" />}
-              </>
-            )}
-          </DashboardSection>
         </>
       ) : null}
 
+      {headerControls}
       {selectionMode || viewMode === 'type' ? (
         <>
           <InventoryGroup
@@ -210,6 +202,20 @@ export function HomeDashboard({
           />
         ))
       )}
+
+      {!selectionMode ? (
+          <DashboardSection delay={110}>
+            <ContentTabs accessibilityLabel="最近记录" value={recentTab} onChange={setRecentTab} tabs={[{ value: 'items', label: '最近添加' }, { value: 'activity', label: '最近操作' }]} />
+            {recentTab === 'items' ? (
+              recentItems.length ? recentItems.slice(0, RECENT_SECTION_LIMIT).map((item) => <RecentItemRow key={item.id} item={item} path={recentItemPaths[item.id] ?? ''} />) : <EmptyBlock text="暂无新增" />
+            ) : (
+              <>
+                <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/activity')} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: palette.brandStrong }}>查看全部操作</Text></Pressable>
+                {recentActivity.length ? recentActivity.slice(0, RECENT_SECTION_LIMIT).map((entry) => <ActivityRow key={entry.id} entry={entry} />) : <EmptyBlock text="暂无操作" />}
+              </>
+            )}
+          </DashboardSection>
+      ) : null}
 
     </>
   );
@@ -417,11 +423,13 @@ function InventoryTile({
     candidate.scope === categoryScope && candidate.name === item.category
   ));
   const contentStats = item.type === 'container' ? countLocationContents(allItems, item.id) : null;
+  const isCompactLocation = isLocationItem(item) && !selectionMode;
+  const tileContainerStyle = isCompactLocation ? locationTilePressableStyle : tilePressableStyle;
   const countText = item.type === 'container' ? `${contentStats?.total ?? 0} 项` : '1 件';
 
   const tile = (
-    <View style={[tileStyle, selected ? tileSelectedStyle : null]}>
-      <View style={tilePreviewStyle}>
+    <View style={[tileStyle, isCompactLocation ? locationTileStyle : null, selected ? tileSelectedStyle : null]}>
+      <View style={[tilePreviewStyle, isCompactLocation ? locationPreviewStyle : null]}>
         {imageUri ? (
           <InventoryImage url={item.images[0]} style={tileImageStyle} resizeMode="cover" />
         ) : category ? (
@@ -441,11 +449,11 @@ function InventoryTile({
           />
         )}
       </View>
-      <Text numberOfLines={1} style={tileTitleStyle}>{item.name}</Text>
-      <View style={tileMetaLineStyle}>
-        <Text style={tileMetaTextStyle}>{countText}</Text>
-        <Text style={tileTypePillStyle}>{item.type === 'container' ? getContainerTypeLabel(item) : '物品'}</Text>
-        {selectionMode ? null : <Ionicons name="chevron-forward" size={16} color={palette.textSoft} style={tileChevronStyle} />}
+      <Text numberOfLines={1} style={[tileTitleStyle, isCompactLocation ? locationTitleStyle : null]}>{item.name}</Text>
+      <View style={[tileMetaLineStyle, isCompactLocation ? locationMetaLineStyle : null]}>
+        <Text style={[tileMetaTextStyle, isCompactLocation ? locationMetaTextStyle : null]}>{countText}</Text>
+        <Text style={[tileTypePillStyle, isCompactLocation ? locationTypeStyle : null]}>{item.type === 'container' ? getContainerTypeLabel(item) : '物品'}</Text>
+        {selectionMode || isCompactLocation ? null : <Ionicons name="chevron-forward" size={16} color={palette.textSoft} style={tileChevronStyle} />}
       </View>
       {selected ? (
         <View style={selectedBadgeStyle}>
@@ -457,7 +465,7 @@ function InventoryTile({
 
   if (selectionMode) {
     return (
-      <Pressable onPress={() => onToggleSelected(item.id)} style={tilePressableStyle}>
+      <Pressable onPress={() => onToggleSelected(item.id)} style={tileContainerStyle}>
         {tile}
       </Pressable>
     );
@@ -469,7 +477,7 @@ function InventoryTile({
         delayLongPress={500}
         onLongPress={() => router.push(resolveMobileDetailHref(item))}
         onPress={() => router.push(resolveMobileContainerBrowseHref(item))}
-        style={tilePressableStyle}
+        style={tileContainerStyle}
       >
         {tile}
       </Pressable>
@@ -478,7 +486,7 @@ function InventoryTile({
 
   return (
     <Link href={resolveMobileDetailHref(item)} asChild>
-      <Pressable style={tilePressableStyle}>{tile}</Pressable>
+      <Pressable style={tileContainerStyle}>{tile}</Pressable>
     </Link>
   );
 }
@@ -567,7 +575,7 @@ const headerActionsStyle = {
 
 const headerActionStyle = {
   height: 40,
-  borderRadius: 14,
+  borderRadius: 12,
   paddingHorizontal: 12,
   backgroundColor: palette.canvasStrong,
   flexDirection: 'row' as const,
@@ -581,7 +589,7 @@ const headerActionActiveStyle = {
 
 const headerActionTextStyle = {
   fontSize: 14,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -590,9 +598,9 @@ const headerActionActiveTextStyle = {
 };
 
 const viewToggleStyle = {
-  height: 40,
-  borderRadius: 14,
-  padding: 4,
+  minHeight: 48,
+  borderRadius: 12,
+  padding: 2,
   backgroundColor: palette.canvasStrong,
   flexDirection: 'row' as const,
   gap: 2,
@@ -600,8 +608,8 @@ const viewToggleStyle = {
 
 const modeButtonStyle = {
   minWidth: 58,
-  height: 32,
-  borderRadius: 11,
+  minHeight: 44,
+  borderRadius: 8,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   flexDirection: 'row' as const,
@@ -616,7 +624,7 @@ const modeButtonActiveStyle = {
 
 const modeButtonTextStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
 };
 
@@ -634,8 +642,8 @@ const selectionNoticeStyle = {
 };
 
 const selectionNoticeTitleStyle = {
-  fontSize: 15,
-  fontWeight: '800' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -645,12 +653,12 @@ const selectionNoticeTextStyle = {
 };
 
 const sectionStyle = {
-  borderRadius: 24,
+  borderRadius: 16,
   borderWidth: 1,
-  borderColor: palette.borderSoft,
+  borderColor: palette.border,
   backgroundColor: palette.surface,
-  padding: 12,
-  gap: 10,
+  padding: 18,
+  gap: 12,
   ...shadows.sm,
 };
 
@@ -662,7 +670,7 @@ const sectionHeaderStyle = {
 
 const sectionTitleStyle = {
   fontSize: 19,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -675,7 +683,7 @@ const sectionSubtitleStyle = {
 
 const sectionActionStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brand,
   paddingTop: 3,
 };
@@ -717,7 +725,7 @@ const inventoryGroupIdentityStyle = {
 
 const inventoryGroupTitleStyle = {
   fontSize: 13,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
   paddingHorizontal: 2,
 };
@@ -730,7 +738,7 @@ const inventoryGroupActionStyle = {
 
 const inventoryGroupActionTextStyle = {
   fontSize: 13,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brand,
 };
 
@@ -745,8 +753,8 @@ const tilePressableStyle = {
 };
 
 const tileStyle = {
-  minHeight: 230,
-  borderRadius: 22,
+  minHeight: 210,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
@@ -788,7 +796,7 @@ const tileImageStyle = {
 
 const tileTitleStyle = {
   fontSize: 16,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -809,7 +817,7 @@ const tileTypePillStyle = {
   paddingHorizontal: 8,
   paddingVertical: 3,
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brand,
 };
 
@@ -859,6 +867,14 @@ const quickActionIconStyle = {
 
 const quickActionTextStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
+
+const locationTilePressableStyle = { width: '31%' as const };
+const locationTileStyle = { minHeight: 164, padding: 10, gap: 8 };
+const locationPreviewStyle = { height: 86, borderRadius: 12 };
+const locationTitleStyle = { fontSize: 14 };
+const locationMetaLineStyle = { flexWrap: 'wrap' as const, gap: 4 };
+const locationMetaTextStyle = { fontSize: 11 };
+const locationTypeStyle = { fontSize: 10, paddingHorizontal: 5 };

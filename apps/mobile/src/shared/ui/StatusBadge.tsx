@@ -13,21 +13,21 @@ interface StatusToneStyle {
 const STATUS_TONE_STYLES: Record<PresentationTone, StatusToneStyle> = {
   success: {
     backgroundColor: palette.successTint,
-    borderColor: '#d1fae5',
-    textColor: '#047857',
+    borderColor: palette.successTint,
+    textColor: palette.success,
     dotColor: palette.success,
   },
   warning: {
     backgroundColor: palette.warningTint,
-    borderColor: '#fef3c7',
-    textColor: '#b45309',
+    borderColor: palette.warningTint,
+    textColor: palette.warning,
     dotColor: palette.warning,
   },
   danger: {
     backgroundColor: palette.dangerTint,
-    borderColor: '#fee2e2',
+    borderColor: palette.dangerTint,
     textColor: palette.danger,
-    dotColor: '#f87171',
+    dotColor: palette.danger,
   },
   neutral: {
     backgroundColor: palette.surfaceMuted,
@@ -37,7 +37,7 @@ const STATUS_TONE_STYLES: Record<PresentationTone, StatusToneStyle> = {
   },
   brand: {
     backgroundColor: palette.brandTint,
-    borderColor: '#99f6e4',
+    borderColor: palette.brandTint,
     textColor: palette.brandStrong,
     dotColor: palette.brand,
   },
@@ -56,8 +56,8 @@ export function StatusBadge({ status }: { status: ItemStatus }) {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
-        borderRadius: 999,
-        borderWidth: 1,
+        borderRadius: 6,
+        borderWidth: 0,
         borderColor: toneStyle.borderColor,
         backgroundColor: toneStyle.backgroundColor,
         paddingHorizontal: 9,
@@ -76,7 +76,7 @@ export function StatusBadge({ status }: { status: ItemStatus }) {
         style={{
           color: toneStyle.textColor,
           fontSize: 12,
-          fontWeight: '700',
+          fontWeight: '600',
         }}
       >
         {presentation.label}

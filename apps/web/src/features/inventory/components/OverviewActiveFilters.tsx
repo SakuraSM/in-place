@@ -64,7 +64,7 @@ export default function OverviewActiveFilters({
       <button
         type="button"
         onClick={onClearAll}
-        className="min-h-9 px-2 text-sm font-bold text-brandStrong"
+        className="min-h-9 px-2 text-sm font-semibold text-brandStrong"
       >
         清除全部
       </button>

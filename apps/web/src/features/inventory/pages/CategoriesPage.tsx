@@ -207,14 +207,14 @@ export default function CategoriesPage() {
           aria-label={activePresentation.label}
           className="space-y-5"
         >
-        <section className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm md:flex md:items-center md:justify-between md:gap-5 md:p-5">
+        <section className="rounded-3xl border border-border bg-canvasStrong p-4 shadow-sm md:flex md:items-center md:justify-between md:gap-5 md:p-5">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
               <Sparkles size={20} />
             </span>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-bold text-slate-900">常用分类预设</h2>
+                <h2 className="font-semibold text-slate-900">常用分类预设</h2>
                 <EntityBadge kind="category" compact />
               </div>
               <p className="mt-1 text-sm leading-5 text-slate-600">
@@ -229,7 +229,7 @@ export default function CategoriesPage() {
               type="button"
               onClick={() => void handleApplyPresets()}
               disabled={applyingPresets}
-              className="mt-4 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0 md:w-auto"
+              className="mt-4 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-semibold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0 md:w-auto"
             >
               {applyingPresets ? '补充中…' : `一键补充 ${presetSummary.missingCount} 个`}
             </button>
@@ -246,7 +246,7 @@ export default function CategoriesPage() {
         {loading ? (
           <div className="py-12 text-center text-sm text-slate-500" role="status">加载中…</div>
         ) : filteredCategories.length === 0 ? (
-          <EmptyState icon={<Shapes size={28} className="text-slate-400" />} title={`暂无${activePresentation.label}`} />
+          <EmptyState icon={<Shapes size={28} className="text-muted" />} title={`暂无${activePresentation.label}`} />
         ) : (
           <motion.div key={activeScope} variants={staggerContainer} animate="animate" className="space-y-2.5">
             {filteredCategories.map((category) => (
@@ -275,7 +275,7 @@ export default function CategoriesPage() {
           setShowEditor(true);
         }}
         aria-label={`新增${activePresentation.label}`}
-        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 transition-colors hover:bg-teal-700 md:bottom-8 md:right-8"
+        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brandStrong text-white shadow-lg shadow-brand/20 transition-colors hover:bg-brandHover md:bottom-8 md:right-8"
       >
         <Plus size={24} />
       </button> : null}

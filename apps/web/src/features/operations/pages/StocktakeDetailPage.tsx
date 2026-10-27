@@ -118,14 +118,14 @@ export default function StocktakeDetailPage() {
         title={session.location.name}
         titleSize="detail"
         actions={(
-          <span className={`rounded-full px-3 py-1 text-xs font-bold ${session.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${session.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
             {session.status === 'completed' ? '已完成' : '进行中，可随时离开后继续'}
           </span>
         )}
       />
       <PageContent width="narrow" className="space-y-5">
         <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
-          <h2 className="font-bold text-slate-900">盘点概览</h2>
+          <h2 className="font-semibold text-slate-900">盘点概览</h2>
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {[
               ['期望', summary.total],
@@ -136,7 +136,7 @@ export default function StocktakeDetailPage() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl bg-surfaceMuted p-3">
                 <p className="text-xs text-slate-500">{label}</p>
-                <p className="mt-1 text-xl font-bold text-slate-900">{value}</p>
+                <p className="mt-1 text-xl font-semibold text-slate-900">{value}</p>
               </div>
             ))}
           </div>
@@ -144,14 +144,14 @@ export default function StocktakeDetailPage() {
 
         {canEditInventory && session.status === 'in_progress' ? (
           <section className="rounded-3xl border border-brand/25 bg-surface p-5 shadow-sm">
-            <h2 className="font-bold text-slate-900">扫码核对</h2>
+            <h2 className="font-semibold text-slate-900">扫码核对</h2>
             <p className="mb-4 mt-1 text-sm text-slate-500">连续扫描物品标签；清单外物品也会单独标记。</p>
             <CodeScanner onCode={(code) => void scanItem(code)} continuous />
           </section>
         ) : null}
 
         <section className="rounded-3xl border border-borderSoft bg-surface p-4 shadow-sm md:p-5">
-          <h2 className="mb-3 font-bold text-slate-900">盘点清单</h2>
+          <h2 className="mb-3 font-semibold text-slate-900">盘点清单</h2>
           <div className="space-y-2">
             {session.entries.map((entry) => {
               const counted = entry.counted_quantity ?? 0;
@@ -167,7 +167,7 @@ export default function StocktakeDetailPage() {
                   {canEditInventory && session.status === 'in_progress' ? (
                     <div className="flex items-center gap-1">
                       <button type="button" disabled={!canEditInventory} aria-label={`减少 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted - 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Minus size={15} /></button>
-                      <span className="w-8 text-center text-sm font-bold">{counted}</span>
+                      <span className="w-8 text-center text-sm font-semibold">{counted}</span>
                       <button type="button" disabled={!canEditInventory} aria-label={`增加 ${entry.item.name} 实盘数量`} onClick={() => void countItem(entry.item_id, counted + 1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface"><Plus size={15} /></button>
                     </div>
                   ) : null}
@@ -179,13 +179,13 @@ export default function StocktakeDetailPage() {
 
         {canEditInventory && session.status === 'in_progress' ? (
           <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
-            <h2 className="font-bold text-slate-900">完成前确认差异</h2>
+            <h2 className="font-semibold text-slate-900">完成前确认差异</h2>
             <p className="mt-1 text-sm text-slate-500">仍待核对的 {summary.pending} 项会标为缺失，但不会删除。</p>
             <div className="mt-4 space-y-3">
               <label className="flex items-start gap-3 text-sm text-slate-700"><input type="checkbox" checked={reconcileMoves} onChange={(event) => setReconcileMoves(event.target.checked)} className="mt-0.5 h-4 w-4" />将位置不符的已找到物品移动到本次盘点位置</label>
               <label className="flex items-start gap-3 text-sm text-slate-700"><input type="checkbox" checked={reconcileQuantities} onChange={(event) => setReconcileQuantities(event.target.checked)} className="mt-0.5 h-4 w-4" />将实盘数量写回库存（缺失项保持原数量）</label>
             </div>
-            <button type="button" disabled={completing} onClick={() => void complete()} className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-bold text-white disabled:opacity-50">
+            <button type="button" disabled={completing} onClick={() => void complete()} className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-semibold text-white disabled:opacity-50">
               <ClipboardCheck size={18} />
               {completing ? '保存结果中…' : '确认并完成盘点'}
             </button>

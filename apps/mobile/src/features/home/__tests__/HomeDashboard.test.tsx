@@ -57,12 +57,20 @@ describe('HomeDashboard', () => {
     const viewerScreen = render(<HomeDashboard {...baseProps} canEditInventory={false} />);
     expect(viewerScreen.queryByText('新增')).toBeNull();
     expect(viewerScreen.queryByText('盘点')).toBeNull();
+    expect(viewerScreen.queryByText('记录一件物品')).toBeNull();
     expect(viewerScreen.getByText('查看标签')).toBeTruthy();
 
     const selectionScreen = render(<HomeDashboard {...baseProps} selectionMode selectedIds={['item-1']} />);
     expect(selectionScreen.queryByLabelText('快捷操作')).toBeNull();
     expect(selectionScreen.getByText('已选择 1 项')).toBeTruthy();
   });
+});
+
+it('uses the existing create-sheet action from the welcome panel', () => {
+  const onCreate = jest.fn();
+  const screen = render(<HomeDashboard {...baseProps} onCreate={onCreate} />);
+  fireEvent.press(screen.getByText('记录一件物品'));
+  expect(onCreate).toHaveBeenCalledTimes(1);
 });
 
 it('opens borrowed inventory from the matching statistic and switches recent records', () => {

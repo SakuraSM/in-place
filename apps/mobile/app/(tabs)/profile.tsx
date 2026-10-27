@@ -161,6 +161,6 @@ const avatarStyle = {
   justifyContent: 'center' as const,
   backgroundColor: palette.brand,
 };
-const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '900' as const };
-const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '800' as const };
+const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '600' as const };
+const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '600' as const };
 const menuStyle = { gap: 8, width: '100%' as const };

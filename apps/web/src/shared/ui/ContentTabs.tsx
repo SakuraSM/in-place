@@ -70,7 +70,7 @@ export function ContentTabs<Value extends string>({
       role="tablist"
       aria-label={label}
       className={joinClassNames(
-        'flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-borderSoft bg-surfaceMuted p-1',
+        'flex max-w-full gap-6 overflow-x-auto border-b border-border bg-transparent',
         className,
       )}
     >
@@ -92,10 +92,10 @@ export function ContentTabs<Value extends string>({
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={joinClassNames(
-              'flex min-h-10 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-semibold transition-colors sm:flex-none sm:gap-2 sm:px-3',
+              'flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 border-b-2 px-0 py-2 text-sm font-medium transition-colors sm:flex-none sm:gap-2',
               isActive
-                ? 'bg-surface text-brandStrong shadow-sm'
-                : 'text-slate-600 hover:bg-surface/70 hover:text-slate-900',
+                ? 'border-brandStrong text-brandStrong'
+                : 'border-transparent text-muted hover:text-ink',
             )}
           >
             {Icon ? <Icon size={15} aria-hidden /> : null}
