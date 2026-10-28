@@ -45,6 +45,7 @@ InPlace 用“位置 → 收纳 → 物品”表达家庭库存。用户既可�
 | 操作记录 | `/activity` | 追踪新增、修改和库存操作 | `apps/web/src/features/activity/pages/ActivityPage.tsx` |
 | 拍照录入 | `/scan` | 通过图片识别辅助新增库存 | `apps/web/src/features/inventory/pages/ScanPage.tsx` |
 | 家庭任务 | `/stocktakes`、`/reminders`、`/household` | 盘点、提醒和家庭协作 | `apps/web/src/features/operations/pages` |
+| MCP 接入 | `/profile/mcp` | 创建、保存和撤销 Agent 凭证，授权查询与批量新增 | `apps/web/src/features/profile/pages/McpSettingsPage.tsx`；[接入说明](mcp-access.md) |
 
 首页负责“今天要看和要做什么”，库存检索负责“查找某个对象”，空间位置负责“它在哪里”。三者职责不同，不应合并成同一种列表页。
 

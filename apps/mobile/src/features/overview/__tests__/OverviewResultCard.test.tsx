@@ -6,6 +6,7 @@ import { OverviewResultArtwork } from '../OverviewResultArtwork';
 
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('@/providers/AuthProvider', () => ({ useAuth: () => ({ session: { token: 'local-test-token' } }) }));
+jest.mock('@/shared/api/mobileClient', () => ({ getMobileApiBaseUrl: () => 'https://inventory.example.com/api' }));
 jest.mock('@/shared/ui/CategoryArtwork', () => {
   const { Text: MockText } = jest.requireActual<typeof import('react-native')>('react-native');
   return { CategoryArtwork: () => <MockText>分类插画</MockText> };

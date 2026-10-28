@@ -76,6 +76,12 @@ export default function ProfileTab() {
       iconName: 'server-outline',
     },
     {
+      href: '/profile/mcp' as Href,
+      title: 'MCP 接入',
+      subtitle: 'Agent 凭证、查询与批量新增',
+      iconName: 'key-outline',
+    },
+    {
       href: '/profile/about',
       title: '关于',
       subtitle: '版本与开源信息',

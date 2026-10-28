@@ -19,6 +19,8 @@ import { lifecycleRoutes } from './modules/lifecycle/lifecycle.routes.js';
 import { mapRoutes } from './modules/maps/map.routes.js';
 import { getAllowedCorsOrigins, getPublicOrigin, type AppEnv } from './env.js';
 import { resolveUploadRoot } from './lib/uploads.js';
+import { mcpRoutes } from './modules/mcp/mcp.routes.js';
+import { mcpCredentialRoutes } from './modules/mcp/mcp-credentials.routes.js';
 
 export async function createApp(env: AppEnv) {
   await mkdir(resolveUploadRoot(env), { recursive: true });
@@ -85,6 +87,8 @@ export async function createApp(env: AppEnv) {
   await app.register(itemRoutes, { prefix: '/api/v1/items', env });
   await app.register(lifecycleRoutes, { prefix: '/api/v1', env });
   await app.register(mapRoutes, { prefix: '/api/v1/maps', env });
+  await app.register(mcpCredentialRoutes, { prefix: '/api/v1/mcp/credentials', env });
+  await app.register(mcpRoutes, { env });
   await app.register(stocktakeRoutes, { prefix: '/api/v1/stocktakes' });
   await app.register(tagRoutes, { prefix: '/api/v1/tags' });
   await app.register(uploadRoutes, { env });

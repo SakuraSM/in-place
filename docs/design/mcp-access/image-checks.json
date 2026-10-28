@@ -1,0 +1,16 @@
+{
+  "serverHealth": 200,
+  "webHealth": 200,
+  "webSpa": 200,
+  "allInOneDatabaseHealth": 200,
+  "allInOneMcp": true,
+  "webProxyMcp": true,
+  "testCredentialRevoked": true,
+  "platform": "linux/arm64",
+  "date": "2026-10-28",
+  "imagesBuilt": [
+    "server",
+    "web",
+    "all-in-one"
+  ]
+}

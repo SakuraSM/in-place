@@ -7,6 +7,7 @@ import {
   createCodesApi,
   createHouseholdsApi,
   createItemsApi,
+  createMcpApi,
   createLifecycleApi,
   createStocktakesApi,
   createTagsApi,
@@ -113,6 +114,7 @@ export async function saveMobileHouseholdId(householdId: string | null) {
 }
 
 export const itemsApi = createItemsApi(mobileApiClient.request);
+export const mcpApi = createMcpApi(mobileApiClient.request);
 export const categoriesApi = createCategoriesApi(mobileApiClient.request);
 export const tagsApi = createTagsApi(mobileApiClient.request);
 export const aiApi = createAiApi(mobileApiClient.request);

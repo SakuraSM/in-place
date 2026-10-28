@@ -163,6 +163,7 @@ export default function ProfilePage() {
                   description="修改密码并管理当前账号会话。"
                   tone="bg-rose-50 text-rose-500"
                 />
+                <QuickLinkCard to="/profile/mcp" icon={<Settings2 size={20} />} title="MCP 接入" description="管理 Agent 凭证，查询库存与批量新增物品。" tone="bg-emerald-50 text-emerald-700" />
                 <QuickLinkCard
                   to="/duplicates"
                   icon={<Combine size={20} />}
