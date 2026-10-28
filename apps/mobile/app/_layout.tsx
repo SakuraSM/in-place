@@ -1,4 +1,4 @@
-import { motionDurations } from '@inplace/ui/mobile';
+import { motionDurations, semantic } from '@inplace/ui/mobile';
 import { Stack } from 'expo-router';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,10 +20,10 @@ export default function RootLayout() {
               <Stack
                 screenOptions={{
                   headerShown: false,
-                  contentStyle: { backgroundColor: '#f7faf8' },
-                  headerStyle: { backgroundColor: '#f7faf8' },
+                  contentStyle: { backgroundColor: semantic.canvas },
+                  headerStyle: { backgroundColor: semantic.canvas },
                   headerShadowVisible: false,
-                  headerTitleStyle: { fontSize: 18, fontWeight: '800' },
+                  headerTitleStyle: { fontSize: 18, fontWeight: '600' },
                   animation: Platform.OS === 'android' ? 'ios_from_right' : 'simple_push',
                   animationDuration: STACK_TRANSITION_DURATION_MS,
                   freezeOnBlur: true,
@@ -38,6 +38,7 @@ export default function RootLayout() {
                 <Stack.Screen name="profile/ai" />
                 <Stack.Screen name="profile/security" />
                 <Stack.Screen name="profile/data" />
+                <Stack.Screen name="profile/mcp" />
                 <Stack.Screen name="profile/edit" />
                 <Stack.Screen name="profile/about" />
                 <Stack.Screen name="profile/household" />

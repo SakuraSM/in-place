@@ -1,12 +1,15 @@
 import { Image, type ImageProps, type ImageSourcePropType } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
+import { getMobileApiBaseUrl } from '@/shared/api/mobileClient';
 import { resolveInventoryImageUri } from './mobileInventoryFormat';
 
 function isProtectedUploadUri(uri: string) {
   try {
-    return new URL(uri).pathname.startsWith('/api/uploads/');
+    const imageUrl = new URL(uri);
+    return imageUrl.origin === new URL(getMobileApiBaseUrl()).origin
+      && imageUrl.pathname.startsWith('/api/uploads/');
   } catch {
-    return uri.startsWith('/api/uploads/');
+    return false;
   }
 }
 

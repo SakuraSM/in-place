@@ -97,27 +97,27 @@ export function CompactListRow({
 }
 
 const rowStyle = {
-  minHeight: 54,
+  minHeight: 78,
   width: '100%' as const,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  gap: 10,
-  borderRadius: 14,
-  borderWidth: 1,
+  gap: 12,
+  borderRadius: 0,
+  borderBottomWidth: 1,
   borderColor: palette.borderSoft,
-  backgroundColor: palette.surfaceMuted,
-  paddingHorizontal: 10,
-  paddingVertical: 8,
+  backgroundColor: 'transparent',
+  paddingHorizontal: 0,
+  paddingVertical: 14,
 };
 
 const selectedRowStyle = {
-  borderColor: '#99f6e4',
+  borderColor: palette.brand,
   backgroundColor: palette.brandTint,
 };
 
 const dangerRowStyle = {
-  borderColor: '#fecdd3',
-  backgroundColor: '#fff1f2',
+  borderColor: palette.dangerTint,
+  backgroundColor: palette.dangerTint,
 };
 
 const disabledRowStyle = {
@@ -129,17 +129,17 @@ const pressedStyle = {
 };
 
 const iconBoxStyle = {
-  width: 34,
-  height: 34,
+  width: 44,
+  height: 44,
   flexShrink: 0,
   borderRadius: 12,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  backgroundColor: palette.brandTint,
+  backgroundColor: palette.surfaceMuted,
 };
 
 const dangerIconBoxStyle = {
-  backgroundColor: '#ffe4e6',
+  backgroundColor: palette.dangerTint,
 };
 
 const textBlockStyle = {
@@ -158,8 +158,8 @@ const titleStyle = {
   flex: 1,
   minWidth: 0,
   color: palette.text,
-  fontSize: 15,
-  fontWeight: '800' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 const dangerTitleStyle = {
@@ -182,5 +182,5 @@ const metaStyle = {
   flexShrink: 0,
   color: palette.textMuted,
   fontSize: 13,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };

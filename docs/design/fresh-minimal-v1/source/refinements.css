@@ -1,0 +1,33 @@
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+.row-thumb .icon { width: 23px; height: 23px; }
+.mobile .row-thumb .icon { width: 22px; height: 22px; }
+.mobile[data-page="home"] .page-heading p:not(.eyebrow) { display: none; }
+.mobile[data-page="home"] .page-heading h1 { font-size: 24px; }
+.mobile[data-page="home"] .home-welcome { height: 180px; padding: 20px; }
+.mobile[data-page="home"] .home-welcome h2 { font-size: 18px; max-width: 190px; margin: 7px 0; }
+.mobile[data-page="home"] .home-welcome p:not(.eyebrow) { margin-bottom: 12px; }
+.mobile[data-page="home"] .welcome-art { top: 18px; right: 0; width: 115px; height: 115px; }
+.mobile[data-page="home"] .metrics { grid-template-columns: repeat(4, 1fr); padding: 18px 0; gap: 0; }
+.mobile[data-page="home"] .metric { padding: 0 10px; border-right: 1px solid var(--border); }
+.mobile[data-page="home"] .metric:last-child { border: 0; }
+.mobile[data-page="home"] .metric span { font-size: 9px; white-space: nowrap; }
+.mobile[data-page="home"] .metric strong { font-size: 26px; margin-bottom: 0; }
+.mobile[data-page="home"] .metric span:last-child { display: none; }
+.mobile[data-export="full"] { position: relative; }
+.mobile[data-export="full"] .bottom-nav { position: absolute; bottom: 0; }
+.mobile[data-export="full"] .form-footer { position: static; width: auto; border-bottom: 0; padding: 18px 0; }
+.mobile[data-export="full"] .workspace-body { padding-bottom: 108px; }
+.mobile[data-export="full"]:is([data-page="form"], [data-page="security"], [data-page="ai"], [data-page="profile-edit"], [data-page="stocktake-detail"]) .workspace-body { padding-bottom: 30px; }
+.mobile .inline > .field { flex: 1; }
+.mobile .state-grid .chips .btn { white-space: normal; }
+.map-canvas { height: 390px; }
+.mobile .basemap img { left: -350px; top: -330px; }
+.mobile .map-zoom .btn { font-size: 0; }
+.map-zoom .btn.square { padding: 0; }
+.auth-shell > .workspace-top > .brand { display: flex; }
+.basemap { container-type: inline-size; }
+.basemap img { width: 170.6667cqw; height: auto; left: -17.0667cqw; top: -44cqw; }
+.mobile .basemap img { width: 1280px; height: 720px; left: -350px; top: -330px; }
+.mobile .btn.small, .mobile .chip { min-height: 44px; }
+.check-target { display: grid; place-items: center; min-width: 44px; min-height: 44px; }

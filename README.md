@@ -24,6 +24,7 @@ The codebase is still evolving, but its current direction is stable: clients tal
 - Fastify API backed by PostgreSQL and Drizzle ORM.
 - Image upload support and server-side AI recognition hooks.
 - JSON and CSV data export, plus JSON backup import on mobile.
+- [MCP access for agents](docs/product/mcp-access.md) to query inventory and import new records with expiring, revocable credentials.
 - A geographic asset map with location-aware markers, clustering, filtering, and coordinate assignment.
 - Docker Compose deployment for both split-service and all-in-one setups.
 

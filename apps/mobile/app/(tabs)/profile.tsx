@@ -76,6 +76,12 @@ export default function ProfileTab() {
       iconName: 'server-outline',
     },
     {
+      href: '/profile/mcp' as Href,
+      title: 'MCP 接入',
+      subtitle: 'Agent 凭证、查询与批量新增',
+      iconName: 'key-outline',
+    },
+    {
       href: '/profile/about',
       title: '关于',
       subtitle: '版本与开源信息',
@@ -161,6 +167,6 @@ const avatarStyle = {
   justifyContent: 'center' as const,
   backgroundColor: palette.brand,
 };
-const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '900' as const };
-const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '800' as const };
+const avatarTextStyle = { color: '#ffffff', fontSize: 22, fontWeight: '600' as const };
+const profileNameStyle = { color: palette.text, fontSize: 18, fontWeight: '600' as const };
 const menuStyle = { gap: 8, width: '100%' as const };

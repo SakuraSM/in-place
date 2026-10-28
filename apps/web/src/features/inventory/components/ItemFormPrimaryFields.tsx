@@ -102,7 +102,7 @@ export default function ItemFormPrimaryFields({
           onChange={(event) => onUpdate('name', event.target.value)}
           placeholder={form.type === 'container' ? (form.isLocation ? '如：卧室、客厅、仓库...' : '如：透明收纳箱、床头柜抽屉、柜子...') : '如：蓝色羽绒服...'}
           required
-          className="w-full rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand"
+          className="ui-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-900 placeholder:text-muted transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand"
         />
       </label>
 

@@ -9,6 +9,7 @@ import {
   shadowsWeb,
   controlSizes,
   motionDurations,
+  layout,
 } from '../../tokens/index';
 
 /**
@@ -38,6 +39,17 @@ export const tailwindPreset = {
         brand: semantic.brand,
         brandStrong: semantic.brandStrong,
         brandTint: semantic.brandTint,
+        brandHover: semantic.brandHover,
+        ink: semantic.text,
+        muted: semantic.textMuted,
+        danger: semantic.danger,
+        dangerTint: semantic.dangerTint,
+        success: semantic.success,
+        successTint: semantic.successTint,
+        warning: semantic.warning,
+        warningTint: semantic.warningTint,
+        info: semantic.info,
+        infoTint: semantic.infoTint,
         disabledText: semantic.disabledText,
         disabledSurface: semantic.disabledSurface,
         focusRing: semantic.focusRing,
@@ -57,9 +69,12 @@ export const tailwindPreset = {
       ),
       fontWeight: fontWeights,
       boxShadow: shadowsWeb,
-      minHeight: Object.fromEntries(
-        Object.entries(controlSizes).map(([key, value]) => [`control-${key}`, `${value}px`]),
-      ),
+      height: { 'map-mobile': `${layout.mapCanvas.mobile}px`, 'map-desktop': `${layout.mapCanvas.desktop}px` },
+      minHeight: {
+        ...Object.fromEntries(Object.entries(controlSizes).map(([key, value]) => [`control-${key}`, `${value}px`])),
+        'map-mobile': `${layout.mapCanvas.mobile}px`,
+        'map-desktop': `${layout.mapCanvas.desktop}px`,
+      },
       transitionDuration: Object.fromEntries(
         Object.entries(motionDurations).map(([key, value]) => [`motion-${key}`, `${value}ms`]),
       ),

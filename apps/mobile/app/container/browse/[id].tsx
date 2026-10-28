@@ -160,7 +160,7 @@ function ContentRow({ item }: { item: Item }) {
 const iconActionStyle = {
   width: 40,
   height: 40,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.canvasStrong,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -189,7 +189,7 @@ const pathTextStyle = {
 const activePathTextStyle = {
   fontSize: 13,
   lineHeight: 18,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 

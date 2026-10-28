@@ -102,8 +102,8 @@ export default function DuplicatesScreen() {
 const emptyTextStyle = { fontSize: 14, lineHeight: 20, color: palette.textSoft };
 const groupStyle = { gap: 8, borderTopWidth: 1, borderTopColor: palette.borderSoft, paddingTop: 12 };
 const groupTitleRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10 };
-const titleStyle = { fontSize: 16, fontWeight: '900' as const, color: palette.text };
+const titleStyle = { fontSize: 16, fontWeight: '600' as const, color: palette.text };
 const metaStyle = { fontSize: 12, color: palette.textSoft };
 const recordStyle = { fontSize: 13, color: palette.textMuted };
 const mergeButtonStyle = { minHeight: 48, justifyContent: 'center' as const, borderRadius: 12, backgroundColor: palette.brandStrong, paddingHorizontal: 13, paddingVertical: 9 };
-const mergeButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: '#ffffff' };
+const mergeButtonTextStyle = { fontSize: 13, fontWeight: '600' as const, color: '#ffffff' };

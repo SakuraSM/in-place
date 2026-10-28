@@ -52,7 +52,7 @@ const headerStyle = {
 
 const titleStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -74,7 +74,7 @@ const editButtonStyle = {
 
 const editButtonTextStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: '#ffffff',
 };
 
@@ -93,6 +93,6 @@ const deleteButtonStyle = {
 
 const deleteButtonTextStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.danger,
 };

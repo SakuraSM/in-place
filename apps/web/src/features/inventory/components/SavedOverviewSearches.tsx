@@ -54,13 +54,13 @@ function ScopedSavedSearches({ query, suggestedLabel, storageKey }: SavedOvervie
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <button type="button" disabled={!normalizedQuery || isAlreadySaved} onClick={saveCurrent} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-surface px-3 text-xs font-bold text-brandStrong shadow-sm disabled:opacity-40">
+      <button type="button" disabled={!normalizedQuery || isAlreadySaved} onClick={saveCurrent} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-surface px-3 text-xs font-semibold text-brandStrong shadow-sm disabled:opacity-40">
         <Bookmark size={14} />保存当前筛选
       </button>
       {saved.map((entry) => (
         <span key={entry.id} className="inline-flex min-h-11 max-w-full items-center rounded-xl border border-borderSoft bg-surface text-xs">
           <button type="button" onClick={() => navigate(`/overview?${entry.query}`)} className="min-h-11 min-w-0 break-words px-3 font-semibold text-slate-700">{entry.label}</button>
-          <button type="button" aria-label={`删除保存的筛选：${entry.label}`} onClick={() => persist(saved.filter((candidate) => candidate.id !== entry.id))} className="flex h-11 w-11 shrink-0 items-center justify-center text-slate-400 hover:text-rose-600"><X size={13} /></button>
+          <button type="button" aria-label={`删除保存的筛选：${entry.label}`} onClick={() => persist(saved.filter((candidate) => candidate.id !== entry.id))} className="flex h-11 w-11 shrink-0 items-center justify-center text-muted hover:text-rose-600"><X size={13} /></button>
         </span>
       ))}
       <span className="text-xs text-slate-500">筛选仅保存在当前家庭。旧版未标注家庭的筛选保留在本机，不自动载入。</span>

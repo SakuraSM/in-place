@@ -39,7 +39,7 @@ function normalizePrice(value: string | number | null | undefined) {
   return numberValue.toFixed(2);
 }
 
-function toCreateValues(input: CreateItemInput) {
+export function toCreateValues(input: CreateItemInput) {
   return {
     parentId: input.parentId ?? null,
     type: input.type,

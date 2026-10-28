@@ -106,7 +106,7 @@ const headerStyle = {
 const titleStyle = {
   flex: 1,
   fontSize: 20,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 

@@ -64,7 +64,7 @@ export default function ContextMenu({
             <ItemIcon size={20} />
           </span>
           <div>
-            <p className="text-sm font-bold text-slate-900">{item.name}</p>
+            <p className="text-sm font-semibold text-slate-900">{item.name}</p>
             <p className="mt-0.5 text-xs text-slate-500">{itemTypeLabel}</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function ContextMenu({
               key={key}
               type="button"
               onClick={() => runAction(key)}
-              className={`flex w-full items-center gap-3 rounded-2xl border border-transparent bg-surfaceMuted px-4 py-3.5 text-left text-sm font-bold text-slate-700 transition-colors ${className}`}
+              className={`flex w-full items-center gap-3 rounded-2xl border border-transparent bg-surfaceMuted px-4 py-3.5 text-left text-sm font-semibold text-slate-700 transition-colors ${className}`}
             >
               <Icon size={18} />
               {label}

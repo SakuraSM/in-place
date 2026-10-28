@@ -9,9 +9,9 @@ import {
 
 const PAGE_WIDTHS: PageWidth[] = ['wide', 'standard', 'narrow'];
 const PAGE_WIDTH_CLASSES: Record<PageWidth, string> = {
-  wide: 'max-w-[1600px]',
-  standard: 'max-w-6xl',
-  narrow: 'max-w-3xl',
+  wide: 'max-w-[1200px]',
+  standard: 'max-w-[1200px]',
+  narrow: 'max-w-[840px]',
 };
 
 describe('PageLayout', () => {
@@ -48,8 +48,8 @@ describe('PageLayout', () => {
     );
 
     expect(screen.getByRole('heading', { name: '物品详情' })).toHaveClass(
-      'text-2xl',
-      'md:text-3xl',
+      'text-[26px]',
+      'md:text-[30px]',
     );
     expect(screen.getByText('库存对象')).toBeInTheDocument();
     expect(screen.getByText('查看物品的位置、状态和相关记录。')).toBeInTheDocument();

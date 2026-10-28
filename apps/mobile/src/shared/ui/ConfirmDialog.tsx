@@ -85,12 +85,12 @@ const dialogStyle = {
 
 const titleStyle = {
   fontSize: 20,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
 const messageStyle = {
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 22,
   color: palette.textMuted,
 };
@@ -128,12 +128,12 @@ const disabledButtonStyle = {
 
 const secondaryButtonTextStyle = {
   color: palette.text,
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 const primaryButtonTextStyle = {
   color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };

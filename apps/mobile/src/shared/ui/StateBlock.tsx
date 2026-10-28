@@ -25,7 +25,7 @@ export function StateBlock({ title, body, loading = false }: StateBlockProps) {
         }}
       >
         {loading ? <ActivityIndicator color={palette.brandStrong} /> : null}
-        <Text style={{ fontSize: 20, fontWeight: '800', color: palette.text, textAlign: 'center' }}>{title}</Text>
+        <Text style={{ fontSize: 20, fontWeight: '600', color: palette.text, textAlign: 'center' }}>{title}</Text>
         {body ? (
           <Text style={{ fontSize: 14, lineHeight: 20, color: palette.textMuted, textAlign: 'center' }}>
             {body}

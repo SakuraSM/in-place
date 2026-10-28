@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-27",
+  "boards": 35,
+  "pngs": 66,
+  "webRoutes": 30,
+  "coveredNonRedirectWebRoutes": 27,
+  "coveredMobilePageFiles": 29,
+  "files": 164,
+  "contrasts": [
+    {
+      "foreground": "text",
+      "background": "canvas",
+      "ratio": 11.35
+    },
+    {
+      "foreground": "muted",
+      "background": "canvas",
+      "ratio": 4.76
+    },
+    {
+      "foreground": "muted",
+      "background": "surface",
+      "ratio": 5.04
+    },
+    {
+      "foreground": "surface",
+      "background": "brand",
+      "ratio": 5.72
+    },
+    {
+      "foreground": "brand",
+      "background": "tint",
+      "ratio": 4.97
+    },
+    {
+      "foreground": "warning",
+      "background": "warning-tint",
+      "ratio": 4.78
+    },
+    {
+      "foreground": "danger",
+      "background": "danger-tint",
+      "ratio": 5.11
+    },
+    {
+      "foreground": "info",
+      "background": "info-tint",
+      "ratio": 5.49
+    }
+  ],
+  "failures": []
+}

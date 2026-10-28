@@ -7,7 +7,7 @@ export const controlSizes = {
 
 /** Shared motion timings in milliseconds. */
 export const motionDurations = {
-  fast: 150,
-  standard: 220,
-  deliberate: 300,
+  fast: 140,
+  standard: 180,
+  deliberate: 240,
 } as const;

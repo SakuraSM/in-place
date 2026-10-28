@@ -40,7 +40,7 @@ const SIZE_MAP = {
   },
   lg: {
     wrapper: 'gap-4',
-    logo: 'h-20 w-20 rounded-[26px]',
+    logo: 'h-20 w-20 rounded-3xl',
     title: 'text-2xl',
     subtitle: 'text-sm',
     tagline: 'text-sm',
@@ -73,6 +73,7 @@ export default function BrandLockup({
     <div className={`flex items-center justify-between ${className}`}>
       <div className={`flex min-w-0 items-center ${styles.wrapper}`}>
         <LogoWrapper
+          data-brand-logo
           {...(animated
             ? {
                 whileHover: { rotate: [0, -6, 6, 0], scale: 1.04 },
@@ -92,7 +93,7 @@ export default function BrandLockup({
           <div className="flex min-w-0 items-center gap-2">
             <Title
               data-brand-title
-              className={`truncate font-bold leading-none text-slate-900 ${styles.title}`}
+              className={`truncate font-semibold leading-none text-slate-900 ${styles.title}`}
             >
               {title}
             </Title>

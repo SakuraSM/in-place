@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Item } from '@inplace/domain';
 import { activityApi, categoriesApi, itemsApi } from '@/shared/api/mobileClient';
@@ -24,6 +24,7 @@ const FLOATING_ACTION_BUTTON_SIZE = 56;
 const FLOATING_ACTION_BUTTON_ICON_SIZE = 28;
 const FLOATING_ACTION_BUTTON_RIGHT = 20;
 const FLOATING_ACTION_BUTTON_BOTTOM_OFFSET = 20;
+const WELCOME_SCROLL_THRESHOLD = 180;
 
 export default function HomeTab() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function HomeTab() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isFloatingAddVisible, setIsFloatingAddVisible] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const batch = useInventoryBatch({
@@ -138,7 +140,10 @@ export default function HomeTab() {
 
   return (
     <View style={screenRootStyle}>
-      <Screen scroll contentInsetMode="page" chrome="muted" contentStyle={{ paddingBottom: 112 }}>
+      <Screen scroll contentInsetMode="page" chrome="muted" contentStyle={{ paddingBottom: 112 }} scrollProps={{ scrollEventThrottle: 32, onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const isPastWelcome = event.nativeEvent.contentOffset.y > WELCOME_SCROLL_THRESHOLD;
+        if (isPastWelcome !== isFloatingAddVisible) setIsFloatingAddVisible(isPastWelcome);
+      } }}>
         {hasAuxiliaryError ? <Pressable accessibilityRole="button" onPress={() => { void statsQuery.refetch(); void recentActivityQuery.refetch(); void categoriesQuery.refetch(); }} style={{ minHeight: 48 }}><Text style={{ color: palette.danger }}>部分统计或辅助信息加载失败，点击重试</Text></Pressable> : null}
         <HomeDashboard
           stats={statsQuery.data ?? null}
@@ -156,9 +161,10 @@ export default function HomeTab() {
           onToggleSelectionMode={handleToggleSelectionMode}
           onChangeViewMode={setViewMode}
           onToggleSelected={handleToggleSelected}
+          onCreate={() => setIsAddSheetOpen(true)}
         />
       </Screen>
-      {!selectionMode && canEditInventory ? (
+      {!selectionMode && canEditInventory && isFloatingAddVisible ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="新增物品"

@@ -101,7 +101,7 @@ export default function HouseholdPage() {
           <div className="flex items-center gap-3">
             <Users className="text-brandStrong" size={22} />
             <div>
-              <h2 className="font-bold text-slate-900">成员与权限</h2>
+              <h2 className="font-semibold text-slate-900">成员与权限</h2>
               <p className="text-sm text-slate-500">Viewer 只读，Editor 可维护库存与盘点，Owner 管理成员和危险操作。</p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function HouseholdPage() {
                 </div>
                 {isOwner && member.role !== 'owner' ? (
                   <>
-                    <select value={member.role} onChange={(event) => void updateRole(member.id, event.target.value as 'editor' | 'viewer')} className="h-9 rounded-xl border border-border bg-surfaceMuted px-2 text-sm">
+                    <select value={member.role} onChange={(event) => void updateRole(member.id, event.target.value as 'editor' | 'viewer')} className="ui-field h-9 rounded-xl border border-border bg-surface px-2 text-sm">
                       <option value="editor">可编辑</option>
                       <option value="viewer">只读</option>
                     </select>
@@ -132,19 +132,19 @@ export default function HouseholdPage() {
         <aside className="space-y-5">
           {isOwner ? (
             <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
-              <h2 className="flex items-center gap-2 font-bold text-slate-900"><Link2 size={18} />邀请家庭成员</h2>
+              <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Link2 size={18} />邀请家庭成员</h2>
               <label className="mt-4 block">
                 <span className="mb-1.5 block text-sm font-semibold text-slate-700">加入后的角色</span>
-                <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as 'editor' | 'viewer')} className="h-11 w-full rounded-2xl border border-border bg-surfaceMuted px-3 text-sm">
+                <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as 'editor' | 'viewer')} className="ui-field h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm">
                   <option value="editor">可编辑</option>
                   <option value="viewer">只读</option>
                 </select>
               </label>
-              <button type="button" onClick={() => void createInvite()} className="mt-3 h-11 w-full rounded-2xl bg-brandStrong text-sm font-bold text-white">生成一次性邀请链接</button>
+              <button type="button" onClick={() => void createInvite()} className="mt-3 h-11 w-full rounded-2xl bg-brandStrong text-sm font-semibold text-white">生成一次性邀请链接</button>
               {inviteUrl ? (
                 <div className="mt-3 rounded-2xl bg-surfaceMuted p-3">
                   <p className="break-all text-xs text-slate-600">{inviteUrl}</p>
-                  <button type="button" onClick={() => void navigator.clipboard.writeText(inviteUrl).then(() => notify({ tone: 'success', title: '链接已复制' }))} className="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-brandStrong"><Copy size={15} />复制链接</button>
+                  <button type="button" onClick={() => void navigator.clipboard.writeText(inviteUrl).then(() => notify({ tone: 'success', title: '链接已复制' }))} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brandStrong"><Copy size={15} />复制链接</button>
                   <button
                     type="button"
                     onClick={() => void householdsApi.revokeInvite(currentHousehold.id, inviteId).then(() => {
@@ -152,7 +152,7 @@ export default function HouseholdPage() {
                       setInviteId('');
                       notify({ tone: 'success', title: '邀请链接已撤销' });
                     })}
-                    className="ml-4 mt-2 text-sm font-bold text-rose-600"
+                    className="ml-4 mt-2 text-sm font-semibold text-rose-600"
                   >
                     撤销
                   </button>
@@ -162,9 +162,9 @@ export default function HouseholdPage() {
           ) : null}
 
           <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
-            <h2 className="flex items-center gap-2 font-bold text-slate-900"><Home size={18} />新家庭空间</h2>
-            <input value={newHouseholdName} onChange={(event) => setNewHouseholdName(event.target.value)} placeholder="例如：我们的家" className="mt-4 h-11 w-full rounded-2xl border border-border bg-surfaceMuted px-3 text-sm outline-none focus:border-brand" />
-            <button type="button" disabled={saving || !newHouseholdName.trim()} onClick={() => void createHousehold()} className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 text-sm font-bold text-white disabled:opacity-50"><Plus size={17} />创建空间</button>
+            <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Home size={18} />新家庭空间</h2>
+            <input value={newHouseholdName} onChange={(event) => setNewHouseholdName(event.target.value)} placeholder="例如：我们的家" className="ui-field mt-4 h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand" />
+            <button type="button" disabled={saving || !newHouseholdName.trim()} onClick={() => void createHousehold()} className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 text-sm font-semibold text-white disabled:opacity-50"><Plus size={17} />创建空间</button>
           </section>
         </aside>
       </PageContent>

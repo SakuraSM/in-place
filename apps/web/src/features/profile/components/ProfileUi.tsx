@@ -14,11 +14,11 @@ export function SectionPanel({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-3xl border border-border bg-surface">
       <div className="border-b border-slate-50 px-5 py-4 md:px-6">
         <div className="flex items-center gap-2">
-          {icon ? <span className="text-sky-500">{icon}</span> : null}
-          <p className="text-sm font-semibold text-slate-800">{title}</p>
+          {icon ? <span className="text-brandStrong">{icon}</span> : null}
+          <p className="text-[17px] font-semibold text-ink">{title}</p>
         </div>
         {description ? <p className="mt-1 text-xs leading-5 text-slate-600">{description}</p> : null}
       </div>
@@ -41,7 +41,7 @@ export function QuickLinkCard({
   tone: string;
 }) {
   return (
-    <Link to={to} className="group rounded-3xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <Link to={to} className="group border-b border-borderSoft bg-surface px-5 py-4 transition-colors first:rounded-t-3xl last:rounded-b-3xl last:border-b-0 hover:bg-surfaceMuted">
       <div className="flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tone}`}>
           {icon}
@@ -51,7 +51,7 @@ export function QuickLinkCard({
             <p className="font-semibold text-slate-900">{title}</p>
             <ChevronRight size={14} className="text-slate-300 transition-transform group-hover:translate-x-0.5" />
           </div>
-          <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
       </div>
     </Link>

@@ -1,3 +1,4 @@
+import InventoryArtwork from '../components/InventoryArtwork';
 import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -104,11 +105,11 @@ export default function ItemDetailPage() {
         />
       </motion.div>
 
-      <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <motion.div variants={staggerItem} className="ui-panel">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
             <EntityBadge kind="item" compact className="mb-2" />
-            <h2 className="text-xl font-bold leading-tight text-slate-900">{item.name}</h2>
+            <h2 className="text-xl font-semibold leading-tight text-slate-900">{item.name}</h2>
           </div>
           <StatusBadge status={item.status} />
         </div>
@@ -127,7 +128,7 @@ export default function ItemDetailPage() {
       </motion.div>
 
       {(item.price || item.purchase_date || item.warranty_date) && (
-        <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <motion.div variants={staggerItem} className="ui-panel">
           <h2 className="text-sm font-semibold text-slate-700 mb-3">购买信息</h2>
           <div className="space-y-3">
             {item.price && (
@@ -136,7 +137,7 @@ export default function ItemDetailPage() {
                   <DollarSign size={14} className="text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">购买价格</p>
+                  <p className="text-xs text-muted">购买价格</p>
                   <p className="text-sm font-semibold text-slate-800">¥{item.price.toFixed(2)}</p>
                 </div>
               </div>
@@ -147,7 +148,7 @@ export default function ItemDetailPage() {
                   <Calendar size={14} className="text-brandStrong" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">购买日期</p>
+                  <p className="text-xs text-muted">购买日期</p>
                   <p className="text-sm font-semibold text-slate-800">{item.purchase_date}</p>
                 </div>
               </div>
@@ -158,7 +159,7 @@ export default function ItemDetailPage() {
                   <ShieldCheck size={14} className="text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">保修截止</p>
+                  <p className="text-xs text-muted">保修截止</p>
                   <p className="text-sm font-semibold text-slate-800">{item.warranty_date}</p>
                 </div>
               </div>
@@ -168,7 +169,7 @@ export default function ItemDetailPage() {
       )}
 
       {ancestors.length > 0 && (
-        <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <motion.div variants={staggerItem} className="ui-panel">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <MapPin size={14} />
             所在位置
@@ -185,7 +186,7 @@ export default function ItemDetailPage() {
       )}
 
       {item.tags.length > 0 && (
-        <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <motion.div variants={staggerItem} className="ui-panel">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <Tag size={14} />
             标签
@@ -204,7 +205,7 @@ export default function ItemDetailPage() {
         </motion.div>
       )}
 
-      <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <motion.div variants={staggerItem} className="ui-panel">
         <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
           <div>
             <p className="mb-0.5">创建时间</p>
@@ -296,7 +297,7 @@ export default function ItemDetailPage() {
               </div>
             ) : (
               <div className="sticky top-28 flex aspect-[5/4] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm xl:aspect-square">
-                <Package size={64} className="text-slate-200" />
+                <InventoryArtwork item={item} className="max-h-72 max-w-72" />
               </div>
             )}
           </div>
@@ -306,7 +307,7 @@ export default function ItemDetailPage() {
         </div>
 
         <div className="space-y-4 lg:hidden">
-          {item.images.length > 0 && (
+          {item.images.length > 0 ? (
             <div className="overflow-hidden rounded-2xl bg-white">
               <div className="relative aspect-square overflow-hidden">
                 <img src={buildInventoryImageUrl(item.images[activeImageIdx], 'detail')} alt={item.name} className="h-full w-full object-cover" />
@@ -327,7 +328,7 @@ export default function ItemDetailPage() {
                 </div>
               )}
             </div>
-          )}
+          ) : <div className="flex h-[230px] items-center justify-center rounded-3xl bg-canvasStrong"><InventoryArtwork item={item} className="max-h-56 max-w-56" /></div>}
           {infoCards}
         </div>
       </PageContent>

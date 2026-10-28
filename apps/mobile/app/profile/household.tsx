@@ -213,20 +213,20 @@ export default function HouseholdScreen() {
   );
 }
 
-const secondaryButtonStyle = { minHeight: 44, borderRadius: 14, backgroundColor: palette.brandTint, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 7 };
-const secondaryButtonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: palette.brandStrong };
+const secondaryButtonStyle = { minHeight: 44, borderRadius: 12, backgroundColor: palette.brandTint, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 7 };
+const secondaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: palette.brandStrong };
 const primaryButtonStyle = { minHeight: 46, borderRadius: 15, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };
-const primaryButtonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: '#ffffff' };
+const primaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: '#ffffff' };
 const memberActionsStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 };
 const miniButtonStyle = { borderRadius: 10, backgroundColor: palette.canvasStrong, paddingHorizontal: 9, paddingVertical: 7 };
-const miniButtonTextStyle = { fontSize: 11, fontWeight: '800' as const, color: palette.textMuted };
+const miniButtonTextStyle = { fontSize: 11, fontWeight: '600' as const, color: palette.textMuted };
 const dangerButtonStyle = { width: 30, height: 30, borderRadius: 10, backgroundColor: palette.dangerTint, alignItems: 'center' as const, justifyContent: 'center' as const };
 const roleRowStyle = { flexDirection: 'row' as const, gap: 8 };
 const roleButtonStyle = { flex: 1, minHeight: 40, borderRadius: 13, backgroundColor: palette.surfaceMuted, alignItems: 'center' as const, justifyContent: 'center' as const };
 const activeRoleStyle = { backgroundColor: palette.brandTint, borderWidth: 1, borderColor: palette.brand };
-const roleTextStyle = { fontSize: 13, fontWeight: '800' as const, color: palette.textMuted };
-const activeRoleTextStyle = { fontSize: 13, fontWeight: '900' as const, color: palette.brandStrong };
-const inviteBoxStyle = { gap: 10, borderRadius: 14, backgroundColor: palette.surfaceMuted, padding: 12 };
+const roleTextStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.textMuted };
+const activeRoleTextStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.brandStrong };
+const inviteBoxStyle = { gap: 10, borderRadius: 12, backgroundColor: palette.surfaceMuted, padding: 12 };
 const inviteUrlStyle = { fontSize: 12, lineHeight: 18, color: palette.textMuted };
 const dangerMiniStyle = { borderRadius: 10, backgroundColor: palette.dangerTint, paddingHorizontal: 9, paddingVertical: 7 };
-const dangerTextStyle = { fontSize: 11, fontWeight: '900' as const, color: palette.danger };
+const dangerTextStyle = { fontSize: 11, fontWeight: '600' as const, color: palette.danger };

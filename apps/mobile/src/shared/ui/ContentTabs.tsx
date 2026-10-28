@@ -57,17 +57,19 @@ export function ContentTabs<TValue extends string>({
 }
 
 const tabListStyle = {
-  gap: 8,
-  paddingVertical: 2,
+  gap: 22,
+  paddingVertical: 0,
+  borderBottomWidth: 1,
+  borderBottomColor: palette.border,
 };
 
 const tabStyle = {
   minHeight: controlSizes.touch,
-  borderRadius: 14,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
-  paddingHorizontal: 14,
+  borderRadius: 0,
+  borderBottomWidth: 2,
+  borderColor: 'transparent',
+  backgroundColor: 'transparent',
+  paddingHorizontal: 0,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -76,18 +78,18 @@ const tabStyle = {
 
 const selectedTabStyle = {
   borderColor: palette.brand,
-  backgroundColor: palette.brandTint,
+  backgroundColor: 'transparent',
 };
 
 const tabTextStyle = {
   fontSize: 14,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
 const selectedTabTextStyle = {
   color: palette.brandStrong,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
 };
 
 const countStyle = {
@@ -106,7 +108,7 @@ const selectedCountStyle = {
 
 const countTextStyle = {
   fontSize: 11,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
 };
 

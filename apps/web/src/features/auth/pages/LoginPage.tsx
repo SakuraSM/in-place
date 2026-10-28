@@ -45,7 +45,7 @@ export default function LoginPage() {
       footer={(
         <>
           还没有账号？{' '}
-          <Link to="/register" className="font-bold text-brandStrong hover:text-teal-700">
+          <Link to="/register" className="font-semibold text-brandStrong hover:text-teal-700">
             立即注册
           </Link>
         </>
@@ -66,11 +66,11 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor={LOGIN_EMAIL_ID} className="mb-1.5 block text-sm font-bold text-slate-700">
+              <label htmlFor={LOGIN_EMAIL_ID} className="mb-1.5 block text-sm font-semibold text-slate-700">
                 邮箱地址
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                 <input
                   id={LOGIN_EMAIL_ID}
                   name="email"
@@ -82,17 +82,17 @@ export default function LoginPage() {
                   required
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? LOGIN_ERROR_ID : undefined}
-                  className="w-full rounded-2xl border border-border bg-surfaceMuted py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="ui-field w-full rounded-xl border border-border bg-surface py-3.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-muted transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor={LOGIN_PASSWORD_ID} className="mb-1.5 block text-sm font-bold text-slate-700">
+              <label htmlFor={LOGIN_PASSWORD_ID} className="mb-1.5 block text-sm font-semibold text-slate-700">
                 密码
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                 <input
                   id={LOGIN_PASSWORD_ID}
                   name="password"
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   required
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? LOGIN_ERROR_ID : undefined}
-                  className="w-full rounded-2xl border border-border bg-surfaceMuted py-3.5 pl-10 pr-12 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="ui-field w-full rounded-xl border border-border bg-surface py-3.5 pl-10 pr-12 text-sm text-slate-900 placeholder:text-muted transition focus:border-brandStrong focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
                 <button
                   type="button"
@@ -122,7 +122,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-1 w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-teal-300"
+                className="mt-1 w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:bg-teal-300"
               >
                 {loading ? '登录中...' : '登录'}
               </button>

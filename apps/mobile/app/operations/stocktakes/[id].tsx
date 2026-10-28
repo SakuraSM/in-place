@@ -261,7 +261,7 @@ const primaryButtonStyle = {
   justifyContent: 'center' as const,
   gap: 7,
 };
-const primaryButtonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: '#ffffff' };
+const primaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: '#ffffff' };
 const secondaryButtonStyle = {
   flex: 1,
   minHeight: 46,
@@ -270,7 +270,7 @@ const secondaryButtonStyle = {
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
-const secondaryButtonTextStyle = { fontSize: 14, fontWeight: '800' as const, color: palette.text };
+const secondaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: palette.text };
 const completedTextStyle = { fontSize: 14, lineHeight: 20, color: palette.textMuted };
 const quantityRowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 };
 const quantityButtonStyle = {
@@ -281,7 +281,7 @@ const quantityButtonStyle = {
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
-const quantityTextStyle = { minWidth: 24, textAlign: 'center' as const, fontSize: 14, fontWeight: '900' as const, color: palette.text };
+const quantityTextStyle = { minWidth: 24, textAlign: 'center' as const, fontSize: 14, fontWeight: '600' as const, color: palette.text };
 const scannerRootStyle = { flex: 1, backgroundColor: '#020617' };
 const scannerPermissionStyle = { flex: 1, padding: 24, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 16, backgroundColor: palette.canvas };
 const scannerCloseStyle = { minHeight: 58, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };

@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY apps/server/package.json apps/server/package.json
 COPY packages/db/package.json packages/db/package.json
+COPY packages/domain/package.json packages/domain/package.json
 
 RUN --mount=type=cache,target=/root/.npm npm ci --include=optional --ignore-scripts \
   && npm rebuild esbuild \
@@ -15,6 +16,7 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY apps/server/package.json apps/server/package.json
 COPY packages/db/package.json packages/db/package.json
+COPY packages/domain/package.json packages/domain/package.json
 
 RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --include=optional --ignore-scripts \
   && npm rebuild sharp \
@@ -29,6 +31,7 @@ COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
 COPY package.json package-lock.json .npmrc tsconfig.json tsconfig.base.json ./
 COPY apps/server ./apps/server
 COPY packages/db ./packages/db
+COPY packages/domain ./packages/domain
 
 RUN npm run build --workspace @inplace/db \
   && npm run build --workspace @inplace/server
@@ -45,6 +48,7 @@ COPY apps/server/package.json ./apps/server/package.json
 COPY apps/server/docker-entrypoint.sh ./apps/server/docker-entrypoint.sh
 COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY packages/db/package.json ./packages/db/package.json
+COPY packages/domain ./packages/domain
 COPY --from=builder /app/packages/db/dist ./packages/db/dist
 COPY --from=builder /app/packages/db/migrations ./packages/db/migrations
 

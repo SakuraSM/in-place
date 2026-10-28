@@ -86,7 +86,7 @@ function TagEditor({
           type="submit"
           form={formId}
           disabled={saving || !name.trim()}
-          className="w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-2xl bg-brandStrong py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? '保存中...' : '保存标签'}
         </button>
@@ -103,7 +103,7 @@ function TagEditor({
               maxLength={80}
               required
               autoFocus
-              className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
+              className="ui-field w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
           </div>
 
@@ -115,7 +115,7 @@ function TagEditor({
               onChange={(event) => setDescription(event.target.value)}
               placeholder="可选，描述这个标签的使用场景..."
               rows={4}
-              className="w-full rounded-2xl border border-border bg-surfaceMuted px-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
+              className="ui-field w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-slate-900 placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
           </div>
 
@@ -226,7 +226,7 @@ export default function TagsPage() {
 
       <PageContent width="standard" className="flex flex-col">
         {loading && tags.length === 0 ? (
-          <div className="py-16 text-center text-sm text-slate-400">加载中...</div>
+          <div className="py-16 text-center text-sm text-muted">加载中...</div>
         ) : tags.length === 0 ? (
           <EmptyState
             icon={<StickyNote size={28} className="text-slate-300" />}

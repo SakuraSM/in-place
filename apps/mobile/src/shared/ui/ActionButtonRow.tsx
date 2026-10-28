@@ -39,6 +39,7 @@ function ActionButton({ action, compact }: { action: ActionButtonConfig; compact
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(action.disabled || action.loading), busy: Boolean(action.loading) }}
       disabled={action.disabled || action.loading}
       onPress={action.onPress}
       style={({ pressed }) => [
@@ -70,7 +71,7 @@ const rowStyle = {
 
 const buttonStyle = {
   minHeight: 44,
-  borderRadius: 14,
+  borderRadius: 12,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -80,7 +81,7 @@ const buttonStyle = {
 };
 
 const compactButtonStyle = {
-  minHeight: 40,
+  minHeight: 44,
   borderRadius: 12,
   paddingHorizontal: 10,
 };
@@ -106,7 +107,7 @@ const variantStyles = {
 
 const buttonTextStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
 };
 
 const pressedStyle = {

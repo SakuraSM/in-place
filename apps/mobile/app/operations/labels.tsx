@@ -144,10 +144,10 @@ function buildLabelsHtml(codes: PrintableCode[], layout: LabelLayout) {
   </style></head><body><main>${labels}</main></body></html>`;
 }
 
-const labelStyle = { fontSize: 13, fontWeight: '800' as const, color: palette.textMuted };
+const labelStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.textMuted };
 const inputStyle = {
   minHeight: 46,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surfaceMuted,
@@ -177,14 +177,14 @@ const secondaryButtonStyle = {
   justifyContent: 'center' as const,
   gap: 7,
 };
-const primaryButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: '#ffffff' };
-const secondaryButtonTextStyle = { fontSize: 13, fontWeight: '900' as const, color: palette.text };
+const primaryButtonTextStyle = { fontSize: 13, fontWeight: '600' as const, color: '#ffffff' };
+const secondaryButtonTextStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.text };
 const disabledStyle = { opacity: 0.45 };
 const emptyTextStyle = { fontSize: 14, lineHeight: 20, color: palette.textSoft };
 const previewGridStyle = { gap: 8 };
 const previewLabelStyle = {
   minHeight: 58,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surfaceMuted,
@@ -193,5 +193,5 @@ const previewLabelStyle = {
   alignItems: 'center' as const,
   gap: 10,
 };
-const previewBrandStyle = { fontSize: 14, fontWeight: '900' as const, color: palette.brandStrong };
+const previewBrandStyle = { fontSize: 14, fontWeight: '600' as const, color: palette.brandStrong };
 const previewCodeStyle = { fontSize: 11, color: palette.textSoft };

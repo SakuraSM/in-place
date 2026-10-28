@@ -66,7 +66,7 @@ export default function LabelPrintPage() {
                 max={100}
                 value={count}
                 onChange={(event) => setCount(Number(event.target.value))}
-                className="h-11 w-full rounded-2xl border border-border bg-surfaceMuted px-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                className="ui-field h-11 w-full rounded-xl border border-border bg-surface px-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
             </label>
             <fieldset>
@@ -89,7 +89,7 @@ export default function LabelPrintPage() {
               type="button"
               disabled={loading || count < 1 || count > 100}
               onClick={() => void createLabels()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-bold text-white hover:bg-teal-700 disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-semibold text-white hover:bg-brandHover disabled:opacity-50"
             >
               <Tags size={18} />
               {loading ? '生成中…' : '生成'}
@@ -98,7 +98,7 @@ export default function LabelPrintPage() {
               type="button"
               disabled={codes.length === 0}
               onClick={() => window.print()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-bold text-white disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white disabled:opacity-50"
             >
               <Printer size={18} />
               打印

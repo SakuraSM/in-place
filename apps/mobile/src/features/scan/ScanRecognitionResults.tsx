@@ -237,8 +237,8 @@ const disabledButtonStyle = {
 
 const saveButtonTextStyle = {
   color: '#ffffff',
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 const cardStyle = {
@@ -296,8 +296,8 @@ const titleRowStyle = {
 const titleStyle = {
   flex: 1,
   color: palette.text,
-  fontSize: 15,
-  fontWeight: '800' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };
 
 const typeBadgeStyle = {
@@ -310,7 +310,7 @@ const typeBadgeStyle = {
 const typeBadgeTextStyle = {
   color: palette.textMuted,
   fontSize: 10,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const descriptionStyle = {
@@ -339,7 +339,7 @@ const brandChipStyle = {
 const chipTextStyle = {
   color: palette.textMuted,
   fontSize: 10,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const brandChipTextStyle = {
@@ -369,7 +369,7 @@ const checkActiveStyle = {
 const stateTextStyle = {
   color: palette.brandStrong,
   fontSize: 11,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const savedTextStyle = {
@@ -395,7 +395,7 @@ const actionButtonStyle = {
 const actionButtonTextStyle = {
   color: palette.textMuted,
   fontSize: 12,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const editorStyle = {
@@ -404,7 +404,7 @@ const editorStyle = {
 
 const inputStyle = {
   backgroundColor: palette.surface,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   paddingHorizontal: 12,

@@ -126,6 +126,6 @@ const fieldButtonTextStyle = {
   flex: 1,
   minWidth: 0,
   color: palette.text,
-  fontSize: 15,
-  fontWeight: '700' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
 };

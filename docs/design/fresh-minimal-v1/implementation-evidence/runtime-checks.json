@@ -1,0 +1,1345 @@
+{
+  "date": "2026-10-27",
+  "kind": "Application runtime checks against an isolated synthetic household",
+  "web": [
+    {
+      "name": "home",
+      "width": 1440,
+      "height": 1024,
+      "title": "物品首页",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-home-1440.png"
+    },
+    {
+      "name": "overview",
+      "width": 1440,
+      "height": 1024,
+      "title": "库存检索",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-overview-1440.png"
+    },
+    {
+      "name": "locations",
+      "width": 1440,
+      "height": 1024,
+      "title": "空间位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-locations-1440.png"
+    },
+    {
+      "name": "map",
+      "width": 1440,
+      "height": 1024,
+      "title": "空间位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-map-1440.png"
+    },
+    {
+      "name": "activity",
+      "width": 1440,
+      "height": 1024,
+      "title": "操作记录",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-activity-1440.png"
+    },
+    {
+      "name": "scan",
+      "width": 1440,
+      "height": 1024,
+      "title": "拍照录入",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-scan-1440.png"
+    },
+    {
+      "name": "scan-code",
+      "width": 1440,
+      "height": 1024,
+      "title": "扫描 InPlace 标签",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-scan-code-1440.png"
+    },
+    {
+      "name": "labels",
+      "width": 1440,
+      "height": 1024,
+      "title": "二维码标签打印",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-labels-1440.png"
+    },
+    {
+      "name": "stocktakes",
+      "width": 1440,
+      "height": 1024,
+      "title": "确认每件物品都在该在的位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-stocktakes-1440.png"
+    },
+    {
+      "name": "stocktake-detail",
+      "width": 1440,
+      "height": 1024,
+      "title": "书房",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-stocktake-detail-1440.png"
+    },
+    {
+      "name": "household",
+      "width": 1440,
+      "height": 1024,
+      "title": "ui-20261027的家庭",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-household-1440.png"
+    },
+    {
+      "name": "invite",
+      "width": 1440,
+      "height": 1024,
+      "title": "无法加入家庭空间",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-invite-1440.png"
+    },
+    {
+      "name": "reminders",
+      "width": 1440,
+      "height": 1024,
+      "title": "提醒中心",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-reminders-1440.png"
+    },
+    {
+      "name": "reports",
+      "width": 1440,
+      "height": 1024,
+      "title": "家庭库存报告",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-reports-1440.png"
+    },
+    {
+      "name": "duplicates",
+      "width": 1440,
+      "height": 1024,
+      "title": "重复物品检测",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-duplicates-1440.png"
+    },
+    {
+      "name": "manage",
+      "width": 1440,
+      "height": 1024,
+      "title": "管理中心",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-manage-1440.png"
+    },
+    {
+      "name": "profile",
+      "width": 1440,
+      "height": 1024,
+      "title": "我的",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-profile-1440.png"
+    },
+    {
+      "name": "ai",
+      "width": 1440,
+      "height": 1024,
+      "title": "AI 配置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-ai-1440.png"
+    },
+    {
+      "name": "security",
+      "width": 1440,
+      "height": 1024,
+      "title": "账号安全",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-security-1440.png"
+    },
+    {
+      "name": "data",
+      "width": 1440,
+      "height": 1024,
+      "title": "数据管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-data-1440.png"
+    },
+    {
+      "name": "categories",
+      "width": 1440,
+      "height": 1024,
+      "title": "分类管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-categories-1440.png"
+    },
+    {
+      "name": "tags",
+      "width": 1440,
+      "height": 1024,
+      "title": "标签管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-tags-1440.png"
+    },
+    {
+      "name": "item",
+      "width": 1440,
+      "height": 1024,
+      "title": "降噪耳机",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-item-1440.png"
+    },
+    {
+      "name": "container",
+      "width": 1440,
+      "height": 1024,
+      "title": "书桌抽屉",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-container-1440.png"
+    },
+    {
+      "name": "location-detail",
+      "width": 1440,
+      "height": 1024,
+      "title": "书房",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-location-detail-1440.png"
+    },
+    {
+      "name": "bound-label",
+      "width": 1440,
+      "height": 1024,
+      "title": "书桌抽屉",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-bound-label-1440.png"
+    },
+    {
+      "name": "unbound-label",
+      "width": 1440,
+      "height": 1024,
+      "title": "这是一个未绑定标签",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-unbound-label-1440.png"
+    },
+    {
+      "name": "home",
+      "width": 390,
+      "height": 844,
+      "title": "物品首页",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-home-390.png"
+    },
+    {
+      "name": "overview",
+      "width": 390,
+      "height": 844,
+      "title": "库存检索",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-overview-390.png"
+    },
+    {
+      "name": "locations",
+      "width": 390,
+      "height": 844,
+      "title": "空间位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-locations-390.png"
+    },
+    {
+      "name": "map",
+      "width": 390,
+      "height": 844,
+      "title": "空间位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-map-390.png"
+    },
+    {
+      "name": "activity",
+      "width": 390,
+      "height": 844,
+      "title": "操作记录",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-activity-390.png"
+    },
+    {
+      "name": "scan",
+      "width": 390,
+      "height": 844,
+      "title": "拍照录入",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-scan-390.png"
+    },
+    {
+      "name": "scan-code",
+      "width": 390,
+      "height": 844,
+      "title": "扫描 InPlace 标签",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-scan-code-390.png"
+    },
+    {
+      "name": "labels",
+      "width": 390,
+      "height": 844,
+      "title": "二维码标签打印",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-labels-390.png"
+    },
+    {
+      "name": "stocktakes",
+      "width": 390,
+      "height": 844,
+      "title": "确认每件物品都在该在的位置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-stocktakes-390.png"
+    },
+    {
+      "name": "stocktake-detail",
+      "width": 390,
+      "height": 844,
+      "title": "书房",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-stocktake-detail-390.png"
+    },
+    {
+      "name": "household",
+      "width": 390,
+      "height": 844,
+      "title": "ui-20261027的家庭",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-household-390.png"
+    },
+    {
+      "name": "invite",
+      "width": 390,
+      "height": 844,
+      "title": "无法加入家庭空间",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-invite-390.png"
+    },
+    {
+      "name": "reminders",
+      "width": 390,
+      "height": 844,
+      "title": "提醒中心",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-reminders-390.png"
+    },
+    {
+      "name": "reports",
+      "width": 390,
+      "height": 844,
+      "title": "家庭库存报告",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-reports-390.png"
+    },
+    {
+      "name": "duplicates",
+      "width": 390,
+      "height": 844,
+      "title": "重复物品检测",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-duplicates-390.png"
+    },
+    {
+      "name": "manage",
+      "width": 390,
+      "height": 844,
+      "title": "管理中心",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-manage-390.png"
+    },
+    {
+      "name": "profile",
+      "width": 390,
+      "height": 844,
+      "title": "我的",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-profile-390.png"
+    },
+    {
+      "name": "ai",
+      "width": 390,
+      "height": 844,
+      "title": "AI 配置",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-ai-390.png"
+    },
+    {
+      "name": "security",
+      "width": 390,
+      "height": 844,
+      "title": "账号安全",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-security-390.png"
+    },
+    {
+      "name": "data",
+      "width": 390,
+      "height": 844,
+      "title": "数据管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-data-390.png"
+    },
+    {
+      "name": "categories",
+      "width": 390,
+      "height": 844,
+      "title": "分类管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-categories-390.png"
+    },
+    {
+      "name": "tags",
+      "width": 390,
+      "height": 844,
+      "title": "标签管理",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-tags-390.png"
+    },
+    {
+      "name": "item",
+      "width": 390,
+      "height": 844,
+      "title": "降噪耳机",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-item-390.png"
+    },
+    {
+      "name": "container",
+      "width": 390,
+      "height": 844,
+      "title": "书桌抽屉",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-container-390.png"
+    },
+    {
+      "name": "location-detail",
+      "width": 390,
+      "height": 844,
+      "title": "书房",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-location-detail-390.png"
+    },
+    {
+      "name": "bound-label",
+      "width": 390,
+      "height": 844,
+      "title": "书桌抽屉",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-bound-label-390.png"
+    },
+    {
+      "name": "unbound-label",
+      "width": 390,
+      "height": 844,
+      "title": "这是一个未绑定标签",
+      "documentOverflow": false,
+      "contentOverflow": false,
+      "brokenImages": [],
+      "errors": [],
+      "overlay": false,
+      "screenshot": "/tmp/inplace-ui-20261027/web-unbound-label-390.png"
+    }
+  ],
+  "breakpoints": [
+    {
+      "name": "home",
+      "width": 1280,
+      "height": 720,
+      "heading": "物品首页",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "overview",
+      "width": 1280,
+      "height": 720,
+      "heading": "库存检索",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "item",
+      "width": 1280,
+      "height": 720,
+      "heading": "降噪耳机",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 1280,
+      "height": 720,
+      "heading": "我的",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "home",
+      "width": 768,
+      "height": 1024,
+      "heading": "物品首页",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "overview",
+      "width": 768,
+      "height": 1024,
+      "heading": "库存检索",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "item",
+      "width": 768,
+      "height": 1024,
+      "heading": "降噪耳机",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 768,
+      "height": 1024,
+      "heading": "我的",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "home",
+      "width": 1024,
+      "height": 768,
+      "heading": "物品首页",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "overview",
+      "width": 1024,
+      "height": 768,
+      "heading": "库存检索",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "item",
+      "width": 1024,
+      "height": 768,
+      "heading": "降噪耳机",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    },
+    {
+      "name": "profile",
+      "width": 1024,
+      "height": 768,
+      "heading": "我的",
+      "overflow": false,
+      "overlay": false,
+      "errors": []
+    }
+  ],
+  "android": [
+    {
+      "name": "home",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 50,
+      "firstTexts": [
+        "归位",
+        "",
+        "",
+        "ui-20261027的家庭",
+        "",
+        "A LITTLE MORE ORDER",
+        "家里的美好，从归位开始。"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-home.png"
+    },
+    {
+      "name": "overview",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 52,
+      "firstTexts": [
+        "库存",
+        "",
+        "ui-20261027的家庭",
+        "",
+        "",
+        "批量",
+        ""
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-overview.png"
+    },
+    {
+      "name": "locations",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 37,
+      "firstTexts": [
+        "位置",
+        "",
+        "ui-20261027的家庭",
+        "",
+        "位置树",
+        "3",
+        "地图"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-locations.png"
+    },
+    {
+      "name": "activity",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 55,
+      "firstTexts": [
+        "记录",
+        "概览",
+        "20 / 22",
+        "手动录入",
+        "12",
+        "AI 录入",
+        "0"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-activity.png"
+    },
+    {
+      "name": "manage",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 42,
+      "firstTexts": [
+        "工具中心",
+        "",
+        "ui-20261027的家庭",
+        "",
+        "库存工具",
+        "盘点、提醒、报告与标签",
+        ""
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-manage.png"
+    },
+    {
+      "name": "profile",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 43,
+      "firstTexts": [
+        "我的",
+        "",
+        "ui-20261027的家庭",
+        "",
+        "账户",
+        "U",
+        "未设置昵称"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-profile.png"
+    },
+    {
+      "name": "scan",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 14,
+      "firstTexts": [
+        "尚未配置 AI 识别服务",
+        "配置识别服务后可使用拍照录入，也可以手动新增或扫描标签整理库存。",
+        "前往 AI 配置",
+        "扫标签归位",
+        "",
+        "首页",
+        ""
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-scan.png"
+    },
+    {
+      "name": "item",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 27,
+      "firstTexts": [
+        "",
+        "降噪耳机",
+        "物品",
+        "",
+        "编辑",
+        "概览",
+        ""
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-item.png"
+    },
+    {
+      "name": "container",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 31,
+      "firstTexts": [
+        "",
+        "书桌抽屉",
+        "收纳",
+        "",
+        "编辑",
+        "",
+        "添加"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-container.png"
+    },
+    {
+      "name": "location-detail",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 30,
+      "firstTexts": [
+        "",
+        "书房",
+        "位置",
+        "",
+        "编辑",
+        "",
+        "批量"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-location-detail.png"
+    },
+    {
+      "name": "browse",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 16,
+      "firstTexts": [
+        "",
+        "书桌抽屉",
+        "收纳内容 · 1 项",
+        "",
+        "",
+        "添加内容",
+        "收纳位置"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-browse.png"
+    },
+    {
+      "name": "form",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 31,
+      "firstTexts": [
+        "",
+        "新增物品",
+        "基础信息",
+        "物品",
+        "收纳",
+        "位置",
+        "名称"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-form.png"
+    },
+    {
+      "name": "edit",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 30,
+      "firstTexts": [
+        "",
+        "编辑物品",
+        "基础信息",
+        "物品",
+        "收纳",
+        "位置",
+        "名称"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-edit.png"
+    },
+    {
+      "name": "categories",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 34,
+      "firstTexts": [
+        "",
+        "分类",
+        "管理位置、收纳与物品分类",
+        "位置分类",
+        "5",
+        "收纳分类",
+        "6"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-categories.png"
+    },
+    {
+      "name": "tags",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 23,
+      "firstTexts": [
+        "",
+        "标签",
+        "用于搜索与组合筛选",
+        "新建标签",
+        "标签名称",
+        "描述",
+        "天空蓝"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-tags.png"
+    },
+    {
+      "name": "scan-code",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 5,
+      "firstTexts": [
+        "返回",
+        "扫描 InPlace 标签",
+        "扫描物品进入详情；扫描位置后继续扫描物品即可归位。",
+        "输入或粘贴标签",
+        "重置目标"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-scan-code.png"
+    },
+    {
+      "name": "household",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 23,
+      "firstTexts": [
+        "",
+        "家庭空间",
+        "成员、角色与邀请",
+        "家庭空间",
+        "切换后库存操作只影响当前家庭",
+        "",
+        "ui-20261027的家庭"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-household.png"
+    },
+    {
+      "name": "profile-edit",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 7,
+      "firstTexts": [
+        "",
+        "个人资料",
+        "更新账号显示信息",
+        "昵称",
+        "昵称",
+        "昵称",
+        "保存资料"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-profile-edit.png"
+    },
+    {
+      "name": "security",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 12,
+      "firstTexts": [
+        "",
+        "账号安全",
+        "密码与登录会话",
+        "修改密码",
+        "至少 8 位",
+        "当前密码",
+        "当前密码"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-security.png"
+    },
+    {
+      "name": "ai",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 5,
+      "firstTexts": [
+        "",
+        "AI 配置",
+        "模型与服务连接",
+        "恢复默认",
+        "保存配置"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-ai.png"
+    },
+    {
+      "name": "data",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 9,
+      "firstTexts": [
+        "",
+        "数据管理",
+        "备份、导出与恢复",
+        "导出",
+        "导出 JSON 备份",
+        "导出 CSV 表格",
+        "导入 JSON"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-data.png"
+    },
+    {
+      "name": "about",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 12,
+      "firstTexts": [
+        "",
+        "关于",
+        "版本与开源信息",
+        "归位",
+        "版本",
+        "0.3.6",
+        "运行时"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-about.png"
+    },
+    {
+      "name": "labels",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 15,
+      "firstTexts": [
+        "",
+        "标签打印",
+        "生成并打印归位二维码",
+        "二维码标签",
+        "标签不包含账号、物品名称或数据库 ID",
+        "标签数量（1–100）",
+        "30"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-labels.png"
+    },
+    {
+      "name": "duplicates",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 11,
+      "firstTexts": [
+        "",
+        "重复项",
+        "检查并合并相似库存记录",
+        "保留最早记录的位置、状态和日期，合并数量、图片及标签。待移除记录有关联盘点或借用时不能合并。",
+        "重复物品检测 · 1 组",
+        "按类型、规范化名称和类别识别",
+        "设计与生活"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-duplicates.png"
+    },
+    {
+      "name": "reports",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 28,
+      "firstTexts": [
+        "",
+        "库存报告",
+        "价值、补货、到期与盘点摘要",
+        "家庭库存报告",
+        "用于搬家、保险留档和日常补货",
+        "",
+        "生成并分享 PDF"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-reports.png"
+    },
+    {
+      "name": "reminders",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 23,
+      "firstTexts": [
+        "",
+        "提醒",
+        "保修、借用、维护与盘点",
+        "提醒中心 · 3 条未读",
+        "保修、借用、维护和久未盘点",
+        "",
+        "厨房 久未盘点"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-reminders.png"
+    },
+    {
+      "name": "stocktakes",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 15,
+      "firstTexts": [
+        "",
+        "盘点",
+        "按位置核对库存差异",
+        "库存盘点",
+        "按位置核对数量、遗漏和错误归位",
+        "",
+        "创建盘点"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-stocktakes.png"
+    },
+    {
+      "name": "stocktake-detail",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 44,
+      "firstTexts": [
+        "",
+        "书房",
+        "盘点详情",
+        "书房",
+        "0 / 5 已核对",
+        "",
+        "扫码核对"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-stocktake-detail.png"
+    },
+    {
+      "name": "invite",
+      "ready": true,
+      "ownsWindow": true,
+      "errors": [],
+      "visibleTextCount": 6,
+      "firstTexts": [
+        "",
+        "家庭邀请",
+        "加入共享家庭空间",
+        "无法加入",
+        "邀请不存在、已使用或已过期",
+        "返回家庭空间"
+      ],
+      "screenshot": "/tmp/inplace-ui-20261027/android-invite.png"
+    }
+  ],
+  "controlledMap": {
+    "kind": "Controlled runtime config and SDK failure, no real map SDK acceptance",
+    "records": [
+      {
+        "width": 1440,
+        "canvasHeight": 392,
+        "overflow": false,
+        "toolbarOverflow": false,
+        "preventedSdkLoads": 1
+      },
+      {
+        "width": 1280,
+        "canvasHeight": 392,
+        "overflow": false,
+        "toolbarOverflow": false,
+        "preventedSdkLoads": 1
+      },
+      {
+        "width": 390,
+        "canvasHeight": 332,
+        "overflow": false,
+        "toolbarOverflow": false,
+        "preventedSdkLoads": 1
+      }
+    ]
+  },
+  "controlledBridge": {
+    "kind": "Browser-hosted bridge error contract and SDK failure fixture; not physical WebView/AMap acceptance",
+    "records": [
+      {
+        "width": 1440,
+        "height": 390,
+        "events": [
+          "error",
+          "error",
+          "error",
+          "error"
+        ],
+        "preventedSdkLoads": 1,
+        "overflow": false,
+        "hasFailureMessage": true
+      },
+      {
+        "width": 390,
+        "height": 330,
+        "events": [
+          "error",
+          "error"
+        ],
+        "preventedSdkLoads": 1,
+        "overflow": false,
+        "hasFailureMessage": true
+      }
+    ]
+  },
+  "summary": {
+    "webTests": 111,
+    "mobileTests": 70,
+    "webLint": "passed",
+    "mobileLint": "passed",
+    "typechecks": [
+      "ui",
+      "web",
+      "mobile"
+    ],
+    "webProductionBuild": "passed",
+    "androidNativeDebugBuild": "passed",
+    "expoExports": [
+      "android",
+      "ios"
+    ],
+    "webPrimaryChecks": 54,
+    "webPrimaryIssues": 0,
+    "extraViewportChecks": 12,
+    "androidPrimaryChecks": 29,
+    "androidPrimaryIssues": 0,
+    "androidAuthChecks": [
+      "login",
+      "register",
+      "logout",
+      "relogin"
+    ],
+    "androidFontScales": [
+      1,
+      1.3
+    ],
+    "restoredDeviceFontScale": 1.3,
+    "softKeyboardAndVisibleFooter": "verified",
+    "realProviderAcceptance": "not performed",
+    "iosNativeRuntime": "not performed"
+  }
+}

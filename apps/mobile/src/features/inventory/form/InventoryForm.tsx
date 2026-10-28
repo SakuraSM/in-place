@@ -76,7 +76,7 @@ export function InventoryForm({ presentation, item, parentId, type, onClose, onS
   const content = <>
     <View style={{ paddingHorizontal: 16 }}>
       {presentation === 'screen' ? <PageHeader title={title} onBack={requestClose} /> : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Text accessibilityRole="header" style={{ flex: 1, color: palette.text, fontSize: 20, fontWeight: '800' }}>{title}</Text>
+        <Text accessibilityRole="header" style={{ flex: 1, color: palette.text, fontSize: 20, fontWeight: '600' }}>{title}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="关闭表单" disabled={form.isBusy} onPress={requestClose} style={{ minHeight: controlSizes.touch, minWidth: controlSizes.touch, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: palette.textMuted }}>关闭</Text></Pressable>
       </View>}
     </View>
@@ -86,10 +86,10 @@ export function InventoryForm({ presentation, item, parentId, type, onClose, onS
       <InventoryFormFields nameInputRef={nameInput} form={form} categories={categories.data ?? []} tags={(tags.data ?? []).map((tag) => tag.name)} userId={user?.id} itemId={item?.id} canEdit={canEditInventory} categoryError={categories.isError} retryCategories={() => { void categories.refetch(); }} />
     </ScrollView>
     <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: palette.border }}>
-      <Pressable accessibilityRole="button" disabled={form.isBusy || !form.isDirty || !canEditInventory} onPress={form.requestReset} style={({ pressed }) => ({ minHeight: controlSizes.touch, flex: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.surfaceMuted, opacity: pressed ? 0.7 : 1 })}><Text style={{ color: palette.textMuted }}>重置</Text></Pressable>
-      {!item ? <Pressable accessibilityRole="button" accessibilityLabel="保存并继续" disabled={form.isBusy || !canEditInventory || !form.draft.name.trim()} onPress={() => void form.save(true)} style={{ minHeight: controlSizes.touch, flex: 2, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.brandTint }}><Text style={{ color: palette.brandStrong, fontWeight: '800' }}>保存并继续</Text></Pressable> : null}
-      <Pressable accessibilityRole="button" accessibilityLabel="保存" accessibilityState={{ disabled: form.isBusy || !canEditInventory || !form.draft.name.trim(), busy: form.isBusy }} disabled={form.isBusy || !canEditInventory || !form.draft.name.trim()} onPress={() => void form.save()} style={({ pressed }) => ({ minHeight: controlSizes.touch, flex: 2, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: form.isBusy || !canEditInventory || !form.draft.name.trim() ? palette.disabledSurface : palette.brandStrong, opacity: pressed ? 0.7 : 1 })}>
-        {form.isBusy ? <ActivityIndicator color={palette.brandStrong} /> : <Text style={{ color: canEditInventory && form.draft.name.trim() ? '#ffffff' : palette.disabledText, fontWeight: '800' }}>保存</Text>}
+      <Pressable accessibilityRole="button" disabled={form.isBusy || !form.isDirty || !canEditInventory} onPress={form.requestReset} style={({ pressed }) => ({ minHeight: controlSizes.touch, flex: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.surfaceMuted, opacity: pressed ? 0.7 : 1 })}><Text style={{ color: palette.textMuted }}>重置</Text></Pressable>
+      {!item ? <Pressable accessibilityRole="button" accessibilityLabel="保存并继续" disabled={form.isBusy || !canEditInventory || !form.draft.name.trim()} onPress={() => void form.save(true)} style={{ minHeight: controlSizes.touch, flex: 2, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.brandTint }}><Text style={{ color: palette.brandStrong, fontWeight: '600' }}>保存并继续</Text></Pressable> : null}
+      <Pressable accessibilityRole="button" accessibilityLabel="保存" accessibilityState={{ disabled: form.isBusy || !canEditInventory || !form.draft.name.trim(), busy: form.isBusy }} disabled={form.isBusy || !canEditInventory || !form.draft.name.trim()} onPress={() => void form.save()} style={({ pressed }) => ({ minHeight: controlSizes.touch, flex: 2, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: form.isBusy || !canEditInventory || !form.draft.name.trim() ? palette.disabledSurface : palette.brandStrong, opacity: pressed ? 0.7 : 1 })}>
+        {form.isBusy ? <ActivityIndicator color={palette.brandStrong} /> : <Text style={{ color: canEditInventory && form.draft.name.trim() ? '#ffffff' : palette.disabledText, fontWeight: '600' }}>保存</Text>}
       </Pressable>
     </View>
   </>;

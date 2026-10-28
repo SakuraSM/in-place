@@ -51,4 +51,4 @@ export default function HouseholdJoinScreen() {
 }
 
 const buttonStyle = { minHeight: 48, borderRadius: 16, backgroundColor: palette.brandStrong, alignItems: 'center' as const, justifyContent: 'center' as const };
-const buttonTextStyle = { fontSize: 14, fontWeight: '900' as const, color: '#ffffff' };
+const buttonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: '#ffffff' };

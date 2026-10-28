@@ -24,6 +24,7 @@ InPlace 是一个开源的家庭物品管理项目，用于记录家中有哪些
 - 基于 Fastify 的 API 服务，使用 PostgreSQL 和 Drizzle ORM。
 - 支持图片上传，并预留服务端 AI 识别能力。
 - 支持 JSON、CSV 导出，移动端支持 JSON 备份导入。
+- 支持 [MCP 接入](docs/product/mcp-access.md)，管理 Agent 凭证、查询库存并批量新增物品、位置和收纳。
 - 支持真实地理资产地图，可按位置展示图标、聚合标记、筛选资产并标注坐标。
 - 支持拆分服务和一体化两种 Docker Compose 部署方式。
 

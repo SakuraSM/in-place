@@ -1,13 +1,11 @@
+import { AuthShell } from '@/features/auth/AuthShell';
 import { Link, Redirect } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { getMobileApiBaseUrlInput } from '@/shared/api/mobileClient';
 import { ConnectionFields } from '@/features/auth/ConnectionFields';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
-import { Entrance } from '@/shared/ui/Entrance';
-import { Screen } from '@/shared/ui/Screen';
-import { palette, shadows } from '@/shared/ui/theme';
+import { palette } from '@/shared/ui/theme';
 
 export default function LoginScreen() {
   const { signIn, session, loading } = useAuth();
@@ -42,22 +40,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}><Screen
-      scroll
-      safeAreaBottom="none"
-      contentInsetMode="form"
-      contentStyle={{ justifyContent: 'center', gap: 18 }}
-    >
-      <Entrance variant="page">
-        <BrandHeader
-          title="归位"
-          subtitle="登录库存空间"
-          variant="hero"
-        />
-      </Entrance>
-
-      <Entrance delay={90} variant="card">
-        <View style={cardStyle}>
+    <AuthShell title="欢迎回到归位">
           <ConnectionFields server={apiBaseUrl} email={email} password={password} disabled={submitting} registering={false} onServerChange={setApiBaseUrl} onEmailChange={setEmail} onPasswordChange={setPassword} onSubmit={() => void handleSubmit()} />
 
           {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: palette.danger }}>{error}</Text> : null}
@@ -79,31 +62,20 @@ export default function LoginScreen() {
               <Text style={{ color: palette.brandStrong, textAlign: 'center', fontWeight: '600' }}>没有账号？去注册</Text>
             </Pressable>
           </Link>
-        </View>
-      </Entrance>
-    </Screen></KeyboardAvoidingView>
+    </AuthShell>
   );
 }
 
 const buttonStyle = {
   backgroundColor: palette.brandStrong,
-  borderRadius: 16,
-  paddingVertical: 15,
+  borderRadius: 12,
+  minHeight: 44,
+  paddingVertical: 12,
   alignItems: 'center' as const,
 };
 
 const buttonTextStyle = {
   color: '#ffffff',
-  fontSize: 16,
+  fontSize: 14,
   fontWeight: '600' as const,
-};
-
-const cardStyle = {
-  backgroundColor: palette.surface,
-  borderRadius: 28,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  padding: 20,
-  gap: 16,
-  ...shadows.card,
 };

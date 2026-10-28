@@ -60,7 +60,7 @@ export default function StocktakesPage() {
               <select
                 value={locationId}
                 onChange={(event) => setLocationId(event.target.value)}
-                className="h-11 w-full rounded-2xl border border-border bg-surfaceMuted px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                className="ui-field h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               >
                 <option value="">选择位置</option>
                 {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
@@ -70,7 +70,7 @@ export default function StocktakesPage() {
               type="button"
               disabled={!canEditInventory || !locationId || starting}
               onClick={() => void startStocktake()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-bold text-white disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-5 text-sm font-semibold text-white disabled:opacity-50"
             >
               <Play size={17} />
               {starting ? '创建清单中…' : '开始盘点'}
@@ -80,7 +80,7 @@ export default function StocktakesPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-base font-bold text-slate-900">最近盘点</h2>
+          <h2 className="mb-3 text-base font-semibold text-slate-900">最近盘点</h2>
           {loading ? <p className="text-sm text-slate-500">正在加载…</p> : null}
           {!loading && sessions.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-border bg-surfaceMuted p-8 text-center">
@@ -97,7 +97,7 @@ export default function StocktakesPage() {
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700"><MapPin size={20} /></span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-slate-900">{session.location.name}</p>
+                    <p className="truncate font-semibold text-slate-900">{session.location.name}</p>
                     <p className="mt-1 text-xs text-slate-500">{new Date(session.created_at).toLocaleString('zh-CN')}</p>
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${session.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>

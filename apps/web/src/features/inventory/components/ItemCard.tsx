@@ -70,8 +70,8 @@ export default function ItemCard({
           }
           onLongPress();
         }}
-        animate={{ y: hovered ? -3 : 0, boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.04)' }}
-        whileTap={{ scale: 0.96 }}
+        animate={{ boxShadow: hovered ? '0 4px 16px rgba(36,59,51,0.05)' : '0 0 0 transparent' }}
+        whileTap={{ scale: 0.99 }}
         transition={{ type: 'spring', stiffness: 400, damping: 22 }}
         role={selectionMode ? 'checkbox' : undefined}
         aria-checked={selectionMode ? selected : undefined}
@@ -80,7 +80,7 @@ export default function ItemCard({
           selected ? 'border-brand ring-2 ring-brand/20' : 'border-borderSoft'
         }`}
       >
-        <div className="relative aspect-square overflow-hidden bg-slate-50 lg:aspect-[4/3]">
+        <div className="relative aspect-[4/3] overflow-hidden bg-surfaceMuted">
           {item.images.length > 0 ? (
               <motion.img
               src={buildInventoryImageUrl(item.images[0], 'card')}
@@ -172,7 +172,7 @@ export default function ItemCard({
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.15 }}
           aria-label={`打开${item.name}的更多操作`}
-          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white/95 text-slate-500 opacity-100 shadow-sm backdrop-blur-sm transition-[opacity,color,background-color] hover:bg-brandTint hover:text-brandStrong focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white/95 text-muted opacity-100 transition-[opacity,color,background-color] hover:bg-brandTint hover:text-brandStrong focus:opacity-100 md:h-9 md:w-9 md:opacity-0 md:group-hover:opacity-100"
           title="更多操作"
         >
           <MoreHorizontal size={14} />

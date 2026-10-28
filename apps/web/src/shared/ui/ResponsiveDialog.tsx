@@ -63,7 +63,7 @@ export default function ResponsiveDialog({
         <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-border md:hidden" />
         <header className="flex items-start justify-between gap-4 border-b border-borderSoft px-5 pb-4 pt-3 md:px-6 md:pt-5">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-bold text-slate-900">
+            <h2 id={titleId} className="text-lg font-semibold text-slate-900">
               {title}
             </h2>
             {description ? (

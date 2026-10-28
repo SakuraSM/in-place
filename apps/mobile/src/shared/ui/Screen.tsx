@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StatusBar, View, type ScrollViewProps, type StatusBarStyle, type ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, View, type ScrollViewProps, type StatusBarStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { layout } from '@inplace/ui/mobile';
 import { palette } from './theme';
 
 interface ScreenProps {
   children: ReactNode;
+  footer?: ReactNode;
   scroll?: boolean;
   contentStyle?: ViewStyle;
   scrollProps?: ScrollViewProps;
@@ -15,86 +17,37 @@ interface ScreenProps {
   chrome?: 'default' | 'muted' | 'none';
 }
 
-export function Screen({
-  children,
-  scroll = false,
-  contentStyle,
-  scrollProps,
-  safeAreaTop = 'top-safe',
-  safeAreaBottom = 'bottom-safe',
-  statusBarStyle = 'dark-content',
-  contentInsetMode = 'page',
-  chrome = 'default',
-}: ScreenProps) {
+export function Screen({ children, footer, scroll = false, contentStyle, scrollProps, safeAreaTop = 'top-safe', safeAreaBottom = 'bottom-safe', statusBarStyle = 'dark-content', contentInsetMode = 'page' }: ScreenProps) {
   const insets = useSafeAreaInsets();
-  const contentSpacing = contentInsetMode === 'tight'
-    ? { horizontal: 16, vertical: 8, gap: 10 }
-    : contentInsetMode === 'form'
-      ? { horizontal: 16, vertical: 12, gap: 12 }
-      : { horizontal: 16, vertical: 12, gap: 12 };
-  const topPadding = safeAreaTop === 'top-safe' ? insets.top + 6 : 0;
-  const bottomPadding = safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, 10) : 0;
+  const isTight = contentInsetMode === 'tight';
+  const verticalSpacing = isTight ? 12 : 20;
+  const topInset = safeAreaTop === 'top-safe' ? insets.top : 0;
+  const topPadding = safeAreaTop === 'top-safe' ? 6 : 0;
+  const bottomPadding = !footer && safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, 10) : 0;
   const containerStyle: ViewStyle = {
     flexGrow: 1,
-    paddingHorizontal: contentSpacing.horizontal,
-    paddingTop: topPadding + contentSpacing.vertical,
-    paddingBottom: bottomPadding + contentSpacing.vertical,
-    gap: contentSpacing.gap,
+    paddingHorizontal: layout.pageGutter.mobile,
+    paddingTop: topPadding + verticalSpacing,
+    paddingBottom: bottomPadding + verticalSpacing,
+    gap: isTight ? 16 : layout.pageGap.mobile,
   };
-
-  if (scroll) {
-    return (
-      <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
-        <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
-        <BackgroundChrome chrome={chrome} />
-        <ScrollView
-          testID="screen-scroll"
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[containerStyle, contentStyle]}
-          {...scrollProps}
-        >
-          {children as never}
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
+  const content = scroll ? (
+    <ScrollView testID="screen-scroll" keyboardShouldPersistTaps="handled" contentContainerStyle={[containerStyle, contentStyle]} {...scrollProps}>{children as never}</ScrollView>
+  ) : (
+    <View testID="screen-content" style={[containerStyle, { flex: 1 }, contentStyle]}>{children as never}</View>
+  );
   return (
-    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: palette.canvas }}>
+    <SafeAreaView testID="screen-safe-area" edges={[]} style={{ flex: 1, paddingTop: topInset, backgroundColor: palette.canvas }}>
       <StatusBar barStyle={statusBarStyle} translucent backgroundColor="transparent" />
-      <BackgroundChrome chrome={chrome} />
-      <View testID="screen-content" style={[containerStyle, { flex: 1 }, contentStyle]}>{children as never}</View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' && footer ? 'padding' : undefined}>
+        {content}
+        {footer ? <ScreenFooter bottomInset={insets.bottom}>{footer}</ScreenFooter> : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function BackgroundChrome({ chrome }: { chrome: 'default' | 'muted' | 'none' }) {
-  if (chrome === 'none' || chrome === 'muted') {
-    return null;
-  }
-
-  return (
-    <View style={backgroundChromeStyle}>
-      <View style={topGlowStyle} />
-    </View>
-  );
+interface ScreenFooterProps { children: ReactNode; bottomInset: number }
+function ScreenFooter({ children, bottomInset }: ScreenFooterProps) {
+  return <View testID="screen-footer" style={{ paddingHorizontal: layout.pageGutter.mobile, paddingTop: 14, paddingBottom: Math.max(bottomInset, 14), borderTopWidth: 1, borderTopColor: palette.border, backgroundColor: palette.surface }}>{children as never}</View>;
 }
-
-const backgroundChromeStyle = {
-  position: 'absolute' as const,
-  top: 0,
-  right: 0,
-  bottom: 0,
-  left: 0,
-};
-
-const topGlowStyle = {
-  position: 'absolute' as const,
-  top: -92,
-  right: -82,
-  width: 164,
-  height: 164,
-  borderRadius: 999,
-  backgroundColor: '#dff7f4',
-  opacity: 0.16,
-};

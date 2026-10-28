@@ -132,7 +132,7 @@ export default function DataManagementScreen() {
 const primaryButtonStyle = {
   alignItems: 'center' as const,
   backgroundColor: palette.brandStrong,
-  borderRadius: 14,
+  borderRadius: 12,
   paddingVertical: 13,
 };
 
@@ -144,7 +144,7 @@ const primaryButtonTextStyle = {
 const secondaryButtonStyle = {
   alignItems: 'center' as const,
   backgroundColor: palette.surface,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   paddingVertical: 13,

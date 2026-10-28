@@ -24,7 +24,7 @@ export function PageHeader({ title, subtitle, accessory, onBack = router.back }:
         <Ionicons name="arrow-back" size={22} color={palette.text} />
       </Pressable>
       <View style={titleBlockStyle}>
-        <Text numberOfLines={1} style={titleStyle}>{title}</Text>
+        <Text numberOfLines={2} style={titleStyle}>{title}</Text>
         {subtitle ? <Text numberOfLines={2} style={subtitleStyle}>{subtitle}</Text> : null}
       </View>
       {accessory ? <View style={accessoryStyle}>{accessory as never}</View> : null}
@@ -41,15 +41,13 @@ const rootStyle = {
 const backButtonStyle = {
   width: 44,
   height: 44,
-  borderRadius: 14,
+  borderRadius: 12,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
+  backgroundColor: 'transparent',
 };
-const titleBlockStyle = { minWidth: 0, flex: 1, gap: 2 };
-const titleStyle = { fontSize: 22, lineHeight: 28, fontWeight: '900' as const, color: palette.text };
-const subtitleStyle = { fontSize: 13, lineHeight: 18, color: palette.textSoft };
+const titleBlockStyle = { minWidth: 0, flex: 1, gap: 6 };
+const titleStyle = { fontSize: 26, lineHeight: 34, fontWeight: '600' as const, color: palette.text, letterSpacing: -0.5 };
+const subtitleStyle = { fontSize: 12, lineHeight: 18, color: palette.textMuted };
 const accessoryStyle = { minHeight: 44, justifyContent: 'center' as const };
 const pressedStyle = { opacity: 0.68 };

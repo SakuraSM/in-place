@@ -170,18 +170,18 @@ export function MobileAttachmentsCard({ itemId, canEdit = true }: { itemId: stri
 
 const uploadButtonStyle = {
   minHeight: 44,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.brandTint,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   flexDirection: 'row' as const,
   gap: 8,
 };
-const uploadButtonTextStyle = { color: palette.brandStrong, fontSize: 14, fontWeight: '800' as const };
+const uploadButtonTextStyle = { color: palette.brandStrong, fontSize: 14, fontWeight: '600' as const };
 const listStyle = { marginTop: 12, gap: 8 };
 const rowStyle = {
   minHeight: 56,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.surfaceMuted,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
@@ -189,7 +189,7 @@ const rowStyle = {
   paddingRight: 8,
 };
 const fileButtonStyle = { minWidth: 0, flex: 1, flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, paddingVertical: 9 };
-const fileNameStyle = { color: palette.text, fontSize: 14, fontWeight: '800' as const };
+const fileNameStyle = { color: palette.text, fontSize: 14, fontWeight: '600' as const };
 const fileMetaStyle = { marginTop: 2, color: palette.textSoft, fontSize: 11 };
 const deleteButtonStyle = { width: 40, height: 40, alignItems: 'center' as const, justifyContent: 'center' as const };
 const emptyStyle = { marginTop: 10, color: palette.textSoft, fontSize: 13, lineHeight: 19 };

@@ -105,7 +105,7 @@ const pickerStyle = {
 };
 
 const selectedSummaryStyle = {
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: '#99f6e4',
   backgroundColor: palette.brandTint,
@@ -121,7 +121,7 @@ const selectedTextStyle = {
   minWidth: 0,
   color: palette.brandStrong,
   fontSize: 13,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
 };
 
 const breadcrumbRailStyle = {
@@ -154,7 +154,7 @@ const breadcrumbTextStyle = {
   maxWidth: 110,
   color: palette.textMuted,
   fontSize: 12,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const locationRowStyle = {
@@ -179,9 +179,9 @@ const locationTextStyle = {
   flex: 1,
   minWidth: 0,
   color: palette.text,
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 20,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
 };
 
 const loadingStyle = {
@@ -216,7 +216,7 @@ const typePillStyle = {
   paddingVertical: 3,
   color: palette.brandStrong,
   fontSize: 11,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
 };
 
 const drillButtonStyle = {

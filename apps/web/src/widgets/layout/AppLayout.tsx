@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import HouseholdSwitcher from './HouseholdSwitcher';
+import WorkspaceHeader from './WorkspaceHeader';
 import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
 import BrandVersionFooter from '../../shared/ui/BrandVersionFooter';
@@ -28,13 +28,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         id="main-content"
         tabIndex={-1}
         data-scroll-root
-        className={`flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-clip bg-canvas pb-[var(--mobile-nav-offset)] lg:h-dvh lg:min-h-0 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0 ${
-          sidebarCollapsed ? 'lg:ml-24' : 'lg:ml-64 xl:ml-72'
+        className={`flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-clip bg-canvas pb-[var(--mobile-nav-offset)] md:h-dvh md:min-h-0 md:overflow-x-hidden md:overflow-y-auto md:pb-0 ${
+          sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[72px] min-[1200px]:ml-56'
         }`}
       >
-        <div className="app-page-gutter pt-3 lg:hidden"><HouseholdSwitcher /></div>
+        <WorkspaceHeader />
         {children}
-        <footer className="app-page-gutter py-5 lg:hidden">
+        <footer className="app-page-gutter py-5 md:hidden">
           <BrandVersionFooter compact className="justify-center" />
         </footer>
       </main>

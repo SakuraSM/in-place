@@ -273,7 +273,7 @@ export default function MobileMapCanvasPage() {
       {status === 'loading' ? <MapStatus text="正在加载高德地图…" /> : null}
       {status === 'error' ? <MapStatus text="地图加载失败，请检查服务配置" danger /> : null}
       {coordinateTargetName ? (
-        <div className="absolute left-3 right-3 top-3 rounded-2xl border border-brand/30 bg-white/95 px-4 py-3 text-sm font-bold text-slate-900 shadow-lg">
+        <div className="absolute left-3 right-3 top-3 rounded-2xl border border-brand/30 bg-white/95 px-4 py-3 text-sm font-semibold text-slate-900 shadow-lg">
           点击地图标注“{coordinateTargetName}”
         </div>
       ) : null}
@@ -284,7 +284,7 @@ export default function MobileMapCanvasPage() {
 function MapStatus({ text, danger = false }: { text: string; danger?: boolean }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-white/95 px-6" role={danger ? 'alert' : 'status'}>
-      <p className={danger ? 'text-sm font-bold text-rose-700' : 'text-sm font-semibold text-slate-600'}>{text}</p>
+      <p className={danger ? 'text-sm font-semibold text-rose-700' : 'text-sm font-semibold text-slate-600'}>{text}</p>
     </div>
   );
 }

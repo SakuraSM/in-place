@@ -42,15 +42,15 @@ export default function GeoAssetMapToolbar({
 
   return (
     <section
-      className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-3xl border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-2 md:p-4 xl:grid-cols-[minmax(16rem,1fr)_10rem_10rem_9rem_9rem_auto] xl:items-end"
+      className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-3xl border border-border bg-surface p-3 md:grid-cols-2 md:p-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end"
       aria-label="地图筛选"
     >
       <label className="min-w-0">
-        <span className="mb-1.5 block text-xs font-bold text-slate-600">搜索位置或资产</span>
+        <span className="mb-1.5 block text-xs font-semibold text-slate-600">搜索位置或资产</span>
         <span className="relative block">
           <Search
             size={17}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
             aria-hidden="true"
           />
           <input
@@ -58,7 +58,7 @@ export default function GeoAssetMapToolbar({
             value={filters.query}
             onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
             placeholder="名称、分类、标签或地址"
-            className="h-11 w-full rounded-2xl border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+            className="ui-field h-11 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
           />
         </span>
       </label>
@@ -68,7 +68,7 @@ export default function GeoAssetMapToolbar({
         aria-expanded={isMobileFilterOpen}
         aria-controls={mobileFilterPanelId}
         onClick={() => setIsMobileFilterOpen((isOpen) => !isOpen)}
-        className="mt-[22px] inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong md:hidden"
+        className="mt-[22px] inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong md:hidden"
       >
         <SlidersHorizontal size={16} aria-hidden="true" />
         <span>筛选</span>
@@ -85,14 +85,14 @@ export default function GeoAssetMapToolbar({
       >
 
       <label>
-        <span className="mb-1.5 block text-xs font-bold text-slate-600">资产状态</span>
+        <span className="mb-1.5 block text-xs font-semibold text-slate-600">资产状态</span>
         <select
           value={filters.status}
           onChange={(event) => onFiltersChange({
             ...filters,
             status: event.target.value as GeoAssetMapFilters['status'],
           })}
-          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+          className="ui-field h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -101,11 +101,11 @@ export default function GeoAssetMapToolbar({
       </label>
 
       <label>
-        <span className="mb-1.5 block text-xs font-bold text-slate-600">资产分类</span>
+        <span className="mb-1.5 block text-xs font-semibold text-slate-600">资产分类</span>
         <select
           value={filters.category}
           onChange={(event) => onFiltersChange({ ...filters, category: event.target.value })}
-          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+          className="ui-field h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
         >
           <option value={GEO_ASSET_ALL_FILTER}>全部分类</option>
           {categories.map((category) => (
@@ -115,31 +115,31 @@ export default function GeoAssetMapToolbar({
       </label>
 
       <label>
-        <span className="mb-1.5 block text-xs font-bold text-slate-600">创建日期从</span>
+        <span className="mb-1.5 block text-xs font-semibold text-slate-600">创建日期从</span>
         <input
           type="date"
           value={filters.createdAfter}
           max={filters.createdBefore || undefined}
           onChange={(event) => onFiltersChange({ ...filters, createdAfter: event.target.value })}
-          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+          className="ui-field h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
         />
       </label>
 
       <label>
-        <span className="mb-1.5 block text-xs font-bold text-slate-600">创建日期至</span>
+        <span className="mb-1.5 block text-xs font-semibold text-slate-600">创建日期至</span>
         <input
           type="date"
           value={filters.createdBefore}
           min={filters.createdAfter || undefined}
           onChange={(event) => onFiltersChange({ ...filters, createdBefore: event.target.value })}
-          className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
+          className="ui-field h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-brandStrong focus:ring-2 focus:ring-brand/20"
         />
       </label>
 
       <button
         type="button"
         onClick={handleReset}
-        className="col-span-2 inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong md:col-auto"
+        className="col-span-2 inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brandStrong md:col-auto"
       >
         <FilterX size={16} aria-hidden="true" />
         重置

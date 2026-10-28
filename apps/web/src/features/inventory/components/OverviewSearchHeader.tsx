@@ -25,7 +25,7 @@ export function OverviewSearchField({
         onChange={(event) => onChange(event.target.value)}
         placeholder="搜索名称、描述或标签"
         aria-label="搜索库存"
-        className="w-full rounded-2xl border border-border bg-surfaceMuted py-3 pl-10 pr-11 text-sm text-slate-900 placeholder:text-slate-500"
+        className="ui-field w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-11 text-sm text-ink placeholder:text-muted"
       />
       {value ? (
         <button
@@ -67,7 +67,7 @@ export function OverviewMobileControls({
   return (
     <section
       aria-label="搜索与筛选"
-      className="flex min-w-0 gap-2 xl:hidden"
+      className="flex min-w-0 gap-3"
     >
       <div className="min-w-0 flex-1">
         <OverviewSearchField value={query} onChange={onQueryChange} autoFocus={autoFocus} />
@@ -75,7 +75,7 @@ export function OverviewMobileControls({
       <button
         type="button"
         onClick={onOpenFilters}
-        className="relative flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-border bg-surface px-3 text-sm font-bold text-slate-700"
+        className="relative flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-border bg-surface px-3 text-sm font-semibold text-slate-700"
       >
         <ListFilter size={17} />
         筛选

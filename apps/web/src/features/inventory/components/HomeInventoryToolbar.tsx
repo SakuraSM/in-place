@@ -15,6 +15,7 @@ interface HomeInventoryToolbarProps {
   onNavigateBreadcrumb: (itemId: string | null) => void;
   onToggleSelectAll: () => void;
   onViewModeChange: (viewMode: HomeViewMode) => void;
+  className?: string;
 }
 
 const VIEW_MODE_OPTIONS = [
@@ -33,11 +34,12 @@ export default function HomeInventoryToolbar({
   onNavigateBreadcrumb,
   onToggleSelectAll,
   onViewModeChange,
+  className = '',
 }: HomeInventoryToolbarProps) {
   if (isEmpty && breadcrumbs.length === 0) return null;
 
   return (
-    <div className="mb-5 space-y-3 md:mb-6">
+    <div className={`mb-5 space-y-3 md:mb-6 ${className}`}>
       {breadcrumbs.length > 0 ? (
         <Breadcrumb
           items={breadcrumbs.map((breadcrumb) => ({
@@ -69,7 +71,7 @@ export default function HomeInventoryToolbar({
           className="flex items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brandTint px-4 py-3"
         >
           <div>
-            <p className="text-sm font-bold text-slate-900">批量操作已开启</p>
+            <p className="text-sm font-semibold text-slate-900">批量操作已开启</p>
             <p className="mt-0.5 text-xs text-slate-600">
               已选 {selectedCount} / {totalCount} 项
             </p>
@@ -77,7 +79,7 @@ export default function HomeInventoryToolbar({
           <button
             type="button"
             onClick={onToggleSelectAll}
-            className="rounded-xl border border-border bg-surface px-3 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-surfaceMuted"
+            className="rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-surfaceMuted"
           >
             {isAllSelected ? '取消全选' : `全选本层 ${totalCount} 项`}
           </button>

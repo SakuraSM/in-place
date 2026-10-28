@@ -19,6 +19,7 @@ const ProfilePage = lazy(() => import('../features/profile/pages/ProfilePage'));
 const AiSettingsPage = lazy(() => import('../features/profile/pages/AiSettingsPage'));
 const SecurityPage = lazy(() => import('../features/profile/pages/SecurityPage'));
 const DataManagementPage = lazy(() => import('../features/profile/pages/DataManagementPage'));
+const McpSettingsPage = lazy(() => import('../features/profile/pages/McpSettingsPage'));
 const CategoriesPage = lazy(() => import('../features/inventory/pages/CategoriesPage'));
 const TagsPage = lazy(() => import('../features/tags/pages/TagsPage'));
 const ContainerDetailPage = lazy(() => import('../features/inventory/pages/ContainerDetailPage'));
@@ -100,6 +101,7 @@ export default function App() {
                   <Route path="/profile/ai" element={<ProtectedPage><AiSettingsPage /></ProtectedPage>} />
                   <Route path="/profile/security" element={<ProtectedPage><SecurityPage /></ProtectedPage>} />
                   <Route path="/profile/data" element={<ProtectedPage><DataManagementPage /></ProtectedPage>} />
+                  <Route path="/profile/mcp" element={<ProtectedPage><McpSettingsPage /></ProtectedPage>} />
                   <Route path="/categories" element={<ProtectedPage><CategoriesPage /></ProtectedPage>} />
                   <Route path="/tags" element={<ProtectedPage><TagsPage /></ProtectedPage>} />
                   <Route path="/notes" element={<Navigate to="/tags" replace />} />

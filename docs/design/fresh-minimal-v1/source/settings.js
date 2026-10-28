@@ -1,0 +1,36 @@
+import {art,badge,button,emptyState,field,footer,href,icon,notice,panel,row,sectionHeading,selectField,settingRow} from './primitives.js';
+
+function profile() {
+  return `<div class="narrow stack"><section class="profile-hero"><div class="avatar">林</div><div class="grow"><h2>小林</h2><p class="muted">lin@example.invalid</p></div>${badge('家庭所有者')}</section>${panel(`${sectionHeading('我的家庭')}${settingRow({title:'温暖的家',subtitle:'3 位成员 · 当前家庭空间',iconName:'house',page:'household'})}`)}${panel(`${sectionHeading('偏好与设置')}${settingRow({title:'AI 配置',subtitle:'管理识别服务与模型',iconName:'sparkles',page:'ai'})}${settingRow({title:'账号安全',subtitle:'账号资料与密码',iconName:'shield-check',page:'security'})}${settingRow({title:'数据管理',subtitle:'导出清单与备份',iconName:'database',page:'data'})}${settingRow({title:'个人资料',subtitle:'修改昵称与基础资料',iconName:'user-round',page:'profile-edit'})}${settingRow({title:'关于归位',subtitle:'版本与开源信息',iconName:'info',page:'about'})}`)}<div class="signout">${button({label:'退出登录',page:'login',iconName:'log-out',tone:'ghost'})}</div></div>`;
+}
+function household() {
+  return `<div class="narrow stack"><section class="profile-hero">${art('location-apartment')}<div class="grow"><span class="caption">当前家庭空间</span><h2>温暖的家</h2><p class="muted">一起整理，一起好好生活。</p></div></section>${panel(`${sectionHeading('家庭成员')}<p class="caption">不同角色拥有不同的管理权限。</p>${row({title:'小林 · 你',subtitle:'管理家庭与所有库存',iconName:'user-round',end:badge('所有者')})}${row({title:'小夏',subtitle:'可以新增、编辑和整理库存',iconName:'user-round',end:badge('编辑者','info')})}${row({title:'小禾',subtitle:'可以查看家庭库存',iconName:'user-round',end:badge('查看者','neutral')})}<div class="spacer">${button({label:'邀请成员',iconName:'user-plus',tone:'primary'})}</div>`)}${panel(`${sectionHeading('家庭管理')}${settingRow({title:'切换家庭空间',subtitle:'查看其他已加入的家庭',iconName:'house',end:icon('chevron-right')})}${settingRow({title:'家庭名称',subtitle:'温暖的家',iconName:'pencil',end:button({label:'编辑',tone:'ghost',className:'small'})})}`)}</div>`;
+}
+function ai() {
+  return `<div class="narrow stack">${notice('为拍照识别配置 AI 服务','视觉稿中的服务地址和模型均为占位，不包含真实密钥。')}<section class="panel">${sectionHeading('识别服务')}<div class="field-grid">${field({label:'服务地址',value:'https://api.example.invalid/v1',wide:true,hint:'使用服务提供方支持的兼容地址。'})}${field({label:'模型名称',placeholder:'填写已开通的模型',wide:true})}${field({label:'API 密钥',type:'password',placeholder:'输入新密钥，留空保留已有配置',wide:true,hint:'已保存密钥仅显示状态，不回显明文。'})}</div><div class="spacer">${badge('已保存密钥 · 示例状态')}</div></section>${panel(`${sectionHeading('配置来源')}${settingRow({title:'当前配置',subtitle:'家庭自定义配置',iconName:'sliders-horizontal'})}${button({label:'恢复默认配置',iconName:'rotate-ccw',tone:'ghost'})}`)}${footer('保存配置')}</div>`;
+}
+function security() {
+  return `<div class="narrow stack">${panel(`${sectionHeading('账号信息')}${settingRow({title:'登录邮箱',subtitle:'lin@example.invalid',iconName:'mail'})}`)}<section class="panel">${sectionHeading('修改密码')}<div class="stack">${field({label:'当前密码',type:'password',placeholder:'请输入当前密码'})}${field({label:'新密码',type:'password',placeholder:'请输入新密码'})}${field({label:'再次输入新密码',type:'password',placeholder:'请再次确认'})}</div></section>${footer('更新密码')}</div>`;
+}
+function dataManagement() {
+  const isMobile = document.body.dataset.platform === 'mobile';
+  return `<div class="narrow stack">${panel(`${sectionHeading('导出家庭数据')}<p class="muted">为家庭库存留一份备份。</p>${settingRow({title:'JSON 完整备份',subtitle:'适合备份与迁移',iconName:'database',end:button({label:'导出',iconName:'download',className:'small'})})}${settingRow({title:'CSV 物品清单',subtitle:'适合在电子表格中查看',iconName:'file-spreadsheet',end:button({label:'导出',iconName:'download',className:'small'})})}`)}${isMobile ? panel(`${sectionHeading('从 JSON 备份导入')}${notice('导入前先确认目标家庭','读取文件后显示预检结果，确认后再执行导入。','warning')}<div class="upload-zone spacer">${icon('upload')}<p>选择 JSON 备份文件</p></div><div class="spacer">${button({label:'选择备份文件',iconName:'folder-open'})}</div>`) : notice('备份导入目前在原生移动端提供','Web 保留 JSON 与 CSV 导出，不增加尚未提供的导入操作。','info')}${panel(`${sectionHeading('备份建议')}<p class="muted">大批量整理之前导出一份 JSON。请妥善保管可能含个人信息的备份文件。</p>`)}</div>`;
+}
+function profileEdit() {
+  return `<div class="narrow stack">${panel(`<section class="profile-hero"><div class="avatar">林</div><div><h3>小林</h3><p class="caption">个人资料</p></div></section><div class="stack spacer">${field({label:'昵称',value:'小林'})}${settingRow({title:'登录邮箱',subtitle:'lin@example.invalid',iconName:'mail'})}</div>`)}${footer('保存资料')}</div>`;
+}
+function about() {
+  return `<div class="narrow stack"><div class="about-brand"><img src="assets/logo.png" alt="归位标志"><h2>归位 InPlace</h2><p class="muted">家庭物品管理</p><span class="badge neutral spacer">版本 0.3.6 · 仓库基线</span></div>${panel(`${sectionHeading('版本与开源')}${settingRow({title:'项目仓库',subtitle:'github.com/SakuraSM/in-place',iconName:'folder-open'})}${settingRow({title:'版本与许可证',subtitle:'以项目仓库及当前安装包信息为准',iconName:'info'})}`)}<p class="caption">视觉稿对应 2026 年 10 月 27 日读取的仓库基线。</p></div>`;
+}
+function login() { return authForm(false); }
+function register() { return authForm(true); }
+function authForm(isRegister) {
+  return `<div class="auth-layout"><section class="auth-story"><p class="eyebrow">A HOME FOR EVERYTHING</p><h1>记得拥有，<br>也记得归处。</h1><p>从一件小物开始，<br>把日常收拾成喜欢的样子。</p>${art('location-apartment')}</section><section class="auth-form"><p class="eyebrow">${isRegister ? 'MAKE ROOM FOR LIFE' : 'WELCOME HOME'}</p><h2>${isRegister ? '创建你的归位账户' : '欢迎回到归位'}</h2><p class="muted">${isRegister ? '和家人一起，照顾好每一件物品。' : '家里的每一件物品，都在这里。'}</p><form class="stack spacer">${isRegister ? field({label:'昵称',placeholder:'怎么称呼你'}) : ''}${field({label:'邮箱',type:'email',placeholder:'your@email.com'})}${field({label:'密码',type:'password',placeholder:isRegister ? '设置登录密码' : '输入登录密码'})}${isRegister ? field({label:'确认密码',type:'password',placeholder:'再次输入密码'}) : ''}${button({label:isRegister ? '创建账户' : '登录',tone:'primary',className:'full'})}</form><p class="auth-switch">${isRegister ? '已经有账户？' : '还没有账户？'} <a href="${href(isRegister ? 'login' : 'register')}">${isRegister ? '去登录' : '创建账户'} ${icon('arrow-right')}</a></p><p class="caption spacer">静态视觉稿 · 表单不会提交或发送数据</p></section></div>`;
+}
+function invite() {
+  return `<div class="invite-layout"><div class="invite-art">${art('location-apartment')}</div><p class="eyebrow">BETTER TOGETHER</p><h1>一起，把家照顾好。</h1><p class="muted spacer">小林邀请你加入「温暖的家」</p>${panel(`<div class="between"><h2>温暖的家</h2>${badge('编辑者','info')}</div><p class="muted spacer">加入后，你可以查看、录入和整理这个家庭的库存。</p><div class="divider"></div>${button({label:'确认加入家庭',tone:'primary',iconName:'user-plus',className:'full'})}<p class="caption spacer">仅在邀请有效时可加入；失效时提供返回入口。</p>`)}<a class="caption" href="${href('home')}">暂不加入，返回首页</a></div>`;
+}
+function platform() {
+  return `<div class="narrow stack">${notice('当前为部署状态页面','此稿为平台模式，不显示家庭库存。')}<div class="stack">${[['Web 前端','页面服务正常','globe'],['API 服务','健康检查通过 · 示例','server'],['PostgreSQL','数据库连接正常 · 示例','database']].map(([title,subtitle,iconName])=>panel(settingRow({title,subtitle,iconName,end:badge('示例正常')}))).join('')}</div>${panel(`${sectionHeading('服务检查')}<p class="caption">检查目标 /api/v1/health</p><div class="spacer">${button({label:'重新检查',iconName:'rotate-ccw',tone:'primary'})}</div>`)}</div>`;
+}
+export const SETTINGS_VIEWS = {profile,household,ai,security,data:dataManagement,'profile-edit':profileEdit,about,login,register,invite,platform};

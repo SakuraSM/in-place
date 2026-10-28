@@ -1,7 +1,8 @@
+import InventoryArtwork from '../components/InventoryArtwork';
 import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, SquarePen, Trash2, Tag, MapPin, ChevronRight, Box, Package2 } from 'lucide-react';
+import { ArrowLeft, SquarePen, Trash2, Tag, MapPin, ChevronRight, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fetchItem, fetchAncestors, fetchChildren, updateItem, deleteItem } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
@@ -114,11 +115,11 @@ export default function ContainerDetailPage() {
         />
       </motion.div>
 
-      <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <motion.div variants={staggerItem} className="ui-panel">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
             <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact className="mb-2" />
-            <h2 className="text-xl font-bold leading-tight text-slate-900">{container.name}</h2>
+            <h2 className="text-xl font-semibold leading-tight text-slate-900">{container.name}</h2>
           </div>
         </div>
         {container.category && (
@@ -131,7 +132,7 @@ export default function ContainerDetailPage() {
         )}
       </motion.div>
 
-      <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <motion.div variants={staggerItem} className="ui-panel">
         <h2 className="text-sm font-semibold text-slate-700 mb-3">{containerLabel}信息</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-slate-50 px-4 py-3">
@@ -146,7 +147,7 @@ export default function ContainerDetailPage() {
       </motion.div>
 
       {ancestors.length > 0 && (
-        <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <motion.div variants={staggerItem} className="ui-panel">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <MapPin size={14} />
             收纳位置
@@ -163,7 +164,7 @@ export default function ContainerDetailPage() {
       )}
 
       {container.tags.length > 0 && (
-        <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <motion.div variants={staggerItem} className="ui-panel">
           <h2 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
             <Tag size={14} />
             标签
@@ -182,7 +183,7 @@ export default function ContainerDetailPage() {
         </motion.div>
       )}
 
-      <motion.div variants={staggerItem} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <motion.div variants={staggerItem} className="ui-panel">
         <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
           <div>
             <p className="mb-0.5">创建时间</p>
@@ -275,7 +276,7 @@ export default function ContainerDetailPage() {
             ) : (
               <div className="sticky top-28 flex aspect-[5/4] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm xl:aspect-square">
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100 text-slate-300">
-                  <Package2 size={34} />
+                  <InventoryArtwork item={container} className="max-h-72 max-w-72" />
                 </div>
               </div>
             )}
@@ -305,7 +306,7 @@ export default function ContainerDetailPage() {
                 </div>
               )}
             </div>
-          ) : null}
+          ) : <div className="flex h-[230px] items-center justify-center rounded-3xl bg-canvasStrong"><InventoryArtwork item={container} className="max-h-56 max-w-56" /></div>}
           {infoCards}
         </div>
       </PageContent>

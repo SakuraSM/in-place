@@ -45,7 +45,7 @@ export function HouseholdButton({ compact = false }: { compact?: boolean }) {
 }
 
 const buttonStyle = { minHeight: 48, maxWidth: 180, borderRadius: 15, borderWidth: 1, borderColor: palette.borderSoft, backgroundColor: palette.surface, paddingHorizontal: 11, flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 };
-const compactButtonStyle = { minHeight: 48, maxWidth: 150, paddingHorizontal: 9 };
-const labelStyle = { maxWidth: 96, fontSize: 12, fontWeight: '800' as const, color: palette.textMuted };
-const roleStyle = { fontSize: 10, fontWeight: '900' as const, color: palette.warning };
+const compactButtonStyle = { minHeight: 48, minWidth: 48, maxWidth: 150, flexShrink: 1, paddingHorizontal: 9 };
+const labelStyle = { maxWidth: 96, flexShrink: 1, fontSize: 12, fontWeight: '600' as const, color: palette.textMuted };
+const roleStyle = { fontSize: 10, fontWeight: '600' as const, color: palette.warning };
 const pressedStyle = { opacity: 0.68 };

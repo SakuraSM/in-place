@@ -120,7 +120,7 @@ export default function LocationPicker({ value, excludeId, excludedIds = [], onC
             </motion.button>
           </div>
 
-          <div className="px-4 pt-3"><input type="search" aria-label="搜索收纳位置" placeholder="搜索位置名称或路径" value={query} onChange={(event) => setQuery(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+          <div className="px-4 pt-3"><input type="search" aria-label="搜索收纳位置" placeholder="搜索位置名称或路径" value={query} onChange={(event) => setQuery(event.target.value)} className="ui-field h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
 
           <div className="overflow-y-auto flex-1 p-4 space-y-2">
             {selectionError ? <p role="alert" className="text-sm text-red-700">{selectionError}</p> : null}
@@ -137,7 +137,7 @@ export default function LocationPicker({ value, excludeId, excludedIds = [], onC
                   : 'bg-slate-50 border-transparent text-slate-700 hover:bg-sky-50'
               }`}
             >
-              <Home size={16} className="text-slate-400" />
+              <Home size={16} className="text-muted" />
               <span className="flex-1 text-left">
                 {currentParent === null ? `不设置${INVENTORY_NODE_LABELS.storageLocation}` : '放在当前位置'}
               </span>
@@ -153,7 +153,7 @@ export default function LocationPicker({ value, excludeId, excludedIds = [], onC
                 <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : visible.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">{searching ? '没有匹配的位置，试试上级位置名称' : '暂无下级位置或收纳'}</p>
+              <p className="text-center text-muted text-sm py-6">{searching ? '没有匹配的位置，试试上级位置名称' : '暂无下级位置或收纳'}</p>
             ) : (
               visible.map(({ item: container, path }, i) => (
                 <motion.div
@@ -176,7 +176,7 @@ export default function LocationPicker({ value, excludeId, excludedIds = [], onC
                         : 'bg-slate-50 border-transparent text-slate-700 hover:bg-sky-50'
                     }`}
                   >
-                    <Box size={16} className="text-slate-400 shrink-0" />
+                    <Box size={16} className="text-muted shrink-0" />
                     <span className="min-w-0 flex-1 text-left"><span className="block truncate">{container.name}</span>{searching ? <span className="mt-1 block text-xs font-normal text-slate-500">{path}</span> : null}</span>
                     <EntityBadge kind={isLocationItem(container) ? 'location' : 'container'} compact />
                     {value === container.id && <Check size={15} className="text-sky-500" />}
@@ -188,7 +188,7 @@ export default function LocationPicker({ value, excludeId, excludedIds = [], onC
                     aria-label={`查看${container.name}的下级位置`}
                     whileHover={{ scale: 1.1, backgroundColor: '#e2e8f0' }}
                     whileTap={{ scale: 0.92 }}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition-colors shrink-0"
+                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-muted transition-colors shrink-0"
                   >
                     <ChevronRight size={16} />
                   </motion.button> : null}

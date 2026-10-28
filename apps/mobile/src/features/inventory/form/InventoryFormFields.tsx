@@ -16,7 +16,7 @@ const TRACKING: Array<{ value: TrackingMode; label: string }> = [{ value: 'uniqu
 const STATUSES: ItemStatus[] = ['in_stock', 'borrowed', 'worn_out'];
 const TAG_PREVIEW_LIMIT = 12;
 const rail = { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 8 };
-const labelStyle = { fontSize: 13, fontWeight: '800' as const, color: palette.textMuted };
+const labelStyle = { fontSize: 13, fontWeight: '600' as const, color: palette.textMuted };
 
 interface InventoryFormFieldsProps {
   form: InventoryFormController;
@@ -49,7 +49,7 @@ export function InventoryFormFields({ form, categories, tags, userId, itemId, ca
 
     </SectionCard>
     <Pressable accessibilityRole="button" accessibilityLabel="更多信息" accessibilityState={{ expanded: form.expanded }} onPress={() => form.setExpanded(!form.expanded)} style={{ minHeight: 48, paddingHorizontal: 12, justifyContent: 'center' }}>
-      <Text style={{ color: palette.brandStrong, fontSize: 15, fontWeight: '700' }}>{form.expanded ? '收起更多信息' : '更多信息 · 数量、价格、日期、标签和图片'}</Text>
+      <Text style={{ color: palette.brandStrong, fontSize: 14, fontWeight: '600' }}>{form.expanded ? '收起更多信息' : '更多信息 · 数量、价格、日期、标签和图片'}</Text>
     </Pressable>
     {form.expanded ? <SectionCard title="补充信息" density="compact">
       <FormField label="描述" value={draft.description} error={errors.description} editable={!disabled} multiline onChangeText={(value) => update('description', value)} style={{ minHeight: 80, textAlignVertical: 'top' }} />

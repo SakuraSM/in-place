@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Item } from '@inplace/domain';
 import { itemsApi, lifecycleApi } from '@/shared/api/mobileClient';
@@ -46,7 +46,7 @@ it('sets an exact quantity in one request and blocks duplicate presses', async (
   fireEvent.press(screen.getByRole('button', { name: /保存/ }));
   await waitFor(() => expect(itemsApi.updateItem).toHaveBeenCalledTimes(1));
   expect(itemsApi.updateItem).toHaveBeenCalledWith('item', { quantity: 120 });
-  finish({ ...item, quantity: 120 });
+  await act(async () => { finish({ ...item, quantity: 120 }); });
   await waitFor(() => expect(screen.queryByLabelText('库存数量')).toBeNull());
   fireEvent.press(screen.getByRole('tab', { name: '批次' }));
   fireEvent.press(screen.getByText('新增批次'));

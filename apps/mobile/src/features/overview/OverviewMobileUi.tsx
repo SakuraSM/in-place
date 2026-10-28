@@ -10,14 +10,13 @@ import type { Category, Item } from '@inplace/domain';
 import { itemsApi } from '@/shared/api/mobileClient';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { resolveMobileContainerBrowseHref, resolveMobileDetailHref } from '@/shared/lib/detailPath';
-import { getContainerTypeLabel, isLocationItem } from '@/shared/lib/location';
-import { InventoryIcon } from '@/shared/ui/InventoryIcon';
-import { CategoryArtwork } from '@/shared/ui/CategoryArtwork';
+import { getContainerTypeLabel } from '@/shared/lib/location';
 import { LocationHierarchyPicker } from '@/features/home/LocationHierarchyPicker';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { palette, shadows } from '@/shared/ui/theme';
-import { formatMobileLocationPath, resolveInventoryImageUri } from '@/features/inventory/mobileInventoryFormat';
-import { InventoryImage } from '@/features/inventory/InventoryImage';
+import { formatMobileLocationPath } from '@/features/inventory/mobileInventoryFormat';
+import { OverviewResultArtwork } from './OverviewResultArtwork';
+import { OverviewResultCard } from './OverviewResultCard';
 
 export function FilterChip({
   active,
@@ -34,7 +33,7 @@ export function FilterChip({
 }) {
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ selected: active, disabled }} disabled={disabled} onPress={onPress} style={[chipStyle, active ? activeChipStyle : null, disabled ? disabledChipStyle : null]}>
-      {icon ? <Ionicons name={icon} size={13} color={active ? '#ffffff' : palette.textMuted} /> : null}
+      {icon ? <Ionicons name={icon} size={13} color={active ? palette.brandStrong : palette.textMuted} /> : null}
       <Text numberOfLines={1} style={active ? activeChipTextStyle : chipTextStyle}>{label}</Text>
     </Pressable>
   );
@@ -47,10 +46,10 @@ interface ResultRowProps {
   selectionMode?: boolean;
   selected?: boolean;
   onToggleSelected?: (itemId: string) => void;
+  presentation?: 'row' | 'card';
 }
 
-export function ResultRow({ item, category, path, selectionMode = false, selected = false, onToggleSelected }: ResultRowProps) {
-  const imageUri = resolveInventoryImageUri(item.images[0]);
+export function ResultRow({ item, category, path, selectionMode = false, selected = false, onToggleSelected, presentation = 'row' }: ResultRowProps) {
   const handlePress = () => {
     if (selectionMode) {
       onToggleSelected?.(item.id);
@@ -74,21 +73,11 @@ export function ResultRow({ item, category, path, selectionMode = false, selecte
       delayLongPress={500}
       onLongPress={handleLongPress}
       onPress={handlePress}
-      style={[resultRowStyle, selected ? resultRowSelectedStyle : null]}
+      style={[presentation === 'card' ? resultCardStyle : resultRowStyle, selected ? resultRowSelectedStyle : null]}
     >
+      {presentation === 'card' ? <OverviewResultCard item={item} category={category} path={path} selected={selected} /> : <>
       <View style={resultThumbStyle}>
-        {imageUri ? (
-          <InventoryImage url={item.images[0]} resizeMode="cover" style={resultThumbImageStyle} />
-        ) : category ? (
-          <CategoryArtwork
-            presetKey={category.preset_key}
-            icon={category.icon}
-            color={category.color}
-            size="md"
-          />
-        ) : (
-          <InventoryIcon type={item.type} isLocation={isLocationItem(item)} size="md" />
-        )}
+        <OverviewResultArtwork item={item} category={category} presentation="row" />
       </View>
       <View style={resultTextStyle}>
         <View style={resultTitleLineStyle}>
@@ -110,6 +99,7 @@ export function ResultRow({ item, category, path, selectionMode = false, selecte
       ) : (
         <Ionicons name="chevron-forward" size={20} color={palette.textSoft} />
       )}
+      </>}
     </Pressable>
   );
 }
@@ -240,7 +230,7 @@ export function TagFilterSheet({
 }
 
 export const screenContentStyle = { paddingHorizontal: 16, gap: 8 };
-export const pageTitleStyle = { fontSize: 28, lineHeight: 34, fontWeight: '900' as const, color: palette.text, paddingTop: 2 };
+export const pageTitleStyle = { fontSize: 28, lineHeight: 34, fontWeight: '600' as const, color: palette.text, paddingTop: 2 };
 export const pageTitleRowStyle = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
@@ -249,7 +239,7 @@ export const pageTitleRowStyle = {
 };
 export const selectionToggleStyle = {
   minHeight: controlSizes.touch,
-  borderRadius: 14,
+  borderRadius: 12,
   paddingHorizontal: 12,
   backgroundColor: palette.canvasStrong,
   flexDirection: 'row' as const,
@@ -261,7 +251,7 @@ export const selectionToggleActiveStyle = {
 };
 export const selectionToggleTextStyle = {
   fontSize: 13,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 export const selectionToggleActiveTextStyle = {
@@ -279,7 +269,7 @@ export const searchBoxStyle = {
   gap: 10,
   ...shadows.sm,
 };
-export const searchInputStyle = { flex: 1, minHeight: 40, fontSize: 15, color: palette.text };
+export const searchInputStyle = { flex: 1, minHeight: 40, fontSize: 14, color: palette.text };
 export const clearButtonStyle = {
   width: controlSizes.touch,
   height: controlSizes.touch,
@@ -290,7 +280,7 @@ export const clearButtonStyle = {
 };
 export const resultDividerStyle = { height: 1, marginHorizontal: -18, backgroundColor: palette.borderSoft };
 export const resultSummaryStyle = { fontSize: 14, color: palette.textSoft, paddingTop: 6 };
-export const resultListStyle = { gap: 8 };
+export const resultListStyle = { gap: 0 };
 export const loadedMetaStyle = { textAlign: 'center' as const, fontSize: 13, color: palette.textSoft };
 export const loadingMoreStyle = {
   flexDirection: 'row' as const,
@@ -305,28 +295,31 @@ const chipStyle = {
   minWidth: controlSizes.touch,
   maxWidth: '100%' as const,
   borderRadius: 999,
-  backgroundColor: palette.canvasStrong,
+  backgroundColor: palette.surface,
+  borderWidth: 1,
+  borderColor: palette.border,
   paddingHorizontal: 9,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 4,
 };
-const activeChipStyle = { backgroundColor: palette.brand };
+const activeChipStyle = { backgroundColor: palette.brandTint, borderColor: palette.brandStrong };
 const disabledChipStyle = { opacity: 0.42 };
-const chipTextStyle = { fontSize: 12, fontWeight: '800' as const, color: palette.textMuted };
-const activeChipTextStyle = { fontSize: 12, fontWeight: '900' as const, color: '#ffffff' };
+const chipTextStyle = { fontSize: 12, fontWeight: '600' as const, color: palette.textMuted };
+const activeChipTextStyle = { fontSize: 12, fontWeight: '600' as const, color: palette.brandStrong };
 const resultRowStyle = {
-  minHeight: 70,
-  borderRadius: 16,
-  borderWidth: 1,
+  minHeight: 82,
+  borderRadius: 0,
+  borderBottomWidth: 1,
   borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
-  padding: 10,
+  backgroundColor: 'transparent',
+  paddingVertical: 14,
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   gap: 10,
   ...shadows.sm,
 };
+const resultCardStyle = { width: '100%' as const, flexGrow: 1, overflow: 'hidden' as const, borderRadius: 16, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface };
 const resultRowSelectedStyle = {
   borderColor: palette.brand,
   backgroundColor: palette.brandTint,
@@ -340,10 +333,9 @@ const resultThumbStyle = {
   justifyContent: 'center' as const,
   overflow: 'hidden' as const,
 };
-const resultThumbImageStyle = { width: '100%' as const, height: '100%' as const };
 const resultTextStyle = { flex: 1, minWidth: 0, gap: 3 };
 const resultTitleLineStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 };
-const resultTitleStyle = { flex: 1, fontSize: 16, fontWeight: '900' as const, color: palette.text };
+const resultTitleStyle = { flex: 1, fontSize: 16, fontWeight: '600' as const, color: palette.text };
 const resultCategoryStyle = { fontSize: 13, color: palette.textMuted };
 const pathLineStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4 };
 const pathTextStyle = { flex: 1, fontSize: 13, color: palette.textSoft };
@@ -353,7 +345,7 @@ const containerPillStyle = {
   paddingHorizontal: 8,
   paddingVertical: 3,
   fontSize: 11,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brandStrong,
 };
 const selectionDotStyle = {
@@ -381,14 +373,14 @@ const sheetOptionStyle = {
   gap: 10,
 };
 const sheetOptionActiveStyle = { backgroundColor: palette.brandTint, borderWidth: 1, borderColor: '#99f6e4' };
-const sheetOptionTextStyle = { flex: 1, fontSize: 14, fontWeight: '800' as const, color: palette.text };
+const sheetOptionTextStyle = { flex: 1, fontSize: 14, fontWeight: '600' as const, color: palette.text };
 const sheetOptionCountStyle = {
   borderRadius: 999,
   backgroundColor: palette.canvasStrong,
   paddingHorizontal: 8,
   paddingVertical: 3,
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 const sheetSearchStyle = {

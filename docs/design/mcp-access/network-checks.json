@@ -1,0 +1,30 @@
+{
+  "transport": "real HTTP with SDK client",
+  "preview": true,
+  "created": 3,
+  "idempotentRetry": true,
+  "searchResults": 3,
+  "revokedCredentialStatus": 401,
+  "node20ProductionImage": {
+    "health": 200,
+    "mcpRead": true,
+    "credentialRevoked": true,
+    "proxyHeadersSimulated": true
+  },
+  "testCredentialsRemainingActive": 0,
+  "android": {
+    "credentialCreated": true,
+    "expiryDays": 30,
+    "credentialRevoked": true
+  },
+  "web": {
+    "credentialCreated": true,
+    "secretDismissed": true,
+    "credentialRevoked": true,
+    "widths": [
+      1440,
+      390
+    ],
+    "horizontalOverflow": false
+  }
+}

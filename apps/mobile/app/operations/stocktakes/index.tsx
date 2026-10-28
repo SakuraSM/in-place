@@ -143,5 +143,5 @@ const primaryButtonStyle = {
   justifyContent: 'center' as const,
   gap: 8,
 };
-const primaryButtonTextStyle = { fontSize: 15, fontWeight: '900' as const, color: '#ffffff' };
+const primaryButtonTextStyle = { fontSize: 14, fontWeight: '600' as const, color: '#ffffff' };
 const emptyTextStyle = { fontSize: 14, color: palette.textSoft };

@@ -18,14 +18,15 @@ interface MetricGridProps {
   items: MetricGridItem[];
   columns?: 2 | 3 | 4;
   dense?: boolean;
+  appearance?: 'tiles' | 'strip';
   style?: ViewStyle;
 }
 
-export function MetricGrid({ items, columns = 2, dense = false, style }: MetricGridProps) {
+export function MetricGrid({ items, columns = 2, dense = false, appearance = 'tiles', style }: MetricGridProps) {
   return (
-    <View style={[gridStyle, style]}>
-      {items.map((item) => (
-        <MetricTile key={item.key} item={item} columns={columns} dense={dense} />
+    <View style={[gridStyle, appearance === 'strip' ? stripStyle : null, style]}>
+      {items.map((item, index) => (
+        <MetricTile key={item.key} item={item} columns={columns} dense={dense} isStrip={appearance === 'strip'} isLast={index === items.length - 1} />
       ))}
     </View>
   );
@@ -35,13 +36,17 @@ function MetricTile({
   item,
   columns,
   dense,
+  isStrip,
+  isLast,
 }: {
   item: MetricGridItem;
   columns: 2 | 3 | 4;
   dense: boolean;
+  isStrip: boolean;
+  isLast: boolean;
 }) {
   const tileWidth: DimensionValue = columns === 4 ? '23%' : columns === 3 ? '31%' : '47.5%';
-  const tileStyleList: ViewStyle[] = [
+  const tileStyleList: ViewStyle[] = isStrip ? [stripTileStyle, { borderRightWidth: isLast ? 0 : 1 }] : [
     tileStyle,
     ...(dense ? [denseTileStyle] : []),
     {
@@ -52,10 +57,10 @@ function MetricTile({
   const content = (
     <>
       <View style={metricHeaderStyle}>
-        <Text numberOfLines={1} style={labelStyle}>{item.label}</Text>
-        {item.iconName ? <Ionicons name={item.iconName} size={15} color={palette.brandStrong} /> : null}
+        <Text numberOfLines={1} style={[labelStyle, isStrip ? stripLabelStyle : null]}>{item.label}</Text>
+        {item.iconName && !isStrip ? <Ionicons name={item.iconName} size={15} color={palette.brandStrong} /> : null}
       </View>
-      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={valueStyle}>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[valueStyle, isStrip ? stripValueStyle : null]}>
         {item.value}
       </Text>
       {item.caption ? <Text numberOfLines={1} style={captionStyle}>{item.caption}</Text> : null}
@@ -67,7 +72,7 @@ function MetricTile({
   }
 
   return (
-    <Pressable onPress={item.onPress} style={({ pressed }) => [tileStyleList, pressed ? pressedStyle : null]}>
+    <Pressable accessibilityRole="button" onPress={item.onPress} style={({ pressed }) => [tileStyleList, pressed ? pressedStyle : null]}>
       {content}
     </Pressable>
   );
@@ -82,7 +87,7 @@ const gridStyle = {
 const tileStyle = {
   flexGrow: 1,
   minHeight: 66,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surfaceMuted,
@@ -108,13 +113,13 @@ const labelStyle = {
   minWidth: 0,
   color: palette.textSoft,
   fontSize: 12,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
 };
 
 const valueStyle = {
   color: palette.text,
   fontSize: 20,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
 };
 
 const captionStyle = {
@@ -125,3 +130,8 @@ const captionStyle = {
 const pressedStyle = {
   opacity: 0.74,
 };
+
+const stripStyle: ViewStyle = { gap: 0, flexWrap: 'nowrap', borderWidth: 1, borderColor: palette.border, borderRadius: 16, backgroundColor: palette.surface, paddingVertical: 18 };
+const stripTileStyle: ViewStyle = { flex: 1, minWidth: 0, minHeight: 56, paddingHorizontal: 10, gap: 6, borderColor: palette.border };
+const stripLabelStyle = { fontSize: 10, fontWeight: '400' as const };
+const stripValueStyle = { fontSize: 26, fontVariant: ['tabular-nums'] as ('tabular-nums')[] };

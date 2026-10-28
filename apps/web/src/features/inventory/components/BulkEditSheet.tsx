@@ -171,7 +171,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
           <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100">
             <div>
               <h2 id={titleId} className="font-semibold text-slate-900 text-lg">批量编辑</h2>
-              <p className="text-xs text-slate-400 mt-1">已选择 {items.length} 个{selectedTypeLabel}</p>
+              <p className="text-xs text-muted mt-1">已选择 {items.length} 个{selectedTypeLabel}</p>
             </div>
             <motion.button
               type="button"
@@ -193,7 +193,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">类别</label>
                 {availableCategories.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-2">当前没有可选类别</p>
+                  <p className="text-xs text-muted py-2">当前没有可选类别</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {availableCategories.map((categoryItem) => {
@@ -277,7 +277,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="批量覆盖描述，留空可清空描述"
                   rows={3}
-                  className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm resize-none"
+                  className="ui-field mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm resize-none"
                 />
               )}
             </div>
@@ -316,7 +316,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                   onChange={(event) => setTagInput(event.target.value)}
                   onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), handleAddTag())}
                   placeholder="添加后会并入所有已选对象"
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
+                  className="ui-field flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition text-sm"
                 />
                 <motion.button
                   type="button"
@@ -364,7 +364,7 @@ export default function BulkEditSheet({ items, categories, onSave, onClose }: Pr
                 disabled={saving}
                 whileHover={{ scale: saving ? 1 : 1.01 }}
                 whileTap={{ scale: saving ? 1 : 0.98 }}
-                className="w-full rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-teal-700 disabled:opacity-50"
+                className="w-full rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brandHover disabled:opacity-50"
               >
                 {saving ? '保存中...' : '批量保存'}
               </motion.button>

@@ -422,7 +422,7 @@ const sheetHeaderStyle = {
 
 const sheetTitleStyle = {
   fontSize: 18,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
@@ -452,7 +452,7 @@ const fieldStyle = {
 
 const fieldLabelStyle = {
   fontSize: 14,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -491,7 +491,7 @@ const chipTextStyle = {
 
 const activeChipTextStyle = {
   fontSize: 13,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.brandStrong,
 };
 
@@ -526,7 +526,7 @@ const toggleHeaderStyle = {
 
 const toggleTitleStyle = {
   fontSize: 14,
-  fontWeight: '700' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -548,7 +548,7 @@ const checkboxActiveStyle = {
 
 const inputStyle = {
   minHeight: 46,
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.border,
   backgroundColor: palette.surface,
@@ -575,7 +575,7 @@ const tagInputStyle = {
 const tagAddButtonStyle = {
   width: 46,
   height: 46,
-  borderRadius: 14,
+  borderRadius: 12,
   backgroundColor: palette.brandTint,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
@@ -604,8 +604,8 @@ const saveButtonStyle = {
 };
 
 const saveButtonTextStyle = {
-  fontSize: 15,
-  fontWeight: '800' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
   color: '#ffffff',
 };
 

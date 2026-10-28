@@ -65,7 +65,7 @@ export default function PaginationControls({
           <select
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded-lg border border-border bg-surfaceMuted px-2.5 py-1.5 text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
+            className="ui-field rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
           >
             {PAGE_SIZE_OPTIONS.map((value) => (
               <option key={value} value={value}>
@@ -125,7 +125,7 @@ export default function PaginationControls({
             max={totalPages}
             value={jumpPage}
             onChange={(event) => setJumpPage(event.target.value)}
-            className="h-10 w-16 rounded-xl border border-border bg-surfaceMuted px-3 text-center text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
+            className="ui-field h-10 w-16 rounded-xl border border-border bg-surface px-3 text-center text-sm text-slate-700 focus:border-brandStrong focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
           <button
             type="button"

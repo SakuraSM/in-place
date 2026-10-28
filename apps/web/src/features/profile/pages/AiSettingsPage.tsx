@@ -104,13 +104,13 @@ export default function AiSettingsPage() {
           animate="animate"
         >
         <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
-          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.16),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#fffaf0_100%)] px-5 py-5 md:px-6 md:py-6">
+          <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-amber-100 text-amber-600">
                 <Sparkles size={26} />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold text-slate-900">识别服务</p>
+                <p className="text-lg font-semibold text-slate-900">识别服务</p>
                 <p className="mt-2 text-sm text-slate-500">
                   {aiLoading
                     ? '正在读取服务端配置...'
@@ -120,7 +120,7 @@ export default function AiSettingsPage() {
                         ? '当前使用系统默认配置'
                         : '当前未配置可用密钥'}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted">
                   当前来源：{aiSettings.source === 'user' ? '账号配置' : '系统默认'}
                 </p>
               </div>
@@ -142,7 +142,7 @@ export default function AiSettingsPage() {
                 value={aiApiKey}
                 onChange={(event) => setAiApiKey(event.target.value)}
                 placeholder={aiSettings.hasStoredApiKey ? '留空则保持当前服务端密钥' : '输入后会加密保存到服务端'}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="ui-field w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
@@ -158,7 +158,7 @@ export default function AiSettingsPage() {
                   value={aiSettings.baseUrl}
                   onChange={(event) => setAiSettings((current) => ({ ...current, baseUrl: event.target.value }))}
                   placeholder="例如：https://api.openai.com/v1"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="ui-field w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export default function AiSettingsPage() {
                   value={aiSettings.model}
                   onChange={(event) => setAiSettings((current) => ({ ...current, model: event.target.value }))}
                   placeholder="例如：gpt-4o / gpt-5.4"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="ui-field w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function AiSettingsPage() {
               <button
                 onClick={() => void handleAiSave()}
                 disabled={aiSaving || aiLoading}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save size={15} />
                 {aiSaving ? '保存中...' : '保存配置'}

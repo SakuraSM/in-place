@@ -26,7 +26,7 @@ export default function CodeScanPage() {
               <QrCode size={22} />
             </span>
             <div>
-              <h2 className="font-bold text-slate-900">整理已有库存</h2>
+              <h2 className="font-semibold text-slate-900">整理已有库存</h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 扫物品标签进入详情；扫位置标签后可连续扫描多个物品并批量归位。
               </p>
@@ -36,7 +36,7 @@ export default function CodeScanPage() {
         </section>
         {recentScans.length > 0 ? (
           <section className="mt-5 rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
-            <h2 className="font-bold text-slate-900">最近扫描</h2>
+            <h2 className="font-semibold text-slate-900">最近扫描</h2>
             <div className="mt-3 divide-y divide-borderSoft">
               {recentScans.map((scan) => (
                 <Link key={scan.code} to={`/s/${scan.code}`} className="flex items-center justify-between gap-3 py-3 text-sm">

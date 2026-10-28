@@ -71,7 +71,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     >
       <Icon size={20} className={`mt-0.5 shrink-0 ${presentation.iconClassName}`} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-slate-900">{toast.title}</p>
+        <p className="text-sm font-semibold text-slate-900">{toast.title}</p>
         {toast.description ? (
           <p className="mt-1 text-sm leading-5 text-slate-600">{toast.description}</p>
         ) : null}

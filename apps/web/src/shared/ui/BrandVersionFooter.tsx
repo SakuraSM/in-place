@@ -10,7 +10,7 @@ export default function BrandVersionFooter({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center justify-center gap-2 text-slate-400 ${className}`}>
+    <div className={`flex items-center justify-center gap-2 text-muted ${className}`}>
       <img
         src="/branding/inplace-logo-full.png"
         alt="归位"

@@ -140,7 +140,7 @@ export default function CodeScanner({
         <button
           type="button"
           onClick={() => setCameraActive((active) => !active)}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-semibold text-white hover:bg-teal-700"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brandStrong px-4 text-sm font-semibold text-white hover:bg-brandHover"
         >
           <Camera size={18} />
           {cameraActive ? '关闭摄像头' : '打开摄像头'}
@@ -171,13 +171,13 @@ export default function CodeScanner({
         <label className="min-w-0 flex-1">
           <span className="sr-only">标签码或二维码地址</span>
           <span className="relative block">
-            <Keyboard size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Keyboard size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               value={manualCode}
               onChange={(event) => setManualCode(event.target.value)}
               placeholder="粘贴标签码或 /s/ 地址"
               autoComplete="off"
-              className="h-11 w-full rounded-2xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="ui-field h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           </span>
         </label>

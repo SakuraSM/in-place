@@ -190,7 +190,7 @@ function DirectChildRow({ item }: { item: Item }) {
 }
 
 const bodyStyle = {
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 22,
   color: palette.textMuted,
 };

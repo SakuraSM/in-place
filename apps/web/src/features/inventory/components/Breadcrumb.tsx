@@ -38,7 +38,7 @@ export default function Breadcrumb({ items, onNavigate }: Props) {
               className={`text-xs font-medium transition-colors max-w-[100px] truncate ${
                 i === items.length - 1
                   ? 'text-slate-800'
-                  : 'text-slate-400 hover:text-sky-500'
+                  : 'text-muted hover:text-sky-500'
               }`}
             >
               {crumb.name}

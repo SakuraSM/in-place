@@ -9,6 +9,9 @@ import type {
 import { PageContent } from '../../../shared/ui/PageLayout';
 import { SkeletonList } from '../../../shared/ui/SkeletonCard';
 import HomeDashboard from './HomeDashboard';
+import HomeWelcome from './HomeWelcome';
+import HomeRecentPanels from './HomeRecentPanels';
+import HomeGroupingSelect from './HomeGroupingSelect';
 import HomeInventoryToolbar from './HomeInventoryToolbar';
 import HomeInventorySections, { type HomeViewMode } from './HomeInventorySections';
 
@@ -77,7 +80,19 @@ export default function HomePageContent({
 
   return (
     <PageContent width="wide" className="flex min-w-0 flex-col">
+        {showDashboard ? <HomeWelcome /> : null}
+
+
+        {showDashboard ? (
+          <HomeDashboard
+            stats={stats}
+            statsLoading={statsLoading}
+            onNavigateOverview={onNavigateOverview}
+          />
+        ) : null}
+
         <HomeInventoryToolbar
+          className={showDashboard ? 'hidden md:block' : undefined}
           breadcrumbs={breadcrumbs}
           isEmpty={isEmpty}
           isSelectionMode={selectionMode}
@@ -90,27 +105,15 @@ export default function HomePageContent({
           onViewModeChange={onViewModeChange}
         />
 
-        {showDashboard ? (
-          <HomeDashboard
-            stats={stats}
-            recentItems={recentItems}
-            recentItemPaths={recentItemPaths}
-            recentActivity={recentActivity}
-            statsLoading={statsLoading}
-            onOpenActivity={onOpenActivity}
-            onOpenItem={onOpenItem}
-            onOpenActivityItem={onOpenActivityItem}
-            onNavigateOverview={onNavigateOverview}
-          />
-        ) : null}
-
+        <div className={showDashboard ? "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]" : "min-w-0"}>
+        <div className={showDashboard ? "home-inventory-area min-w-0" : "min-w-0"}>
         {loading ? (
           <SkeletonList />
         ) : isEmpty ? (
           <div
             className={`flex flex-col items-center justify-center text-center ${
               showDashboard
-                ? 'rounded-[28px] border border-dashed border-border bg-surface py-14'
+                ? 'rounded-3xl border border-dashed border-border bg-surface py-14'
                 : 'py-20'
             }`}
           >
@@ -129,6 +132,7 @@ export default function HomePageContent({
           >
             {pageCount > 1 ? <p className="mb-3 text-sm text-slate-500">当前页显示第 {(currentPage - 1) * HOME_PAGE_SIZE + 1}–{Math.min(currentPage * HOME_PAGE_SIZE, items.length)} 项，分组数量仅统计本页。</p> : null}
             <HomeInventorySections
+              headerActions={showDashboard ? <HomeGroupingSelect value={viewMode} onChange={onViewModeChange} /> : undefined}
               items={visibleItems}
               categories={categories}
               childCounts={childCounts}
@@ -149,6 +153,9 @@ export default function HomePageContent({
             </nav> : null}
           </div>
         )}
+        </div>
+        {showDashboard ? <HomeRecentPanels recentItems={recentItems} recentItemPaths={recentItemPaths} recentActivity={recentActivity} onOpenActivity={onOpenActivity} onOpenItem={onOpenItem} onOpenActivityItem={onOpenActivityItem} /> : null}
+        </div>
     </PageContent>
   );
 }

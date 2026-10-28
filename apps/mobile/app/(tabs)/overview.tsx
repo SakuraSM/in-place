@@ -12,7 +12,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { HouseholdButton } from '@/shared/ui/HouseholdButton';
 import { categoriesApi, itemsApi } from '@/shared/api/mobileClient';
-import { isLocationItem } from '@/shared/lib/location';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { BulkActionBar } from '@/shared/ui/BulkActionBar';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
@@ -20,12 +19,10 @@ import { Screen } from '@/shared/ui/Screen';
 import { StateBlock } from '@/shared/ui/StateBlock';
 import { palette } from '@/shared/ui/theme';
 import { HomeBulkEditSheet, type BulkEditPayload } from '@/features/home/HomeBulkEditSheet';
-import { buildMobileItemPath } from '@/features/inventory/mobileInventoryFormat';
 import { OverviewFilterControls, type FilterOption, type OverviewViewMode } from '@/features/overview/OverviewFilterControls';
-import { HierarchyResultGroup } from '@/features/overview/OverviewResults';
+import { FlatResultGrid, HierarchyResultGroup } from '@/features/overview/OverviewResults';
 import {
   LocationFilterSheet,
-  ResultRow,
   TagFilterSheet,
   clearButtonStyle,
   loadedMetaStyle,
@@ -37,7 +34,6 @@ import {
   selectionToggleTextStyle,
   selectionToggleActiveTextStyle,
   resultDividerStyle,
-  resultListStyle,
   resultSummaryStyle,
   screenContentStyle,
   searchBoxStyle,
@@ -408,22 +404,14 @@ export default function OverviewTab() {
       ) : (
         <>
           {!searchQuery.isLoading && flatItems.length === 0 ? <StateBlock title="暂无结果" body="调整关键词后再试" /> : null}
-          <View style={resultListStyle}>
-            {flatItems.map((item) => (
-              <ResultRow
-                key={item.id}
-                item={item}
-                category={(categoriesQuery.data ?? []).find((category) => (
-                  category.name === item.category
-                  && category.scope === (item.type === 'item' ? 'item' : isLocationItem(item) ? 'location' : 'container')
-                ))}
-                path={buildMobileItemPath(item, itemMap)}
-                selectionMode={selectionMode}
-                selected={selectedIds.includes(item.id)}
-                onToggleSelected={handleToggleSelected}
-              />
-            ))}
-          </View>
+          <FlatResultGrid
+            items={flatItems}
+            itemMap={itemMap}
+            categories={categoriesQuery.data ?? []}
+            selectionMode={selectionMode}
+            selectedIds={selectedIds}
+            onToggleSelected={handleToggleSelected}
+          />
         </>
       )}
 

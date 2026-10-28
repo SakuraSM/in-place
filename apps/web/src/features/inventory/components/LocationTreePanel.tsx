@@ -75,7 +75,7 @@ export default function LocationTreePanel({
 
   if (tree.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-muted">
         <FolderTree size={18} className="mx-auto mb-2 text-slate-300" />
         {emptyLabel}
       </div>

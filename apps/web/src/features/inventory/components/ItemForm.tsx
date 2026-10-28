@@ -236,13 +236,13 @@ export default function ItemForm({
           onClick={() => setIsAdditionalDetailsOpen((isOpen) => !isOpen)}
           className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-surfaceMuted px-4 py-3 text-left transition hover:border-brand/30 hover:bg-brandTint focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong"
         >
-          <span><span className="block text-sm font-bold text-slate-900">更多信息</span><span className="mt-0.5 block text-xs text-slate-500">价格、日期、库存追踪、标签和图片均可稍后补充</span></span>
+          <span><span className="block text-sm font-semibold text-slate-900">更多信息</span><span className="mt-0.5 block text-xs text-slate-500">价格、日期、库存追踪、标签和图片均可稍后补充</span></span>
           <ChevronDown size={18} className={`shrink-0 text-slate-500 transition-transform ${isAdditionalDetailsOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
         </button>
 
         {isAdditionalDetailsOpen ? (
           <div id={additionalDetailsId} className="space-y-5">
-            <label htmlFor={descriptionId} className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">描述</span><textarea id={descriptionId} name="description" value={form.description} onChange={(event) => update('description', event.target.value)} placeholder="添加备注或描述…" rows={2} className="w-full rounded-xl border border-border bg-surfaceMuted px-4 py-3 text-sm" /></label>
+            <label htmlFor={descriptionId} className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">描述</span><textarea id={descriptionId} name="description" value={form.description} onChange={(event) => update('description', event.target.value)} placeholder="添加备注或描述…" rows={2} className="ui-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm" /></label>
             <ItemFormAdditionalFields
               form={form}
               availableTags={availableTags}

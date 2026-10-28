@@ -340,3 +340,30 @@ export type NewItem = typeof items.$inferInsert;
 export type NewTagRecord = typeof tagRegistry.$inferInsert;
 export type NewUserAiSetting = typeof userAiSettings.$inferInsert;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
+
+export const mcpCredentials = pgTable('mcp_credentials', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  membershipId: uuid('membership_id').notNull().references(() => householdMembers.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  householdId: uuid('household_id').notNull().references(() => households.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 80 }).notNull(),
+  tokenHash: varchar('token_hash', { length: 64 }).notNull(),
+  tokenPrefix: varchar('token_prefix', { length: 20 }).notNull(),
+  scopes: jsonb('scopes').$type<Array<'inventory:read' | 'inventory:import'>>().notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  tokenIdx: uniqueIndex('mcp_credentials_token_hash_idx').on(table.tokenHash),
+  ownerIdx: index('mcp_credentials_owner_idx').on(table.userId, table.householdId),
+}));
+
+export const mcpImportRequests = pgTable('mcp_import_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  credentialId: uuid('credential_id').notNull().references(() => mcpCredentials.id, { onDelete: 'cascade' }),
+  requestKey: varchar('request_key', { length: 100 }).notNull(),
+  payloadHash: varchar('payload_hash', { length: 64 }).notNull(),
+  result: jsonb('result').$type<{ count: number; items: Array<{ key: string; id: string; name: string; kind: string }> }>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ requestIdx: uniqueIndex('mcp_import_requests_key_idx').on(table.credentialId, table.requestKey) }));

@@ -40,14 +40,14 @@ export default function DuplicatesPage() {
       <PageContent width="narrow">
         <p className="mb-4 text-sm leading-6 text-slate-600">按名称、类型和类别识别。保留最早记录的位置、状态及日期，累加数量、图片和标签。有关联盘点或借用记录的待移除物品不能合并。</p>
         {inventory.isLoading ? <p role="status">正在检测重复项…</p> : inventory.isError ? <p role="alert">重复项加载失败。<button type="button" onClick={() => void inventory.refetch()} className="ml-3 text-brandStrong">重试</button></p> : groups.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border bg-surfaceMuted p-10 text-center"><CopyCheck size={34} className="mx-auto text-brandStrong" /><p className="mt-3 font-bold text-slate-800">没有发现同名同类别的重复记录</p></div>
+          <div className="rounded-3xl border border-dashed border-border bg-surfaceMuted p-10 text-center"><CopyCheck size={34} className="mx-auto text-brandStrong" /><p className="mt-3 font-semibold text-slate-800">没有发现同名同类别的重复记录</p></div>
         ) : (
           <div className="space-y-4">
             {groups.map((group) => (
               <section key={group.key} className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div><h2 className="font-bold text-slate-900">{group.items[0].name}</h2><p className="mt-1 text-sm text-slate-500">{group.category || '未分类'} · {group.items.length} 条记录 · 合计数量 {group.items.reduce((sum, item) => sum + item.quantity, 0)}</p></div>
-                  {canEdit ? <button type="button" disabled={isMerging} onClick={() => setTargetGroup(group)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-bold text-white disabled:opacity-50"><Combine size={16} />合并记录</button> : null}
+                  <div><h2 className="font-semibold text-slate-900">{group.items[0].name}</h2><p className="mt-1 text-sm text-slate-500">{group.category || '未分类'} · {group.items.length} 条记录 · 合计数量 {group.items.reduce((sum, item) => sum + item.quantity, 0)}</p></div>
+                  {canEdit ? <button type="button" disabled={isMerging} onClick={() => setTargetGroup(group)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-semibold text-white disabled:opacity-50"><Combine size={16} />合并记录</button> : null}
                 </div>
                 <ul className="mt-4 divide-y divide-borderSoft">{group.items.map((item, index) => <li key={item.id} className="space-y-1 py-3 text-sm"><p>{index === 0 ? '保留为主记录' : '合并后移除'} · {new Date(item.created_at).toLocaleDateString('zh-CN')} · 数量 {item.quantity}</p><p className="break-words text-slate-500">位置：{names.get(item.parent_id ?? '') ?? '根目录'} · 单价：{item.price ?? '未填写'} · 到期：{item.expiry_date ?? '未填写'} · 状态：{{ in_stock: '在库', borrowed: '借出', worn_out: '损耗' }[item.status]}</p></li>)}</ul>
               </section>

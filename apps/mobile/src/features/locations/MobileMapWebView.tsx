@@ -10,6 +10,7 @@ import {
 } from '@inplace/app-core';
 import { getMobileWebBaseUrl } from '@/shared/api/mobileClient';
 import { palette } from '@/shared/ui/theme';
+import { layout } from '@inplace/ui/mobile';
 import { isAllowedMobileMapNavigation } from './mobileMapSecurity';
 
 interface MobileMapWebViewProps {
@@ -129,9 +130,9 @@ export function MobileMapWebView({
 }
 
 const frameStyle = {
-  height: 380,
+  height: layout.mapCanvas.mobile,
   overflow: 'hidden' as const,
-  borderRadius: 20,
+  borderRadius: 16,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surfaceMuted,
@@ -146,6 +147,6 @@ const overlayStyle = {
   padding: 24,
   backgroundColor: 'rgba(248,250,252,0.96)',
 };
-const statusTextStyle = { fontSize: 14, fontWeight: '700' as const, color: palette.textMuted };
-const errorTextStyle = { fontSize: 14, lineHeight: 21, textAlign: 'center' as const, fontWeight: '700' as const, color: palette.danger };
+const statusTextStyle = { fontSize: 14, fontWeight: '600' as const, color: palette.textMuted };
+const errorTextStyle = { fontSize: 14, lineHeight: 21, textAlign: 'center' as const, fontWeight: '600' as const, color: palette.danger };
 const errorHintStyle = { fontSize: 12, lineHeight: 18, textAlign: 'center' as const, color: palette.textSoft };

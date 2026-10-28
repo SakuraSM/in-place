@@ -84,18 +84,18 @@ export default function ProfilePage() {
   return (
     <PageShell className="overflow-x-hidden">
       <PageHeader title="我的" />
-      <PageContent width="standard">
+      <PageContent width="narrow">
         <motion.div
           variants={staggerContainer}
           animate="animate"
-          className="grid min-w-0 gap-4 xl:grid-cols-2"
+          className="grid min-w-0 gap-6"
         >
-          <div className="min-w-0 space-y-4 xl:sticky xl:top-28 xl:self-start">
+          <div className="min-w-0 space-y-5">
             <motion.div
               variants={staggerItem}
-              className="overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm"
+              className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm"
             >
-              <div className="bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.14),_transparent_44%),linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] px-5 py-5 md:px-6 md:py-6">
+              <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
                 <div className="flex items-start gap-4">
                   <motion.div
                     whileHover={{ scale: 1.08, rotate: 6 }}
@@ -106,7 +106,7 @@ export default function ProfilePage() {
                   </motion.div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-xl font-bold text-slate-900">{resolvedDisplayName}</p>
+                      <p className="truncate text-xl font-semibold text-slate-900">{resolvedDisplayName}</p>
                       <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
                         账号正常
                       </span>
@@ -134,7 +134,7 @@ export default function ProfilePage() {
               <div className="px-1">
                 <p className="text-sm font-semibold text-slate-700">快捷入口</p>
               </div>
-              <div className="grid gap-3">
+              <div className="grid overflow-hidden rounded-3xl border border-border">
                 <QuickLinkCard
                   to="/tags"
                   icon={<NotebookPen size={20} />}
@@ -163,6 +163,7 @@ export default function ProfilePage() {
                   description="修改密码并管理当前账号会话。"
                   tone="bg-rose-50 text-rose-500"
                 />
+                <QuickLinkCard to="/profile/mcp" icon={<Settings2 size={20} />} title="MCP 接入" description="管理 Agent 凭证，查询库存与批量新增物品。" tone="bg-emerald-50 text-emerald-700" />
                 <QuickLinkCard
                   to="/duplicates"
                   icon={<Combine size={20} />}
@@ -208,13 +209,13 @@ export default function ProfilePage() {
                       }}
                       placeholder="输入昵称"
                       autoComplete="nickname"
-                      className="w-full rounded-xl border border-border bg-surfaceMuted px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
+                      className="ui-field w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-slate-900 placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
                     />
                   </div>
                   <button
                     onClick={() => void handleProfileSave()}
                     disabled={profileSaving || !profileChanged}
-                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {profileSaving ? '保存中...' : '保存昵称'}
                   </button>

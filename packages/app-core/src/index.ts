@@ -14,6 +14,7 @@ export * from './lifecycle';
 export * from './geo-asset-map';
 export * from './mobile-map-bridge';
 export * from './maps';
+export * from './mcp';
 export * from './navigation';
 export * from './presentation';
 export * from './shared';

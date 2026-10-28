@@ -140,7 +140,7 @@ const toastTextStyle = {
 
 const toastTitleStyle = {
   fontSize: 14,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 

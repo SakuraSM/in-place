@@ -1,3 +1,4 @@
+import { ContentTabs } from '@/shared/ui/ContentTabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -74,28 +75,10 @@ export function OverviewFilterControls({
     <>
       <View style={filterPanelStyle}>
         <View style={filterGroupStyle}>
-          <Text style={filterGroupLabelStyle}>展示方式</Text>
-          <View style={viewSegmentStyle}>
-            {viewModeFilters.map((option) => {
-              const isActive = viewMode === option.value;
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isActive }}
-                  onPress={() => onChangeViewMode(option.value)}
-                  style={[viewSegmentButtonStyle, isActive ? viewSegmentButtonActiveStyle : null]}
-                >
-                  {option.icon ? <Ionicons name={option.icon} size={14} color={isActive ? palette.text : palette.textSoft} /> : null}
-                  <Text style={[viewSegmentButtonTextStyle, isActive ? viewSegmentButtonTextActiveStyle : null]}>{option.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <ContentTabs accessibilityLabel="展示方式" tabs={viewModeFilters.map(option => ({ value: option.value, label: option.label }))} value={viewMode} onChange={onChangeViewMode} />
         </View>
 
         <View style={filterGroupStyle}>
-          <Text style={filterGroupLabelStyle}>对象类型</Text>
           <View style={typeFilterRowStyle}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={quickFilterRailStyle} style={typeFilterScrollStyle}>
               {typeFilters.map((option) => (
@@ -237,11 +220,9 @@ function getFilterLabel<TValue extends string>(options: FilterOption<TValue>[], 
 }
 
 const filterPanelStyle = {
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: palette.borderSoft,
-  backgroundColor: palette.surface,
-  padding: 8,
+  borderRadius: 0,
+  backgroundColor: 'transparent',
+  padding: 0,
   gap: 8,
   ...shadows.sm,
 };
@@ -250,11 +231,6 @@ const filterGroupStyle = {
   gap: 6,
 };
 
-const filterGroupLabelStyle = {
-  fontSize: 12,
-  fontWeight: '900' as const,
-  color: palette.textSoft,
-};
 
 const typeFilterRowStyle = {
   flexDirection: 'row' as const,
@@ -267,43 +243,13 @@ const typeFilterScrollStyle = {
   minWidth: 0,
 };
 
-const viewSegmentStyle = {
-  minHeight: 34,
-  borderRadius: 12,
-  backgroundColor: palette.surfaceMuted,
-  padding: 3,
-  flexDirection: 'row' as const,
-  gap: 3,
-};
 
-const viewSegmentButtonStyle = {
-  flex: 1,
-  minHeight: 28,
-  borderRadius: 10,
-  paddingHorizontal: 8,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  gap: 5,
-};
 
-const viewSegmentButtonActiveStyle = {
-  backgroundColor: palette.surface,
-  ...shadows.sm,
-};
 
-const viewSegmentButtonTextStyle = {
-  fontSize: 13,
-  fontWeight: '800' as const,
-  color: palette.textSoft,
-};
 
-const viewSegmentButtonTextActiveStyle = {
-  color: palette.text,
-};
 
 const filterButtonStyle = {
-  minHeight: 34,
+  minHeight: 44,
   borderRadius: 12,
   backgroundColor: palette.text,
   paddingHorizontal: 12,
@@ -315,7 +261,7 @@ const filterButtonStyle = {
 
 const filterButtonTextStyle = {
   fontSize: 13,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: '#ffffff',
 };
 
@@ -331,7 +277,7 @@ const filterButtonBadgeStyle = {
 
 const filterButtonBadgeTextStyle = {
   fontSize: 11,
-  fontWeight: '900' as const,
+  fontWeight: '600' as const,
   color: '#ffffff',
 };
 
@@ -349,7 +295,7 @@ const activeFilterRailStyle = {
 
 const activeFilterLabelStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textSoft,
 };
 
@@ -365,7 +311,7 @@ const activeFilterPillStyle = {
 
 const activeFilterPillTextStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.brandStrong,
 };
 
@@ -379,7 +325,7 @@ const clearFiltersButtonStyle = {
 
 const clearFiltersTextStyle = {
   fontSize: 12,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -396,7 +342,7 @@ const sheetClearButtonStyle = {
 
 const sheetClearButtonTextStyle = {
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.textMuted,
 };
 
@@ -418,12 +364,12 @@ const secondaryFilterButtonTextStyle = {
   flex: 1,
   minWidth: 0,
   fontSize: 14,
-  fontWeight: '800' as const,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 
 const filterSectionStyle = {
-  borderRadius: 14,
+  borderRadius: 12,
   borderWidth: 1,
   borderColor: palette.borderSoft,
   backgroundColor: palette.surface,
@@ -436,8 +382,8 @@ const filterSectionHeaderStyle = {
 };
 
 const filterSectionTitleStyle = {
-  fontSize: 15,
-  fontWeight: '900' as const,
+  fontSize: 14,
+  fontWeight: '600' as const,
   color: palette.text,
 };
 

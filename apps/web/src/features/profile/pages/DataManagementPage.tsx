@@ -123,15 +123,15 @@ export default function DataManagementPage() {
           animate="animate"
         >
         <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
-          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_42%),linear-gradient(135deg,#ffffff_0%,#f7fbff_100%)] px-5 py-5 md:px-6 md:py-6">
+          <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-sky-100 text-sky-600">
                 <HardDriveDownload size={26} />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold text-slate-900">备份与恢复</p>
+                <p className="text-lg font-semibold text-slate-900">备份与恢复</p>
                 <p className="mt-2 text-sm text-slate-500">集中管理当前家庭空间的数据导出与 JSON 备份导入。</p>
-                <p className="mt-1 text-xs text-slate-400">导入只覆盖当前家庭空间，不会自动合并其他家庭库存。</p>
+                <p className="mt-1 text-xs text-muted">导入只覆盖当前家庭空间，不会自动合并其他家庭库存。</p>
               </div>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function DataManagementPage() {
                   <button
                     onClick={() => void handleExport('json')}
                     disabled={exportingFormat !== null}
-                    className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-brandStrong px-4 text-sm font-medium text-white transition-colors hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Download size={15} />
                     {exportingFormat === 'json' ? '导出中...' : '导出 JSON'}
@@ -195,7 +195,7 @@ export default function DataManagementPage() {
                   <button
                     onClick={() => importInputRef.current?.click()}
                     disabled={importing}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-muted"
                   >
                     <Upload size={15} />
                     选择 JSON 文件
@@ -205,7 +205,7 @@ export default function DataManagementPage() {
               </div>
               {importPreview ? (
                 <div className="rounded-2xl bg-brandTint p-3 text-sm text-slate-700">
-                  <p className="font-bold text-brandStrong">导入预览 · 版本 {importPreview.version}</p>
+                  <p className="font-semibold text-brandStrong">导入预览 · 版本 {importPreview.version}</p>
                   <p className="mt-1">物品 {importPreview.items} · 分类 {importPreview.categories} · 标签 {importPreview.tags} · 二维码 {importPreview.codes} · 盘点 {importPreview.stocktakes}</p>
                 </div>
               ) : null}
