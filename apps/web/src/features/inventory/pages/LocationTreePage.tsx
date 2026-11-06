@@ -88,7 +88,6 @@ export default function LocationTreePage() {
       <PageHeader
         width="wide"
         title="空间位置"
-        description="用位置树管理层级，或切换到地图查看家庭资产分布。"
         actions={(
           <>
             <ViewTabs currentView={currentView} onChange={handleChangeView} />

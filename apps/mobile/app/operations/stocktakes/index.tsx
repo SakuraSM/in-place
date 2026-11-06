@@ -65,8 +65,8 @@ export default function StocktakesScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="盘点" subtitle="按位置核对库存差异" />
-      <SectionCard title="库存盘点" subtitle="按位置核对数量、遗漏和错误归位" density="compact">
+      <PageHeader title="家庭盘点" />
+      <SectionCard title="开始盘点" density="compact">
         {canEditInventory ? <Pressable
           accessibilityRole="button"
           onPress={() => setLocationPickerOpen(true)}
@@ -74,7 +74,7 @@ export default function StocktakesScreen() {
         >
           <Ionicons name="add" size={19} color="#ffffff" />
           <Text style={primaryButtonTextStyle}>创建盘点</Text>
-        </Pressable> : null}
+        </Pressable> : <Text style={emptyTextStyle}>当前家庭为只读，无法发起盘点。</Text>}
       </SectionCard>
 
       <SectionCard title={`进行中 ${activeSessions.length}`} density="dense" headerMode="compact">

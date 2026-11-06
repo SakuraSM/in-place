@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Bot, KeyRound, Link as LinkIcon, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { Bot, KeyRound, Link as LinkIcon, RotateCcw, Save, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { fetchAiSettings, resetAiSettings, updateAiSettings, type AiSettings } from '../../../legacy/ai-settings';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import { SectionPanel } from '../components/ProfileUi';
 
 const DEFAULT_AI_SETTINGS: AiSettings = {
@@ -93,10 +93,7 @@ export default function AiSettingsPage() {
       <PageHeader
         width="narrow"
         title="AI 配置"
-        backLink={<Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
-            <ArrowLeft size={15} />
-            返回我的
-          </Link>}
+        backLink={<PageBack to="/profile" label="返回我的" />}
       />
       <PageContent width="narrow">
         <motion.div

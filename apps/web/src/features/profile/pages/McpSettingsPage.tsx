@@ -1,9 +1,8 @@
 import { useState, type ReactElement } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { getMcpCredentialStatus } from '@inplace/app-core';
 import { useHousehold } from '../../../app/providers/household-context';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { SectionPanel } from '../components/ProfileUi';
 import { McpCredentialForm } from '../components/McpCredentialForm';
@@ -12,7 +11,7 @@ import { useMcpSettings } from '../hooks/useMcpSettings';
 export default function McpSettingsPage(): ReactElement {
   const { currentHousehold } = useHousehold();
   return <PageShell>
-    <PageHeader title="MCP 接入" description="让 Agent 查询与录入当前家庭的库存" width="narrow" backLink={<Link to="/profile" className="inline-flex items-center gap-2"><ArrowLeft size={18} />返回设置</Link>} />
+    <PageHeader title="MCP 接入" width="narrow" backLink={<PageBack to="/profile" label="返回我的" />} />
     <PageContent width="narrow" className="space-y-5 pb-8">
       {currentHousehold ? <McpSettingsPanel key={currentHousehold.id} householdId={currentHousehold.id} /> : <p>请先选择家庭空间。</p>}
     </PageContent>

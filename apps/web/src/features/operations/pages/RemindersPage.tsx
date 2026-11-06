@@ -44,7 +44,7 @@ export default function RemindersPage() {
 
   return (
     <PageShell>
-      <PageHeader width="narrow" eyebrow="长期维护" title="提醒中心" titleSize="detail" />
+      <PageHeader width="narrow" title="提醒中心" titleSize="detail" />
       <PageContent width="narrow">
         {loading ? <p className="text-sm text-slate-500">正在生成家庭提醒…</p> : null}
         {!loading && reminders.length === 0 ? (

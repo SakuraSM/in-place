@@ -89,7 +89,7 @@ export default function LocationTreeView({
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
             <MapPin size={18} />
           </div>
-          <h2 className="font-semibold text-slate-950">空间位置</h2>
+          <h2 className="font-semibold text-slate-950">位置列表</h2>
         </div>
         <LocationTreePanel
           items={items}

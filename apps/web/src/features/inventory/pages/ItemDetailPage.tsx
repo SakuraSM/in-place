@@ -2,7 +2,7 @@ import InventoryDetailGallery from '../components/InventoryDetailGallery';
 import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useCallback, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, SquarePen, Trash2, Tag, MapPin, ChevronRight, Package } from 'lucide-react';
+import { SquarePen, Trash2, Tag, MapPin, ChevronRight, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fetchItem, fetchAncestors, fetchChildren, updateItem, deleteItem } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
@@ -10,6 +10,7 @@ import type { ItemCreateInput } from '@inplace/domain';
 import StatusBadge from '../../../shared/ui/StatusBadge';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import ItemForm from '../components/ItemForm';
 import ItemPurchaseInfo from '../components/ItemPurchaseInfo';
 import SpatialRelationScene from '../components/SpatialRelationScene';
@@ -201,16 +202,7 @@ export default function ItemDetailPage() {
         title={item.name}
         titleSize="detail"
         eyebrow="物品详情"
-        backLink={(
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="返回上一级"
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-        )}
+        backLink={<PageBack label="返回上一级" iconOnly onClick={() => navigate(-1)} />}
         actions={canEditInventory ? (
           <>
             <motion.button

@@ -75,7 +75,7 @@ export default function ActivityTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="记录" />
+        <BrandHeader variant="page" title="操作记录" />
       </Entrance>
 
       <SectionCard title="概览" subtitle={meta ? `${logs.length} / ${meta.total}` : undefined} delay={70} density="dense" headerMode="compact">

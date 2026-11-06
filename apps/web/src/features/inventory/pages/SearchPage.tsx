@@ -132,6 +132,8 @@ export default function SearchPage() {
     isLoading: isSearchLoading,
     isFetching,
     isError,
+    isPaused,
+    isPlaceholderData,
     refetch,
   } = useQuery({
     queryKey: [
@@ -208,6 +210,13 @@ export default function SearchPage() {
   });
   const handleLocationChange = (locationId: string | null) => updateFilters({ locationId });
   const activeFilterCount = countActiveOverviewFilters(filters);
+  const isWaitingForFilterResults = isPlaceholderData && filters.page === 1;
+  let emptyDescription: string | undefined;
+  if (activeFilterCount > 0) {
+    emptyDescription = selectedLocation
+      ? `试试其他关键词，或切换位置「${selectedLocation.name}」。`
+      : '试试其他关键词或调整筛选条件。';
+  }
 
   const filterControls = (
     <OverviewFilters
@@ -273,18 +282,19 @@ export default function SearchPage() {
             totalPages={pagination.totalPages}
             hasNextPage={pagination.hasNextPage}
             isMobile={isMobile}
-            isInitialLoading={isInventoryLoading || (isSearchLoading && !searchResponse)}
+            isInitialLoading={isInventoryLoading || (isSearchLoading && !searchResponse) || isWaitingForFilterResults}
+            isWaitingForNetwork={isPaused && (!searchResponse || isWaitingForFilterResults)}
+            isPaused={isPaused}
             isFetching={isFetching}
             isError={isError}
-            emptyDescription={selectedLocation
-              ? `试试其他关键词，或切换位置「${selectedLocation.name}」。`
-              : '试试其他关键词或调整筛选条件。'}
+            emptyTitle={activeFilterCount > 0 ? '当前筛选下没有结果' : '还没有库存记录'}
+            emptyDescription={emptyDescription}
             onOpenItem={(item) => navigate(resolveItemDetailPath(item))}
             onRetry={() => void refetch()}
             onPageChange={(page) => updateFilters({ page }, { replace: false, resetPage: false })}
             onPageSizeChange={(pageSize) => updateFilters({ pageSize })}
             onLoadMore={() => {
-              if (!isFetching && pagination.hasNextPage) {
+              if (!isFetching && !isPaused && pagination.hasNextPage) {
                 updateFilters(
                   { page: filters.page + 1 },
                   { replace: false, resetPage: false },
@@ -298,19 +308,19 @@ export default function SearchPage() {
       {showMobileFilters ? (
         <ResponsiveDialog
           title="筛选库存"
-          description={activeFilterCount > 0 ? `已启用 ${activeFilterCount} 项筛选` : '按类型、状态、标签和位置缩小范围。'}
+          description={activeFilterCount > 0 ? `已启用 ${activeFilterCount} 项筛选` : undefined}
           onClose={() => setShowMobileFilters(false)}
-        >
-          <div className="px-5 py-5">{filterControls}</div>
-          <div className="sticky bottom-0 border-t border-borderSoft bg-surface px-5 py-4">
+          footer={(
             <button
               type="button"
               onClick={() => setShowMobileFilters(false)}
               className="min-h-12 w-full rounded-2xl bg-brandStrong px-4 text-sm font-semibold text-white"
             >
-              查看 {pagination.total} 个结果
+              {isPaused ? '查看结果（等待联网）' : isError ? '查看结果' : isFetching || isWaitingForFilterResults ? '查看结果（更新中）' : `查看 ${pagination.total} 个结果`}
             </button>
-          </div>
+          )}
+        >
+          <div className="px-5 py-5">{filterControls}</div>
         </ResponsiveDialog>
       ) : null}
     </PageShell>

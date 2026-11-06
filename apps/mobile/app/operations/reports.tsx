@@ -62,8 +62,8 @@ export default function ReportsScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="库存报告" subtitle="价值、补货、到期与盘点摘要" />
-      <SectionCard title="家庭库存报告" subtitle="用于搬家、保险留档和日常补货" density="compact">
+      <PageHeader title="库存报告" />
+      <SectionCard title="导出报告" density="compact">
         <Pressable onPress={() => void handleExportPdf()} style={primaryButtonStyle}>
           <Ionicons name="document-outline" size={18} color="#ffffff" />
           <Text style={primaryButtonTextStyle}>生成并分享 PDF</Text>

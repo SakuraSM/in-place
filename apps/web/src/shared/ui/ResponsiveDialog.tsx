@@ -16,6 +16,7 @@ interface ResponsiveDialogProps {
   shouldCloseOnBackdrop?: boolean;
   shouldCloseOnEscape?: boolean;
   showCloseButton?: boolean;
+  isCloseDisabled?: boolean;
 }
 
 const DIALOG_WIDTH_CLASS: Record<ResponsiveDialogSize, string> = {
@@ -35,16 +36,17 @@ export default function ResponsiveDialog({
   shouldCloseOnBackdrop = true,
   shouldCloseOnEscape = true,
   showCloseButton = true,
+  isCloseDisabled = false,
 }: ResponsiveDialogProps) {
   const titleId = useId();
   const descriptionId = useId();
-  const dialogRef = useDialogFocus({ onClose, shouldCloseOnEscape });
+  const dialogRef = useDialogFocus({ onClose, shouldCloseOnEscape: shouldCloseOnEscape && !isCloseDisabled });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
       <div
         aria-hidden="true"
-        onClick={shouldCloseOnBackdrop ? onClose : undefined}
+        onClick={shouldCloseOnBackdrop && !isCloseDisabled ? onClose : undefined}
         className="absolute inset-0 cursor-default bg-slate-950/30 backdrop-blur-sm"
       />
       <motion.div
@@ -77,7 +79,8 @@ export default function ResponsiveDialog({
               type="button"
               onClick={onClose}
               aria-label={closeLabel}
-              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-surfaceMuted text-slate-600 transition-colors hover:bg-brandTint hover:text-brandStrong"
+              disabled={isCloseDisabled}
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-surfaceMuted text-slate-600 transition-colors hover:bg-brandTint hover:text-brandStrong disabled:cursor-not-allowed disabled:opacity-50"
             >
               <X size={18} />
             </button>

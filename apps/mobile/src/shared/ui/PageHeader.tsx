@@ -24,7 +24,7 @@ export function PageHeader({ title, subtitle, accessory, onBack = router.back }:
         <Ionicons name="arrow-back" size={22} color={palette.text} />
       </Pressable>
       <View style={titleBlockStyle}>
-        <Text numberOfLines={2} style={titleStyle}>{title}</Text>
+        <Text accessibilityRole="header" numberOfLines={2} style={titleStyle}>{title}</Text>
         {subtitle ? <Text numberOfLines={2} style={subtitleStyle}>{subtitle}</Text> : null}
       </View>
       {accessory ? <View style={accessoryStyle}>{accessory as never}</View> : null}

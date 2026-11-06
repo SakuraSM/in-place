@@ -40,7 +40,7 @@ export default function HouseholdJoinScreen() {
 
   return (
     <Screen contentInsetMode="page" chrome="muted">
-      <PageHeader title="家庭邀请" subtitle="加入共享家庭空间" />
+      <PageHeader title="家庭邀请" />
       <SectionCard title={status === 'success' ? '加入成功' : '无法加入'} subtitle={message} density="compact">
         <Pressable onPress={() => router.replace(status === 'success' ? '/(tabs)' : '/profile/household')} style={buttonStyle}>
           <Text style={buttonTextStyle}>{status === 'success' ? '进入首页' : '返回家庭空间'}</Text>

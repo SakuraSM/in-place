@@ -4,7 +4,14 @@ import { ActivityIndicator, Pressable, Text, View, type ViewStyle } from 'react-
 import { palette } from './theme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
-type ActionVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type ActionVariant = 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost';
+const ACTION_TEXT_COLORS: Record<ActionVariant, string> = {
+  primary: '#ffffff',
+  secondary: palette.text,
+  accent: palette.brandStrong,
+  danger: '#ffffff',
+  ghost: palette.textMuted,
+};
 
 export interface ActionButtonConfig {
   key: string;
@@ -35,7 +42,7 @@ export function ActionButtonRow({ actions, compact = false, style }: ActionButto
 
 function ActionButton({ action, compact }: { action: ActionButtonConfig; compact: boolean }) {
   const variant = action.variant ?? 'secondary';
-  const textColor = variant === 'primary' || variant === 'danger' ? '#ffffff' : variant === 'ghost' ? palette.textMuted : palette.text;
+  const textColor = ACTION_TEXT_COLORS[variant];
   return (
     <Pressable
       accessibilityRole="button"
@@ -56,7 +63,7 @@ function ActionButton({ action, compact }: { action: ActionButtonConfig; compact
       ) : action.iconName ? (
         <Ionicons name={action.iconName} size={17} color={textColor} />
       ) : null}
-      <Text numberOfLines={1} style={[buttonTextStyle, { color: textColor }]}>
+      <Text numberOfLines={2} style={[buttonTextStyle, { color: textColor }]}>
         {action.label}
       </Text>
     </Pressable>
@@ -65,7 +72,7 @@ function ActionButton({ action, compact }: { action: ActionButtonConfig; compact
 
 const rowStyle = {
   flexDirection: 'row' as const,
-  alignItems: 'center' as const,
+  alignItems: 'stretch' as const,
   gap: 8,
 };
 
@@ -77,6 +84,7 @@ const buttonStyle = {
   justifyContent: 'center' as const,
   gap: 6,
   paddingHorizontal: 12,
+  paddingVertical: 8,
   borderWidth: 1,
 };
 
@@ -95,6 +103,10 @@ const variantStyles = {
     backgroundColor: palette.surface,
     borderColor: palette.border,
   },
+  accent: {
+    backgroundColor: palette.brandTint,
+    borderColor: palette.brandTint,
+  },
   danger: {
     backgroundColor: palette.danger,
     borderColor: palette.danger,
@@ -108,6 +120,8 @@ const variantStyles = {
 const buttonTextStyle = {
   fontSize: 14,
   fontWeight: '600' as const,
+  textAlign: 'center' as const,
+  flexShrink: 1,
 };
 
 const pressedStyle = {

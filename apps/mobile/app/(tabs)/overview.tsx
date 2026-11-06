@@ -298,7 +298,7 @@ export default function OverviewTab() {
         scrollProps={{ onScroll: handleScroll, scrollEventThrottle: 16 }}
       >
       <View style={pageTitleRowStyle}>
-        <Text style={pageTitleStyle}>库存</Text>
+        <Text accessibilityRole="header" style={pageTitleStyle}>库存</Text>
         <HouseholdButton compact />
         {canEditInventory ? (
           <Pressable
@@ -334,7 +334,7 @@ export default function OverviewTab() {
           </Pressable>
         ) : null}
       </View>
-      <Text style={loadedMetaStyle}>{viewMode === 'hierarchy' ? '层级模式仅查找当前位置的直接下级，可切换平铺跨层查找' : selectedLocation ? `查找${selectedLocation.name}及其下级全部内容` : '查找当前家庭的全部位置、收纳和物品'}</Text>
+      {viewMode === 'hierarchy' ? <Text style={loadedMetaStyle}>层级模式仅搜索当前位置的直接下级</Text> : selectedLocation ? <Text style={loadedMetaStyle}>包含「{selectedLocation.name}」及其下级</Text> : null}
 
       <OverviewFilterControls
         typeFilters={TYPE_FILTERS}

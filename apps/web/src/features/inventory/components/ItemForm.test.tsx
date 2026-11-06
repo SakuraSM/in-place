@@ -144,7 +144,8 @@ describe('ItemForm', () => {
     let resolveUpload: (url: string) => void = () => {};
     const pendingUpload = new Promise<string>((resolve) => { resolveUpload = resolve; });
     vi.mocked(uploadImage).mockReturnValueOnce(pendingUpload);
-    const { container } = render(<ItemForm onSave={vi.fn()} onClose={vi.fn()} />);
+    const onClose = vi.fn();
+    const { container } = render(<ItemForm onSave={vi.fn()} onClose={onClose} />);
     await user.type(screen.getByLabelText('名称 *'), '测试图片');
     await user.click(screen.getByRole('button', { name: /更多信息/ }));
     const fileInput = container.querySelector<HTMLInputElement>('input[type="file"]');
@@ -153,6 +154,9 @@ describe('ItemForm', () => {
 
     expect(screen.getByLabelText('名称 *')).toBeDisabled();
     expect(screen.getByRole('button', { name: /保存中/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '关闭新增物品表单' })).toBeDisabled();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
     act(() => resolveUpload('/uploads/first.png'));
     await waitFor(() => expect(screen.getByLabelText('名称 *')).toBeEnabled());
   });

@@ -31,7 +31,6 @@ interface ManageLink {
 
 interface ManageSectionProps {
   title: string;
-  description: string;
   links: ManageLink[];
 }
 
@@ -39,7 +38,7 @@ const OPERATION_LINKS: ManageLink[] = [
   { title: '家庭盘点', description: '按位置核对库存差异', to: '/stocktakes', icon: ClipboardCheck, tone: 'bg-violet-50 text-violet-700' },
   { title: '提醒中心', description: '处理保修、借用和维护提醒', to: '/reminders', icon: Bell, tone: 'bg-amber-50 text-amber-800' },
   { title: '库存报告', description: '查看价值、补货和到期清单', to: '/reports', icon: BarChart3, tone: 'bg-sky-50 text-sky-700' },
-  { title: '重复项', description: '识别需要合并的库存记录', to: '/duplicates', icon: Copy, tone: 'bg-rose-50 text-rose-700' },
+  { title: '重复物品', description: '识别需要合并的库存记录', to: '/duplicates', icon: Copy, tone: 'bg-rose-50 text-rose-700' },
   { title: '标签打印', description: '生成库存二维码标签', to: '/labels', icon: Printer, tone: 'bg-teal-50 text-teal-700' },
   { title: '扫标签归位', description: '扫描标签快速确认或移动库存', to: '/scan/codes', icon: QrCode, tone: 'bg-emerald-50 text-emerald-700' },
 ];
@@ -66,19 +65,14 @@ export default function ManagePage() {
 
   return (
     <PageShell>
-      <PageHeader
-        title="管理中心"
-        description="集中处理位置、分类、盘点和库存工具。"
-      />
+      <PageHeader title="管理中心" />
       <PageContent className="space-y-5">
         <ManageSection
           title="基础管理"
-          description="维护库存结构和整理规则"
           links={managementLinks}
         />
         <ManageSection
           title="库存工具"
-          description="完成盘点、提醒、报告和标签任务"
           links={OPERATION_LINKS}
         />
       </PageContent>
@@ -86,12 +80,11 @@ export default function ManagePage() {
   );
 }
 
-function ManageSection({ title, description, links }: ManageSectionProps) {
+function ManageSection({ title, links }: ManageSectionProps) {
   return (
     <section aria-labelledby={`manage-${title}`} className="rounded-3xl border border-borderSoft bg-surface p-4 shadow-sm md:p-5">
       <div className="mb-3">
         <h2 id={`manage-${title}`} className="text-base font-semibold text-slate-950">{title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{description}</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {links.map(({ title: linkTitle, description: linkDescription, to, icon: Icon, tone, metric }) => (

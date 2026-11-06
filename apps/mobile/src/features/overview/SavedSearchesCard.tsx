@@ -70,7 +70,7 @@ export function SavedSearchesCard({ filters, onApply }: SavedSearchesCardProps) 
             <Text style={saveButtonTextStyle}>保存当前</Text>
           </Pressable>
         </View>
-        <Text style={emptyStyle}>仅显示当前家庭筛选，旧版筛选保留在本机。</Text>
+        <Text style={emptyStyle}>保存在本机，仅当前账号和家庭可见</Text>
         {searches.length === 0 ? (
           <Text style={emptyStyle}>还没有保存筛选，最多可保存 10 组。</Text>
         ) : null}

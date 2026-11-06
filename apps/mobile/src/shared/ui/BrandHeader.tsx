@@ -66,6 +66,7 @@ export function BrandHeader({
         </View>
         <View style={{ ...(shouldKeepTitleVisible ? {} : { flex: 1, minWidth: 0 }), gap: resolvedVariant === 'hero' ? 3 : 1, paddingTop: resolvedVariant === 'hero' ? 1 : 0 }}>
           <Text
+            accessibilityRole="header"
             style={{
               fontSize: titleSize,
               lineHeight: titleLineHeight,

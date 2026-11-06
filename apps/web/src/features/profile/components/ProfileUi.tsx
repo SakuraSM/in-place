@@ -18,7 +18,7 @@ export function SectionPanel({
       <div className="border-b border-slate-50 px-5 py-4 md:px-6">
         <div className="flex items-center gap-2">
           {icon ? <span className="text-brandStrong">{icon}</span> : null}
-          <p className="text-[17px] font-semibold text-ink">{title}</p>
+          <h2 className="text-[17px] font-semibold text-ink">{title}</h2>
         </div>
         {description ? <p className="mt-1 text-xs leading-5 text-slate-600">{description}</p> : null}
       </div>

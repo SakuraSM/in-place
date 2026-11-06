@@ -47,7 +47,7 @@ export function Screen({ children, footer, scroll = false, contentStyle, scrollP
   );
 }
 
-interface ScreenFooterProps { children: ReactNode; bottomInset: number }
-function ScreenFooter({ children, bottomInset }: ScreenFooterProps) {
+interface ScreenFooterProps { children: ReactNode; bottomInset?: number }
+export function ScreenFooter({ children, bottomInset = 0 }: ScreenFooterProps) {
   return <View testID="screen-footer" style={{ paddingHorizontal: layout.pageGutter.mobile, paddingTop: 14, paddingBottom: Math.max(bottomInset, 14), borderTopWidth: 1, borderTopColor: palette.border, backgroundColor: palette.surface }}>{children as never}</View>;
 }

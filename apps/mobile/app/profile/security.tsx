@@ -37,7 +37,7 @@ export default function SecurityScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted" footer={<ActionButtonRow actions={[{ key: 'save', label: '修改密码', variant: 'primary', onPress: () => void passwordMutation.mutateAsync(), loading: passwordMutation.isPending }]} />}>
-      <PageHeader title="账号安全" subtitle="密码与登录会话" />
+      <PageHeader title="账号安全" />
 
       <SectionCard title="修改密码" subtitle="至少 8 位" delay={60} density="compact">
         <FormField label="当前密码"

@@ -60,7 +60,6 @@ export default function ItemForm({
   const [isAdditionalDetailsOpen, setIsAdditionalDetailsOpen] = useState(Boolean(initial?.id));
   const [parentLabel, setParentLabel] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const titleId = useId();
   const nameId = useId();
   const descriptionId = useId();
   const additionalDetailsId = useId();
@@ -218,7 +217,6 @@ export default function ItemForm({
     <>
       <ItemFormDialog
         title={dialogTitle}
-        titleId={titleId}
         submitError={localError || submitError}
         isSaving={isSaving || isUploading}
         isSubmitDisabled={isSaving || isUploading || !form.name.trim()}

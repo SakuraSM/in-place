@@ -27,8 +27,7 @@ export default function InventoryReportPage() {
     <PageShell>
       <PageHeader
         width="narrow"
-        eyebrow="搬家 / 保险留档"
-        title="家庭库存报告"
+        title="库存报告"
         titleSize="detail"
         className="print:hidden"
         actions={<button type="button" onClick={() => window.print()} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white"><Printer size={17} />打印或保存 PDF</button>}

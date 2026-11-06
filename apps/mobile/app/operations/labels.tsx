@@ -73,7 +73,7 @@ export default function LabelsScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="标签打印" subtitle="生成并打印归位二维码" />
+      <PageHeader title="标签打印" />
       <SectionCard title="二维码标签" subtitle="标签不包含账号、物品名称或数据库 ID" density="compact">
         <Text style={labelStyle}>标签数量（1–100）</Text>
         <TextInput
