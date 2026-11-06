@@ -2,12 +2,12 @@ import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type For
 import { ChevronDown } from 'lucide-react';
 import { INVENTORY_NODE_LABELS } from '@inplace/app-core';
 import type { ItemCreateInput } from '@inplace/domain';
-import type { Category, Item, ItemType } from '../../../legacy/database.types';
+import type { Item, ItemType } from '../../../legacy/database.types';
 import { useAuth } from '../../../app/providers/auth-context';
-import { fetchCategories } from '../../../legacy/categories';
 import { fetchItem, uploadImage } from '../../../legacy/items';
 import { fetchTags } from '../../../legacy/tags';
 import { getFormCategoryScope } from '../lib/categoryScope';
+import { useItemFormCategories } from '../hooks/useItemFormCategories';
 import { createInitialItemFormData, createNextItemFormData, toItemCreateInput } from './itemFormData';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import ItemFormAdditionalFields from './ItemFormAdditionalFields';
@@ -40,7 +40,6 @@ export default function ItemForm({
   onClose,
 }: ItemFormProps) {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [form, setForm] = useState<ItemFormData>(() => createInitialItemFormData({
     initial,
@@ -69,11 +68,7 @@ export default function ItemForm({
     if (focusName && !isSaving) document.getElementById(nameId)?.focus();
   }, [focusName, isSaving, nameId]);
   const categoryScope = getFormCategoryScope(form.type, form.isLocation);
-
-  useEffect(() => {
-    if (!user) return;
-    void fetchCategories(user.id, categoryScope).then(setCategories);
-  }, [categoryScope, user]);
+  const categoryState = useItemFormCategories(user?.id, categoryScope);
 
   useEffect(() => {
     if (!user) return;
@@ -136,14 +131,30 @@ export default function ItemForm({
   };
 
   const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const files = Array.from(event.target.files ?? []);
+    const input = event.currentTarget;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
     if (files.length === 0 || !user) return;
     setIsUploading(true);
+    setLocalError(null);
     try {
-      const uploadedImages = await Promise.all(files.map((file) => uploadImage(file, user.id)));
-      setForm((current) => ({ ...current, images: [...current.images, ...uploadedImages] }));
-    } catch (error) {
-      setLocalError(error instanceof Error ? error.message : '图片上传失败，请重试');
+      const uploadedImages: string[] = [];
+      const failedImages: Array<{ name: string; reason: string }> = [];
+      for (const file of files) {
+        try {
+          uploadedImages.push(await uploadImage(file, user.id));
+        } catch (error) {
+          failedImages.push({ name: file.name, reason: error instanceof Error && error.message ? error.message : '请稍后重试' });
+        }
+      }
+      if (uploadedImages.length > 0) {
+        setForm((current) => ({ ...current, images: [...current.images, ...uploadedImages] }));
+      }
+      if (failedImages.length > 0) {
+        const retainedMessage = uploadedImages.length > 0 ? '已上传的图片已保留，' : '';
+        const failureDetails = failedImages.map(({ name, reason }) => `${name}（${reason}）`).join('、');
+        setLocalError(`上传失败：${failureDetails}。${retainedMessage}请重试失败的图片。`);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -218,7 +229,10 @@ export default function ItemForm({
       >
         <ItemFormPrimaryFields
           form={form}
-          categories={categories}
+          categories={categoryState.categories}
+          isLoadingCategories={categoryState.isLoading}
+          hasCategoryError={categoryState.hasError}
+          onRetryCategories={categoryState.retry}
           nameId={nameId}
           parentLabel={parentLabel}
           forceType={forceType}

@@ -284,16 +284,16 @@ export default function ScanTab() {
 
   if (!aiStatusQuery.data) {
     return (
-      <Screen>
+      <Screen scroll>
         <StateBlock title="尚未配置 AI 识别服务" body="配置识别服务后可使用拍照录入，也可以手动新增或扫描标签整理库存。" />
-        <Pressable accessibilityRole="button" onPress={() => router.push('/profile/ai')} style={primaryButtonStyle}><Text style={primaryButtonTextStyle}>前往 AI 配置</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/profile/ai')} style={[primaryButtonStyle, unavailablePrimaryButtonStyle]}><Text style={primaryButtonTextStyle}>前往 AI 配置</Text></Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="扫标签归位"
           onPress={() => router.push('/scan-code' as Href)}
-          style={primaryButtonStyle}
+          style={labelReturnButtonStyle}
         >
-          <Text style={primaryButtonTextStyle}>扫标签归位</Text>
+          <Text style={labelReturnButtonTextStyle}>扫标签归位</Text>
         </Pressable>
       </Screen>
     );
@@ -430,6 +430,12 @@ const primaryButtonStyle = {
   backgroundColor: palette.brand,
   paddingVertical: 13,
   alignItems: 'center' as const,
+};
+
+const unavailablePrimaryButtonStyle = {
+  flex: 0,
+  minHeight: 48,
+  justifyContent: 'center' as const,
 };
 
 const disabledButtonStyle = {

@@ -10,6 +10,7 @@ interface BrandHeaderProps {
   compact?: boolean;
   variant?: 'hero' | 'page';
   align?: 'top' | 'center';
+  keepTitleVisible?: boolean;
 }
 
 export function BrandHeader({
@@ -20,8 +21,10 @@ export function BrandHeader({
   compact = false,
   variant,
   align = 'top',
+  keepTitleVisible,
 }: BrandHeaderProps) {
   const resolvedVariant = variant ?? (compact ? 'page' : 'hero');
+  const shouldKeepTitleVisible = keepTitleVisible ?? (Boolean(accessory) && !subtitle);
   const logoSize = resolvedVariant === 'hero' ? 44 : 34;
   const titleSize = resolvedVariant === 'hero' ? 30 : 24;
   const titleLineHeight = resolvedVariant === 'hero' ? 34 : 28;
@@ -35,7 +38,7 @@ export function BrandHeader({
         gap: 12,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: align === 'center' ? 'center' : 'flex-start', gap: 12, flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: align === 'center' ? 'center' : 'flex-start', gap: 12, ...(shouldKeepTitleVisible ? { flexShrink: 0 } : { flex: 1, minWidth: 0 }) }}>
         {leading ? <View>{leading as never}</View> : null}
         <View
           style={{
@@ -61,7 +64,7 @@ export function BrandHeader({
             }}
           />
         </View>
-        <View style={{ flex: 1, gap: resolvedVariant === 'hero' ? 3 : 1, paddingTop: resolvedVariant === 'hero' ? 1 : 0 }}>
+        <View style={{ ...(shouldKeepTitleVisible ? {} : { flex: 1, minWidth: 0 }), gap: resolvedVariant === 'hero' ? 3 : 1, paddingTop: resolvedVariant === 'hero' ? 1 : 0 }}>
           <Text
             style={{
               fontSize: titleSize,
@@ -85,7 +88,7 @@ export function BrandHeader({
           ) : null}
         </View>
       </View>
-      {accessory ? <View>{accessory as never}</View> : null}
+      {accessory ? <View style={{ flexShrink: 1, minWidth: 0 }}>{accessory as never}</View> : null}
     </View>
   );
 }

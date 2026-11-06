@@ -8,6 +8,9 @@ import type { ItemFormData, UpdateItemFormField } from './itemFormTypes';
 interface ItemFormPrimaryFieldsProps {
   form: ItemFormData;
   categories: Category[];
+  isLoadingCategories: boolean;
+  hasCategoryError: boolean;
+  onRetryCategories: () => void;
   nameId: string;
   parentLabel: string | null;
   forceType?: ItemType;
@@ -27,6 +30,9 @@ const STATUS_OPTIONS: Array<{ value: ItemStatus; label: string }> = [
 export default function ItemFormPrimaryFields({
   form,
   categories,
+  isLoadingCategories,
+  hasCategoryError,
+  onRetryCategories,
   nameId,
   parentLabel,
   forceType,
@@ -115,7 +121,14 @@ export default function ItemFormPrimaryFields({
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-slate-700">类别</legend>
-        {categories.length === 0 ? (
+        {isLoadingCategories ? (
+          <p role="status" className="py-2 text-xs text-slate-600">正在加载分类…</p>
+        ) : hasCategoryError ? (
+          <div role="alert" className="py-2 text-xs text-rose-700">
+            分类加载失败，请重试；也可稍后设置分类。{' '}
+            <button type="button" onClick={onRetryCategories} className="font-semibold underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong">重试加载分类</button>
+          </div>
+        ) : categories.length === 0 ? (
           <p className="py-2 text-xs text-slate-500">暂无分类，请前往「分类管理」添加</p>
         ) : (
           <div className="flex flex-wrap gap-2">

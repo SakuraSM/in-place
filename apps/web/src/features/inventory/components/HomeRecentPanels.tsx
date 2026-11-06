@@ -19,7 +19,7 @@ function RecentItemsList({ recentItems, recentItemPaths, onOpenItem }: RecentIte
   if (recentItems.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-surfaceMuted px-4 py-10 text-center text-sm text-slate-600 xl:flex-1">
-        还没有新增内容，点右下角按钮开始整理吧。
+        还没有新增内容。
       </div>
     );
   }

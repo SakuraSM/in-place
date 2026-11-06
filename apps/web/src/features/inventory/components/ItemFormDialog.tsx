@@ -52,9 +52,11 @@ export default function ItemFormDialog({
         </div>
 
         <form onSubmit={(event) => void onSubmit(event)} className="flex min-h-0 flex-1 flex-col">
-          <fieldset disabled={isSaving} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">{children}</fieldset>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <fieldset disabled={isSaving} className="min-w-0 space-y-5 px-5 py-4">{children}</fieldset>
+          </div>
           <div className="border-t border-slate-100 bg-white px-5 py-4">
-            {submitError ? <div role="alert" className="mb-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div> : null}
+            {submitError ? <div role="alert" className="mb-3 max-h-28 overflow-y-auto break-words rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div> : null}
             <div className="flex gap-3">
             {allowContinue ? <button type="submit" value="continue" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandTint px-3 py-4 text-sm font-semibold text-brandStrong disabled:opacity-50">保存并继续</button> : null}
             <button type="submit" disabled={isSubmitDisabled} className="flex-1 rounded-2xl bg-brandStrong py-4 text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50">

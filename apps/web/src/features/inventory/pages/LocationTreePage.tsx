@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useRef, useState, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { MapPinned, Plus, Rows3 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -15,6 +15,11 @@ import { useAllInventoryItems } from '../hooks/useAllInventoryItems';
 const AssetMapView = lazy(() => import('../components/AssetMapView'));
 
 type LocationPageView = 'tree' | 'map';
+const LOCATION_VIEW_PANEL_ID = 'location-view-panel';
+const LOCATION_VIEWS = [
+  { value: 'tree', label: '位置树', icon: Rows3 },
+  { value: 'map', label: '资产地图', icon: MapPinned },
+] as const;
 
 function resolveLocationPageView(searchParams: URLSearchParams): LocationPageView {
   return searchParams.get('view') === 'map' ? 'map' : 'tree';
@@ -35,13 +40,14 @@ export default function LocationTreePage() {
   const currentView = resolveLocationPageView(searchParams);
 
   const handleChangeView = useCallback((view: LocationPageView): void => {
+    if (view === currentView) return;
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.set('view', view);
     setSearchParams(nextSearchParams);
     if (view === 'map') {
       setMapErrorMessage(null);
     }
-  }, [searchParams, setSearchParams]);
+  }, [currentView, searchParams, setSearchParams]);
 
   const handleOpenCreateLocation = useCallback((parentId: string | null): void => {
     setCreateParentId(parentId);
@@ -85,24 +91,7 @@ export default function LocationTreePage() {
         description="用位置树管理层级，或切换到地图查看家庭资产分布。"
         actions={(
           <>
-            <div
-              className="inline-flex rounded-2xl border border-slate-300 bg-white p-1 shadow-sm"
-              role="tablist"
-              aria-label="空间位置视图"
-            >
-              <ViewTab
-                label="位置树"
-                icon={Rows3}
-                isActive={currentView === 'tree'}
-                onSelect={() => handleChangeView('tree')}
-              />
-              <ViewTab
-                label="资产地图"
-                icon={MapPinned}
-                isActive={currentView === 'map'}
-                onSelect={() => handleChangeView('map')}
-              />
-            </div>
+            <ViewTabs currentView={currentView} onChange={handleChangeView} />
             {canEditInventory ? <button
               type="button"
               onClick={() => handleOpenCreateLocation(currentView === 'tree' ? selectedLocationId : null)}
@@ -116,35 +105,37 @@ export default function LocationTreePage() {
       />
 
       <PageContent width="wide" className="flex flex-col">
-        {mapErrorMessage ? (
-          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
-            {mapErrorMessage}
-          </div>
-        ) : null}
+        <div id={LOCATION_VIEW_PANEL_ID} role="tabpanel" aria-labelledby={`location-view-${currentView}`} className="flex flex-1 flex-col">
+          {mapErrorMessage ? (
+            <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
+              {mapErrorMessage}
+            </div>
+          ) : null}
 
-        {currentView === 'tree' ? (
-          <LocationTreeView
-            items={items}
-            isLoading={isLoading}
-            selectedLocationId={selectedLocationId}
-            onSelectLocation={setSelectedLocationId}
-          />
-        ) : (
-          <AssetMapErrorBoundary onMapError={handleMapError}>
-            <Suspense fallback={<MapLoadingState />}>
-              {isLoading ? (
-                <MapLoadingState />
-              ) : (
-                <AssetMapView
-                  householdId={currentHousehold?.id ?? null}
-                  canEdit={canEditInventory}
-                  items={items}
-                  onRequestCreateLocation={() => handleOpenCreateLocation(null)}
-                />
-              )}
-            </Suspense>
-          </AssetMapErrorBoundary>
-        )}
+          {currentView === 'tree' ? (
+            <LocationTreeView
+              items={items}
+              isLoading={isLoading}
+              selectedLocationId={selectedLocationId}
+              onSelectLocation={setSelectedLocationId}
+            />
+          ) : (
+            <AssetMapErrorBoundary onMapError={handleMapError}>
+              <Suspense fallback={<MapLoadingState />}>
+                {isLoading ? (
+                  <MapLoadingState />
+                ) : (
+                  <AssetMapView
+                    householdId={currentHousehold?.id ?? null}
+                    canEdit={canEditInventory}
+                    items={items}
+                    onRequestCreateLocation={() => handleOpenCreateLocation(null)}
+                  />
+                )}
+              </Suspense>
+            </AssetMapErrorBoundary>
+          )}
+        </div>
       </PageContent>
 
       {isCreateFormOpen && canEditInventory ? (
@@ -162,34 +153,48 @@ export default function LocationTreePage() {
   );
 }
 
-interface ViewTabProps {
-  label: string;
-  icon: typeof Rows3;
-  isActive: boolean;
-  onSelect: () => void;
+interface ViewTabsProps {
+  currentView: LocationPageView;
+  onChange: (view: LocationPageView) => void;
 }
 
-function ViewTab({
-  label,
-  icon: Icon,
-  isActive,
-  onSelect,
-}: ViewTabProps) {
+function ViewTabs({ currentView, onChange }: ViewTabsProps) {
+  const tabRefs = useRef<Record<LocationPageView, HTMLButtonElement | null>>({ tree: null, map: null });
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
+    let nextView: LocationPageView;
+    if (event.key === 'Home') nextView = 'tree';
+    else if (event.key === 'End') nextView = 'map';
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') nextView = currentView === 'tree' ? 'map' : 'tree';
+    else return;
+    event.preventDefault();
+    tabRefs.current[nextView]?.focus();
+    onChange(nextView);
+  };
+
   return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={isActive}
-      onClick={onSelect}
-      className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong ${
-        isActive
-          ? 'bg-brandTint text-brandStrong'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-      }`}
-    >
-      <Icon size={14} aria-hidden="true" />
-      {label}
-    </button>
+    <div className="inline-flex rounded-2xl border border-slate-300 bg-white p-1 shadow-sm" role="tablist" aria-label="空间位置视图">
+      {LOCATION_VIEWS.map(({ value, label, icon: Icon }) => {
+        const isActive = currentView === value;
+        return (
+          <button
+            key={value}
+            ref={(element) => { tabRefs.current[value] = element; }}
+            id={`location-view-${value}`}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={LOCATION_VIEW_PANEL_ID}
+            tabIndex={isActive ? 0 : -1}
+            onClick={() => onChange(value)}
+            onKeyDown={handleKeyDown}
+            className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brandStrong ${isActive ? 'bg-brandTint text-brandStrong' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+          >
+            <Icon size={14} aria-hidden="true" />
+            {label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
