@@ -12,6 +12,8 @@ interface BottomSheetProps {
   onClose: () => void;
 }
 
+const MIN_SHEET_BOTTOM_PADDING = 12;
+
 export function BottomSheet({ children, title, visible, onClose }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
 
@@ -33,7 +35,7 @@ export function BottomSheet({ children, title, visible, onClose }: BottomSheetPr
         <View
           accessibilityViewIsModal
           accessibilityLabel={title}
-          style={[sheetStyle, { paddingBottom: Math.max(insets.bottom, 12) }]}
+          style={[sheetStyle, { paddingBottom: Math.max(insets.bottom, MIN_SHEET_BOTTOM_PADDING) }]}
         >
           <SheetHeader title={title} onClose={onClose} />
           <ScrollView

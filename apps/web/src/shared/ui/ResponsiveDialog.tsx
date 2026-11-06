@@ -24,6 +24,8 @@ const DIALOG_WIDTH_CLASS: Record<ResponsiveDialogSize, string> = {
   md: 'md:max-w-xl',
   lg: 'md:max-w-3xl',
 };
+const DIALOG_EASING_FIRST_CONTROL_X = 0.22;
+const DIALOG_EASING_SECOND_CONTROL_X = 0.36;
 
 export default function ResponsiveDialog({
   title,
@@ -59,7 +61,7 @@ export default function ResponsiveDialog({
         initial={{ opacity: 0, y: 24, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.2, ease: [DIALOG_EASING_FIRST_CONTROL_X, 1, DIALOG_EASING_SECOND_CONTROL_X, 1] }}
         className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-border bg-surface shadow-picker md:max-h-[88vh] md:rounded-3xl ${DIALOG_WIDTH_CLASS[size]}`}
       >
         <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-border md:hidden" />
