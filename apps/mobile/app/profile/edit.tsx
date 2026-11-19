@@ -29,9 +29,9 @@ export default function ProfileEditScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted" footer={<ActionButtonRow actions={[{ key: 'save', label: '保存资料', variant: 'primary', onPress: () => void mutation.mutateAsync(), loading: mutation.isPending }]} />}>
-      <PageHeader title="个人资料" subtitle="更新账号显示信息" />
+      <PageHeader title="个人资料" />
 
-      <SectionCard title="昵称" delay={60} density="compact" headerMode="compact">
+      <SectionCard delay={60} density="compact">
         <FormField label="昵称"
           value={displayName}
           onChangeText={(value) => {

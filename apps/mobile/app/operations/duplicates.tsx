@@ -63,9 +63,9 @@ export default function DuplicatesScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="重复项" subtitle="检查并合并相似库存记录" />
+      <PageHeader title="重复物品" />
       <Text style={metaStyle}>保留最早记录的位置、状态和日期，合并数量、图片及标签。待移除记录有关联盘点或借用时不能合并。</Text>
-      <SectionCard title={`重复物品检测 · ${groups.length} 组`} subtitle="按类型、规范化名称和类别识别" density="compact">
+      <SectionCard title={`检测结果 · ${groups.length} 组`} subtitle="按类型、规范化名称和类别识别" density="compact">
         {groups.length === 0 ? <Text style={emptyTextStyle}>没有发现同名同类别的重复记录。</Text> : null}
         {groups.map((group) => (
           <View key={group.key} style={groupStyle}>

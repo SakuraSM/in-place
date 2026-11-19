@@ -158,7 +158,7 @@ export default function ManageCategoriesScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <PageHeader title="分类" subtitle="管理位置、收纳与物品分类" />
+      <PageHeader title="分类管理" />
 
       <ContentTabs
         accessibilityLabel="分类用途"

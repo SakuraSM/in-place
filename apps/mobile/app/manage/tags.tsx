@@ -99,7 +99,7 @@ export default function ManageTagsScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <PageHeader title="标签" subtitle="用于搜索与组合筛选" />
+      <PageHeader title="标签管理" />
 
       {canEditInventory ? <SectionCard title={editingId ? '编辑标签' : '新建标签'} delay={60} density="compact" headerMode="compact">
         {message ? <Text style={successTextStyle}>{message}</Text> : null}

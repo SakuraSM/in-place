@@ -1,9 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View, type DimensionValue, type ViewStyle } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View, type DimensionValue, type ViewStyle } from 'react-native';
 import { palette } from './theme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
+const NARROW_SCREEN_WIDTH = 360;
+const LARGE_FONT_SCALE = 1.2;
+const STRIP_LABEL_LINE_HEIGHT = 16;
+const WRAPPED_LABEL_LINES = 2;
 
 export interface MetricGridItem {
   key: string;
@@ -23,10 +27,14 @@ interface MetricGridProps {
 }
 
 export function MetricGrid({ items, columns = 2, dense = false, appearance = 'tiles', style }: MetricGridProps) {
+  const { width, fontScale } = useWindowDimensions();
+  const stripLabelMinHeight = appearance === 'strip' && width <= NARROW_SCREEN_WIDTH && fontScale >= LARGE_FONT_SCALE
+    ? Math.ceil(STRIP_LABEL_LINE_HEIGHT * fontScale * WRAPPED_LABEL_LINES)
+    : undefined;
   return (
     <View style={[gridStyle, appearance === 'strip' ? stripStyle : null, style]}>
       {items.map((item, index) => (
-        <MetricTile key={item.key} item={item} columns={columns} dense={dense} isStrip={appearance === 'strip'} isLast={index === items.length - 1} />
+        <MetricTile key={item.key} item={item} columns={columns} dense={dense} isStrip={appearance === 'strip'} isLast={index === items.length - 1} stripLabelMinHeight={stripLabelMinHeight} />
       ))}
     </View>
   );
@@ -38,12 +46,14 @@ function MetricTile({
   dense,
   isStrip,
   isLast,
+  stripLabelMinHeight,
 }: {
   item: MetricGridItem;
   columns: 2 | 3 | 4;
   dense: boolean;
   isStrip: boolean;
   isLast: boolean;
+  stripLabelMinHeight?: number;
 }) {
   const tileWidth: DimensionValue = columns === 4 ? '23%' : columns === 3 ? '31%' : '47.5%';
   const tileStyleList: ViewStyle[] = isStrip ? [stripTileStyle, { borderRightWidth: isLast ? 0 : 1 }] : [
@@ -57,7 +67,7 @@ function MetricTile({
   const content = (
     <>
       <View style={metricHeaderStyle}>
-        <Text numberOfLines={1} style={[labelStyle, isStrip ? stripLabelStyle : null]}>{item.label}</Text>
+        <Text numberOfLines={stripLabelMinHeight ? WRAPPED_LABEL_LINES : 1} style={[labelStyle, isStrip ? stripLabelStyle : null, stripLabelMinHeight ? { minHeight: stripLabelMinHeight } : null]}>{item.label}</Text>
         {item.iconName && !isStrip ? <Ionicons name={item.iconName} size={15} color={palette.brandStrong} /> : null}
       </View>
       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[valueStyle, isStrip ? stripValueStyle : null]}>

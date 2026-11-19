@@ -4,7 +4,7 @@ import { Entrance } from './Entrance';
 import { palette } from './theme';
 
 interface SectionCardProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   children: ReactNode;
   delay?: number;
@@ -38,16 +38,16 @@ export function SectionCard({
           borderColor: palette.border,
         }}
       >
-        <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
-          <Text style={{ fontSize: titleSize, fontWeight: '600', color: palette.text }}>
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text style={{ fontSize: 13, lineHeight: 18, color: palette.textSoft }}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
+        {title || subtitle ? (
+          <View style={{ gap: headerMode === 'compact' ? 2 : 4 }}>
+            {title ? <Text accessibilityRole="header" style={{ fontSize: titleSize, fontWeight: '600', color: palette.text }}>{title}</Text> : null}
+            {subtitle ? (
+              <Text style={{ fontSize: 13, lineHeight: 18, color: palette.textSoft }}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
         {children as never}
       </View>
     </Entrance>

@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { fireEvent, render } from '@testing-library/react-native';
 import { HomeDashboard } from '../HomeDashboard';
 
@@ -43,6 +44,10 @@ const baseProps = {
   onChangeViewMode: jest.fn(),
   onToggleSelected: jest.fn(),
 };
+
+beforeAll(async () => {
+  await Ionicons.loadFont();
+});
 
 describe('HomeDashboard', () => {
   it('keeps the operational shortcuts visible for editable households', () => {

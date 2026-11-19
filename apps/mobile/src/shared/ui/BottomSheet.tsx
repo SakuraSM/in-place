@@ -12,6 +12,8 @@ interface BottomSheetProps {
   onClose: () => void;
 }
 
+const MIN_SHEET_BOTTOM_PADDING = 12;
+
 export function BottomSheet({ children, title, visible, onClose }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
 
@@ -33,21 +35,9 @@ export function BottomSheet({ children, title, visible, onClose }: BottomSheetPr
         <View
           accessibilityViewIsModal
           accessibilityLabel={title}
-          style={[sheetStyle, { paddingBottom: Math.max(insets.bottom, 12) }]}
+          style={[sheetStyle, { paddingBottom: Math.max(insets.bottom, MIN_SHEET_BOTTOM_PADDING) }]}
         >
-          <View style={handleStyle} />
-          <View style={headerStyle}>
-            <Text accessibilityRole="header" style={titleStyle}>{title}</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`关闭${title}`}
-              hitSlop={10}
-              onPress={onClose}
-              style={closeStyle}
-            >
-              <Ionicons name="close" size={20} color={palette.textMuted} />
-            </Pressable>
-          </View>
+          <SheetHeader title={title} onClose={onClose} />
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={contentStyle}
@@ -57,6 +47,35 @@ export function BottomSheet({ children, title, visible, onClose }: BottomSheetPr
         </View>
       </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+interface SheetHeaderProps {
+  title: string;
+  onClose: () => void;
+  closeLabel?: string;
+  disabled?: boolean;
+}
+
+export function SheetHeader({ title, onClose, closeLabel, disabled = false }: SheetHeaderProps) {
+  return (
+    <>
+      <View style={handleStyle} />
+      <View style={headerStyle}>
+        <Text accessibilityRole="header" style={titleStyle}>{title}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={closeLabel ?? `关闭${title}`}
+          accessibilityState={{ disabled }}
+          disabled={disabled}
+          hitSlop={10}
+          onPress={onClose}
+          style={[closeStyle, disabled ? { opacity: 0.5 } : null]}
+        >
+          <Ionicons name="close" size={20} color={palette.textMuted} />
+        </Pressable>
+      </View>
+    </>
   );
 }
 

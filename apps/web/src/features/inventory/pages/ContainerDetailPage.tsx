@@ -1,20 +1,21 @@
-import InventoryArtwork from '../components/InventoryArtwork';
+import InventoryDetailGallery from '../components/InventoryDetailGallery';
 import { useInventoryPermissions } from '../../../shared/hooks/useInventoryPermissions';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, SquarePen, Trash2, Tag, MapPin, ChevronRight, Box } from 'lucide-react';
+import { SquarePen, Trash2, Tag, MapPin, ChevronRight, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fetchItem, fetchAncestors, fetchChildren, updateItem, deleteItem } from '../../../legacy/items';
 import type { Item } from '../../../legacy/database.types';
 import type { ItemCreateInput } from '@inplace/domain';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import ItemForm from '../components/ItemForm';
 import SpatialRelationScene from '../components/SpatialRelationScene';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { resolveItemDetailPath } from '../lib/detailPath';
 import { getContainerTypeLabel, isLocationItem } from '../lib/locationTag';
-import { buildInventoryImageUrl } from '../lib/itemImage';
+import { resolveRetainedImageIndex } from '../lib/itemImage';
 import EntityBadge from '../components/EntityBadge';
 
 export default function ContainerDetailPage() {
@@ -31,6 +32,7 @@ export default function ContainerDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    setActiveImageIdx(0);
     const load = async () => {
       setLoading(true);
       const fetchedItem = await fetchItem(id);
@@ -63,6 +65,7 @@ export default function ContainerDetailPage() {
     if (!container) return;
     const updated = await updateItem(container.id, data);
     setContainer(updated);
+    setActiveImageIdx((index) => resolveRetainedImageIndex({ previousImages: container.images, nextImages: updated.images, selectedIndex: index }));
     setShowEdit(false);
   };
 
@@ -205,16 +208,7 @@ export default function ContainerDetailPage() {
         title={container.name}
         titleSize="detail"
         eyebrow={`${containerLabel}详情`}
-        backLink={(
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="返回上一级"
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-        )}
+        backLink={<PageBack label="返回上一级" iconOnly onClick={() => navigate(-1)} />}
         actions={canEditInventory ? (
           <>
             <motion.button
@@ -244,70 +238,9 @@ export default function ContainerDetailPage() {
       />
 
       <PageContent width="wide">
-        <div className="hidden lg:grid lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] lg:gap-8 2xl:grid-cols-[minmax(360px,480px)_minmax(0,1fr)] 2xl:gap-10">
-          <div className="min-w-0 shrink-0">
-            {container.images.length > 0 ? (
-              <div className="sticky top-28">
-                <div className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:aspect-square">
-                  <img
-                    src={buildInventoryImageUrl(container.images[activeImageIdx], 'detail')}
-                    alt={container.name}
-                    className="h-full w-full object-contain object-center"
-                  />
-                </div>
-                {container.images.length > 1 && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide">
-                    {container.images.map((url, i) => (
-                      <motion.button
-                        key={i}
-                        onClick={() => setActiveImageIdx(i)}
-                        whileHover={{ scale: 1.06 }}
-                        whileTap={{ scale: 0.94 }}
-                        className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 bg-white transition-all ${
-                          i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover object-center" />
-                      </motion.button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="sticky top-28 flex aspect-[5/4] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm xl:aspect-square">
-                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100 text-slate-300">
-                  <InventoryArtwork item={container} className="max-h-72 max-w-72" />
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] lg:gap-8 2xl:grid-cols-[minmax(360px,480px)_minmax(0,1fr)] 2xl:gap-10">
+          <InventoryDetailGallery item={container} activeImageIndex={activeImageIdx} onSelectImage={setActiveImageIdx} />
           <div className="min-w-0">{infoCards}</div>
-        </div>
-
-        <div className="space-y-4 lg:hidden">
-          {container.images.length > 0 ? (
-            <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-              <div className="aspect-square overflow-hidden rounded-xl bg-slate-100">
-                <img src={buildInventoryImageUrl(container.images[activeImageIdx], 'detail')} alt={container.name} className="h-full w-full object-cover" />
-              </div>
-              {container.images.length > 1 && (
-                <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide">
-                  {container.images.map((url, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImageIdx(i)}
-                      className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 ${
-                        i === activeImageIdx ? 'border-brandStrong' : 'border-transparent opacity-60'
-                      }`}
-                    >
-                      <img src={buildInventoryImageUrl(url, 'detail-thumb')} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : <div className="flex h-[230px] items-center justify-center rounded-3xl bg-canvasStrong"><InventoryArtwork item={container} className="max-h-56 max-w-56" /></div>}
-          {infoCards}
         </div>
       </PageContent>
 

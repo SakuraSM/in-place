@@ -23,9 +23,12 @@ interface OverviewResultsProps {
   hasNextPage: boolean;
   isMobile: boolean;
   isInitialLoading: boolean;
+  isWaitingForNetwork: boolean;
+  isPaused: boolean;
   isFetching: boolean;
   isError: boolean;
-  emptyDescription: string;
+  emptyTitle: string;
+  emptyDescription?: string;
   onOpenItem: (item: Item) => void;
   onRetry: () => void;
   onPageChange: (page: number) => void;
@@ -60,8 +63,11 @@ export default function OverviewResults({
   hasNextPage,
   isMobile,
   isInitialLoading,
+  isWaitingForNetwork,
+  isPaused,
   isFetching,
   isError,
+  emptyTitle,
   emptyDescription,
   onOpenItem,
   onRetry,
@@ -69,6 +75,14 @@ export default function OverviewResults({
   onPageSizeChange,
   onLoadMore,
 }: OverviewResultsProps) {
+  if (isWaitingForNetwork) {
+    return (
+      <div role="status" className="flex min-h-64 flex-1 items-center justify-center text-center text-sm text-slate-600">
+        等待网络连接，已保留筛选条件。
+      </div>
+    );
+  }
+
   if (isInitialLoading) {
     return (
       <div role="status" className="flex min-h-64 flex-1 items-center justify-center text-sm text-slate-600">
@@ -101,8 +115,8 @@ export default function OverviewResults({
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surfaceMuted">
           <Package size={28} className="text-muted" />
         </div>
-        <p className="font-semibold text-slate-800">当前筛选下没有结果</p>
-        <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{emptyDescription}</p>
+        <p className="font-semibold text-slate-800">{emptyTitle}</p>
+        {emptyDescription ? <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{emptyDescription}</p> : null}
       </div>
     );
   }
@@ -113,7 +127,7 @@ export default function OverviewResults({
         <p className="text-sm text-slate-600">
           共 <strong className="text-slate-900">{total}</strong> 个结果
         </p>
-        {isFetching ? <span role="status" className="text-xs text-slate-500">正在更新…</span> : null}
+        {isPaused ? <span role="status" className="text-xs text-slate-500">等待网络连接</span> : isFetching ? <span role="status" className="text-xs text-slate-500">正在更新…</span> : null}
       </div>
 
       <motion.div
@@ -148,10 +162,10 @@ export default function OverviewResults({
             <button
               type="button"
               onClick={onLoadMore}
-              disabled={isFetching}
+              disabled={isFetching || isPaused}
               className="min-h-11 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-brandStrong disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isFetching ? '加载中…' : `加载更多（已展示 ${results.length} / ${total}）`}
+              {isPaused ? '等待网络连接' : isFetching ? '加载中…' : `加载更多（已展示 ${results.length} / ${total}）`}
             </button>
           ) : (
             <p className="text-xs text-slate-500">已展示全部 {total} 个结果</p>

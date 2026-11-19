@@ -15,7 +15,7 @@ export default function AboutScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <PageHeader title="关于" subtitle="版本与开源信息" />
+      <PageHeader title="关于" />
 
       <SectionCard title="归位" delay={60} density="compact" headerMode="compact">
         <InfoRow label="版本" value={appVersion} />

@@ -77,7 +77,6 @@ function TagEditor({
   return (
     <ResponsiveDialog
       title={initial ? '编辑标签' : '新增标签'}
-      description="用标签补充物品的用途、状态或整理优先级。"
       onClose={onClose}
       closeLabel="关闭标签表单"
       size="sm"

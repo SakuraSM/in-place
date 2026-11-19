@@ -125,6 +125,8 @@ npm run dev:server
 npm run dev:web
 ```
 
+Web 开发服务器默认将 `/api` 转发到 `http://127.0.0.1:4000`。如果本地 API 使用其他地址，可在 `apps/web/.env` 中设置 `INPLACE_DEV_API_PROXY_TARGET`；已有环境文件中的 `VITE_API_BASE_URL` 可改为 `/api`。
+
 启动移动端：
 
 ```bash

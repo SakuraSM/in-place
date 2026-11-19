@@ -119,8 +119,8 @@ export default function HouseholdScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="家庭空间" subtitle="成员、角色与邀请" />
-      <SectionCard title="家庭空间" subtitle="切换后库存操作只影响当前家庭" density="compact">
+      <PageHeader title="家庭空间" />
+      <SectionCard title="我的家庭" subtitle="操作仅影响当前家庭" density="compact">
         {(householdsQuery.data ?? []).map((household) => (
           <CompactListRow
             key={household.id}

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog,
 and this project is expected to follow Semantic Versioning once release management is formalized.
 
+## [0.4.1]
+
+### Changed
+
+- Use consistent page titles, back buttons, and bottom actions across Web and mobile. Keep form actions visible while the content scrolls.
+- Forward `/api` to the local server by default in Web development. Use `INPLACE_DEV_API_PROXY_TARGET` to override the target.
+
+### Fixed
+
+- Prevent stale Web inventory data from overwriting newer edits. If refreshing fails after a save, let users retry the refresh without submitting again.
+- Keep the selected image after an edit if it is still attached. Retain successful uploads when another image fails.
+- Distinguish an empty inventory from an empty search. Show when results are updating or waiting for a connection before displaying the new count.
+- Improve the layout of mobile titles and inventory actions on narrow screens and at larger text sizes.
+- Resolve the Vite JSX configuration warnings and wait for native test updates from icon fonts and query notifications.
+
+### Upgrade
+
+- No database migration is required when upgrading from `0.4.0`.
+- Set the mobile build number baseline to `9` so the next production build increments to `10`.
+
 ## [0.4.0] - 2026-10-28
 
 ### Added

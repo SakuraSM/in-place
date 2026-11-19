@@ -16,6 +16,7 @@ interface ResponsiveDialogProps {
   shouldCloseOnBackdrop?: boolean;
   shouldCloseOnEscape?: boolean;
   showCloseButton?: boolean;
+  isCloseDisabled?: boolean;
 }
 
 const DIALOG_WIDTH_CLASS: Record<ResponsiveDialogSize, string> = {
@@ -23,6 +24,8 @@ const DIALOG_WIDTH_CLASS: Record<ResponsiveDialogSize, string> = {
   md: 'md:max-w-xl',
   lg: 'md:max-w-3xl',
 };
+const DIALOG_EASING_FIRST_CONTROL_X = 0.22;
+const DIALOG_EASING_SECOND_CONTROL_X = 0.36;
 
 export default function ResponsiveDialog({
   title,
@@ -35,16 +38,17 @@ export default function ResponsiveDialog({
   shouldCloseOnBackdrop = true,
   shouldCloseOnEscape = true,
   showCloseButton = true,
+  isCloseDisabled = false,
 }: ResponsiveDialogProps) {
   const titleId = useId();
   const descriptionId = useId();
-  const dialogRef = useDialogFocus({ onClose, shouldCloseOnEscape });
+  const dialogRef = useDialogFocus({ onClose, shouldCloseOnEscape: shouldCloseOnEscape && !isCloseDisabled });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:px-6 md:py-8">
       <div
         aria-hidden="true"
-        onClick={shouldCloseOnBackdrop ? onClose : undefined}
+        onClick={shouldCloseOnBackdrop && !isCloseDisabled ? onClose : undefined}
         className="absolute inset-0 cursor-default bg-slate-950/30 backdrop-blur-sm"
       />
       <motion.div
@@ -57,7 +61,7 @@ export default function ResponsiveDialog({
         initial={{ opacity: 0, y: 24, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.2, ease: [DIALOG_EASING_FIRST_CONTROL_X, 1, DIALOG_EASING_SECOND_CONTROL_X, 1] }}
         className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-border bg-surface shadow-picker md:max-h-[88vh] md:rounded-3xl ${DIALOG_WIDTH_CLASS[size]}`}
       >
         <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-border md:hidden" />
@@ -77,7 +81,8 @@ export default function ResponsiveDialog({
               type="button"
               onClick={onClose}
               aria-label={closeLabel}
-              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-surfaceMuted text-slate-600 transition-colors hover:bg-brandTint hover:text-brandStrong"
+              disabled={isCloseDisabled}
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-surfaceMuted text-slate-600 transition-colors hover:bg-brandTint hover:text-brandStrong disabled:cursor-not-allowed disabled:opacity-50"
             >
               <X size={18} />
             </button>

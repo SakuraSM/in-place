@@ -86,8 +86,7 @@ export default function CategoryEditorDialog({
 
   return (
     <ResponsiveDialog
-      title={initial?.id ? '编辑分类' : '新增分类'}
-      description={`为${scopeLabel.replace('分类', '')}设置易识别的名称、颜色和图标。`}
+      title={`${initial?.id ? '编辑' : '新增'}${scopeLabel}`}
       onClose={onClose}
       closeLabel="关闭分类表单"
       size="sm"

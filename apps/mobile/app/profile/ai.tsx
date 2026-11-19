@@ -70,7 +70,7 @@ export default function AiSettingsScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted" footer={<ActionButtonRow actions={[{ key: 'reset', label: '恢复默认', onPress: () => void resetMutation.mutateAsync(), loading: resetMutation.isPending, disabled: saveMutation.isPending }, { key: 'save', label: '保存配置', variant: 'primary', onPress: () => void saveMutation.mutateAsync(), loading: saveMutation.isPending, disabled: resetMutation.isPending }]} />}>
-      <PageHeader title="AI 配置" subtitle="模型与服务连接" />
+      <PageHeader title="AI 配置" />
 
       <SectionCard title="状态" delay={60} density="compact">
         <Text style={bodyStyle}>启用状态：{aiSettings?.enabled ? '已启用' : '未启用'}</Text>

@@ -320,7 +320,6 @@ export default function ScanPage() {
       <PageHeader
         width="wide"
         title="拍照录入"
-        description="识别照片中的物品，确认信息后新建库存"
       />
 
       <PageContent width="wide">

@@ -36,7 +36,7 @@ export default function DuplicatesPage() {
 
   return (
     <PageShell>
-      <PageHeader width="narrow" eyebrow="数据清理" title="重复物品检测" titleSize="detail" />
+      <PageHeader width="narrow" title="重复物品" titleSize="detail" />
       <PageContent width="narrow">
         <p className="mb-4 text-sm leading-6 text-slate-600">按名称、类型和类别识别。保留最早记录的位置、状态及日期，累加数量、图片和标签。有关联盘点或借用记录的待移除物品不能合并。</p>
         {inventory.isLoading ? <p role="status">正在检测重复项…</p> : inventory.isError ? <p role="alert">重复项加载失败。<button type="button" onClick={() => void inventory.refetch()} className="ml-3 text-brandStrong">重试</button></p> : groups.length === 0 ? (

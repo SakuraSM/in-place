@@ -46,7 +46,6 @@ export function OverviewPageHeader() {
     <PageHeader
       width="wide"
       title="库存检索"
-      description="跨位置查找并筛选全部库存。"
     />
   );
 }

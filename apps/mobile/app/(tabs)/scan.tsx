@@ -11,11 +11,9 @@ import { useHousehold } from '@/providers/HouseholdProvider';
 import { aiApi, itemsApi, recognizeItemsFromUri, uploadImageFromUri } from '@/shared/api/mobileClient';
 import { getMediaLibraryPermissionError } from '@/shared/lib/imagePickerPermission';
 import { ScanCropSheet } from '@/features/scan/ScanCropSheet';
+import { ScanPageHeader } from '@/features/scan/ScanPageHeader';
 import { ScanRecognitionResults, type DraftRecognition } from '@/features/scan/ScanRecognitionResults';
 import { cropImageFromUri, fullImageCropBox, normalizeBoundingBox, type NormalizedCropBox, type ScanSourceImage } from '@/features/scan/scanImageCrop';
-import { BrandHeader } from '@/shared/ui/BrandHeader';
-import { HouseholdButton } from '@/shared/ui/HouseholdButton';
-import { Entrance } from '@/shared/ui/Entrance';
 import { Screen } from '@/shared/ui/Screen';
 import { SectionCard } from '@/shared/ui/SectionCard';
 import { StateBlock } from '@/shared/ui/StateBlock';
@@ -275,25 +273,26 @@ export default function ScanTab() {
   };
 
   if (aiStatusQuery.isLoading) {
-    return <Screen><StateBlock title="检查 AI 状态" loading /></Screen>;
+    return <Screen><ScanPageHeader /><StateBlock title="检查 AI 状态" loading /></Screen>;
   }
 
   if (aiStatusQuery.isError) {
-    return <Screen><StateBlock title="AI 状态失败" body={aiStatusQuery.error instanceof Error ? aiStatusQuery.error.message : '请稍后重试'} /></Screen>;
+    return <Screen><ScanPageHeader /><StateBlock title="AI 状态失败" body={aiStatusQuery.error instanceof Error ? aiStatusQuery.error.message : '请稍后重试'} /></Screen>;
   }
 
   if (!aiStatusQuery.data) {
     return (
-      <Screen>
+      <Screen scroll>
+        <ScanPageHeader />
         <StateBlock title="尚未配置 AI 识别服务" body="配置识别服务后可使用拍照录入，也可以手动新增或扫描标签整理库存。" />
-        <Pressable accessibilityRole="button" onPress={() => router.push('/profile/ai')} style={primaryButtonStyle}><Text style={primaryButtonTextStyle}>前往 AI 配置</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/profile/ai')} style={[primaryButtonStyle, unavailablePrimaryButtonStyle]}><Text style={primaryButtonTextStyle}>前往 AI 配置</Text></Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="扫标签归位"
           onPress={() => router.push('/scan-code' as Href)}
-          style={primaryButtonStyle}
+          style={labelReturnButtonStyle}
         >
-          <Text style={primaryButtonTextStyle}>扫标签归位</Text>
+          <Text style={labelReturnButtonTextStyle}>扫标签归位</Text>
         </Pressable>
       </Screen>
     );
@@ -301,9 +300,7 @@ export default function ScanTab() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <Entrance variant="page">
-        <BrandHeader title="拍照录入" subtitle="识别照片，确认后新建库存" variant="page" accessory={<HouseholdButton compact />} />
-      </Entrance>
+      <ScanPageHeader />
 
       <SectionCard
         title="已有 InPlace 标签？"
@@ -430,6 +427,12 @@ const primaryButtonStyle = {
   backgroundColor: palette.brand,
   paddingVertical: 13,
   alignItems: 'center' as const,
+};
+
+const unavailablePrimaryButtonStyle = {
+  flex: 0,
+  minHeight: 48,
+  justifyContent: 'center' as const,
 };
 
 const disabledButtonStyle = {

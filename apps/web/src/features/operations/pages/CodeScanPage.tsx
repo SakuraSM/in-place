@@ -15,9 +15,7 @@ export default function CodeScanPage() {
     <PageShell>
       <PageHeader
         width="narrow"
-        eyebrow="扫标签归位"
-        title="扫描 InPlace 标签"
-        description="查看、绑定已有库存，或选择位置后连续归位"
+        title="扫标签归位"
       />
       <PageContent width="narrow">
         <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm md:p-7">

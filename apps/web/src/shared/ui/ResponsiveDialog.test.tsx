@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import ResponsiveDialog from './ResponsiveDialog';
 
 function DialogHarness() {
@@ -48,5 +48,24 @@ describe('ResponsiveDialog', () => {
 
     await user.tab({ shift: true });
     expect(last).toHaveFocus();
+  });
+
+  it('prevents every close action while closing is disabled', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <ResponsiveDialog title="保存中" onClose={onClose} isCloseDisabled>
+        内容
+      </ResponsiveDialog>,
+    );
+
+    expect(screen.getByRole('button', { name: '关闭' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('dialog').previousElementSibling!);
+    await user.keyboard('{Escape}');
+    expect(onClose).not.toHaveBeenCalled();
+
+    rerender(<ResponsiveDialog title="保存完成" onClose={onClose}>内容</ResponsiveDialog>);
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

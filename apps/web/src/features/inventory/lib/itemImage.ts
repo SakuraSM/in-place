@@ -16,3 +16,16 @@ export function buildInventoryImageUrl(
 ): string {
   return buildImageVariantUrl(url, INVENTORY_IMAGE_OPTIONS[scenario]);
 }
+
+interface RetainedImageSelection {
+  previousImages: readonly string[];
+  nextImages: readonly string[];
+  selectedIndex: number;
+}
+
+export function resolveRetainedImageIndex({ previousImages, nextImages, selectedIndex }: RetainedImageSelection): number {
+  if (nextImages.length === 0) return 0;
+  const selectedImage = previousImages[selectedIndex];
+  const nextIndex = selectedImage ? nextImages.indexOf(selectedImage) : -1;
+  return nextIndex >= 0 ? nextIndex : Math.min(Math.max(selectedIndex, 0), nextImages.length - 1);
+}

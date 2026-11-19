@@ -54,7 +54,7 @@ export default function LabelPrintPage() {
 
   return (
     <PageShell>
-      <PageHeader width="standard" eyebrow="预印标签" title="二维码标签打印" titleSize="detail" className="print:hidden" />
+      <PageHeader width="standard" title="标签打印" titleSize="detail" className="print:hidden" />
       <PageContent width="standard" className="space-y-5 print:p-0">
         <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm print:hidden">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">

@@ -63,7 +63,7 @@ function ScopedSavedSearches({ query, suggestedLabel, storageKey }: SavedOvervie
           <button type="button" aria-label={`删除保存的筛选：${entry.label}`} onClick={() => persist(saved.filter((candidate) => candidate.id !== entry.id))} className="flex h-11 w-11 shrink-0 items-center justify-center text-muted hover:text-rose-600"><X size={13} /></button>
         </span>
       ))}
-      <span className="text-xs text-slate-500">筛选仅保存在当前家庭。旧版未标注家庭的筛选保留在本机，不自动载入。</span>
+      <span className="text-xs text-slate-500">保存在本机，仅当前账号和家庭可见</span>
     </div>
   );
 }

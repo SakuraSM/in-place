@@ -282,8 +282,6 @@
 }
 
 @media (max-width: 767px) {
-  .home-page-heading [data-page-description] { display: none; }
-  .home-page-heading h1 { font-size: 24px; }
   .home-inventory-area [data-inventory-scope='location'] [data-inventory-grid] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .home-inventory-area [data-inventory-scope='location'] [data-container-preview] { height: 86px; aspect-ratio: auto; margin-bottom: 10px; }
   .home-inventory-area [data-inventory-scope='location'] [data-container-artwork='preset'] { padding: 4px; }

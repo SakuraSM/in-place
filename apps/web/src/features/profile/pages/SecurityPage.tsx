@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { ArrowLeft, LockKeyhole, LogOut, Shield } from 'lucide-react';
+import { LockKeyhole, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/auth-context';
 import { apiRequest } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function SecurityPage() {
@@ -53,30 +54,13 @@ export default function SecurityPage() {
       <PageHeader
         width="narrow"
         title="账号安全"
-        backLink={<Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
-            <ArrowLeft size={15} />
-            返回我的
-          </Link>}
+        backLink={<PageBack to="/profile" label="返回我的" />}
       />
       <PageContent width="narrow">
         <motion.div
           variants={staggerContainer}
           animate="animate"
         >
-        <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
-          <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-rose-100 text-rose-500">
-                <Shield size={26} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-lg font-semibold text-slate-900">密码与会话</p>
-                <p className="mt-2 text-sm text-slate-500">修改密码和处理当前登录会话。</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
           <motion.div variants={staggerItem}>
             <SectionPanel icon={<LockKeyhole size={16} />} title="修改密码">

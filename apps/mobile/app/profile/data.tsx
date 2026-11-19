@@ -73,7 +73,7 @@ export default function DataManagementScreen() {
 
   return (
     <Screen scroll contentInsetMode="form" chrome="muted">
-      <PageHeader title="数据管理" subtitle="备份、导出与恢复" />
+      <PageHeader title="数据管理" />
 
       <SectionCard title="导出" delay={60} density="compact">
         <Pressable onPress={() => exportJsonMutation.mutate()} disabled={busy} style={primaryButtonStyle}>
@@ -88,7 +88,7 @@ export default function DataManagementScreen() {
         <Pressable onPress={() => pickImportMutation.mutate()} disabled={busy} style={primaryButtonStyle}>
           {pickImportMutation.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={primaryButtonTextStyle}>选择 JSON 备份</Text>}
         </Pressable>
-      </SectionCard> : null}
+      </SectionCard> : <Text style={permissionTextStyle}>仅家庭所有者可导入备份。</Text>}
 
       {message ? <Text style={successTextStyle}>{message}</Text> : null}
       {exportJsonMutation.isError ? <Text style={errorTextStyle}>{exportJsonMutation.error instanceof Error ? exportJsonMutation.error.message : 'JSON 导出失败'}</Text> : null}
@@ -166,6 +166,11 @@ function getExportSuccessMessage(label: string, result: InventoryFileExportResul
 const successTextStyle = {
   color: '#15803d',
   fontSize: 14,
+};
+
+const permissionTextStyle = {
+  color: palette.textSoft,
+  fontSize: 13,
 };
 
 const errorTextStyle = {

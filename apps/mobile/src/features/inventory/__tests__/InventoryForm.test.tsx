@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createInventoryDraft, toInventoryItemInput } from '@inplace/app-core';
@@ -100,6 +100,20 @@ describe('shared native inventory form', () => {
     act(() => alert.mock.calls[0][2]?.find((button) => button.text === '放弃修改')?.onPress?.());
     expect(close).toHaveBeenCalledTimes(1);
     alert.mockRestore();
+  });
+
+  it('keeps save actions in the shared footer and supports adding another item', async () => {
+    const screen = mount(<HomeItemFormSheet visible onClose={jest.fn()} />);
+    const footer = within(screen.getByTestId('screen-footer'));
+    expect(footer.getByRole('button', { name: '保存并继续' })).toBeTruthy();
+    expect(within(screen.getByTestId('inventory-form-scroll')).queryByRole('button', { name: '保存' })).toBeNull();
+    expect(screen.getByRole('header', { name: '新增物品' })).toBeTruthy();
+
+    fireEvent.changeText(screen.getByLabelText('名称'), '继续录入的物品');
+    fireEvent.press(footer.getByRole('button', { name: '保存并继续' }));
+    await waitFor(() => expect(itemsApi.createItem).toHaveBeenCalledWith(expect.objectContaining({ name: '继续录入的物品' })));
+    await waitFor(() => expect(screen.getByLabelText('名称').props.value).toBe(''));
+    expect(screen.getByRole('header', { name: '新增物品' })).toBeTruthy();
   });
 
   it('keeps editing fields and metadata when only the name changes', async () => {

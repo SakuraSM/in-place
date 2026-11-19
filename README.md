@@ -125,6 +125,8 @@ npm run dev:server
 npm run dev:web
 ```
 
+The web development server forwards `/api` to `http://127.0.0.1:4000` by default. Set `INPLACE_DEV_API_PROXY_TARGET` in `apps/web/.env` if the local API uses another address. Existing environment files can set `VITE_API_BASE_URL` to `/api`.
+
 Run the mobile app:
 
 ```bash

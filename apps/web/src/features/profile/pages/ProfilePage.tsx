@@ -105,23 +105,12 @@ export default function ProfilePage() {
                     <User size={28} className="text-sky-500" />
                   </motion.div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-xl font-semibold text-slate-900">{resolvedDisplayName}</p>
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
-                        账号正常
-                      </span>
-                    </div>
+                    <p className="truncate text-xl font-semibold text-slate-900">{resolvedDisplayName}</p>
                     <div className="mt-2 flex min-w-0 items-center gap-2 text-sm text-slate-600">
                       <Mail size={14} className="shrink-0" />
                       <span className="min-w-0 truncate">{user?.email}</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">个人资料</span>
-                  <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">数据备份</span>
-                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">AI 配置</span>
                 </div>
               </div>
             </motion.div>
@@ -139,50 +128,50 @@ export default function ProfilePage() {
                   to="/tags"
                   icon={<NotebookPen size={20} />}
                   title="标签管理"
-                  description="维护统一标签库，减少重复命名，方便搜索和批量整理。"
+                  description="维护用于搜索和筛选的标签"
                   tone="bg-amber-50 text-amber-500"
                 />
                 <QuickLinkCard
                   to="/categories"
                   icon={<Box size={20} />}
                   title="分类管理"
-                  description="统一位置、收纳和物品分类结构，让首页和库存检索都更清晰。"
+                  description="维护位置、收纳和物品分类"
                   tone="bg-sky-50 text-sky-500"
                 />
                 <QuickLinkCard
                   to="/profile/ai"
                   icon={<Sparkles size={20} />}
                   title="AI 配置"
-                  description="管理识别模型、服务地址和账号专属密钥。"
+                  description="识别服务与账号密钥"
                   tone="bg-amber-50 text-amber-500"
                 />
                 <QuickLinkCard
                   to="/profile/security"
                   icon={<Shield size={20} />}
                   title="账号安全"
-                  description="修改密码并管理当前账号会话。"
+                  description="修改密码与退出登录"
                   tone="bg-rose-50 text-rose-500"
                 />
-                <QuickLinkCard to="/profile/mcp" icon={<Settings2 size={20} />} title="MCP 接入" description="管理 Agent 凭证，查询库存与批量新增物品。" tone="bg-emerald-50 text-emerald-700" />
+                <QuickLinkCard to="/profile/mcp" icon={<Settings2 size={20} />} title="MCP 接入" description="管理 Agent 凭证" tone="bg-emerald-50 text-emerald-700" />
                 <QuickLinkCard
                   to="/duplicates"
                   icon={<Combine size={20} />}
                   title="重复物品"
-                  description="检测同名同类别记录并安全合并数量、图片和标签。"
+                  description="查找并合并重复记录"
                   tone="bg-violet-50 text-violet-600"
                 />
                 <QuickLinkCard
                   to="/reports"
                   icon={<FileBarChart2 size={20} />}
                   title="库存报告"
-                  description="汇总家庭价值、保修覆盖和最近盘点缺失，打印或保存 PDF。"
+                  description="查看库存统计并导出报告"
                   tone="bg-emerald-50 text-emerald-600"
                 />
                 <QuickLinkCard
                   to="/profile/data"
                   icon={<HardDriveDownload size={20} />}
                   title="数据管理"
-                  description="集中处理 JSON 备份导出、CSV 导出和 JSON 导入恢复。"
+                  description="导出和导入备份"
                   tone="bg-sky-50 text-sky-500"
                 />
               </div>

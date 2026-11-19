@@ -17,19 +17,26 @@ interface ScreenProps {
   chrome?: 'default' | 'muted' | 'none';
 }
 
+const TIGHT_SCREEN_VERTICAL_SPACING = 12;
+const DEFAULT_SCREEN_VERTICAL_SPACING = 20;
+const TIGHT_SCREEN_GAP = 16;
+const SAFE_TOP_EXTRA_PADDING = 6;
+const MIN_SAFE_BOTTOM_PADDING = 10;
+const FOOTER_VERTICAL_PADDING = 14;
+
 export function Screen({ children, footer, scroll = false, contentStyle, scrollProps, safeAreaTop = 'top-safe', safeAreaBottom = 'bottom-safe', statusBarStyle = 'dark-content', contentInsetMode = 'page' }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const isTight = contentInsetMode === 'tight';
-  const verticalSpacing = isTight ? 12 : 20;
+  const verticalSpacing = isTight ? TIGHT_SCREEN_VERTICAL_SPACING : DEFAULT_SCREEN_VERTICAL_SPACING;
   const topInset = safeAreaTop === 'top-safe' ? insets.top : 0;
-  const topPadding = safeAreaTop === 'top-safe' ? 6 : 0;
-  const bottomPadding = !footer && safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, 10) : 0;
+  const topPadding = safeAreaTop === 'top-safe' ? SAFE_TOP_EXTRA_PADDING : 0;
+  const bottomPadding = !footer && safeAreaBottom === 'bottom-safe' ? Math.max(insets.bottom, MIN_SAFE_BOTTOM_PADDING) : 0;
   const containerStyle: ViewStyle = {
     flexGrow: 1,
     paddingHorizontal: layout.pageGutter.mobile,
     paddingTop: topPadding + verticalSpacing,
     paddingBottom: bottomPadding + verticalSpacing,
-    gap: isTight ? 16 : layout.pageGap.mobile,
+    gap: isTight ? TIGHT_SCREEN_GAP : layout.pageGap.mobile,
   };
   const content = scroll ? (
     <ScrollView testID="screen-scroll" keyboardShouldPersistTaps="handled" contentContainerStyle={[containerStyle, contentStyle]} {...scrollProps}>{children as never}</ScrollView>
@@ -47,7 +54,7 @@ export function Screen({ children, footer, scroll = false, contentStyle, scrollP
   );
 }
 
-interface ScreenFooterProps { children: ReactNode; bottomInset: number }
-function ScreenFooter({ children, bottomInset }: ScreenFooterProps) {
-  return <View testID="screen-footer" style={{ paddingHorizontal: layout.pageGutter.mobile, paddingTop: 14, paddingBottom: Math.max(bottomInset, 14), borderTopWidth: 1, borderTopColor: palette.border, backgroundColor: palette.surface }}>{children as never}</View>;
+interface ScreenFooterProps { children: ReactNode; bottomInset?: number }
+export function ScreenFooter({ children, bottomInset = 0 }: ScreenFooterProps) {
+  return <View testID="screen-footer" style={{ paddingHorizontal: layout.pageGutter.mobile, paddingTop: FOOTER_VERTICAL_PADDING, paddingBottom: Math.max(bottomInset, FOOTER_VERTICAL_PADDING), borderTopWidth: 1, borderTopColor: palette.border, backgroundColor: palette.surface }}>{children as never}</View>;
 }

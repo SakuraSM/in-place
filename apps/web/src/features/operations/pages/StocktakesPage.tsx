@@ -49,8 +49,7 @@ export default function StocktakesPage() {
     <PageShell>
       <PageHeader
         width="standard"
-        eyebrow="家庭盘点"
-        title="确认每件物品都在该在的位置"
+        title="家庭盘点"
       />
       <PageContent width="standard" className="space-y-5">
         <section className="rounded-3xl border border-borderSoft bg-surface p-5 shadow-sm md:p-6">

@@ -100,7 +100,7 @@ export default function LocationsTab() {
       }}
     >
       <Entrance variant="page">
-        <BrandHeader variant="page" title="位置" accessory={<HouseholdButton compact />} />
+        <BrandHeader variant="page" title="空间位置" accessory={<HouseholdButton compact />} />
       </Entrance>
 
       <ContentTabs
@@ -121,7 +121,7 @@ export default function LocationsTab() {
         </SectionCard>
       ) : (
         <>
-          <SectionCard title="空间位置" subtitle={meta ? `${items.length} / ${meta.total}` : undefined} delay={70} density="dense" headerMode="compact">
+          <SectionCard title="位置列表" subtitle={meta ? `${items.length} / ${meta.total}` : undefined} delay={70} density="dense" headerMode="compact">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={locationRailStyle}>
               {locationItems.map((location) => (
                 <Pressable

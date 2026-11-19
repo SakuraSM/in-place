@@ -1,13 +1,13 @@
 import { useHousehold } from '../../../app/providers/household-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { ArrowLeft, Download, HardDriveDownload, Upload } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { apiRequest, apiRequestResponse } from '../../../shared/api/client';
 import ConfirmDialog from '../../../shared/ui/ConfirmDialog';
 import { staggerContainer, staggerItem } from '../../../shared/lib/animations';
 import { PageContent, PageHeader, PageShell } from '../../../shared/ui/PageLayout';
+import PageBack from '../../../shared/ui/PageBack';
 import { SectionPanel } from '../components/ProfileUi';
 
 export default function DataManagementPage() {
@@ -112,37 +112,18 @@ export default function DataManagementPage() {
       <PageHeader
         width="narrow"
         title="数据管理"
-        backLink={<Link to="/profile" className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-slate-900">
-            <ArrowLeft size={15} />
-            返回我的
-          </Link>}
+        backLink={<PageBack to="/profile" label="返回我的" />}
       />
       <PageContent width="narrow">
         <motion.div
           variants={staggerContainer}
           animate="animate"
         >
-        <motion.div variants={staggerItem} className="mb-5 overflow-hidden rounded-3xl border border-borderSoft bg-surface shadow-sm md:mb-6">
-          <div className="bg-canvasStrong px-5 py-5 md:px-6 md:py-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-sky-100 text-sky-600">
-                <HardDriveDownload size={26} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-lg font-semibold text-slate-900">备份与恢复</p>
-                <p className="mt-2 text-sm text-slate-500">集中管理当前家庭空间的数据导出与 JSON 备份导入。</p>
-                <p className="mt-1 text-xs text-muted">导入只覆盖当前家庭空间，不会自动合并其他家庭库存。</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
         <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
           <motion.div variants={staggerItem}>
             <SectionPanel
               icon={<Download size={16} />}
               title="数据导出"
-              description="按用途选择完整备份或表格导出。"
             >
               <div className="grid gap-3">
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -179,7 +160,7 @@ export default function DataManagementPage() {
             <SectionPanel
               icon={<Upload size={16} />}
               title="JSON 备份导入"
-              description={`将覆盖家庭「${currentHousehold?.name}」的库存及相关记录，请先导出备份。`}
+              description={`将覆盖家庭「${currentHousehold?.name}」的库存及相关记录，不影响其他家庭；请先导出备份。`}
             >
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-800">选择备份文件</p>

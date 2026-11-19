@@ -49,19 +49,19 @@ export default function ManageTab() {
   const menuItems: ManageMenuItem[] = [
     {
       href: '/(tabs)/locations',
-      title: '位置',
+      title: '位置与地图',
       subtitle: '空间与收纳层级',
       iconName: 'location-outline',
     },
     {
       href: '/operations/stocktakes' as Href,
-      title: '盘点',
+      title: '家庭盘点',
       subtitle: '按位置核对库存差异',
       iconName: 'clipboard-outline',
     },
     {
       href: '/operations/reminders' as Href,
-      title: '提醒',
+      title: '提醒中心',
       subtitle: '保修、借用、维护与盘点',
       iconName: 'notifications-outline',
     },
@@ -73,7 +73,7 @@ export default function ManageTab() {
     },
     {
       href: '/operations/duplicates' as Href,
-      title: '重复项',
+      title: '重复物品',
       subtitle: '识别并合并重复库存',
       iconName: 'copy-outline',
     },
@@ -85,20 +85,20 @@ export default function ManageTab() {
     },
     {
       href: '/(tabs)/activity',
-      title: '记录',
+      title: '操作记录',
       subtitle: '录入与修改日志',
       iconName: 'time-outline',
     },
     {
       href: '/manage/categories',
-      title: '分类',
+      title: '分类管理',
       subtitle: '物品与收纳分类',
       iconName: 'folder-open-outline',
       meta: `${categoriesQuery.data?.length ?? 0}`,
     },
     {
       href: '/manage/tags',
-      title: '标签',
+      title: '标签管理',
       subtitle: '搜索与筛选标签',
       iconName: 'pricetags-outline',
       meta: `${tagsQuery.data?.length ?? 0}`,
@@ -108,10 +108,10 @@ export default function ManageTab() {
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
       <Entrance variant="page">
-        <BrandHeader title="工具中心" variant="page" accessory={<HouseholdButton compact />} />
+        <BrandHeader title="管理中心" variant="page" accessory={<HouseholdButton compact />} />
       </Entrance>
 
-      <SectionCard title="库存工具" subtitle="盘点、提醒、报告与标签" delay={60} density="dense" headerMode="compact">
+      <SectionCard title="库存工具" delay={60} density="dense" headerMode="compact">
         <View style={menuStyle}>
           {menuItems.slice(1, 6).map((item) => (
             <Link key={item.title} href={item.href} asChild>
@@ -128,7 +128,7 @@ export default function ManageTab() {
           ))}
         </View>
       </SectionCard>
-      <SectionCard title="基础管理" subtitle="位置、记录、分类与标签" delay={100} density="dense" headerMode="compact">
+      <SectionCard title="基础管理" delay={100} density="dense" headerMode="compact">
         <View style={menuStyle}>
           {[menuItems[0], ...menuItems.slice(6)].map((item) => (
             <Link key={item.title} href={item.href} asChild>

@@ -50,8 +50,8 @@ export default function RemindersScreen() {
 
   return (
     <Screen scroll contentInsetMode="page" chrome="muted">
-      <PageHeader title="提醒" subtitle="保修、借用、维护与盘点" />
-      <SectionCard title={`提醒中心 · ${unreadCount} 条未读`} subtitle="保修、借用、维护和久未盘点" density="compact">
+      <PageHeader title="提醒中心" />
+      <SectionCard title={`${unreadCount} 条未读`} density="compact">
         {reminders.length === 0 ? <Text style={emptyTextStyle}>当前没有提醒。</Text> : null}
         {reminders.map((reminder) => {
           const presentation = REMINDER_PRESENTATION[reminder.type];

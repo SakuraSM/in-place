@@ -109,7 +109,8 @@ export function HomeDashboard({
           title="归位"
           variant="page"
           align="center"
-          accessory={<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Pressable accessibilityRole="button" accessibilityLabel="搜索全部物品" onPress={() => router.navigate(overviewHref('all', 'all', true))} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="search-outline" size={22} color={palette.brandStrong} /></Pressable><HouseholdButton compact /></View>}
+          keepTitleVisible
+          accessory={<View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 }}><Pressable accessibilityRole="button" accessibilityLabel="搜索全部物品" onPress={() => router.navigate(overviewHref('all', 'all', true))} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="search-outline" size={22} color={palette.brandStrong} /></Pressable><HouseholdButton compact /></View>}
         />
       </Entrance>
       {!selectionMode ? <HomeWelcome canEdit={canEditInventory} onCreate={onCreate} /> : null}
